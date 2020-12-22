@@ -87,7 +87,7 @@ function building_process_way(object)
     local state = object:grab_tag('addr:state')
     local wheelchair = object:grab_tag('wheelchair')
     local levels = object:grab_tag('building:levels')
-    local height = parse_building_height(object.tags['building:height'])
+    local height = parse_building_height(object.tags['height'])
     local housenumber  = object:grab_tag('addr:housenumber')
     local operator  = object:grab_tag('operator')
 
