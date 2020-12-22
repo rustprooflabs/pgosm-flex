@@ -12,19 +12,24 @@ local srid = 3857
 
 local tables = {}
 
-tables.buildings = osm2pgsql.define_way_table('building_polygon', {
-    { column = 'osm_type',     type = 'text' , not_null = true},
-    { column = 'name',     type = 'text' },
-    { column = 'levels',  type = 'int'},
-    { column = 'height',  type = 'numeric'},
-    { column = 'housenumber', type = 'text'},
-    { column = 'street',     type = 'text' },
-    { column = 'city',     type = 'text' },
-    { column = 'state', type = 'text'},
-    { column = 'wheelchair', type = 'bool'},
-    { column = 'tags',     type = 'jsonb' },
-    { column = 'geom',     type = 'multipolygon', projection = srid},
-}, { schema = 'osm' })
+tables.buildings = osm2pgsql.define_table({
+    name = 'building_polygon',
+    schema = 'osm',
+    ids = { type = 'way', id_column = 'osm_id' },
+    columns = {
+        { column = 'osm_type',     type = 'text' , not_null = true},
+        { column = 'name',     type = 'text' },
+        { column = 'levels',  type = 'int'},
+        { column = 'height',  type = 'numeric'},
+        { column = 'housenumber', type = 'text'},
+        { column = 'street',     type = 'text' },
+        { column = 'city',     type = 'text' },
+        { column = 'state', type = 'text'},
+        { column = 'wheelchair', type = 'bool'},
+        { column = 'tags',     type = 'jsonb' },
+        { column = 'geom',     type = 'multipolygon', projection = srid},
+    }
+})
 
 
 function clean_tags(tags)

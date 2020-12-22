@@ -70,6 +70,7 @@ osm2pgsql --slim --drop \
 
 A few decisions made in this project:
 
+* ID column is `osm_id`
 * Default to SRID 3857
 * Default to same units as OpenStreetMap (e.g. km/hr and meters)
 * Extra `tags` stored in `JSONB`

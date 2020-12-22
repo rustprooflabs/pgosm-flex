@@ -6,25 +6,44 @@ local srid = 3857
 
 local tables = {}
 
-tables.traffic_point = osm2pgsql.define_node_table('traffic_point', {
-    { column = 'osm_type',     type = 'text', not_null = false },
-    { column = 'tags',     type = 'jsonb' },
-    { column = 'geom',     type = 'point', projection = srid },
-}, { schema = 'osm' })
+
+tables.traffic_point = osm2pgsql.define_table({
+    name = 'traffic_point',
+    schema = 'osm',
+    ids = { type = 'node', id_column = 'osm_id' },
+    columns = {
+        { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'tags',     type = 'jsonb' },
+        { column = 'geom',     type = 'point' , projection = srid},
+    }
+})
+
+--[[
+    FIXME: Repeat with Lines and Polyons
+
+tables.traffic_line = osm2pgsql.define_table({
+    name = 'traffic_line',
+    schema = 'osm',
+    ids = { type = 'way', id_column = 'osm_id' },
+    columns = {
+        { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'tags',     type = 'jsonb' },
+        { column = 'geom',     type = 'linestring' , projection = srid},
+    }
+})
 
 
-tables.traffic_line = osm2pgsql.define_node_table('traffic_line', {
-    { column = 'osm_type',     type = 'text', not_null = false },
-    { column = 'tags',     type = 'jsonb' },
-    { column = 'geom',     type = 'point', projection = srid },
-}, { schema = 'osm' })
-
-
-tables.traffic_polygon = osm2pgsql.define_node_table('traffic_polygon', {
-    { column = 'osm_type',     type = 'text', not_null = false },
-    { column = 'tags',     type = 'jsonb' },
-    { column = 'geom',     type = 'point', projection = srid },
-}, { schema = 'osm' })
+tables.traffic_polygon = osm2pgsql.define_table({
+    name = '`_polygon',
+    schema = 'osm',
+    ids = { type = 'way', id_column = 'osm_id' },
+    columns = {
+        { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'tags',     type = 'jsonb' },
+        { column = 'geom',     type = 'multipolygon' , projection = srid},
+    }
+})
+--]]
 
 function clean_tags(tags)
     tags.odbl = nil
@@ -106,7 +125,6 @@ function traffic_process_node(object)
     else
         return
     end
-
 
 end
 
