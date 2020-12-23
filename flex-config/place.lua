@@ -7,25 +7,43 @@ local srid = 3857
 
 local tables = {}
 
-tables.place_point = osm2pgsql.define_node_table('place_point', {
-    { column = 'osm_type',     type = 'text', not_null = true },
-    { column = 'tags',     type = 'jsonb' },
-    { column = 'geom',     type = 'point' , projection = srid},
-}, { schema = 'osm' })
 
-tables.place_line = osm2pgsql.define_way_table('place_line', {
-    { column = 'osm_type',     type = 'text', not_null = true },
-    { column = 'tags',     type = 'jsonb' },
-    { column = 'geom',     type = 'linestring', projection = srid },
-}, { schema = 'osm' })
+tables.place_point = osm2pgsql.define_table({
+    name = 'place_point',
+    schema = 'osm',
+    ids = { type = 'node', id_column = 'osm_id' },
+    columns = {
+        { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'name',     type = 'text' },
+        { column = 'tags',     type = 'jsonb' },
+        { column = 'geom',     type = 'point' , projection = srid},
+    }
+})
+
+tables.place_line = osm2pgsql.define_table({
+    name = 'place_line',
+    schema = 'osm',
+    ids = { type = 'way', id_column = 'osm_id' },
+    columns = {
+        { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'name',     type = 'text' },
+        { column = 'tags',     type = 'jsonb' },
+        { column = 'geom',     type = 'linestring' , projection = srid},
+    }
+})
 
 
-tables.place_polygon = osm2pgsql.define_way_table('place_polygon', {
-    { column = 'osm_type',     type = 'text' , not_null = true},
-    { column = 'tags',     type = 'jsonb' },
-    { column = 'geom',     type = 'multipolygon', projection = srid },
-}, { schema = 'osm' })
-
+tables.place_polygon = osm2pgsql.define_table({
+    name = 'place_polygon',
+    schema = 'osm',
+    ids = { type = 'way', id_column = 'osm_id' },
+    columns = {
+        { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'name',     type = 'text' },
+        { column = 'tags',     type = 'jsonb' },
+        { column = 'geom',     type = 'multipolygon' , projection = srid},
+    }
+})
 
 
 function clean_tags(tags)
@@ -48,10 +66,12 @@ function place_process_node(object)
 
     -- Using grab_tag() removes from remaining key/value saved to Pg
     local osm_type = object:grab_tag('place')
+    local name = object:grab_tag('name')
 
     tables.place_point:add_row({
         tags = json.encode(object.tags),
         osm_type = osm_type,
+        name = name,
         geom = { create = 'point' }
     })
 
@@ -67,18 +87,20 @@ function place_process_way(object)
     clean_tags(object.tags)
 
     local osm_type = object:grab_tag('place')
-
+    local name = object:grab_tag('name')
 
     if object.is_closed then
         tables.place_polygon:add_row({
             tags = json.encode(object.tags),
             osm_type = osm_type,
+            name = name,
             geom = { create = 'area' }
         })
     else
         tables.place_line:add_row({
             tags = json.encode(object.tags),
             osm_type = osm_type,
+            name = name,
             geom = { create = 'line' }
         })
     end
