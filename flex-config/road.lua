@@ -1,6 +1,3 @@
--- Use JSON encoder
-local json = require('dkjson')
-
 -- Change SRID if desired
 local srid = 3857
 
@@ -13,21 +10,10 @@ tables.highways = osm2pgsql.define_way_table('road_line',
         { column = 'ref',     type = 'text' },
         { column = 'maxspeed', type = 'int' },
         { column = 'oneway',     type = 'direction' },
-        { column = 'tags',     type = 'jsonb' },
         { column = 'geom',     type = 'linestring', projection = srid },
     },
     { schema = 'osm' }
 )
-
-
-function clean_tags(tags)
-    tags.odbl = nil
-    tags.created_by = nil
-    tags.source = nil
-    tags['source:ref'] = nil
-
-    return next(tags) == nil
-end
 
 
 -- Parse a maxspeed value like "30" or "55 mph" and return a number in km/h
@@ -63,8 +49,6 @@ function road_process_way(object)
         return
     end
 
-    clean_tags(object.tags)
-
     -- Using grab_tag() removes from remaining key/value saved to Pg
     local name = object:grab_tag('name')
     local osm_type = object:grab_tag('highway')
@@ -75,7 +59,6 @@ function road_process_way(object)
     oneway = object:grab_tag('oneway') or 0
 
     tables.highways:add_row({
-        tags = json.encode(object.tags),
         name = name,
         osm_type = osm_type,
         ref = ref,

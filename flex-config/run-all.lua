@@ -1,3 +1,4 @@
+require "all_tags"
 require "road"
 require "road_major"
 require "building"
