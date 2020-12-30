@@ -1,6 +1,3 @@
--- Use JSON encoder
-local json = require('dkjson')
-
 -- Change SRID if desired
 local srid = 3857
 
@@ -13,7 +10,6 @@ tables.traffic_point = osm2pgsql.define_table({
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'tags',     type = 'jsonb' },
         { column = 'geom',     type = 'point' , projection = srid},
     }
 })
@@ -45,15 +41,6 @@ tables.traffic_polygon = osm2pgsql.define_table({
 })
 --]]
 
-function clean_tags(tags)
-    tags.odbl = nil
-    tags.created_by = nil
-    tags.source = nil
-    tags['source:ref'] = nil
-
-    return next(tags) == nil
-end
-
 -- Change function name here
 function traffic_process_node(object)
     if not object.tags.highway and not object.tags.railway and not
@@ -61,8 +48,6 @@ function traffic_process_node(object)
             object.tags.amenity then
         return
     end
-
-    clean_tags(object.tags)
 
     if object.tags.highway == 'traffic_signals'
             or object.tags.highway == 'mini_roundabout'
@@ -78,7 +63,6 @@ function traffic_process_node(object)
         local osm_type = object:grab_tag('highway')
 
         tables.traffic_point:add_row({
-            tags = json.encode(object.tags),
             osm_type = osm_type,
             geom = { create = 'point' }
         })
@@ -87,7 +71,6 @@ function traffic_process_node(object)
         local osm_type = 'crossing'
 
         tables.traffic_point:add_row({
-            tags = json.encode(object.tags),
             osm_type = osm_type,
             geom = { create = 'point' }
         })
@@ -96,7 +79,6 @@ function traffic_process_node(object)
         local osm_type = object:grab_tag('barrier')
 
         tables.traffic_point:add_row({
-            tags = json.encode(object.tags),
             osm_type = osm_type,
             geom = { create = 'point' }
         })
@@ -105,7 +87,6 @@ function traffic_process_node(object)
         local osm_type = object:grab_tag('traffic_calming')
 
         tables.traffic_point:add_row({
-            tags = json.encode(object.tags),
             osm_type = osm_type,
             geom = { create = 'point' }
         })
@@ -117,7 +98,6 @@ function traffic_process_node(object)
         local osm_type = object:grab_tag('amenity')
 
         tables.traffic_point:add_row({
-            tags = json.encode(object.tags),
             osm_type = osm_type,
             geom = { create = 'point' }
         })

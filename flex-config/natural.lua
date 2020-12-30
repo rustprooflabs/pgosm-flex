@@ -1,7 +1,4 @@
 
--- Use JSON encoder
-local json = require('dkjson')
-
 -- Change SRID if desired
 local srid = 3857
 
@@ -14,7 +11,6 @@ tables.natural_point = osm2pgsql.define_table({
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'tags',     type = 'jsonb' },
         { column = 'geom',     type = 'point' , projection = srid},
     }
 })
@@ -26,7 +22,6 @@ tables.natural_line = osm2pgsql.define_table({
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'tags',     type = 'jsonb' },
         { column = 'geom',     type = 'linestring' , projection = srid},
     }
 })
@@ -38,20 +33,10 @@ tables.natural_polygon = osm2pgsql.define_table({
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'tags',     type = 'jsonb' },
         { column = 'geom',     type = 'multipolygon' , projection = srid},
     }
 })
 
-
-function clean_tags(tags)
-    tags.odbl = nil
-    tags.created_by = nil
-    tags.source = nil
-    tags['source:ref'] = nil
-
-    return next(tags) == nil
-end
 
 
 function natural_process_node(object)
@@ -60,13 +45,10 @@ function natural_process_node(object)
         return
     end
 
-    clean_tags(object.tags)
-
     -- Using grab_tag() removes from remaining key/value saved to Pg
     local osm_type = object:grab_tag('natural')
 
     tables.natural_point:add_row({
-        tags = json.encode(object.tags),
         osm_type = osm_type,
         geom = { create = 'point' }
     })
@@ -80,20 +62,16 @@ function natural_process_way(object)
         return
     end
 
-    clean_tags(object.tags)
-
     local osm_type = object:grab_tag('natural')
 
 
     if object.is_closed then
         tables.natural_polygon:add_row({
-            tags = json.encode(object.tags),
             osm_type = osm_type,
             geom = { create = 'area' }
         })
     else
         tables.natural_line:add_row({
-            tags = json.encode(object.tags),
             osm_type = osm_type,
             geom = { create = 'line' }
         })

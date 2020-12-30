@@ -1,5 +1,5 @@
 -- Converted from https://github.com/openstreetmap/osm2pgsql/blob/master/flex-config/unitable.lua
---   to use JSONB instead of HSTORE
+--   to use JSONB instead of HSTORE and osm schema.
 
 -- Put all OSM data into a single table
 local json = require('dkjson')

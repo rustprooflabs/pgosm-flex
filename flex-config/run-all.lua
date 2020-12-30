@@ -1,6 +1,2 @@
-require "road"
-require "road_major"
-require "building"
-require "natural"
-require "traffic"
-require "place"
+require "all_tags"
+require "run-no-tags"

@@ -1,7 +1,4 @@
 
--- Use JSON encoder
-local json = require('dkjson')
-
 -- Change SRID if desired
 local srid = 3857
 
@@ -15,7 +12,6 @@ tables.place_point = osm2pgsql.define_table({
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'name',     type = 'text' },
-        { column = 'tags',     type = 'jsonb' },
         { column = 'geom',     type = 'point' , projection = srid},
     }
 })
@@ -27,7 +23,6 @@ tables.place_line = osm2pgsql.define_table({
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'name',     type = 'text' },
-        { column = 'tags',     type = 'jsonb' },
         { column = 'geom',     type = 'linestring' , projection = srid},
     }
 })
@@ -40,20 +35,9 @@ tables.place_polygon = osm2pgsql.define_table({
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'name',     type = 'text' },
-        { column = 'tags',     type = 'jsonb' },
         { column = 'geom',     type = 'multipolygon' , projection = srid},
     }
 })
-
-
-function clean_tags(tags)
-    tags.odbl = nil
-    tags.created_by = nil
-    tags.source = nil
-    tags['source:ref'] = nil
-
-    return next(tags) == nil
-end
 
 
 function place_process_node(object)
@@ -62,14 +46,11 @@ function place_process_node(object)
         return
     end
 
-    clean_tags(object.tags)
-
     -- Using grab_tag() removes from remaining key/value saved to Pg
     local osm_type = object:grab_tag('place')
     local name = object:grab_tag('name')
 
     tables.place_point:add_row({
-        tags = json.encode(object.tags),
         osm_type = osm_type,
         name = name,
         geom = { create = 'point' }
@@ -84,21 +65,17 @@ function place_process_way(object)
         return
     end
 
-    clean_tags(object.tags)
-
     local osm_type = object:grab_tag('place')
     local name = object:grab_tag('name')
 
     if object.is_closed then
         tables.place_polygon:add_row({
-            tags = json.encode(object.tags),
             osm_type = osm_type,
             name = name,
             geom = { create = 'area' }
         })
     else
         tables.place_line:add_row({
-            tags = json.encode(object.tags),
             osm_type = osm_type,
             name = name,
             geom = { create = 'line' }

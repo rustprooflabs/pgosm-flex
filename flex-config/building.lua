@@ -4,9 +4,6 @@
 -- marked with:  "Change function name here"
 --
 
--- Use JSON encoder
-local json = require('dkjson')
-
 -- Change SRID if desired
 local srid = 3857
 
@@ -26,20 +23,9 @@ tables.buildings = osm2pgsql.define_table({
         { column = 'city',     type = 'text' },
         { column = 'state', type = 'text'},
         { column = 'wheelchair', type = 'bool'},
-        { column = 'tags',     type = 'jsonb' },
         { column = 'geom',     type = 'multipolygon', projection = srid},
     }
 })
-
-
-function clean_tags(tags)
-    tags.odbl = nil
-    tags.created_by = nil
-    tags.source = nil
-    tags['source:ref'] = nil
-
-    return next(tags) == nil
-end
 
 
 
@@ -77,8 +63,6 @@ function building_process_way(object)
         return
     end
 
-    clean_tags(object.tags)
-
     -- Using grab_tag() removes from remaining key/value saved to Pg
     local osm_type = object:grab_tag('building')
     local name = object:grab_tag('name')
@@ -92,7 +76,6 @@ function building_process_way(object)
     local operator  = object:grab_tag('operator')
 
     tables.buildings:add_row({
-        tags = json.encode(object.tags),
         osm_type = osm_type,
         name = name,
         housenumber = housenumber,
