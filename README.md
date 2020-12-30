@@ -13,10 +13,21 @@ For more details on using this project see [Hands on with osm2pgsql's new Flex o
 > Warning - The PgOSM Flex output is currently marked as experimental!  All testing done with osm2pgsql v1.4.0 or later.
 
 
+## Project decisions
+
+A few decisions made in this project:
+
+* ID column is `osm_id`
+* Geometry stored in SRID 3857
+* Default to same units as OpenStreetMap (e.g. km/hr, meters)
+* Data not deemed worthy of a dedicated column goes in side table `osm.tags`. Raw key/value data stored in `JSONB` column
+* Points, Lines, and Polygons are not mixed in a single table
+
+
 
 ## Load main tables
 
-The list of "main" tables will continue to grow.  This will evolve as more layers are added.
+The list of main tables in PgOSM-Flex will continue to grow.
 The only layer intentionally excluded from the `run-all` script is `unitable.lua`.
 
 ```bash
@@ -30,6 +41,28 @@ Run matching SQL scripts.
 
 ```bash
 psql -d pgosm -f ./run-all.sql
+```
+
+
+## Load main tables, No Tags
+
+The `run-no-tags.lua` and `.sql` scripts run the same loads as the `run-all`,
+just skipping the `osm.tags` table.  The `tags` table contains all OSM key/value
+pairs with their `osm_id`.
+
+
+
+```bash
+osm2pgsql --slim --drop \
+    --output=flex --style=./run-no-tags.lua \
+    -d pgosm \
+    ~/tmp/district-of-columbia-latest.osm.pbf
+```
+
+Matching SQL scripts.
+
+```bash
+psql -d pgosm -f ./run-no-tags.sql
 ```
 
 
@@ -63,16 +96,3 @@ osm2pgsql --slim --drop \
     -d pgosm \
     ~/tmp/district-of-columbia-latest.osm.pbf
 ```
-
-
-
-## Notes
-
-A few decisions made in this project:
-
-* ID column is `osm_id`
-* Default to SRID 3857
-* Default to same units as OpenStreetMap (e.g. km/hr and meters)
-* Extra `tags` stored in `JSONB` in side table (`osm.tags`)
-* Points, Lines, and Polygons are not mixed in a single table
-
