@@ -10,6 +10,7 @@ tables.traffic_point = osm2pgsql.define_table({
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'osm_subtype',     type = 'text' },
         { column = 'geom',     type = 'point' , projection = srid},
     }
 })
@@ -21,6 +22,7 @@ tables.traffic_line = osm2pgsql.define_table({
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'osm_subtype',     type = 'text' },
         { column = 'geom',     type = 'linestring' , projection = srid},
     }
 })
@@ -32,6 +34,7 @@ tables.traffic_polygon = osm2pgsql.define_table({
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'osm_subtype',     type = 'text' },
         { column = 'geom',     type = 'multipolygon' , projection = srid},
     }
 })
@@ -71,19 +74,24 @@ function traffic_process_node(object)
             geom = { create = 'point' }
         })
 
+    -- Beginning of traffic w/ subtypes
     elseif object.tags.barrier then
-        local osm_type = object:grab_tag('barrier')
+        local osm_type = 'barrier'
+        local osm_subtype = object:grab_tag('barrier')
 
         tables.traffic_point:add_row({
             osm_type = osm_type,
+            osm_subtype = osm_subtype,
             geom = { create = 'point' }
         })
 
     elseif object.tags.traffic_calming then
-        local osm_type = object:grab_tag('traffic_calming')
+        local osm_type = 'traffic_calming'
+        local osm_subtype = object:grab_tag('traffic_calming')
 
         tables.traffic_point:add_row({
             osm_type = osm_type,
+            osm_subtype = osm_subtype,
             geom = { create = 'point' }
         })
 
@@ -91,10 +99,11 @@ function traffic_process_node(object)
             or object.tags.amenity == 'parking'
             or object.tags.amenity == 'bicycle_parking'
             then
-        local osm_type = object:grab_tag('amenity')
-
+        local osm_type = 'amenity'
+        local osm_subtype = object:grab_tag('amenity')
         tables.traffic_point:add_row({
             osm_type = osm_type,
+            osm_subtype = osm_subtype,
             geom = { create = 'point' }
         })
 
@@ -153,32 +162,39 @@ function traffic_process_way(object)
             })
         end
 
-    elseif object.tags.barrier then
-        local osm_type = object:grab_tag('barrier')
+    -- Beginning of traffic w/ subtypes
+    elseif object.tags.barrier then        
+        local osm_type = 'barrier'
+        local osm_subtype = object:grab_tag('barrier')
 
         if object.is_closed then
             tables.traffic_polygon:add_row({
                 osm_type = osm_type,
+                osm_subtype = osm_subtype,
                 geom = { create = 'area' }
             })
         else
             tables.traffic_line:add_row({
                 osm_type = osm_type,
+                osm_subtype = osm_subtype,
                 geom = { create = 'line' }
             })
         end
 
     elseif object.tags.traffic_calming then
-        local osm_type = object:grab_tag('traffic_calming')
+        local osm_type = 'traffic_calming'
+        local osm_subtype = object:grab_tag('traffic_calming')
 
         if object.is_closed then
             tables.traffic_polygon:add_row({
                 osm_type = osm_type,
+                osm_subtype = osm_subtype,
                 geom = { create = 'area' }
             })
         else
             tables.traffic_line:add_row({
                 osm_type = osm_type,
+                osm_subtype = osm_subtype,
                 geom = { create = 'line' }
             })
         end
@@ -187,16 +203,19 @@ function traffic_process_way(object)
             or object.tags.amenity == 'parking'
             or object.tags.amenity == 'bicycle_parking'
             then
-        local osm_type = object:grab_tag('amenity')
+        local osm_type = 'amenity'
+        local osm_subtype = object:grab_tag('amenity')
 
         if object.is_closed then
             tables.traffic_polygon:add_row({
                 osm_type = osm_type,
+                osm_subtype = osm_subtype,
                 geom = { create = 'area' }
             })
         else
             tables.traffic_line:add_row({
                 osm_type = osm_type,
+                osm_subtype = osm_subtype,
                 geom = { create = 'line' }
             })
         end
