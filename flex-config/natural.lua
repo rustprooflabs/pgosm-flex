@@ -11,6 +11,8 @@ tables.natural_point = osm2pgsql.define_table({
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'name',     type = 'text' },
+        { column = 'ele', type = 'int' },
         { column = 'geom',     type = 'point' , projection = srid},
     }
 })
@@ -22,6 +24,8 @@ tables.natural_line = osm2pgsql.define_table({
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'name',     type = 'text' },
+        { column = 'ele', type = 'int' },
         { column = 'geom',     type = 'linestring' , projection = srid},
     }
 })
@@ -33,10 +37,45 @@ tables.natural_polygon = osm2pgsql.define_table({
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'name',     type = 'text' },
+        { column = 'ele', type = 'int' },
         { column = 'geom',     type = 'multipolygon' , projection = srid},
     }
 })
 
+
+-- Parse an ele value like "1800", "1955 m" or "8001 ft" and return a number in meters
+function parse_ele(input)
+    if not input then
+        return nil
+    end
+
+    local ele = tonumber(input)
+
+    -- If ele is just a number, it is in meters, so just return it
+    if ele then
+        return ele
+    end
+
+    -- If there is an 'm ' at the end, strip off and return
+    if input:sub(-1) == 'm' then
+        local num = tonumber(input:sub(1, -2))
+        if num then
+            return num
+        end
+    end
+
+    -- If there is an 'ft' at the end, strip off and return
+    if input:sub(-2) == 'ft' then
+        local num = tonumber(input:sub(1, -3))
+        if num then
+            return math.floor(num * 0.3048)
+        end
+    end
+
+
+    return nil
+end
 
 
 function natural_process_node(object)
@@ -47,9 +86,13 @@ function natural_process_node(object)
 
     -- Using grab_tag() removes from remaining key/value saved to Pg
     local osm_type = object:grab_tag('natural')
+    local name = object:grab_tag('name')
+    local ele = parse_ele(object.tags.ele)
 
     tables.natural_point:add_row({
         osm_type = osm_type,
+        name = name,
+        ele = ele,
         geom = { create = 'point' }
     })
 
@@ -63,16 +106,21 @@ function natural_process_way(object)
     end
 
     local osm_type = object:grab_tag('natural')
-
+    local name = object:grab_tag('name')
+    local ele = parse_ele(object.tags.ele)
 
     if object.is_closed then
         tables.natural_polygon:add_row({
             osm_type = osm_type,
+            name = name,
+            ele = ele,
             geom = { create = 'area' }
         })
     else
         tables.natural_line:add_row({
             osm_type = osm_type,
+            name = name,
+            ele = ele,
             geom = { create = 'line' }
         })
     end
