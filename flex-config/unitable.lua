@@ -13,10 +13,9 @@ local dtable = osm2pgsql.define_table{
     name = "data",
     schema = 'osm',
     -- This will generate a column "osm_id INT8" for the id, and a column
-    -- "osm_type CHAR(1)" for the type of object: N(ode), W(way), R(relation)
-    ids = { type = 'any', id_column = 'osm_id', type_column = 'osm_type' },
+    -- "geom_type CHAR(1)" for the type of object: N(ode), W(way), R(relation)
+    ids = { type = 'any', id_column = 'osm_id', type_column = 'geom_type' },
     columns = {
-        { column = 'attrs', type = 'jsonb' },
         { column = 'tags',  type = 'jsonb' },
         { column = 'geom',  type = 'geometry', projection = srid  },
     }
@@ -40,10 +39,6 @@ function process(object, geometry_type)
         return
     end
     dtable:add_row({
-        attrs = json.encode({
-            version = object.version,
-            timestamp = object.timestamp,
-        }),
         tags = json.encode(object.tags),
         geom = { create = geometry_type }
     })
@@ -64,10 +59,6 @@ function osm2pgsql.process_relation(object)
 
     if object.tags.type == 'multipolygon' or object.tags.type == 'boundary' then
         dtable:add_row({
-            attrs = json.encode({
-                version = object.version,
-                timestamp = object.timestamp,
-            }),
             tags = json.encode(object.tags),
             geom = { create = 'area' }
         })
