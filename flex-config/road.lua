@@ -3,7 +3,7 @@ local srid = 3857
 
 local tables = {}
 
-tables.highways = osm2pgsql.define_way_table('road_line',
+tables.road_line = osm2pgsql.define_way_table('road_line',
     {
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'name',     type = 'text' },
@@ -17,8 +17,8 @@ tables.highways = osm2pgsql.define_way_table('road_line',
 
 
 -- Parse a maxspeed value like "30" or "55 mph" and return a number in km/h
+-- from osm2pgsql/flex-config/data-types.lua
 function parse_speed(input)
-    -- from osm2pgsql/flex-config/data-types.lua
     if not input then
         return nil
     end
@@ -42,7 +42,6 @@ function parse_speed(input)
 end
 
 
--- Change function name here
 function road_process_way(object)
     -- We are only interested in highways
     if not object.tags.highway then
@@ -58,7 +57,7 @@ function road_process_way(object)
 
     oneway = object:grab_tag('oneway') or 0
 
-    tables.highways:add_row({
+    tables.road_line:add_row({
         name = name,
         osm_type = osm_type,
         ref = ref,
