@@ -6,8 +6,8 @@ COMMENT ON COLUMN osm.road_major.maxspeed IS 'Maximum posted speed limit in kilo
 
 
 ALTER TABLE osm.road_line
-	ADD CONSTRAINT pk_osm_road_line_way_id
-    PRIMARY KEY (way_id)
+	ADD CONSTRAINT pk_osm_road_line_osm_id
+    PRIMARY KEY (osm_id)
 ;
 
 

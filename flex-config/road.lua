@@ -3,17 +3,19 @@ local srid = 3857
 
 local tables = {}
 
-tables.road_line = osm2pgsql.define_way_table('road_line',
-    {
+tables.road_line = osm2pgsql.define_table({
+    name = 'road_line',
+    schema = 'osm',
+    ids = { type = 'way', id_column = 'osm_id' },
+    columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'name',     type = 'text' },
         { column = 'ref',     type = 'text' },
         { column = 'maxspeed', type = 'int' },
         { column = 'oneway',     type = 'direction' },
-        { column = 'geom',     type = 'linestring', projection = srid },
-    },
-    { schema = 'osm' }
-)
+        { column = 'geom',     type = 'linestring', projection = srid }
+    }
+})
 
 
 -- Parse a maxspeed value like "30" or "55 mph" and return a number in km/h

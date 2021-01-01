@@ -11,9 +11,7 @@ local infrastructure_keys = {
     'emergency',
     'highway',
     'man_made',
-    'power',
-    'water',
-    'waterway'
+    'power'
 }
 
 -- Function make_check_in_list_func from: https://github.com/openstreetmap/osm2pgsql/blob/master/flex-config/compatible.lua
@@ -46,37 +44,8 @@ tables.infrastructure_point = osm2pgsql.define_table({
         { column = 'ele', type = 'int' },
         { column = 'height',  type = 'numeric'},
         { column = 'operator', type = 'text'},
+        { column = 'material', type = 'text'},
         { column = 'geom',     type = 'point' , projection = srid},
-    }
-})
-
-
-tables.infrastructure_line = osm2pgsql.define_table({
-    name = 'infrastructure_line',
-    schema = 'osm',
-    ids = { type = 'way', id_column = 'osm_id' },
-    columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'name',     type = 'text' },
-        { column = 'ele', type = 'int' },
-        { column = 'height',  type = 'numeric'},
-        { column = 'operator', type = 'text'},
-        { column = 'geom',     type = 'linestring' , projection = srid},
-    }
-})
-
-
-tables.infrastructure_polygon = osm2pgsql.define_table({
-    name = 'infrastructure_polygon',
-    schema = 'osm',
-    ids = { type = 'way', id_column = 'osm_id' },
-    columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'name',     type = 'text' },
-        { column = 'ele', type = 'int' },
-        { column = 'height',  type = 'numeric'},
-        { column = 'operator', type = 'text'},
-        { column = 'geom',     type = 'multipolygon' , projection = srid},
     }
 })
 
@@ -192,10 +161,12 @@ function infrastructure_process_node(object)
     elseif object.tags.man_made == 'tower'
             or object.tags.man_made == 'communications_tower'
             or object.tags.man_made == 'mast'
-            or object.tags.man_made == 'silo'
+            or object.tags.man_made == 'lighthouse'
+            or object.tags.man_made == 'flagpole'
             then
         local osm_type = object.tags.man_made
         local osm_subtype = object.tags['tower:type']
+        local material = object.tags.material
         
         tables.infrastructure_point:add_row({
             osm_type = osm_type,
@@ -204,6 +175,43 @@ function infrastructure_process_node(object)
             ele = ele,
             height = height,
             operator = operator,
+            material = material,
+            geom = { create = 'point' }
+        })
+
+    elseif object.tags.man_made == 'silo'
+            or object.tags.man_made == 'storage_tank'
+            or object.tags.man_made == 'water_tower'
+            or object.tags.man_made == 'reservoir_covered'
+            then
+        local osm_type = object.tags.man_made
+        local osm_subtype = object.tags['content']
+        local material = object.tags.material
+        
+        tables.infrastructure_point:add_row({
+            osm_type = osm_type,
+            osm_subtype = osm_subtype,
+            name = name,
+            ele = ele,
+            height = height,
+            operator = operator,
+            material = material,
+            geom = { create = 'point' }
+        })
+
+    elseif object.tags.power
+            then
+        local osm_type = 'power'
+        local osm_subtype = object.tags['power']
+        
+        tables.infrastructure_point:add_row({
+            osm_type = osm_type,
+            osm_subtype = osm_subtype,
+            name = name,
+            ele = ele,
+            height = height,
+            operator = operator,
+            material = material,
             geom = { create = 'point' }
         })
 
@@ -234,19 +242,4 @@ else
         infrastructure_process_node(object_copy)
     end
 end
-
-
---[[]
-if osm2pgsql.process_way == nil then
-    -- Change function name here
-    osm2pgsql.process_way = infrastructure_process_way
-else
-    local nested = osm2pgsql.process_way
-    osm2pgsql.process_way = function(object)
-        local object_copy = deep_copy(object)
-        nested(object)
-        -- Change function name here
-        infrastructure_process_way(object_copy)
-    end
-end ]]--
 
