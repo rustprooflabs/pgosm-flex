@@ -23,7 +23,7 @@ tables.place_line = osm2pgsql.define_table({
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'name',     type = 'text' },
-        { column = 'geom',     type = 'linestring' , projection = srid},
+        { column = 'geom',     type = 'multilinestring' , projection = srid},
     }
 })
 
@@ -97,13 +97,12 @@ function place_process_relation(object)
             name = name,
             geom = { create = 'area' }
         })
-  --[[  else
+    else
         tables.place_line:add_row({
             osm_type = osm_type,
             name = name,
             geom = { create = 'line' }
          })
-         ]]--
     end
 end
 
