@@ -1,16 +1,21 @@
 -- Converted from https://github.com/openstreetmap/osm2pgsql/blob/master/flex-config/unitable.lua
 --   to use JSONB instead of HSTORE and osm schema.
-
--- Put all OSM data into a single table
+--
+-------------------------
+--  WARNING:   This layer is NOT intended for production use!
+--  Use this to explore data when building proper structures!
+-------------------------
+--
+-- Includes tags in JSONB (does not rely on all_tags.lua)
+-- Does NOT include deep copy for easy use with "require" like other scripts in this project.
+--
 local json = require('dkjson')
 
--- Change SRID if desired
 local srid = 3857
 
--- We define a single table that can take any OSM object and any geometry.
--- XXX expire will currently not work on these tables.
+-- Single table that can take any OSM object and any geometry.
 local dtable = osm2pgsql.define_table{
-    name = "data",
+    name = "unitable",
     schema = 'osm',
     -- This will generate a column "osm_id INT8" for the id, and a column
     -- "geom_type CHAR(1)" for the type of object: N(ode), W(way), R(relation)
@@ -20,8 +25,6 @@ local dtable = osm2pgsql.define_table{
         { column = 'geom',  type = 'geometry', projection = srid  },
     }
 }
-
--- print("columns=" .. inspect(dtable:columns()))
 
 -- Helper function to remove some of the tags we usually are not interested in.
 -- Returns true if there are no tags left.
