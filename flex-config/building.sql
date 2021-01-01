@@ -16,3 +16,27 @@ ALTER TABLE osm.building_polygon
 ;
 
 CREATE INDEX ix_osm_building_polygon_type ON osm.building_polygon (osm_type);
+
+
+CREATE VIEW osm.vbuilding_all AS
+SELECT osm_id, 'N' AS geom_type, name, levels, height, operator, wheelchair,
+        COALESCE(housenumber, '')
+        || COALESCE(' ' || street, '')
+        || COALESCE(', ' || city || ' ', '')
+        || COALESCE(', ' || state || ' ', '')
+            AS address,
+        geom
+    FROM osm.building_point
+UNION
+SELECT osm_id, 'W' AS geom_type, name, levels, height, operator, wheelchair,
+        COALESCE(housenumber, '')
+        || COALESCE(' ' || street, '')
+        || COALESCE(', ' || city || ' ', '')
+        || COALESCE(', ' || state || ' ', '')
+            AS address,
+        ST_Centroid(geom) AS geom
+    FROM osm.building_polygon
+;
+
+COMMENT ON VIEW osm.vbuilding_all IS 'Converts polygon buildings to point with ST_Centroid(), combines with source points using UNION.';
+COMMENT ON COLUMN osm.vbuilding_all.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
