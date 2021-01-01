@@ -10,7 +10,7 @@ tables.highways = osm2pgsql.define_way_table('road_line',
         { column = 'ref',     type = 'text' },
         { column = 'maxspeed', type = 'int' },
         { column = 'oneway',     type = 'direction' },
-        { column = 'geom',     type = 'linestring', projection = srid },
+        { column = 'geom',     type = 'multilinestring', projection = srid },
     },
     { schema = 'osm' }
 )
@@ -70,6 +70,31 @@ function road_process_way(object)
 end
 
 
+
+function road_process_relation(object)
+    if not object.tags.highway then
+        return
+    end
+
+    local name = object:grab_tag('name')
+    local osm_type = object:grab_tag('highway')
+    local ref = object:grab_tag('ref')
+    -- in km/hr
+    maxspeed = parse_speed(object.tags.maxspeed)
+
+    oneway = object:grab_tag('oneway') or 0
+
+    tables.highways:add_row({
+        name = name,
+        osm_type = osm_type,
+        ref = ref,
+        maxspeed = maxspeed,
+        oneway = oneway,
+        geom = { create = 'line' }
+    })
+
+end
+
 -- deep_copy based on copy2: https://gist.github.com/tylerneylon/81333721109155b2d244
 function deep_copy(obj)
     if type(obj) ~= 'table' then return obj end
@@ -89,5 +114,18 @@ else
         nested(object)
         -- Change function name here
         road_process_way(object_copy)
+    end
+end
+
+if osm2pgsql.process_relation == nil then
+    -- Change function name here
+    osm2pgsql.process_relation = road_process_relation
+else
+    local nested = osm2pgsql.process_relation
+    osm2pgsql.process_relation = function(object)
+        local object_copy = deep_copy(object)
+        nested(object)
+        -- Change function name here
+        road_process_relation(object_copy)
     end
 end
