@@ -31,7 +31,7 @@ tables.place_line = osm2pgsql.define_table({
 tables.place_polygon = osm2pgsql.define_table({
     name = 'place_polygon',
     schema = 'osm',
-    ids = { type = 'way', id_column = 'osm_id' },
+    ids = { type = 'area', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'name',     type = 'text' },
@@ -41,7 +41,6 @@ tables.place_polygon = osm2pgsql.define_table({
 
 
 function place_process_node(object)
-    -- We are only interested in place details
     if not object.tags.place then
         return
     end
@@ -60,7 +59,6 @@ end
 
 -- Change function name here
 function place_process_way(object)
-    -- We are only interested in highways
     if not object.tags.place then
         return
     end
@@ -83,6 +81,32 @@ function place_process_way(object)
     end
     
 end
+
+
+function place_process_relation(object)
+    if not object.tags.place then
+        return
+    end
+
+    local osm_type = object:grab_tag('place')
+    local name = object:grab_tag('name')
+
+    if object.tags.type == 'multipolygon' or object.tags.type == 'boundary' then
+        tables.place_polygon:add_row({
+            osm_type = osm_type,
+            name = name,
+            geom = { create = 'area' }
+        })
+  --[[  else
+        tables.place_line:add_row({
+            osm_type = osm_type,
+            name = name,
+            geom = { create = 'line' }
+         })
+         ]]--
+    end
+end
+
 
 
 -- deep_copy based on copy2: https://gist.github.com/tylerneylon/81333721109155b2d244
@@ -119,5 +143,19 @@ else
         nested(object)
         -- Change function name here
         place_process_way(object_copy)
+    end
+end
+
+
+if osm2pgsql.process_relation == nil then
+    -- Change function name here
+    osm2pgsql.process_relation = place_process_relation
+else
+    local nested = osm2pgsql.process_relation
+    osm2pgsql.process_relation = function(object)
+        local object_copy = deep_copy(object)
+        nested(object)
+        -- Change function name here
+        place_process_relation(object_copy)
     end
 end
