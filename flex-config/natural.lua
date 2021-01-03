@@ -84,6 +84,20 @@ function natural_process_node(object)
         return
     end
 
+    -- Not interetested in tags caught in water.lua
+    if object.tags.natural == 'water'
+            or object.tags.natural == 'lake'
+            or object.tags.natural == 'hot_spring'
+            or object.tags.natural == 'waterfall'
+            or object.tags.natural == 'wetland'
+            or object.tags.natural == 'swamp'
+            or object.tags.natural == 'water_meadow'
+            or object.tags.natural == 'waterway'
+            or object.tags.natural == 'spring'
+            then
+        return
+    end
+
     -- Using grab_tag() removes from remaining key/value saved to Pg
     local osm_type = object:grab_tag('natural')
     local name = object:grab_tag('name')
@@ -102,6 +116,20 @@ end
 function natural_process_way(object)
     -- We are only interested in highways
     if not object.tags.natural then
+        return
+    end
+
+    -- Not interetested in tags caught in water.lua
+    if object.tags.natural == 'water'
+            or object.tags.natural == 'lake'
+            or object.tags.natural == 'hot_spring'
+            or object.tags.natural == 'waterfall'
+            or object.tags.natural == 'wetland'
+            or object.tags.natural == 'swamp'
+            or object.tags.natural == 'water_meadow'
+            or object.tags.natural == 'waterway'
+            or object.tags.natural == 'spring'
+            then
         return
     end
 
