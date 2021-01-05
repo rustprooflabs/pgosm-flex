@@ -7,3 +7,4 @@
 \i infrastructure.sql
 \i water.sql
 \i indoor.sql
+\i shop.sql
