@@ -1,3 +1,5 @@
+require "helpers"
+
 local srid = 3857
 
 local tables = {}
@@ -10,7 +12,7 @@ tables.water_point = osm2pgsql.define_table({
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'osm_subtype',     type = 'text', not_null = true },
         { column = 'name',     type = 'text' },
-        { column = 'layer',   type = 'int', not_null = false },
+        { column = 'layer',   type = 'int', not_null = true },
         { column = 'tunnel',     type = 'text' },
         { column = 'bridge',     type = 'text' },
         { column = 'boat',     type = 'text' },
@@ -27,7 +29,7 @@ tables.water_line = osm2pgsql.define_table({
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'osm_subtype',     type = 'text', not_null = true },
         { column = 'name',     type = 'text' },
-        { column = 'layer',   type = 'int', not_null = false },
+        { column = 'layer',   type = 'int', not_null = true },
         { column = 'tunnel',     type = 'text' },
         { column = 'bridge',     type = 'text' },
         { column = 'boat',     type = 'text' },
@@ -44,27 +46,13 @@ tables.water_polygon = osm2pgsql.define_table({
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'osm_subtype',     type = 'text', not_null = true },
         { column = 'name',     type = 'text' },
-        { column = 'layer',   type = 'int', not_null = false },
+        { column = 'layer',   type = 'int', not_null = true },
         { column = 'tunnel',     type = 'text' },
         { column = 'bridge',     type = 'text' },
         { column = 'boat',     type = 'text' },
         { column = 'geom',     type = 'multipolygon' , projection = srid},
     }
 })
-
-function parse_layer_value(input)
-    if not input then
-        -- We want default value set for all features in Pg
-        return 0
-    end
-
-    local layer = tonumber(input)
-
-    if layer then
-        return layer
-    end
-
-end
 
 
 function water_process_node(object)
@@ -212,15 +200,6 @@ function water_process_way(object)
     end
 
     
-end
-
-
--- deep_copy based on copy2: https://gist.github.com/tylerneylon/81333721109155b2d244
-function deep_copy(obj)
-    if type(obj) ~= 'table' then return obj end
-    local res = setmetatable({}, getmetatable(obj))
-    for k, v in pairs(obj) do res[deep_copy(k)] = deep_copy(v) end
-    return res
 end
 
 

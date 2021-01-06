@@ -1,8 +1,4 @@
--- Building polygons
---
--- When copy/paste to create new style, find and replace values
--- marked with:  "Change function name here"
---
+require "helpers"
 
 -- Change SRID if desired
 local srid = 3857
