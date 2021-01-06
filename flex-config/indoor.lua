@@ -9,7 +9,7 @@ tables.indoor_point = osm2pgsql.define_table({
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'name',     type = 'text' },
-        { column = 'layer',   type = 'int', not_null = true },
+        { column = 'layer',   type = 'int', not_null = false },
         { column = 'level',   type = 'text'},
         { column = 'room',   type = 'text'},
         { column = 'entrance',   type = 'text'},
@@ -28,7 +28,7 @@ tables.indoor_line = osm2pgsql.define_table({
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'name',     type = 'text' },
-        { column = 'layer',   type = 'int', not_null = true },
+        { column = 'layer',   type = 'int', not_null = false },
         { column = 'level',   type = 'text'},
         { column = 'room',   type = 'text'},
         { column = 'entrance',   type = 'text'},
@@ -47,7 +47,7 @@ tables.indoor_polygon = osm2pgsql.define_table({
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'name',     type = 'text' },
-        { column = 'layer',   type = 'int', not_null = true },
+        { column = 'layer',   type = 'int', not_null = false },
         { column = 'level',   type = 'text'},
         { column = 'room',   type = 'text'},
         { column = 'entrance',   type = 'text'},
