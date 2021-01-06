@@ -1,3 +1,5 @@
+require "helpers"
+
 -- Change SRID if desired
 local srid = 3857
 
@@ -16,32 +18,6 @@ tables.road_line = osm2pgsql.define_table({
         { column = 'geom',     type = 'linestring', projection = srid }
     }
 })
-
-
--- Parse a maxspeed value like "30" or "55 mph" and return a number in km/h
--- from osm2pgsql/flex-config/data-types.lua
-function parse_speed(input)
-    if not input then
-        return nil
-    end
-
-    local maxspeed = tonumber(input)
-
-    -- If maxspeed is just a number, it is in km/h, so just return it
-    if maxspeed then
-        return maxspeed
-    end
-
-    -- If there is an 'mph' at the end, convert to km/h and return
-    if input:sub(-3) == 'mph' then
-        local num = tonumber(input:sub(1, -4))
-        if num then
-            return math.floor(num * 1.60934)
-        end
-    end
-
-    return nil
-end
 
 
 function road_process_way(object)
@@ -68,15 +44,6 @@ function road_process_way(object)
         geom = { create = 'line' }
     })
 
-end
-
-
--- deep_copy based on copy2: https://gist.github.com/tylerneylon/81333721109155b2d244
-function deep_copy(obj)
-    if type(obj) ~= 'table' then return obj end
-    local res = setmetatable({}, getmetatable(obj))
-    for k, v in pairs(obj) do res[deep_copy(k)] = deep_copy(v) end
-    return res
 end
 
 

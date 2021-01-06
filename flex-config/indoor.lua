@@ -1,3 +1,5 @@
+require "helpers"
+
 local srid = 3857
 
 local tables = {}
@@ -9,7 +11,7 @@ tables.indoor_point = osm2pgsql.define_table({
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'name',     type = 'text' },
-        { column = 'layer',   type = 'int', not_null = true },
+        { column = 'layer',   type = 'int', not_null = false },
         { column = 'level',   type = 'text'},
         { column = 'room',   type = 'text'},
         { column = 'entrance',   type = 'text'},
@@ -28,7 +30,7 @@ tables.indoor_line = osm2pgsql.define_table({
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'name',     type = 'text' },
-        { column = 'layer',   type = 'int', not_null = true },
+        { column = 'layer',   type = 'int', not_null = false },
         { column = 'level',   type = 'text'},
         { column = 'room',   type = 'text'},
         { column = 'entrance',   type = 'text'},
@@ -47,7 +49,7 @@ tables.indoor_polygon = osm2pgsql.define_table({
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'name',     type = 'text' },
-        { column = 'layer',   type = 'int', not_null = true },
+        { column = 'layer',   type = 'int', not_null = false },
         { column = 'level',   type = 'text'},
         { column = 'room',   type = 'text'},
         { column = 'entrance',   type = 'text'},
@@ -58,19 +60,6 @@ tables.indoor_polygon = osm2pgsql.define_table({
     }
 })
 
-function parse_layer_value(input)
-    if not input then
-        -- We want default value set for all features in Pg
-        return 0
-    end
-
-    local layer = tonumber(input)
-
-    if layer then
-        return layer
-    end
-
-end
 
 
 function indoor_process_node(object)
@@ -150,15 +139,6 @@ function indoor_process_way(object)
 end
 
 
--- deep_copy based on copy2: https://gist.github.com/tylerneylon/81333721109155b2d244
-function deep_copy(obj)
-    if type(obj) ~= 'table' then return obj end
-    local res = setmetatable({}, getmetatable(obj))
-    for k, v in pairs(obj) do res[deep_copy(k)] = deep_copy(v) end
-    return res
-end
-
-
 if osm2pgsql.process_node == nil then
     -- Change function name here
     osm2pgsql.process_node = indoor_process_node
@@ -171,7 +151,6 @@ else
         indoor_process_node(object_copy)
     end
 end
-
 
 
 if osm2pgsql.process_way == nil then
