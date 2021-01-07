@@ -96,3 +96,29 @@ osm2pgsql --slim --drop \
     -d pgosm \
     ~/tmp/district-of-columbia-latest.osm.pbf
 ```
+
+## Dump and reload data
+
+To move data loaded on one Postgres instance to another, use `pg_dump`.
+
+Create a directory to export.  Using `-Fd` for directory format to allow using
+`pg_dump`/`pg_restore` with multiple processes (`-j 8`).  For the small data set for
+Washington D.C. used here this isn't necessary, though can seriously speed up with larger areas, e.g. Europe or North America.
+
+```bash
+mkdir -p ~/tmp/osm_dc
+pg_dump --no-owner --no-privileges --schema=osm \
+    -d pgosm \
+    -Fd -j 8 \
+    -f ~/tmp/osm_dc
+tar -cvf osm_dc.tar -C ~/tmp osm_dc
+```
+
+Move the `.tar`.  Untar and restore.
+
+```bash
+tar -xvf osm_eu.tar
+pg_restore -j 8 -d pgosm_eu -Fd osm_eu/
+```
+
+
