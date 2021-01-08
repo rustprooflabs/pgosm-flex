@@ -6,7 +6,7 @@ local json = require('dkjson')
 
 local tags_table = osm2pgsql.define_table{
     name = "tags",
-    schema = 'osm',
+    schema = schema_name,
     -- This will generate a column "osm_id INT8" for the id, and a column
     -- "geom_type CHAR(1)" for the type of object: N(ode), W(way), R(relation)
     ids = { type = 'any', id_column = 'osm_id', type_column = 'geom_type' },

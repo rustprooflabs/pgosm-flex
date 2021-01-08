@@ -1,12 +1,10 @@
 require "helpers"
 
-local srid = 3857
-
 local tables = {}
 
 tables.indoor_point = osm2pgsql.define_table({
     name = 'indoor_point',
-    schema = 'osm',
+    schema = schema_name,
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
@@ -25,7 +23,7 @@ tables.indoor_point = osm2pgsql.define_table({
 
 tables.indoor_line = osm2pgsql.define_table({
     name = 'indoor_line',
-    schema = 'osm',
+    schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
@@ -44,7 +42,7 @@ tables.indoor_line = osm2pgsql.define_table({
 
 tables.indoor_polygon = osm2pgsql.define_table({
     name = 'indoor_polygon',
-    schema = 'osm',
+    schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },

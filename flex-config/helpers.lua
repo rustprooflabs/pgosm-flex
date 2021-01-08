@@ -1,3 +1,24 @@
+-- helpers.lua provides commonly used functions 
+-- and sets customizable params, e.g. SRID and schema name.
+
+
+local srid_env = os.getenv("PGOSM_SRID")
+if srid_env then
+    srid = srid_env
+    print('Custom SRID: ' .. srid)
+else
+    srid = 3857
+    print('Default SRID: ' .. srid)
+end
+
+local schema_env = os.getenv("PGOSM_SCHEMA")
+if schema_env then
+    schema_name = schema_env
+    print('Custom Schema: ' .. schema_name)
+else
+    schema_name = 'osm'
+    print('Default Schema: ' .. schema_name)
+end
 
 
 -- deep_copy based on copy2: https://gist.github.com/tylerneylon/81333721109155b2d244

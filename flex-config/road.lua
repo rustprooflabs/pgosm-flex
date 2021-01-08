@@ -1,13 +1,10 @@
 require "helpers"
 
--- Change SRID if desired
-local srid = 3857
-
 local tables = {}
 
 tables.road_line = osm2pgsql.define_table({
     name = 'road_line',
-    schema = 'osm',
+    schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
