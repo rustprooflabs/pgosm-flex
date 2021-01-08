@@ -1,0 +1,5 @@
+%syntax-version=1.0.0
+%project=pgosm-flex
+%uri=https://github.com/rustprooflabs/pgosm-flex
+
+001 2021-01-07T23:50:19Z Ryan Lambert <ryan@rustprooflabs.com> # Initial structure for road lookup
