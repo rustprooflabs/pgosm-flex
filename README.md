@@ -23,6 +23,40 @@ A few decisions made in this project:
 * Data not deemed worthy of a dedicated column goes in side table `osm.tags`. Raw key/value data stored in `JSONB` column
 * Points, Lines, and Polygons are not mixed in a single table
 
+## Versions Supported
+
+Requires Postgres 12+ and PostGIS 3.0.
+
+## Clone and setup
+
+Switch to the `postgres` user and clone the PgOSM repo.
+
+```bash
+sudo su - postgres
+mkdir ~/git
+cd ~/git
+git clone https://github.com/rustprooflabs/pgosm-flex.git
+```
+
+## Deploy schema and load helper data
+
+Deploying the table structure is done via [sqitch](https://sqitch.org/).
+Assumes DB name is `pgosm`.
+
+```bash
+cd ~/git/pgosm-flex/db
+sqitch deploy db:pg:pgosm
+```
+
+**Optional** - Load helper road data.
+
+```bash
+cd ~/git/pgosm-flex/db
+psql -d pgosm -f data/roads-us.sql
+```
+
+
+Currently only U.S. region drafted, more regions with local `maxspeed` are welcome via PR!
 
 
 ## Load main tables
