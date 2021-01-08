@@ -1,8 +1,5 @@
 require "helpers"
 
--- Change SRID if desired
-local srid = 3857
-
 local tables = {}
 
 -- Rows with any of the following keys will be treated as possible infrastructure
@@ -19,7 +16,7 @@ local is_infrastructure = make_check_in_list_func(infrastructure_keys)
 
 tables.infrastructure_point = osm2pgsql.define_table({
     name = 'infrastructure_point',
-    schema = 'osm',
+    schema = schema_name,
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },

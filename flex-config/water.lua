@@ -1,12 +1,10 @@
 require "helpers"
 
-local srid = 3857
-
 local tables = {}
 
 tables.water_point = osm2pgsql.define_table({
     name = 'water_point',
-    schema = 'osm',
+    schema = schema_name,
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
@@ -23,7 +21,7 @@ tables.water_point = osm2pgsql.define_table({
 
 tables.water_line = osm2pgsql.define_table({
     name = 'water_line',
-    schema = 'osm',
+    schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
@@ -40,7 +38,7 @@ tables.water_line = osm2pgsql.define_table({
 
 tables.water_polygon = osm2pgsql.define_table({
     name = 'water_polygon',
-    schema = 'osm',
+    schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },

@@ -1,14 +1,11 @@
 require "helpers"
 
--- Change SRID if desired
-local srid = 3857
-
 local tables = {}
 
 
 tables.natural_point = osm2pgsql.define_table({
     name = 'natural_point',
-    schema = 'osm',
+    schema = schema_name,
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
@@ -21,7 +18,7 @@ tables.natural_point = osm2pgsql.define_table({
 
 tables.natural_line = osm2pgsql.define_table({
     name = 'natural_line',
-    schema = 'osm',
+    schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
@@ -34,7 +31,7 @@ tables.natural_line = osm2pgsql.define_table({
 
 tables.natural_polygon = osm2pgsql.define_table({
     name = 'natural_polygon',
-    schema = 'osm',
+    schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },

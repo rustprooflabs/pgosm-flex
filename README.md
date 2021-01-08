@@ -77,6 +77,34 @@ Run matching SQL scripts.
 psql -d pgosm -f ./run-all.sql
 ```
 
+## Customize PgOSM
+
+Some behavior can be customized at run time with the use of environment variables.
+Current environment variables:
+
+* `PGOSM_SRID`
+* `PGOSM_SCHEMA`
+
+
+To use SRID 4326 and the `osm_custom` schema:
+
+```bash
+export PGOSM_SRID=4326
+export PGOSM_SCHEMA=osm_custom
+```
+
+Changes reflected in output printed.
+
+```bash
+2021-01-08 15:01:15  osm2pgsql version 1.4.0 (1.4.0-72-gc3eb0fb6)
+2021-01-08 15:01:15  Database version: 13.1 (Ubuntu 13.1-1.pgdg20.10+1)
+2021-01-08 15:01:15  Node-cache: cache=800MB, maxblocks=12800*65536, allocation method=11
+Custom SRID: 4326
+Custom Schema: osm_custom
+...
+```
+
+
 
 ## Load main tables, No Tags
 

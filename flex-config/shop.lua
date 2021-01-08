@@ -1,12 +1,10 @@
 require "helpers"
 
-local srid = 3857
-
 local tables = {}
 
 tables.shop_point = osm2pgsql.define_table({
     name = 'shop_point',
-    schema = 'osm',
+    schema = schema_name,
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
@@ -28,7 +26,7 @@ tables.shop_point = osm2pgsql.define_table({
 
 tables.shop_polygon = osm2pgsql.define_table({
     name = 'shop_polygon',
-    schema = 'osm',
+    schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },

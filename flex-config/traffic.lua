@@ -1,14 +1,11 @@
 require "helpers"
 
--- Change SRID if desired
-local srid = 3857
-
 local tables = {}
 
 
 tables.traffic_point = osm2pgsql.define_table({
     name = 'traffic_point',
-    schema = 'osm',
+    schema = schema_name,
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
@@ -20,7 +17,7 @@ tables.traffic_point = osm2pgsql.define_table({
 
 tables.traffic_line = osm2pgsql.define_table({
     name = 'traffic_line',
-    schema = 'osm',
+    schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
@@ -32,7 +29,7 @@ tables.traffic_line = osm2pgsql.define_table({
 
 tables.traffic_polygon = osm2pgsql.define_table({
     name = 'traffic_polygon',
-    schema = 'osm',
+    schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },

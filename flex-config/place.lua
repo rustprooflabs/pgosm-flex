@@ -1,14 +1,11 @@
 require "helpers"
 
--- Change SRID if desired
-local srid = 3857
-
 local tables = {}
 
 
 tables.place_point = osm2pgsql.define_table({
     name = 'place_point',
-    schema = 'osm',
+    schema = schema_name,
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
@@ -19,7 +16,7 @@ tables.place_point = osm2pgsql.define_table({
 
 tables.place_line = osm2pgsql.define_table({
     name = 'place_line',
-    schema = 'osm',
+    schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
@@ -31,7 +28,7 @@ tables.place_line = osm2pgsql.define_table({
 
 tables.place_polygon = osm2pgsql.define_table({
     name = 'place_polygon',
-    schema = 'osm',
+    schema = schema_name,
     ids = { type = 'area', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
