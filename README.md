@@ -85,6 +85,7 @@ Current environment variables:
 * `PGOSM_SRID`
 * `PGOSM_SCHEMA`
 
+> WARNING:  Customizing the schema name will cause the `.sql` scripts to break.
 
 To use SRID 4326 and the `osm_custom` schema:
 

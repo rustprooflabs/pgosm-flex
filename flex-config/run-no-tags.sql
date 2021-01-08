@@ -8,3 +8,4 @@
 \i water.sql
 \i indoor.sql
 \i shop.sql
+\i amenity.sql
