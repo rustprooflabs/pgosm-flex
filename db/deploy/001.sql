@@ -21,6 +21,12 @@ CREATE TABLE pgosm.road
 
 
 COMMENT ON TABLE pgosm.road IS 'Provides lookup information for road layers, generally related to routing use cases.';
-
+COMMENT ON COLUMN pgosm.road.region IS 'Allows defining different definitions based on region.  Can be custom defined.';
+COMMENT ON COLUMN pgosm.road.osm_type IS 'Value from highway tags.';
+COMMENT ON COLUMN pgosm.road.route_motor IS 'Used to filter for classifications that typically allow motorized traffic.';
+COMMENT ON COLUMN pgosm.road.route_foot IS 'Used to filter for classifications that typically allow foot traffic.';
+COMMENT ON COLUMN pgosm.road.route_cycle IS 'Used to filter for classifications that typically allow bicycle traffic.';
+COMMENT ON COLUMN pgosm.road.maxspeed IS 'Maxspeed in km/hr';
+COMMENT ON COLUMN pgosm.road.maxspeed_mph IS 'Maxspeed in mph';
 
 COMMIT;
