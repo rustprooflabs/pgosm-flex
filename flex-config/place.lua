@@ -9,6 +9,8 @@ tables.place_point = osm2pgsql.define_table({
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'boundary',     type = 'text' },
+        { column = 'admin_level',     type = 'text' },
         { column = 'name',     type = 'text' },
         { column = 'geom',     type = 'point' , projection = srid},
     }
@@ -20,6 +22,8 @@ tables.place_line = osm2pgsql.define_table({
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'boundary',     type = 'text' },
+        { column = 'admin_level',     type = 'text' },
         { column = 'name',     type = 'text' },
         { column = 'geom',     type = 'linestring' , projection = srid},
     }
@@ -32,6 +36,8 @@ tables.place_polygon = osm2pgsql.define_table({
     ids = { type = 'area', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'boundary',     type = 'text' },
+        { column = 'admin_level',     type = 'text' },
         { column = 'name',     type = 'text' },
         { column = 'geom',     type = 'multipolygon' , projection = srid},
     }
@@ -39,40 +45,71 @@ tables.place_polygon = osm2pgsql.define_table({
 
 
 function place_process_node(object)
-    if not object.tags.place then
+    if not object.tags.place
+        and not object.tags.boundary
+        and not object.tags.admin_level then
         return
     end
 
-    -- Using grab_tag() removes from remaining key/value saved to Pg
-    local osm_type = object:grab_tag('place')
+    local osm_type
+
+    if object.tags.place then
+        osm_type = object:grab_tag('place')
+    elseif object.tags.boundary then
+        osm_type = 'boundary'
+    elseif object.tags.admin_level then
+        osm_type = 'admin_level'
+    end
+    
+    local boundary = object:grab_tag('boundary')
+    local admin_level = object:grab_tag('admin_level')
     local name = object:grab_tag('name')
 
     tables.place_point:add_row({
         osm_type = osm_type,
+        boundary = boundary,
+        admin_level = admin_level,
         name = name,
         geom = { create = 'point' }
     })
 
 end
 
--- Change function name here
+
 function place_process_way(object)
-    if not object.tags.place then
+    if not object.tags.place
+        and not object.tags.boundary
+        and not object.tags.admin_level
+        then
         return
     end
 
-    local osm_type = object:grab_tag('place')
+    if object.tags.place then
+        osm_type = object:grab_tag('place')
+    elseif object.tags.boundary then
+        osm_type = 'boundary'
+    elseif object.tags.admin_level then
+        osm_type = 'admin_level'
+    end
+    
+
+    local boundary = object:grab_tag('boundary')
+    local admin_level = object:grab_tag('admin_level')
     local name = object:grab_tag('name')
 
     if object.is_closed then
         tables.place_polygon:add_row({
             osm_type = osm_type,
+            boundary = boundary,
+            admin_level = admin_level,
             name = name,
             geom = { create = 'area' }
         })
     else
         tables.place_line:add_row({
             osm_type = osm_type,
+            boundary = boundary,
+            admin_level = admin_level,
             name = name,
             geom = { create = 'line' }
         })
@@ -82,16 +119,31 @@ end
 
 
 function place_process_relation(object)
-    if not object.tags.place then
+    if not object.tags.place
+        and not object.tags.boundary
+        and not object.tags.admin_level
+        then
         return
     end
 
-    local osm_type = object:grab_tag('place')
+    if object.tags.place then
+        osm_type = object:grab_tag('place')
+    elseif object.tags.boundary then
+        osm_type = 'boundary'
+    elseif object.tags.admin_level then
+        osm_type = 'admin_level'
+    end
+    
+
+    local boundary = object:grab_tag('boundary')
+    local admin_level = object:grab_tag('admin_level')
     local name = object:grab_tag('name')
 
     if object.tags.type == 'multipolygon' or object.tags.type == 'boundary' then
         tables.place_polygon:add_row({
             osm_type = osm_type,
+            boundary = boundary,
+            admin_level = admin_level,
             name = name,
             geom = { create = 'area' }
         })
