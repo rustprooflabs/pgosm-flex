@@ -10,3 +10,4 @@
 \i shop.sql
 \i amenity.sql
 \i landuse.sql
+\i leisure.sql
