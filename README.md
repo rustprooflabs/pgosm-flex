@@ -212,5 +212,13 @@ current layer definitions.
 │ roof:colour                            │  11115 │
 ```
 
+## Adding new feature layers
 
+Checklist for feature layers:
+
+* Create `<feature>.lua`
+* Create `<feature>.sql`
+* Update `run-no-tags.lua`
+* Update `run-no-tags.sql`
+* Update `db/qc/features_not_in_run_all.sql`
 
