@@ -27,21 +27,13 @@ A few decisions made in this project:
 
 Requires Postgres 12+ and PostGIS 3.0.
 
-## Clone and setup
-
-Switch to the `postgres` user and clone the PgOSM repo.
-
-```bash
-sudo su - postgres
-mkdir ~/git
-cd ~/git
-git clone https://github.com/rustprooflabs/pgosm-flex.git
-```
 
 ## Deploy schema and load helper data
 
 Deploying the table structure is done via [sqitch](https://sqitch.org/).
-Assumes DB name is `pgosm`.
+
+Assumes this repo is cloned under `~/git/pgosm-flex/` and a local Postgres
+DB named `pgosm` has been created with the `postgis` extension installed.
 
 ```bash
 cd ~/git/pgosm-flex/db
@@ -87,11 +79,10 @@ Current environment variables:
 
 > WARNING:  Customizing the schema name will cause the `.sql` scripts to break.
 
-To use SRID 4326 and the `osm_custom` schema:
+To use SRID 4326:
 
 ```bash
 export PGOSM_SRID=4326
-export PGOSM_SCHEMA=osm_custom
 ```
 
 Changes reflected in output printed.
@@ -101,10 +92,9 @@ Changes reflected in output printed.
 2021-01-08 15:01:15  Database version: 13.1 (Ubuntu 13.1-1.pgdg20.10+1)
 2021-01-08 15:01:15  Node-cache: cache=800MB, maxblocks=12800*65536, allocation method=11
 Custom SRID: 4326
-Custom Schema: osm_custom
+Default Schema: osm
 ...
 ```
-
 
 
 ## Load main tables, No Tags
@@ -129,9 +119,10 @@ psql -d pgosm -f ./run-no-tags.sql
 ```
 
 
-## Load individual layers
+## Load individual layer
 
-Individual layers can be added with commands such as this.
+A single layer can be added with commands such as this.  Each `.lua` script and matchi
+`.sql` script is intended to be a standalone, or combined with others.
 
 ```bash
 osm2pgsql --slim --drop \
@@ -147,11 +138,13 @@ psql -d pgosm -f ./road_major.sql
 
 ## One table to rule them all
 
-Load the `unitable.lua` script to make the full OpenStreetMap data set available in one table.  This could be helpful for exploring the data when you don't really know what you are
-looking for.
+Load the `unitable.lua` script to make the full OpenStreetMap data set available in one 
+table.  This violates all sorts of best practices established in this project by shoving all features into a single
+unstructured table.  However, this table is helpful for exploring the full data set
+when you don't really know what you are looking for, but you know **where** you are 
+looking.  It is also helpful for exploring the full gambit of tags and geometries.
 
-Adapted from https://github.com/openstreetmap/osm2pgsql/blob/master/flex-config/unitable.lua
-to use JSONB instead of HSTORE.
+> The `unitable.lua` script include in PgOSM-Flex was [adapted from the example from osm2pgsql](https://github.com/openstreetmap/osm2pgsql/blob/master/flex-config/unitable.lua) to use JSONB instead of HSTORE and take advantage of `helpers.lua` to easily change SRID.
 
 ```bash
 osm2pgsql --slim --drop \

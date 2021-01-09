@@ -9,6 +9,8 @@
 -- Includes tags in JSONB (does not rely on all_tags.lua)
 -- Does NOT include deep copy for easy use with "require" like other scripts in this project.
 --
+require "helpers"
+
 local json = require('dkjson')
 
 -- Single table that can take any OSM object and any geometry.
