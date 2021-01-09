@@ -80,6 +80,19 @@ DELETE FROM osm_missing m
             WHERE m.osm_id = i.osm_id AND m.geom_type = 'N'
 );
 
+DELETE FROM osm_missing m
+    WHERE EXISTS (
+        SELECT 1
+            FROM osm.landuse_point i
+            WHERE m.osm_id = i.osm_id AND m.geom_type = 'N'
+);
+
+DELETE FROM osm_missing m
+    WHERE EXISTS (
+        SELECT 1
+            FROM osm.leisure_point i
+            WHERE m.osm_id = i.osm_id AND m.geom_type = 'N'
+);
 
 
 
@@ -193,6 +206,22 @@ DELETE FROM osm_missing m
             FROM osm.water_polygon i
             WHERE m.osm_id = i.osm_id AND m.geom_type = 'W'
 );
+
+DELETE FROM osm_missing m
+    WHERE EXISTS (
+        SELECT 1
+            FROM osm.landuse_polygon i
+            WHERE m.osm_id = i.osm_id AND m.geom_type = 'W'
+);
+
+DELETE FROM osm_missing m
+    WHERE EXISTS (
+        SELECT 1
+            FROM osm.leisure_polygon i
+            WHERE m.osm_id = i.osm_id AND m.geom_type = 'W'
+);
+
+
 
 
 WITH missing_tags AS (

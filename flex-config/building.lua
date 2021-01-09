@@ -139,13 +139,6 @@ function building_process_way(object)
 
 end
 
--- deep_copy based on copy2: https://gist.github.com/tylerneylon/81333721109155b2d244
-function deep_copy(obj)
-    if type(obj) ~= 'table' then return obj end
-    local res = setmetatable({}, getmetatable(obj))
-    for k, v in pairs(obj) do res[deep_copy(k)] = deep_copy(v) end
-    return res
-end
 
 
 if osm2pgsql.process_way == nil then
