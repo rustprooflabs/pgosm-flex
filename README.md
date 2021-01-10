@@ -54,7 +54,6 @@ Currently only U.S. region drafted, more regions with local `maxspeed` are welco
 ## Load main tables
 
 The list of main tables in PgOSM-Flex will continue to grow.
-The only layer intentionally excluded from the `run-all` script is `unitable.lua`.
 
 ```bash
 osm2pgsql --slim --drop \
@@ -68,6 +67,9 @@ Run matching SQL scripts.
 ```bash
 psql -d pgosm -f ./run-all.sql
 ```
+
+> Note: The `run-all` scripts exclude `unitable` and `road_major`.
+
 
 ## Customize PgOSM
 

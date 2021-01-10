@@ -168,13 +168,6 @@ DELETE FROM osm_missing m
 DELETE FROM osm_missing m
     WHERE EXISTS (
         SELECT 1
-            FROM osm.road_major i
-            WHERE m.osm_id = i.osm_id AND m.geom_type = 'W'
-);
-
-DELETE FROM osm_missing m
-    WHERE EXISTS (
-        SELECT 1
             FROM osm.shop_polygon i
             WHERE m.osm_id = i.osm_id AND m.geom_type = 'W'
 );
