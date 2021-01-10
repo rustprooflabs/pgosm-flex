@@ -46,57 +46,33 @@ function make_check_in_list_func(list)
     end
 end
 
--- parses height tag, units in meters
-function parse_height(input)
+
+-- Parse a tag value like "1800", "1955 m" or "8001 ft" and return a number in meters
+function parse_to_meters(input)
     if not input then
         return nil
     end
 
-    local height = tonumber(input)
+    local num1 = tonumber(input)
 
-    -- If height is just a number, it is in meters, just return it
-    if height then
-        return height
+    -- If num1 is a number, it is in meters
+    if num1 then
+        return num1
+    end
+
+    -- If there is an 'm ' at the end, strip off and return number
+    if input:sub(-1) == 'm' then
+        local num2 = tonumber(input:sub(1, -2))
+        if num2 then
+            return num2
+        end
     end
 
     -- If there is an 'ft' at the end, convert to meters and return
     if input:sub(-2) == 'ft' then
-        local num = tonumber(input:sub(1, -3))
-        if num then
-            return num * 0.3048
-        end
-    end
-
-    return nil
-end
-
-
--- Parse an ele value like "1800", "1955 m" or "8001 ft" and return a number in meters
-function parse_ele(input)
-    if not input then
-        return nil
-    end
-
-    local ele = tonumber(input)
-
-    -- If ele is just a number, it is in meters, so just return it
-    if ele then
-        return ele
-    end
-
-    -- If there is an 'm ' at the end, strip off and return
-    if input:sub(-1) == 'm' then
-        local num = tonumber(input:sub(1, -2))
-        if num then
-            return num
-        end
-    end
-
-    -- If there is an 'ft' at the end, strip off and return
-    if input:sub(-2) == 'ft' then
-        local num = tonumber(input:sub(1, -3))
-        if num then
-            return math.floor(num * 0.3048)
+        local num3 = tonumber(input:sub(1, -3))
+        if num3 then
+            return num3 * 0.3048
         end
     end
 

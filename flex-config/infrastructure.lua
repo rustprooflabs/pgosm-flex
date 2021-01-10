@@ -39,8 +39,8 @@ function infrastructure_process_node(object)
     end
 
     local name = object:grab_tag('name')
-    local ele = parse_ele(object.tags.ele)
-    local height = parse_height(object.tags['height'])
+    local ele = parse_to_meters(object.tags.ele)
+    local height = parse_to_meters(object.tags['height'])
     local operator = object.tags.operator
 
     if object.tags.amenity == 'fire_hydrant'
