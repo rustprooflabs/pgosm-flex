@@ -45,11 +45,21 @@ tables.building_polygon = osm2pgsql.define_table({
 
 
 function building_process_node(object)
-    if not object.tags.building then
+    if not object.tags.building
+            and not object.tags['building:part']
+            then
         return
     end
 
-    local osm_type = object:grab_tag('building')
+    local osm_type
+    if object.tags.building then
+        osm_type = object:grab_tag('building')
+    elseif object.tags['building:part'] then
+        osm_type = 'building_part'
+    else
+        osm_type = 'unknown'
+    end
+
     local name = object:grab_tag('name')
     local street = object:grab_tag('addr:street')
     local city = object:grab_tag('addr:city')
@@ -79,7 +89,9 @@ end
 
 
 function building_process_way(object)
-    if not object.tags.building then
+    if not object.tags.building
+            and not object.tags['building:part']
+            then
         return
     end
 
@@ -87,8 +99,15 @@ function building_process_way(object)
         return
     end
 
-    -- Using grab_tag() removes from remaining key/value saved to Pg
-    local osm_type = object:grab_tag('building')
+    local osm_type
+    if object.tags.building then
+        osm_type = object:grab_tag('building')
+    elseif object.tags['building:part'] then
+        osm_type = 'building_part'
+    else
+        osm_type = 'unknown'
+    end
+
     local name = object:grab_tag('name')
     local street = object:grab_tag('addr:street')
     local city = object:grab_tag('addr:city')
