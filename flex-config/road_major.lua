@@ -8,6 +8,7 @@ tables.road_major = osm2pgsql.define_table({
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'major',   type = 'boolean', not_null = true},
         { column = 'name',     type = 'text' },
         { column = 'ref',     type = 'text' },
         { column = 'maxspeed', type = 'int' },
@@ -24,20 +25,11 @@ function road_major_process_way(object)
     end
 
     -- Only major highways
-    if not (object.tags.highway == 'motorway'
-            or object.tags.highway == 'motorway_link'
-            or object.tags.highway == 'primary'
-            or object.tags.highway == 'primary_link'
-            or object.tags.highway == 'secondary'
-            or object.tags.highway == 'secondary_link'
-            or object.tags.highway == 'tertiary'
-            or object.tags.highway == 'tertiary_link'
-            or object.tags.highway == 'trunk'
-            or object.tags.highway == 'trunk_link')
-            then
+    if not major_road(object.tags.highway) then
         return
     end
 
+    local major = true
     -- Using grab_tag() removes from remaining key/value saved to Pg
     local name = object:grab_tag('name')
     local osm_type = object:grab_tag('highway')
@@ -50,6 +42,7 @@ function road_major_process_way(object)
         osm_type = osm_type,
         ref = ref,
         maxspeed = maxspeed,
+        major = major,
         geom = { create = 'line' }
     })
 

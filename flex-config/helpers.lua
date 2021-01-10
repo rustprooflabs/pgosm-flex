@@ -121,3 +121,24 @@ function parse_layer_value(input)
     -- Fallback
     return 0
 end
+
+
+-- Checks highway tag to determine if major road or not.
+function major_road(highway)
+    if (highway == 'motorway'
+        or highway == 'motorway_link'
+        or highway == 'primary'
+        or highway == 'primary_link'
+        or highway == 'secondary'
+        or highway == 'secondary_link'
+        or highway == 'tertiary'
+        or highway == 'tertiary_link'
+        or highway == 'trunk'
+        or highway == 'trunk_link')
+            then
+        return true
+    end
+
+    return false
+
+    end

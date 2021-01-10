@@ -8,6 +8,7 @@ tables.road_line = osm2pgsql.define_table({
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'major',   type = 'boolean', not_null = true},
         { column = 'name',     type = 'text' },
         { column = 'ref',     type = 'text' },
         { column = 'maxspeed', type = 'int' },
@@ -32,12 +33,15 @@ function road_process_way(object)
 
     oneway = object:grab_tag('oneway') or 0
 
+    local major = major_road(osm_type)
+
     tables.road_line:add_row({
         name = name,
         osm_type = osm_type,
         ref = ref,
         maxspeed = maxspeed,
         oneway = oneway,
+        major = major,
         geom = { create = 'line' }
     })
 

@@ -2,7 +2,7 @@ COMMENT ON TABLE osm.road_line IS 'OpenStreetMap roads, full layer.  Generated b
 COMMENT ON COLUMN osm.road_line.osm_type IS 'Value from "highway" key from OpenStreetMap data.  e.g. motorway, residential, service, footway, etc.';
 
 COMMENT ON COLUMN osm.road_line.maxspeed IS 'Maximum posted speed limit in kilometers per hour (km/kr).  Units not enforced by OpenStreetMap.  Please fix values in MPH in OpenStreetMap.org to either the value in km/hr OR with the suffix "mph" so it can be properly converted.  See https://wiki.openstreetmap.org/wiki/Key:maxspeed';
-COMMENT ON COLUMN osm.road_major.maxspeed IS 'Maximum posted speed limit in kilometers per hour (km/kr).  Units not enforced by OpenStreetMap.  Please fix values in MPH in OpenStreetMap.org to either the value in km/hr OR with the suffix "mph" so it can be properly converted.  See https://wiki.openstreetmap.org/wiki/Key:maxspeed';
+COMMENT ON COLUMN osm.road_line.major IS 'Indicates feature is a "major" road, classification handled by helpers.major_road().';
 
 
 ALTER TABLE osm.road_line
@@ -12,3 +12,9 @@ ALTER TABLE osm.road_line
 
 
 CREATE INDEX ix_osm_road_line_highway ON osm.road_line (osm_type);
+
+-- Standard use case is to query WHERE major.
+--   Opting for partial index to maximize benefits.
+CREATE INDEX ix_osm_road_line_major
+	ON osm.road_line (major)
+	WHERE major;
