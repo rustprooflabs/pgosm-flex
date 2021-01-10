@@ -55,7 +55,6 @@ function landuse_process_way(object)
         return
     end
 
-    -- Using grab_tag() removes from remaining key/value saved to Pg
     local osm_type = object:grab_tag('landuse')
     local name = object:grab_tag('name')
 
@@ -65,7 +64,24 @@ function landuse_process_way(object)
         geom = { create = 'area' }
     })
 
+end
 
+
+function landuse_process_relation(object)
+    if not object.tags.landuse then
+        return
+    end
+
+    local osm_type = object:grab_tag('landuse')
+    local name = object:grab_tag('name')
+
+    if object.tags.type == 'multipolygon' or object.tags.type == 'boundary' then
+        tables.landuse_polygon:add_row({
+            osm_type = osm_type,
+            name = name,
+            geom = { create = 'area' }
+        })
+    end
 end
 
 
@@ -93,5 +109,17 @@ else
         nested(object)
         -- Change function name here
         landuse_process_way(object_copy)
+    end
+end
+
+
+if osm2pgsql.process_relation == nil then
+    osm2pgsql.process_relation = landuse_process_relation
+else
+    local nested = osm2pgsql.process_relation
+    osm2pgsql.process_relation = function(object)
+        local object_copy = deep_copy(object)
+        nested(object)
+        landuse_process_relation(object_copy)
     end
 end
