@@ -9,6 +9,10 @@ tables.amenity_point = osm2pgsql.define_table({
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'name',     type = 'text' },
+        { column = 'housenumber', type = 'text'},
+        { column = 'street',     type = 'text' },
+        { column = 'city',     type = 'text' },
+        { column = 'state', type = 'text'},
         { column = 'geom',     type = 'point' , projection = srid},
     }
 })
@@ -20,6 +24,10 @@ tables.amenity_line = osm2pgsql.define_table({
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'name',     type = 'text' },
+        { column = 'housenumber', type = 'text'},
+        { column = 'street',     type = 'text' },
+        { column = 'city',     type = 'text' },
+        { column = 'state', type = 'text'},
         { column = 'geom',     type = 'linestring' , projection = srid},
     }
 })
@@ -32,6 +40,10 @@ tables.amenity_polygon = osm2pgsql.define_table({
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'name',     type = 'text' },
+        { column = 'housenumber', type = 'text'},
+        { column = 'street',     type = 'text' },
+        { column = 'city',     type = 'text' },
+        { column = 'state', type = 'text'},
         { column = 'geom',     type = 'multipolygon' , projection = srid},
     }
 })
@@ -46,9 +58,18 @@ function amenity_process_node(object)
     local osm_type = object:grab_tag('amenity')
     local name = object:grab_tag('name')
 
+    local housenumber  = object:grab_tag('addr:housenumber')
+    local street = object:grab_tag('addr:street')
+    local city = object:grab_tag('addr:city')
+    local state = object:grab_tag('addr:state')
+
     tables.amenity_point:add_row({
         osm_type = osm_type,
         name = name,
+        housenumber = housenumber,
+        street = street,
+        city = city,
+        state = state,
         geom = { create = 'point' }
     })
 
@@ -63,16 +84,29 @@ function amenity_process_way(object)
     local osm_type = object:grab_tag('amenity')
     local name = object:grab_tag('name')
 
+    local housenumber  = object:grab_tag('addr:housenumber')
+    local street = object:grab_tag('addr:street')
+    local city = object:grab_tag('addr:city')
+    local state = object:grab_tag('addr:state')
+
     if object.is_closed then
         tables.amenity_polygon:add_row({
             osm_type = osm_type,
             name = name,
+            housenumber = housenumber,
+            street = street,
+            city = city,
+            state = state,
             geom = { create = 'area' }
         })
     else
         tables.amenity_line:add_row({
             osm_type = osm_type,
             name = name,
+            housenumber = housenumber,
+            street = street,
+            city = city,
+            state = state,
             geom = { create = 'line' }
         })
     end
