@@ -8,7 +8,6 @@ tables.road_point = osm2pgsql.define_table({
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'major',   type = 'boolean', not_null = true},
         { column = 'name',     type = 'text' },
         { column = 'ref',     type = 'text' },
         { column = 'maxspeed', type = 'int' },
@@ -55,7 +54,6 @@ function road_process_node(object)
     -- in km/hr
     local maxspeed = parse_speed(object.tags.maxspeed)
     local oneway = object:grab_tag('oneway') or 0
-    local major = major_road(osm_type)
     local layer = parse_layer_value(object.tags.layer)
     local tunnel = object:grab_tag('tunnel')
     local bridge = object:grab_tag('bridge')
@@ -66,7 +64,6 @@ function road_process_node(object)
         ref = ref,
         maxspeed = maxspeed,
         oneway = oneway,
-        major = major,
         layer = layer,
         tunnel = tunnel,
         bridge = bridge,

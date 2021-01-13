@@ -2,6 +2,11 @@ COMMENT ON TABLE osm.road_major IS 'OpenStreetMap roads - Major only. Classifica
 COMMENT ON COLUMN osm.road_major.osm_type IS 'Value from "highway" key from OpenStreetMap data.  e.g. motorway, residential, etc.';
 COMMENT ON COLUMN osm.road_major.maxspeed IS 'Maximum posted speed limit in kilometers per hour (km/kr).  Units not enforced by OpenStreetMap.  Please fix values in MPH in OpenStreetMap.org to either the value in km/hr OR with the suffix "mph" so it can be properly converted.  See https://wiki.openstreetmap.org/wiki/Key:maxspeed';
 
+COMMENT ON COLUMN osm.road_major.layer IS 'Vertical ordering layer (Z) to handle crossing/overlapping features. "All ways without an explicit value are assumed to have layer 0." - per Wiki - https://wiki.openstreetmap.org/wiki/Key:layer';
+COMMENT ON COLUMN osm.road_major.bridge IS 'If empty, assume not a bridge.  If not empty, check value for details.';
+COMMENT ON COLUMN osm.road_major.tunnel IS 'If empty, assume not a tunnel.  If not empty, check value for details.';
+
+
 
 ALTER TABLE osm.road_major
 	ADD CONSTRAINT pk_osm_road_major_osm_id
