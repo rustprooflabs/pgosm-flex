@@ -25,30 +25,11 @@ A few decisions made in this project:
 
 ## Versions Supported
 
-Requires Postgres 12+ and PostGIS 3.0.
+Minimum versions supported:
 
-
-## Deploy schema and load helper data
-
-Deploying the table structure is done via [sqitch](https://sqitch.org/).
-
-Assumes this repo is cloned under `~/git/pgosm-flex/` and a local Postgres
-DB named `pgosm` has been created with the `postgis` extension installed.
-
-```bash
-cd ~/git/pgosm-flex/db
-sqitch deploy db:pg:pgosm
-```
-
-**Optional** - Load helper road data.
-
-```bash
-cd ~/git/pgosm-flex/db
-psql -d pgosm -f data/roads-us.sql
-```
-
-
-Currently only U.S. region drafted, more regions with local `maxspeed` are welcome via PR!
+* Postgres 12
+* PostGIS 3.0
+* osm2pgsql 1.4.0
 
 
 ## Load main tables
@@ -69,6 +50,21 @@ psql -d pgosm -f ./run-all.sql
 ```
 
 > Note: The `run-all` scripts exclude `unitable` and `road_major`.
+
+
+PgOSM-Flex tracks basic metadata in table ``osm.pgosm_flex``.
+
+
+```sql
+SELECT pgosm_flex_version, srid, project_url
+    FROM osm.pgosm_flex;
+```
+
+```bash
+pgosm_flex_version|srid|project_url                                |
+------------------|----|-------------------------------------------|
+0.0.6-dev         |3857|https://github.com/rustprooflabs/pgosm-flex|
+```
 
 
 ## Customize PgOSM
@@ -155,6 +151,7 @@ osm2pgsql --slim --drop \
     ~/tmp/district-of-columbia-latest.osm.pbf
 ```
 
+
 ## Dump and reload data
 
 To move data loaded on one Postgres instance to another, use `pg_dump`.
@@ -223,4 +220,38 @@ Checklist for feature layers:
 * Update `run-no-tags.lua`
 * Update `run-no-tags.sql`
 * Update `db/qc/features_not_in_run_all.sql`
+
+# Extras
+
+
+## Additional schema and helper data
+
+**Optional**
+
+Deploying the additional table structure is done via [sqitch](https://sqitch.org/).
+
+Assumes this repo is cloned under `~/git/pgosm-flex/` and a local Postgres
+DB named `pgosm` has been created with the `postgis` extension installed.
+
+```bash
+cd ~/git/pgosm-flex/db
+sqitch deploy db:pg:pgosm
+```
+
+- Load helper road data.
+
+```bash
+cd ~/git/pgosm-flex/db
+psql -d pgosm -f data/roads-us.sql
+```
+
+
+Currently only U.S. region drafted, more regions with local `maxspeed` are welcome via PR!
+
+## QGIS Styles
+
+**Optional**
+
+See [the README documenting using the QGIS styles](https://github.com/rustprooflabs/pgosm-flex/blob/main/db/qgis-style/README.md).
+
 
