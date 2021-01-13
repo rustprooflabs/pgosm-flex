@@ -252,6 +252,6 @@ Currently only U.S. region drafted, more regions with local `maxspeed` are welco
 
 **Optional**
 
-See [db/qgis-style/README.md](the QGIS Style README).
+See [the README documenting using the QGIS styles](https://github.com/rustprooflabs/pgosm-flex/blob/main/db/qgis-style/README.md).
 
 
