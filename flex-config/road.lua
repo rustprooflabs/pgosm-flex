@@ -13,6 +13,9 @@ tables.road_point = osm2pgsql.define_table({
         { column = 'ref',     type = 'text' },
         { column = 'maxspeed', type = 'int' },
         { column = 'oneway',     type = 'direction' },
+        { column = 'layer',   type = 'int', not_null = true },
+        { column = 'tunnel',     type = 'text' },
+        { column = 'bridge',     type = 'text' },
         { column = 'geom',     type = 'point', projection = srid }
     }
 })
@@ -30,6 +33,9 @@ tables.road_line = osm2pgsql.define_table({
         { column = 'ref',     type = 'text' },
         { column = 'maxspeed', type = 'int' },
         { column = 'oneway',     type = 'direction' },
+        { column = 'layer',   type = 'int', not_null = true },
+        { column = 'tunnel',     type = 'text' },
+        { column = 'bridge',     type = 'text' },
         { column = 'geom',     type = 'linestring', projection = srid }
     }
 })
@@ -45,10 +51,14 @@ function road_process_node(object)
     local name = object:grab_tag('name')
     local osm_type = object:grab_tag('highway')
     local ref = object:grab_tag('ref')
+
     -- in km/hr
     local maxspeed = parse_speed(object.tags.maxspeed)
     local oneway = object:grab_tag('oneway') or 0
     local major = major_road(osm_type)
+    local layer = parse_layer_value(object.tags.layer)
+    local tunnel = object:grab_tag('tunnel')
+    local bridge = object:grab_tag('bridge')
 
     tables.road_point:add_row({
         name = name,
@@ -57,6 +67,9 @@ function road_process_node(object)
         maxspeed = maxspeed,
         oneway = oneway,
         major = major,
+        layer = layer,
+        tunnel = tunnel,
+        bridge = bridge,
         geom = { create = 'point' }
     })
 
@@ -70,12 +83,14 @@ function road_process_way(object)
     local name = object:grab_tag('name')
     local osm_type = object:grab_tag('highway')
     local ref = object:grab_tag('ref')
+
     -- in km/hr
     local maxspeed = parse_speed(object.tags.maxspeed)
-
     local oneway = object:grab_tag('oneway') or 0
-
     local major = major_road(osm_type)
+    local layer = parse_layer_value(object.tags.layer)
+    local tunnel = object:grab_tag('tunnel')
+    local bridge = object:grab_tag('bridge')
 
     tables.road_line:add_row({
         name = name,
@@ -84,6 +99,9 @@ function road_process_way(object)
         maxspeed = maxspeed,
         oneway = oneway,
         major = major,
+        layer = layer,
+        tunnel = tunnel,
+        bridge = bridge,
         geom = { create = 'line' }
     })
 
