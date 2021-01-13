@@ -1,3 +1,4 @@
+require "pgosm-meta"
 require "road"
 require "building"
 require "natural"

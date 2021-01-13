@@ -1,3 +1,4 @@
+\i pgosm-meta.sql
 \i road.sql
 \i building.sql
 \i natural.sql
