@@ -35,7 +35,16 @@ Minimum versions supported:
 
 ## Load main tables
 
-The list of main tables in PgOSM-Flex will continue to grow.
+Create database, PostGIS extension and `osm` schema.
+
+```bash
+psql -c "CREATE DATABASE pgosm;"
+psql -d pgosm -c "CREATE EXTENSION postgis; CREATE SCHEMA osm;"
+```
+
+The `run-all.lua` script is a good starting point if you want the most complete set of OpenStreetMap
+data.  The list of main tables in PgOSM-Flex will continue to grow and evolve.
+
 
 ```bash
 osm2pgsql --slim --drop \
