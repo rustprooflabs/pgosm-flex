@@ -61,3 +61,33 @@ CREATE INDEX gix_osm_vplace_polygon
 
 
 COMMENT ON MATERIALIZED VIEW osm.vplace_polygon IS 'Simplified polygon layer removing non-relation geometries when a relation contains it in the member_ids column.';
+
+
+CREATE VIEW osm.vadmin_nested_polygon AS
+SELECT p.osm_id, p.name, p.osm_type,
+        COALESCE(p.admin_level::INT, 99) AS admin_level,
+        t.nest_level, t.name_path, t.osm_id_path, t.admin_level_path,
+        p.geom
+    FROM osm.vplace_polygon p
+    INNER JOIN LATERAL (
+          SELECT COUNT(i.osm_id) AS nest_level,
+                ARRAY_AGG(i.name ORDER BY i.admin_level ASC) AS name_path,
+                ARRAY_AGG(i.osm_id ORDER BY i.admin_level ASC) AS osm_id_path,
+                ARRAY_AGG(i.admin_level ORDER BY i.admin_level ASC) AS admin_level_path
+            FROM osm.vplace_polygon i
+            WHERE ST_Within(p.geom, i.geom)
+                AND i.boundary = p.boundary
+                AND i.name IS NOT NULL
+       ) t ON True
+    WHERE p.boundary = 'administrative'
+        AND p.name IS NOT NULL
+    ORDER BY name_path
+;
+
+COMMENT ON VIEW osm.vadmin_nested_polygon IS 'Provides hierarchy of administrative polygons.  Built on top of osm.vplace_polygon';
+
+COMMENT ON COLUMN osm.vadmin_nested_polygon.admin_level IS 'Value from admin_level if it exists.  Defaults to 99 if not.';
+COMMENT ON COLUMN osm.vadmin_nested_polygon.nest_level IS 'How many polygons is the current polygon nested within.  1 indicates polygon with no containing polygon.';
+COMMENT ON COLUMN osm.vadmin_nested_polygon.name_path IS 'Array of names of the current polygon (last) and all containing polygons.';
+COMMENT ON COLUMN osm.vadmin_nested_polygon.osm_id_path IS 'Array of osm_id for the current polygon (last) and all containing polygons.';
+COMMENT ON COLUMN osm.vadmin_nested_polygon.admin_level_path IS 'Array of admin_level values for the current polygon (last) and all containing polygons.';
