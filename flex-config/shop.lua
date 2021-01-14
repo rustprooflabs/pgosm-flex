@@ -52,7 +52,7 @@ function shop_process_node(object)
         return
     end
 
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
     local housenumber  = object:grab_tag('addr:housenumber')
     local street = object:grab_tag('addr:street')
     local city = object:grab_tag('addr:city')
@@ -117,7 +117,7 @@ function shop_process_way(object)
         return
     end
 
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
     local housenumber = object:grab_tag('addr:housenumber')
     local street = object:grab_tag('addr:street')
     local city = object:grab_tag('addr:city')

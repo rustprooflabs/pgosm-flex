@@ -31,7 +31,7 @@ function road_major_process_way(object)
 
     local major = true
 
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
     local osm_type = object:grab_tag('highway')
     local ref = object:grab_tag('ref')
     
