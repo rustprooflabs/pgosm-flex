@@ -19,6 +19,7 @@ A few decisions made in this project:
 
 * ID column is `osm_id`
 * Geometry stored in SRID 3857
+* Geometry column named `geom`
 * Default to same units as OpenStreetMap (e.g. km/hr, meters)
 * Data not deemed worthy of a dedicated column goes in side table `osm.tags`. Raw key/value data stored in `JSONB` column
 * Points, Lines, and Polygons are not mixed in a single table
@@ -65,6 +66,8 @@ pgosm_flex_version|srid|project_url                                |
 ------------------|----|-------------------------------------------|
 0.0.6-dev         |3857|https://github.com/rustprooflabs/pgosm-flex|
 ```
+
+For more example queries with data loaded by PgOSM-Flex see [QUERY.md](QUERY.md).
 
 
 ## Customize PgOSM
