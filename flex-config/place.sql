@@ -77,7 +77,6 @@ SELECT p.osm_id, p.name, p.osm_type,
             FROM osm.vplace_polygon i
             WHERE ST_Within(p.geom, i.geom)
                 AND i.boundary = p.boundary
-                AND i.admin_level::INT > 0
                 AND i.name IS NOT NULL
        ) t ON True
     WHERE p.boundary = 'administrative'
@@ -87,3 +86,8 @@ SELECT p.osm_id, p.name, p.osm_type,
 
 COMMENT ON VIEW osm.vadmin_nested_polygon IS 'Provides hierarchy of administrative polygons.  Built on top of osm.vplace_polygon';
 
+COMMENT ON COLUMN osm.vadmin_nested_polygon.admin_level IS 'Value from admin_level if it exists.  Defaults to 99 if not.';
+COMMENT ON COLUMN osm.vadmin_nested_polygon.nest_level IS 'How many polygons is the current polygon nested within.  1 indicates polygon with no containing polygon.';
+COMMENT ON COLUMN osm.vadmin_nested_polygon.name_path IS 'Array of names of the current polygon (last) and all containing polygons.';
+COMMENT ON COLUMN osm.vadmin_nested_polygon.osm_id_path IS 'Array of osm_id for the current polygon (last) and all containing polygons.';
+COMMENT ON COLUMN osm.vadmin_nested_polygon.admin_level_path IS 'Array of admin_level values for the current polygon (last) and all containing polygons.';
