@@ -60,7 +60,7 @@ function building_process_node(object)
         osm_type = 'unknown'
     end
 
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
     local street = object:grab_tag('addr:street')
     local city = object:grab_tag('addr:city')
     local state = object:grab_tag('addr:state')
@@ -108,7 +108,7 @@ function building_process_way(object)
         osm_type = 'unknown'
     end
 
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
     local street = object:grab_tag('addr:street')
     local city = object:grab_tag('addr:city')
     local state = object:grab_tag('addr:state')

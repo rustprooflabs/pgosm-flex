@@ -142,3 +142,31 @@ function major_road(highway)
     return false
 
     end
+
+-- From https://github.com/openstreetmap/osm2pgsql/blob/master/flex-config/places.lua
+local function starts_with(str, start)
+   return str:sub(1, #start) == start
+end
+
+-- From http://lua-users.org/wiki/StringRecipes
+local function ends_with(str, ending)
+   return ending == "" or str:sub(-#ending) == ending
+end
+
+
+-- returns the first name type tag it encounters
+function get_name(tags)
+    for k, v in pairs(tags) do
+        if k == 'name'
+            or k == 'short_name'
+            or k == 'alt_name'
+            or k == 'loc_name'
+            or starts_with(k, "name:")
+            or ends_with(k, ":NAME")
+            or k == 'old_name'
+                then
+            return v
+        end
+    end
+end
+
