@@ -154,19 +154,28 @@ local function ends_with(str, ending)
 end
 
 
--- returns the first name type tag it encounters
+-- returns the first name type tag it encounters in order of priority
 function get_name(tags)
+    if tags.name then
+        return tags.name
+    elseif tags.short_name then
+        return tags.short_name
+    elseif tags.alt_name then
+        return tags.alt_name
+    elseif tags.loc_name then
+        return tags.loc_name
+    end
+
     for k, v in pairs(tags) do
-        if k == 'name'
-            or k == 'short_name'
-            or k == 'alt_name'
-            or k == 'loc_name'
-            or starts_with(k, "name:")
+        if starts_with(k, "name:")
             or ends_with(k, ":NAME")
-            or k == 'old_name'
                 then
             return v
         end
+    end
+
+    if tags.old_name then
+        return tags.old_name
     end
 end
 
