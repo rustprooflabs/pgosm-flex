@@ -66,13 +66,14 @@ COMMENT ON MATERIALIZED VIEW osm.vplace_polygon IS 'Simplified polygon layer rem
 CREATE VIEW osm.vadmin_nested_polygon AS
 SELECT p.osm_id, p.name, p.osm_type,
         COALESCE(p.admin_level::INT, 99) AS admin_level,
-        t.name_path, t.osm_id_path, t.admin_level_path,
+        t.nest_level, t.name_path, t.osm_id_path, t.admin_level_path,
         p.geom
     FROM osm.vplace_polygon p
     INNER JOIN LATERAL (
-          SELECT array_agg( i.name ORDER BY i.admin_level ASC ) AS name_path,
-                 array_agg( i.osm_id ORDER BY i.admin_level ASC ) AS osm_id_path,
-                 array_agg( i.admin_level ORDER BY i.admin_level ASC ) AS admin_level_path
+          SELECT COUNT(i.osm_id) AS nest_level,
+                ARRAY_AGG(i.name ORDER BY i.admin_level ASC) AS name_path,
+                ARRAY_AGG(i.osm_id ORDER BY i.admin_level ASC) AS osm_id_path,
+                ARRAY_AGG(i.admin_level ORDER BY i.admin_level ASC) AS admin_level_path
             FROM osm.vplace_polygon i
             WHERE ST_Within(p.geom, i.geom)
                 AND i.boundary = p.boundary
@@ -81,14 +82,7 @@ SELECT p.osm_id, p.name, p.osm_type,
        ) t ON True
     WHERE p.boundary = 'administrative'
         AND p.name IS NOT NULL
-        AND NOT EXISTS (
-            SELECT True 
-                FROM osm.vplace_polygon e
-                WHERE ST_Within(e.geom, p.geom) 
-                    AND e.boundary = 'administrative' 
-                    AND e.admin_level::INT > p.admin_level::INT
-       )
-ORDER BY name_path
+    ORDER BY name_path
 ;
 
 COMMENT ON VIEW osm.vadmin_nested_polygon IS 'Provides hierarchy of administrative polygons.  Built on top of osm.vplace_polygon';
