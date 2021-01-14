@@ -34,7 +34,7 @@ function leisure_process_node(object)
     end
 
     local osm_type = object:grab_tag('leisure')
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
 
     tables.leisure_point:add_row({
         osm_type = osm_type,
@@ -57,7 +57,7 @@ function leisure_process_way(object)
 
     -- Using grab_tag() removes from remaining key/value saved to Pg
     local osm_type = object:grab_tag('leisure')
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
 
     tables.leisure_polygon:add_row({
         osm_type = osm_type,

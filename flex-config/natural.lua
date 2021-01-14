@@ -64,7 +64,7 @@ function natural_process_node(object)
 
     -- Using grab_tag() removes from remaining key/value saved to Pg
     local osm_type = object:grab_tag('natural')
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
     local ele = parse_to_meters(object.tags.ele)
 
     tables.natural_point:add_row({
@@ -98,7 +98,7 @@ function natural_process_way(object)
     end
 
     local osm_type = object:grab_tag('natural')
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
     local ele = parse_to_meters(object.tags.ele)
 
     if object.is_closed then

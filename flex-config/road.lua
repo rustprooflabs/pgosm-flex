@@ -47,7 +47,7 @@ function road_process_node(object)
         return
     end
 
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
     local osm_type = object:grab_tag('highway')
     local ref = object:grab_tag('ref')
 
@@ -77,7 +77,7 @@ function road_process_way(object)
         return
     end
 
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
     local osm_type = object:grab_tag('highway')
     local ref = object:grab_tag('ref')
 

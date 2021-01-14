@@ -34,7 +34,7 @@ function landuse_process_node(object)
     end
 
     local osm_type = object:grab_tag('landuse')
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
 
     tables.landuse_point:add_row({
         osm_type = osm_type,
@@ -56,7 +56,7 @@ function landuse_process_way(object)
     end
 
     local osm_type = object:grab_tag('landuse')
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
 
     tables.landuse_polygon:add_row({
         osm_type = osm_type,
@@ -73,7 +73,7 @@ function landuse_process_relation(object)
     end
 
     local osm_type = object:grab_tag('landuse')
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
 
     if object.tags.type == 'multipolygon' or object.tags.type == 'boundary' then
         tables.landuse_polygon:add_row({

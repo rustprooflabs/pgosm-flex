@@ -56,7 +56,7 @@ function amenity_process_node(object)
 
     -- Using grab_tag() removes from remaining key/value saved to Pg
     local osm_type = object:grab_tag('amenity')
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
 
     local housenumber  = object:grab_tag('addr:housenumber')
     local street = object:grab_tag('addr:street')
@@ -82,7 +82,7 @@ function amenity_process_way(object)
     end
 
     local osm_type = object:grab_tag('amenity')
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
 
     local housenumber  = object:grab_tag('addr:housenumber')
     local street = object:grab_tag('addr:street')
@@ -120,7 +120,7 @@ function amenity_process_relation(object)
     end
 
     local osm_type = object:grab_tag('amenity')
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
 
     if object.tags.type == 'multipolygon' or object.tags.type == 'boundary' then
         tables.amenity_polygon:add_row({

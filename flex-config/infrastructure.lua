@@ -38,7 +38,7 @@ function infrastructure_process_node(object)
         return
     end
 
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
     local ele = parse_to_meters(object.tags.ele)
     local height = parse_to_meters(object.tags['height'])
     local operator = object.tags.operator

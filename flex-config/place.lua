@@ -66,7 +66,7 @@ function place_process_node(object)
     
     local boundary = object:grab_tag('boundary')
     local admin_level = object:grab_tag('admin_level')
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
 
     tables.place_point:add_row({
         osm_type = osm_type,
@@ -98,7 +98,7 @@ function place_process_way(object)
 
     local boundary = object:grab_tag('boundary')
     local admin_level = object:grab_tag('admin_level')
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
 
     if object.is_closed then
         tables.place_polygon:add_row({

@@ -71,7 +71,7 @@ function water_process_node(object)
             then
         local osm_type = 'natural'
         local osm_subtype = object:grab_tag('natural')
-        local name = object:grab_tag('name')
+        local name = get_name(object.tags)
         local layer = parse_layer_value(object.tags.layer)
         local tunnel = object:grab_tag('tunnel')
         local bridge = object:grab_tag('bridge')
@@ -91,7 +91,7 @@ function water_process_node(object)
     elseif object.tags.waterway then
         local osm_type = 'waterway'
         local osm_subtype = object:grab_tag('waterway')
-        local name = object:grab_tag('name')
+        local name = get_name(object.tags)
         local layer = parse_layer_value(object.tags.layer)
         local tunnel = object:grab_tag('tunnel')
         local bridge = object:grab_tag('bridge')
@@ -132,7 +132,7 @@ function water_process_way(object)
             then
         local osm_type = 'natural'
         local osm_subtype = object:grab_tag('natural')
-        local name = object:grab_tag('name')
+        local name = get_name(object.tags)
         local layer = parse_layer_value(object.tags.layer)
         local tunnel = object:grab_tag('tunnel')
         local bridge = object:grab_tag('bridge')
@@ -165,7 +165,7 @@ function water_process_way(object)
     elseif object.tags.waterway then
         local osm_type = 'waterway'
         local osm_subtype = object:grab_tag('waterway')
-        local name = object:grab_tag('name')
+        local name = get_name(object.tags)
         local layer = parse_layer_value(object.tags.layer)
         local tunnel = object:grab_tag('tunnel')
         local bridge = object:grab_tag('bridge')

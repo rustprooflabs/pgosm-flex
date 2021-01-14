@@ -66,7 +66,7 @@ function indoor_process_node(object)
     end
 
     local osm_type = object:grab_tag('indoor')
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
     local layer = parse_layer_value(object.tags.layer)
     local level = object:grab_tag('level')
     local room = object:grab_tag('room')
@@ -97,7 +97,7 @@ function indoor_process_way(object)
     end
 
     local osm_type = object:grab_tag('indoor')
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
     local layer = parse_layer_value(object.tags.layer)
     local level = object:grab_tag('level')
     local room = object:grab_tag('room')
