@@ -1,5 +1,7 @@
 require "helpers"
 
+local json = require('dkjson')
+
 local tables = {}
 
 
@@ -39,6 +41,7 @@ tables.place_polygon = osm2pgsql.define_table({
         { column = 'boundary',     type = 'text' },
         { column = 'admin_level',     type = 'text' },
         { column = 'name',     type = 'text' },
+        { column = 'member_ids', type = 'jsonb'},
         { column = 'geom',     type = 'multipolygon' , projection = srid},
     }
 })
@@ -138,6 +141,7 @@ function place_process_relation(object)
     local boundary = object:grab_tag('boundary')
     local admin_level = object:grab_tag('admin_level')
     local name = object:grab_tag('name')
+    local member_ids = osm2pgsql.way_member_ids(object)
 
     if object.tags.type == 'multipolygon' or object.tags.type == 'boundary' then
         tables.place_polygon:add_row({
@@ -145,6 +149,7 @@ function place_process_relation(object)
             boundary = boundary,
             admin_level = admin_level,
             name = name,
+            member_ids = json.encode(member_ids),
             geom = { create = 'area' }
         })
   --[[  else
