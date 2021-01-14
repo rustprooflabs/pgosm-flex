@@ -19,6 +19,7 @@ A few decisions made in this project:
 
 * ID column is `osm_id`
 * Geometry stored in SRID 3857
+* Geometry column named `geom`
 * Default to same units as OpenStreetMap (e.g. km/hr, meters)
 * Data not deemed worthy of a dedicated column goes in side table `osm.tags`. Raw key/value data stored in `JSONB` column
 * Points, Lines, and Polygons are not mixed in a single table
@@ -34,7 +35,16 @@ Minimum versions supported:
 
 ## Load main tables
 
-The list of main tables in PgOSM-Flex will continue to grow.
+Create database, PostGIS extension and `osm` schema.
+
+```bash
+psql -c "CREATE DATABASE pgosm;"
+psql -d pgosm -c "CREATE EXTENSION postgis; CREATE SCHEMA osm;"
+```
+
+The `run-all.lua` script is a good starting point if you want the most complete set of OpenStreetMap
+data.  The list of main tables in PgOSM-Flex will continue to grow and evolve.
+
 
 ```bash
 osm2pgsql --slim --drop \
@@ -65,6 +75,8 @@ pgosm_flex_version|srid|project_url                                |
 ------------------|----|-------------------------------------------|
 0.0.6-dev         |3857|https://github.com/rustprooflabs/pgosm-flex|
 ```
+
+For more example queries with data loaded by PgOSM-Flex see [QUERY.md](QUERY.md).
 
 
 ## Customize PgOSM
