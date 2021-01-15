@@ -154,6 +154,15 @@ small areas (Colorado), takes significantly longer on larger areas (North Americ
 CALL osm.build_nested_admin_polygons();
 ```
 
+The above can take a long time.  Monitor progress with this query.
+
+```sql
+SELECT COUNT(*) AS row_count,
+        COUNT(*) FILTER (WHERE nest_level IS NOT NULL) AS nesting_set
+    FROM osm.place_polygon_nested
+;
+```
+
 
 
 ## One table to rule them all
