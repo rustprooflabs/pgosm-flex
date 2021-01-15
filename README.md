@@ -145,6 +145,25 @@ osm2pgsql --slim --drop \
 psql -d pgosm -f ./road_major.sql
 ```
 
+## Nested admin polygons
+
+This is defined in `flex-config/place.sql` but not ran.  Can run quickly on
+small areas (Colorado), takes significantly longer on larger areas (North America).
+
+```sql
+CALL osm.build_nested_admin_polygons();
+```
+
+The above can take a long time.  Monitor progress with this query.
+
+```sql
+SELECT COUNT(*) AS row_count,
+        COUNT(*) FILTER (WHERE nest_level IS NOT NULL) AS nesting_set
+    FROM osm.place_polygon_nested
+;
+```
+
+
 
 ## One table to rule them all
 
