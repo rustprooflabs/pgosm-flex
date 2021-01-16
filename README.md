@@ -286,3 +286,61 @@ Currently only U.S. region drafted, more regions with local `maxspeed` are welco
 See [the README documenting using the QGIS styles](https://github.com/rustprooflabs/pgosm-flex/blob/main/db/qgis-style/README.md).
 
 
+
+## PgOSM via Docker
+
+
+PgOSM-Flex can be deployed using the Docker image from [Docker Hub](https://hub.docker.com/r/rustprooflabs/pgosm-flex). 
+
+
+Create folder for the output (``~/pgosm-data``),
+this stores the generated SQL file used to perform the PgOSM transformations and the
+output file from ``pg_dump`` containing the ``osm`` schema to load into a production database.
+The ``.osm.pbf`` file and associated ``md5``are saved here.  Custom templates, and custom OSM file inputs can be stored here.
+
+
+```
+mkdir ~/pgosm-data
+mkdir ~/pgosm-input
+```
+
+Start the `pgosm` container to make PostgreSQL/PostGIS available.  This command exposes Postgres inside Docker on port 5433 and establishes links to local directories.
+
+```
+docker run --name pgosm -d \
+    -v ~/pgosm-data:/app/output \
+    -v ~/pgosm-input:/app/db/data/custom \
+    -e POSTGRES_PASSWORD=mysecretpassword \
+    -p 5433:5432 -d rustprooflabs/pgosm-flex
+```
+
+
+Run the PgOSM-flex processing.  Using the Washington D.C. sub-region is great
+for testing, it runs fast even on the smallest hardware.
+
+```
+docker exec -it \
+    -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_USER=postgres \
+    pgosm bash docker/run_pgosm_flex.sh \
+    north-america/us \
+    district-of-columbia \
+    400 \
+    run-all
+```
+
+
+## Always download
+
+To force the processing to remove existing files and re-download the latest PBF and MD5 files from Geofabrik, set the `PGOSM_ALWAYS_DOWNLOAD` env var when running the Docker
+container.
+
+```
+docker run --name pgosm -d \
+    -v ~/pgosm-data:/app/output \
+    -v ~/pgosm-input:/app/db/data/custom \
+    -e POSTGRES_PASSWORD=mysecretpassword \
+    -e PGOSM_ALWAYS_DOWNLOAD=1 \
+    -p 5433:5432 -d rustprooflabs/pgosm
+```
+
+----
