@@ -28,6 +28,10 @@ echo "    tail -f ~/pgosm-data/$2.log"
 
 ALWAYS_DOWNLOAD=${PGOSM_ALWAYS_DOWNLOAD:-0}
 
+
+echo "" >> $LOG_FILE
+echo "---------------------------------" >> $LOG_FILE
+echo "Start PgOSM-Flex processing" >> $LOG_FILE
 echo "Region:  $1" >> $LOG_FILE
 echo "Sub-Region:  $2" >> $LOG_FILE
 echo "Cache: $3" >> $LOG_FILE
@@ -92,7 +96,9 @@ echo "Running pg_dump..." >> $LOG_FILE
 pg_dump -U postgres -d pgosm \
    --schema=osm > /app/output/pgosm-flex-$2-$4.sql
 
+
 echo "PgOSM processing complete. Final output file: pgosm-$2-$4.sql" >> $LOG_FILE
 echo "PgOSM processing complete. Final output file: pgosm-$2-$4.sql"
+echo "If you followed the README.md it is at: ~/pgosm-data/pgosm-flex-$2-$4.sql"
 
 exit 0
