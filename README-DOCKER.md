@@ -23,7 +23,7 @@ docker build -t rustprooflabs/pgosm-flex:pg13 .
 Push to Dockerhub
 
 ```
-docker push rustprooflabs/pgosm:pg12
+docker push rustprooflabs/pgosm-flex:pg12
 docker push rustprooflabs/pgosm-flex:pg13
-docker push rustprooflabs/pgosm:latest
+docker push rustprooflabs/pgosm-flex:latest
 ```
