@@ -2,7 +2,7 @@ require "helpers"
 
 local tables = {}
 
-local pgosm_flex_version = '0.0.6-dev'
+local pgosm_flex_version = '0.0.6'
 local project_url = 'https://github.com/rustprooflabs/pgosm-flex'
 
 
