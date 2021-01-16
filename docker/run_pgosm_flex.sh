@@ -35,6 +35,7 @@ echo "Start PgOSM-Flex processing" >> $LOG_FILE
 echo "Region:  $1" >> $LOG_FILE
 echo "Sub-Region:  $2" >> $LOG_FILE
 echo "Cache: $3" >> $LOG_FILE
+echo "PgOSM Flex Style: $4" >> $LOG_FILE
 
 
 if [ $ALWAYS_DOWNLOAD == "1" ]; then

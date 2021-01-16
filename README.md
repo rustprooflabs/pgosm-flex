@@ -301,7 +301,6 @@ The ``.osm.pbf`` file and associated ``md5``are saved here.  Custom templates, a
 
 ```
 mkdir ~/pgosm-data
-mkdir ~/pgosm-input
 ```
 
 Start the `pgosm` container to make PostgreSQL/PostGIS available.  This command exposes Postgres inside Docker on port 5433 and establishes links to local directories.
@@ -309,7 +308,6 @@ Start the `pgosm` container to make PostgreSQL/PostGIS available.  This command 
 ```
 docker run --name pgosm -d \
     -v ~/pgosm-data:/app/output \
-    -v ~/pgosm-input:/app/db/data/custom \
     -e POSTGRES_PASSWORD=mysecretpassword \
     -p 5433:5432 -d rustprooflabs/pgosm-flex
 ```
@@ -337,7 +335,6 @@ container.
 ```
 docker run --name pgosm -d \
     -v ~/pgosm-data:/app/output \
-    -v ~/pgosm-input:/app/db/data/custom \
     -e POSTGRES_PASSWORD=mysecretpassword \
     -e PGOSM_ALWAYS_DOWNLOAD=1 \
     -p 5433:5432 -d rustprooflabs/pgosm
