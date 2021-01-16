@@ -68,26 +68,27 @@ fi
 
 cd $BASE_PATH
 
-echo "Create empty pgosm database with extensions..."
-psql -U postgres -c "DROP DATABASE IF EXISTS pgosm;"
-psql -U postgres -c "CREATE DATABASE pgosm;"
-psql -U postgres -d pgosm -c "CREATE EXTENSION postgis;"
-psql -U postgres -d pgosm -c "CREATE SCHEMA osm;"
+echo "Create empty pgosm database with extensions..." >> $LOG_FILE
+psql -U postgres -c "DROP DATABASE IF EXISTS pgosm;" >> $LOG_FILE
+psql -U postgres -c "CREATE DATABASE pgosm;" >> $LOG_FILE
+psql -U postgres -d pgosm -c "CREATE EXTENSION postgis;" >> $LOG_FILE
+psql -U postgres -d pgosm -c "CREATE SCHEMA osm;" >> $LOG_FILE
 
 osm2pgsql --version >> $LOG_FILE
 
-echo "Running osm2pgsql..."
+echo "Running osm2pgsql..." >> $LOG_FILE
 cd $FLEX_PATH
 osm2pgsql -U postgres --create --slim --drop \
   --cache $3 \
   --output=flex --style=./$4.lua \
   -d pgosm  $PBF_FILE &>> $LOG_FILE
 
-echo "Running post-processing SQL script..."
+echo "Running post-processing SQL script..." >> $LOG_FILE
 psql -U postgres -d pgosm -f $4.sql >> $LOG_FILE
 
 cd $BASE_PATH
 
+echo "Running pg_dump..." >> $LOG_FILE
 pg_dump -U postgres -d pgosm \
    --schema=osm > /app/output/pgosm-flex-$2-$4.sql
 
