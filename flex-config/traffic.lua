@@ -43,7 +43,8 @@ tables.traffic_polygon = osm2pgsql.define_table({
 function traffic_process_node(object)
     if not object.tags.highway and not object.tags.railway and not
             object.tags.barrier and not object.tags.traffic_calming and not
-            object.tags.amenity then
+            object.tags.amenity and not object.tags.noexit
+            then
         return
     end
 
@@ -106,6 +107,17 @@ function traffic_process_node(object)
             geom = { create = 'point' }
         })
 
+
+    elseif object.tags.noexit
+            then
+        local osm_type = 'noexit'
+        -- No meaningful subtype, only defined value is "yes"
+        -- https://wiki.openstreetmap.org/wiki/Key:noexit
+        tables.traffic_point:add_row({
+            osm_type = osm_type,
+            geom = { create = 'point' }
+        })
+
     else
         return
     end
@@ -117,7 +129,8 @@ end
 function traffic_process_way(object)
     if not object.tags.highway and not object.tags.railway and not
             object.tags.barrier and not object.tags.traffic_calming and not
-            object.tags.amenity then
+            object.tags.amenity  and not object.tags.noexit
+            then
         return
     end
 
@@ -215,6 +228,23 @@ function traffic_process_way(object)
             tables.traffic_line:add_row({
                 osm_type = osm_type,
                 osm_subtype = osm_subtype,
+                geom = { create = 'line' }
+            })
+        end
+
+
+    elseif object.tags.noexit
+            then
+        local osm_type = 'noexit'
+        -- No meaningful subtype, only defined value is "yes"
+        -- https://wiki.openstreetmap.org/wiki/Key:noexit
+
+        if object.is_closed then
+            -- noexit does not make sense for polygons
+            return
+        else
+            tables.traffic_line:add_row({
+                osm_type = osm_type,
                 geom = { create = 'line' }
             })
         end
