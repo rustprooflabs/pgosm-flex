@@ -33,6 +33,8 @@ ALTER TABLE osm.shop_polygon
     STORED
 ;
 
+COMMENT ON COLUMN osm.shop_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
+COMMENT ON COLUMN osm.shop_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 
 COMMENT ON COLUMN osm.shop_point.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
 COMMENT ON COLUMN osm.shop_polygon.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
@@ -55,4 +57,5 @@ SELECT osm_id, 'W' AS geom_type, osm_type, osm_subtype, name,
 ;
 
 COMMENT ON VIEW osm.vshop_all IS 'Converts polygon shops to point with ST_Centroid(), combines with source points using UNION.';
+COMMENT ON COLUMN osm.vshop_all.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 
