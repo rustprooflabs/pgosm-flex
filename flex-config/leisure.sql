@@ -13,3 +13,6 @@ ALTER TABLE osm.leisure_polygon
 
 CREATE INDEX ix_osm_leisure_point_type ON osm.leisure_point (osm_type);
 CREATE INDEX ix_osm_leisure_polygon_type ON osm.leisure_polygon (osm_type);
+
+COMMENT ON COLUMN osm.leisure_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
+COMMENT ON COLUMN osm.leisure_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';

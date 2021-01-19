@@ -40,3 +40,7 @@ SELECT osm_id, 'W' AS geom_type, name, levels, height, operator, wheelchair,
 
 COMMENT ON VIEW osm.vbuilding_all IS 'Converts polygon buildings to point with ST_Centroid(), combines with source points using UNION.';
 COMMENT ON COLUMN osm.vbuilding_all.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
+
+COMMENT ON COLUMN osm.building_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
+COMMENT ON COLUMN osm.building_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
+COMMENT ON COLUMN osm.vbuilding_all.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';

@@ -13,3 +13,7 @@ ALTER TABLE osm.landuse_polygon
 
 CREATE INDEX ix_osm_landuse_point_type ON osm.landuse_point (osm_type);
 CREATE INDEX ix_osm_landuse_polygon_type ON osm.landuse_polygon (osm_type);
+
+
+COMMENT ON COLUMN osm.landuse_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
+COMMENT ON COLUMN osm.landuse_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';

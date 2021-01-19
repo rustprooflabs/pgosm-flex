@@ -185,3 +185,6 @@ SELECT osm_id, ST_Subdivide(geom) AS geom
 CREATE INDEX gix_osm_vplace_polygon_subdivide
     ON osm.vplace_polygon_subdivide USING GIST (geom)
 ;
+
+COMMENT ON MATERIALIZED VIEW osm.vplace_polygon_subdivide IS 'Subdivided geometry from osm.vplace_polygon.  Multiple rows per osm_id, one for each subdivided geometry.';
+

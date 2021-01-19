@@ -25,3 +25,7 @@ CREATE INDEX ix_osm_natural_line_type ON osm.natural_line (osm_type);
 CREATE INDEX ix_osm_natural_polygon_type ON osm.natural_polygon (osm_type);
 
 
+COMMENT ON COLUMN osm.natural_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
+COMMENT ON COLUMN osm.natural_line.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
+COMMENT ON COLUMN osm.natural_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
+
