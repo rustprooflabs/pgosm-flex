@@ -18,3 +18,7 @@ ALTER TABLE osm.tags
         )
     STORED
 ;
+
+COMMENT ON COLUMN osm.tags.osm_id IS 'OpenStreetMap ID. Unique along with geometry type (geom_type).';
+COMMENT ON COLUMN osm.tags.geom_type IS 'Type of geometry. N(ode), W(ay) or R(elation).  Unique along with osm_id';
+COMMENT ON COLUMN osm.tags.osm_url IS 'Calculated URL to object in OpenStreetMap.org.  Paths are split based on N(ode), W(ay) and R(elation).  See definition of generated column for full details.';
