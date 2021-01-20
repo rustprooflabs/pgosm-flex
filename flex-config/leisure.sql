@@ -16,3 +16,6 @@ CREATE INDEX ix_osm_leisure_polygon_type ON osm.leisure_polygon (osm_type);
 
 COMMENT ON COLUMN osm.leisure_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.leisure_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
+
+COMMENT ON COLUMN osm.leisure_point.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
+COMMENT ON COLUMN osm.leisure_polygon.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';

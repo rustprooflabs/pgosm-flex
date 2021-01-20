@@ -12,6 +12,13 @@ COMMENT ON COLUMN osm.place_point.osm_type IS 'Values from place if a place tag 
 COMMENT ON COLUMN osm.place_line.osm_type IS 'Values from place if a place tag exists.  If no place tag, values boundary or admin_level indicate the source of the feature.';
 COMMENT ON COLUMN osm.place_polygon.osm_type IS 'Values from place if a place tag exists.  If no place tag, values boundary or admin_level indicate the source of the feature.';
 
+COMMENT ON COLUMN osm.place_polygon.member_ids IS 'Member IDs making up the full relation.  NULL if not a relation.  Used to create improved osm.vplace_polygon.';
+
+COMMENT ON COLUMN osm.place_point.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
+COMMENT ON COLUMN osm.place_line.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
+COMMENT ON COLUMN osm.place_polygon.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
+
+
 
 ALTER TABLE osm.place_point
     ADD CONSTRAINT pk_osm_place_point_osm_id
@@ -68,7 +75,8 @@ CREATE INDEX gix_osm_vplace_polygon
 
 COMMENT ON MATERIALIZED VIEW osm.vplace_polygon IS 'Simplified polygon layer removing non-relation geometries when a relation contains it in the member_ids column.';
 COMMENT ON COLUMN osm.vplace_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
-
+COMMENT ON COLUMN osm.vplace_polygon.member_ids IS 'Member IDs making up the full relation.  NULL if not a relation.  Used to create improved osm.vplace_polygon.';
+COMMENT ON COLUMN osm.vplace_polygon.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 
 
 DROP TABLE IF EXISTS osm.place_polygon_nested;
@@ -108,6 +116,7 @@ COMMENT ON COLUMN osm.place_polygon_nested.nest_level IS 'How many polygons is t
 COMMENT ON COLUMN osm.place_polygon_nested.name_path IS 'Array of names of the current polygon (last) and all containing polygons.';
 COMMENT ON COLUMN osm.place_polygon_nested.osm_id_path IS 'Array of osm_id for the current polygon (last) and all containing polygons.';
 COMMENT ON COLUMN osm.place_polygon_nested.admin_level_path IS 'Array of admin_level values for the current polygon (last) and all containing polygons.';
+COMMENT ON COLUMN osm.place_polygon_nested.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 
 
 INSERT INTO osm.place_polygon_nested (osm_id, name, osm_type, admin_level, geom)

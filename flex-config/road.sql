@@ -18,6 +18,9 @@ COMMENT ON COLUMN osm.road_line.bridge IS 'If empty, assume not a bridge.  If no
 COMMENT ON COLUMN osm.road_point.tunnel IS 'If empty, assume not a tunnel.  If not empty, check value for details.';
 COMMENT ON COLUMN osm.road_line.tunnel IS 'If empty, assume not a tunnel.  If not empty, check value for details.';
 
+COMMENT ON COLUMN osm.road_point.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
+COMMENT ON COLUMN osm.road_line.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
+
 
 ALTER TABLE osm.road_point
     ADD CONSTRAINT pk_osm_road_point_osm_id

@@ -42,6 +42,8 @@ psql -c "CREATE DATABASE pgosm;"
 psql -d pgosm -c "CREATE EXTENSION postgis; CREATE SCHEMA osm;"
 ```
 
+### Load data
+
 The `run-all.lua` script is a good starting point if you want the most complete set of OpenStreetMap
 data.  The list of main tables in PgOSM-Flex will continue to grow and evolve.
 
@@ -53,7 +55,10 @@ osm2pgsql --slim --drop \
     ~/tmp/district-of-columbia-latest.osm.pbf
 ```
 
-Run matching SQL scripts.
+### Post-processing SQL
+
+Run matching SQL scripts, each `.lua` has a matching `.sql` to create
+primary keys, indexes, comments, views and more.
 
 ```bash
 psql -d pgosm -f ./run-all.sql
@@ -61,19 +66,26 @@ psql -d pgosm -f ./run-all.sql
 
 > Note: The `run-all` scripts exclude `unitable` and `road_major`.
 
+### Meta table
 
 PgOSM-Flex tracks basic metadata in table ``osm.pgosm_flex``.
+The `ts` is set by the post-processing script.  It does not necessarily
+indicate the date of the data loaded, though in general it should be close
+depending on your processing pipeline.
 
 
 ```sql
-SELECT pgosm_flex_version, srid, project_url
+SELECT pgosm_flex_version, srid, project_url, ts
     FROM osm.pgosm_flex;
 ```
 
 ```bash
-pgosm_flex_version|srid|project_url                                |
-------------------|----|-------------------------------------------|
-0.0.6-dev         |3857|https://github.com/rustprooflabs/pgosm-flex|
+┌────────────────────┬──────┬──────────────────────────────────────┬───────────────────────────────┐
+│ pgosm_flex_version │ srid │             project_url              │              ts               │
+╞════════════════════╪══════╪══════════════════════════════════════╪═══════════════════════════════╡
+│ 0.0.6              │ 3857 │ https://github.com/rustprooflabs/pgo…│ 2021-01-20 01:25:17.555204+00 │
+│                    │      │…sm-flex                              │                               │
+└────────────────────┴──────┴──────────────────────────────────────┴───────────────────────────────┘
 ```
 
 For more example queries with data loaded by PgOSM-Flex see [QUERY.md](QUERY.md).

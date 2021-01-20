@@ -17,3 +17,6 @@ CREATE INDEX ix_osm_landuse_polygon_type ON osm.landuse_polygon (osm_type);
 
 COMMENT ON COLUMN osm.landuse_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.landuse_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
+
+COMMENT ON COLUMN osm.landuse_point.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
+COMMENT ON COLUMN osm.landuse_polygon.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';

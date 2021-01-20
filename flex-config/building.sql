@@ -10,6 +10,20 @@ COMMENT ON COLUMN osm.building_polygon.wheelchair IS 'Indicates if building is w
 COMMENT ON COLUMN osm.building_point.wheelchair IS 'Indicates if building is wheelchair accessible.';
 
 
+COMMENT ON COLUMN osm.building_point.housenumber IS 'Value from addr:housenumber tag';
+COMMENT ON COLUMN osm.building_point.street IS 'Value from addr:street tag';
+COMMENT ON COLUMN osm.building_point.city IS 'Value from addr:city tag';
+COMMENT ON COLUMN osm.building_point.state IS 'Value from addr:state tag';
+
+COMMENT ON COLUMN osm.building_polygon.housenumber IS 'Value from addr:housenumber tag';
+COMMENT ON COLUMN osm.building_polygon.street IS 'Value from addr:street tag';
+COMMENT ON COLUMN osm.building_polygon.city IS 'Value from addr:city tag';
+COMMENT ON COLUMN osm.building_polygon.state IS 'Value from addr:state tag';
+
+COMMENT ON COLUMN osm.building_point.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
+COMMENT ON COLUMN osm.building_polygon.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
+
+
 ALTER TABLE osm.building_polygon
     ADD CONSTRAINT pk_osm_building_polygon_osm_id
     PRIMARY KEY (osm_id)
@@ -44,3 +58,7 @@ COMMENT ON COLUMN osm.vbuilding_all.address IS 'Simple attempt to combine addres
 COMMENT ON COLUMN osm.building_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.building_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.vbuilding_all.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
+COMMENT ON COLUMN osm.vbuilding_all.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
+
+COMMENT ON COLUMN osm.vbuilding_all.height IS 'Object height.  Should be in meters (m) but is not enforced.  Please fix data in OpenStreetMap.org if incorrect values are discovered.';
+

@@ -38,6 +38,9 @@ COMMENT ON COLUMN osm.indoor_point.highway IS 'Indoor highways, e.g. stairs, esc
 COMMENT ON COLUMN osm.indoor_line.highway IS 'Indoor highways, e.g. stairs, escalators, hallways. See https://wiki.openstreetmap.org/wiki/Indoor_Mapping#Tagging';
 COMMENT ON COLUMN osm.indoor_polygon.highway IS 'Indoor highways, e.g. stairs, escalators, hallways. See https://wiki.openstreetmap.org/wiki/Indoor_Mapping#Tagging';
 
+COMMENT ON COLUMN osm.indoor_point.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
+COMMENT ON COLUMN osm.indoor_line.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
+COMMENT ON COLUMN osm.indoor_polygon.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 
 ALTER TABLE osm.indoor_point
     ADD CONSTRAINT pk_osm_indoor_point_osm_id

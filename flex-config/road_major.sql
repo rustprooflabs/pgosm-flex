@@ -8,7 +8,7 @@ COMMENT ON COLUMN osm.road_major.osm_id IS 'OpenStreetMap ID. Unique along with 
 COMMENT ON COLUMN osm.road_major.layer IS 'Vertical ordering layer (Z) to handle crossing/overlapping features. "All ways without an explicit value are assumed to have layer 0." - per Wiki - https://wiki.openstreetmap.org/wiki/Key:layer';
 COMMENT ON COLUMN osm.road_major.bridge IS 'If empty, assume not a bridge.  If not empty, check value for details.';
 COMMENT ON COLUMN osm.road_major.tunnel IS 'If empty, assume not a tunnel.  If not empty, check value for details.';
-
+COMMENT ON COLUMN osm.road_major.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 
 
 ALTER TABLE osm.road_major
