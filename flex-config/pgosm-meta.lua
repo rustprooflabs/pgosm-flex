@@ -10,6 +10,7 @@ tables.pgosm_flex_meta = osm2pgsql.define_table({
         { column = 'pgosm_flex_version',     type = 'text', not_null = true },
         { column = 'srid',     type = 'text', not_null = true },
         { column = 'project_url',     type = 'text', not_null = true },
+        { column = 'osm2pgsql_version',     type = 'text', not_null = true}
     }
 })
 
@@ -34,8 +35,10 @@ function pgosm_get_latest_tag()
     return result
 end
 
+
 local commit_hash = pgosm_get_commit_hash()
 local git_tag = pgosm_get_latest_tag()
+local osm2pgsql_version = osm2pgsql.version
 print ('PgOSM-Flex version:', git_tag, commit_hash)
 local pgosm_flex_version = git_tag .. '-' .. commit_hash
 local project_url = 'https://github.com/rustprooflabs/pgosm-flex'
@@ -51,7 +54,8 @@ function pgosm_meta_load_row(object)
     tables.pgosm_flex_meta:add_row({
         pgosm_flex_version = pgosm_flex_version,
         srid = srid,
-        project_url = project_url
+        project_url = project_url,
+        osm2pgsql_version = osm2pgsql_version
     })
 
     meta_added = true
