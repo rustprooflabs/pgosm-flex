@@ -10,6 +10,17 @@ COMMENT ON COLUMN osm.building_polygon.wheelchair IS 'Indicates if building is w
 COMMENT ON COLUMN osm.building_point.wheelchair IS 'Indicates if building is wheelchair accessible.';
 
 
+COMMENT ON COLUMN osm.building_point.housenumber IS 'Value from addr:housenumber tag';
+COMMENT ON COLUMN osm.building_point.street IS 'Value from addr:street tag';
+COMMENT ON COLUMN osm.building_point.city IS 'Value from addr:city tag';
+COMMENT ON COLUMN osm.building_point.state IS 'Value from addr:state tag';
+
+COMMENT ON COLUMN osm.building_polygon.housenumber IS 'Value from addr:housenumber tag';
+COMMENT ON COLUMN osm.building_polygon.street IS 'Value from addr:street tag';
+COMMENT ON COLUMN osm.building_polygon.city IS 'Value from addr:city tag';
+COMMENT ON COLUMN osm.building_polygon.state IS 'Value from addr:state tag';
+
+
 ALTER TABLE osm.building_polygon
     ADD CONSTRAINT pk_osm_building_polygon_osm_id
     PRIMARY KEY (osm_id)

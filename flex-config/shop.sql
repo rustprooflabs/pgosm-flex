@@ -39,6 +39,17 @@ COMMENT ON COLUMN osm.shop_polygon.osm_id IS 'OpenStreetMap ID. Unique along wit
 COMMENT ON COLUMN osm.shop_point.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
 COMMENT ON COLUMN osm.shop_polygon.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
 
+COMMENT ON COLUMN osm.shop_point.housenumber IS 'Value from addr:housenumber tag';
+COMMENT ON COLUMN osm.shop_point.street IS 'Value from addr:street tag';
+COMMENT ON COLUMN osm.shop_point.city IS 'Value from addr:city tag';
+COMMENT ON COLUMN osm.shop_point.state IS 'Value from addr:state tag';
+
+COMMENT ON COLUMN osm.shop_polygon.housenumber IS 'Value from addr:housenumber tag';
+COMMENT ON COLUMN osm.shop_polygon.street IS 'Value from addr:street tag';
+COMMENT ON COLUMN osm.shop_polygon.city IS 'Value from addr:city tag';
+COMMENT ON COLUMN osm.shop_polygon.state IS 'Value from addr:state tag';
+
+
 -- osm_type column only has shop/amenity values.
 -- Indexing osm_subtype b/c has more selective and seems more likely to be used.
 CREATE INDEX ix_osm_shop_point_type ON osm.shop_point (osm_subtype);
@@ -58,4 +69,4 @@ SELECT osm_id, 'W' AS geom_type, osm_type, osm_subtype, name,
 
 COMMENT ON VIEW osm.vshop_all IS 'Converts polygon shops to point with ST_Centroid(), combines with source points using UNION.';
 COMMENT ON COLUMN osm.vshop_all.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
-
+COMMENT ON COLUMN osm.vshop_all.address IS 'Simple attempt to combine address parts into single column with COALESCE.';

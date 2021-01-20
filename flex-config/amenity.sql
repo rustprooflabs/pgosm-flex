@@ -25,3 +25,18 @@ CREATE INDEX ix_osm_amenity_polygon_type ON osm.amenity_polygon (osm_type);
 COMMENT ON COLUMN osm.amenity_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.amenity_line.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.amenity_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
+
+COMMENT ON COLUMN osm.amenity_point.housenumber IS 'Value from addr:housenumber tag';
+COMMENT ON COLUMN osm.amenity_point.street IS 'Value from addr:street tag';
+COMMENT ON COLUMN osm.amenity_point.city IS 'Value from addr:city tag';
+COMMENT ON COLUMN osm.amenity_point.state IS 'Value from addr:state tag';
+
+COMMENT ON COLUMN osm.amenity_line.housenumber IS 'Value from addr:housenumber tag';
+COMMENT ON COLUMN osm.amenity_line.street IS 'Value from addr:street tag';
+COMMENT ON COLUMN osm.amenity_line.city IS 'Value from addr:city tag';
+COMMENT ON COLUMN osm.amenity_line.state IS 'Value from addr:state tag';
+
+COMMENT ON COLUMN osm.amenity_polygon.housenumber IS 'Value from addr:housenumber tag';
+COMMENT ON COLUMN osm.amenity_polygon.street IS 'Value from addr:street tag';
+COMMENT ON COLUMN osm.amenity_polygon.city IS 'Value from addr:city tag';
+COMMENT ON COLUMN osm.amenity_polygon.state IS 'Value from addr:state tag';

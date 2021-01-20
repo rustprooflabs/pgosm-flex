@@ -12,6 +12,9 @@ COMMENT ON COLUMN osm.place_point.osm_type IS 'Values from place if a place tag 
 COMMENT ON COLUMN osm.place_line.osm_type IS 'Values from place if a place tag exists.  If no place tag, values boundary or admin_level indicate the source of the feature.';
 COMMENT ON COLUMN osm.place_polygon.osm_type IS 'Values from place if a place tag exists.  If no place tag, values boundary or admin_level indicate the source of the feature.';
 
+COMMENT ON COLUMN osm.place_polygon.member_ids IS 'Member IDs making up the full relation.  NULL if not a relation.  Used to create improved osm.vplace_polygon.';
+
+
 
 ALTER TABLE osm.place_point
     ADD CONSTRAINT pk_osm_place_point_osm_id
@@ -68,6 +71,7 @@ CREATE INDEX gix_osm_vplace_polygon
 
 COMMENT ON MATERIALIZED VIEW osm.vplace_polygon IS 'Simplified polygon layer removing non-relation geometries when a relation contains it in the member_ids column.';
 COMMENT ON COLUMN osm.vplace_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
+COMMENT ON COLUMN osm.vplace_polygon.member_ids IS 'Member IDs making up the full relation.  NULL if not a relation.  Used to create improved osm.vplace_polygon.';
 
 
 
