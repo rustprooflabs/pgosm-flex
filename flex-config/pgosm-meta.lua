@@ -2,9 +2,6 @@ require "helpers"
 
 local tables = {}
 
-local pgosm_flex_version = '0.0.6'
-local project_url = 'https://github.com/rustprooflabs/pgosm-flex'
-
 
 tables.pgosm_flex_meta = osm2pgsql.define_table({
     name = 'pgosm_flex',
@@ -15,6 +12,33 @@ tables.pgosm_flex_meta = osm2pgsql.define_table({
         { column = 'project_url',     type = 'text', not_null = true },
     }
 })
+
+
+function pgosm_get_commit_hash()
+    local cmd = 'git rev-parse --short HEAD'
+    local handle = io.popen(cmd)
+    local result = handle:read("*a")
+    handle:close()
+
+    result = string.gsub(result, "\n", "")
+    return result
+end
+
+function pgosm_get_latest_tag()
+    local cmd = 'git describe --abbrev=0'
+    local handle = io.popen(cmd)
+    local result = handle:read("*a")
+    handle:close()
+
+    result = string.gsub(result, "\n", "")
+    return result
+end
+
+local commit_hash = pgosm_get_commit_hash()
+local git_tag = pgosm_get_latest_tag()
+print ('PgOSM-Flex version:', git_tag, commit_hash)
+local pgosm_flex_version = git_tag .. '-' .. commit_hash
+local project_url = 'https://github.com/rustprooflabs/pgosm-flex'
 
 
 -- Couldn't find a better way to only add one row from Lua, adds one row then flips meta_added.
