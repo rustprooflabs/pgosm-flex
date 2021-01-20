@@ -26,6 +26,10 @@ COMMENT ON COLUMN osm.water_point.tunnel IS 'If empty, assume not a tunnel.  If 
 COMMENT ON COLUMN osm.water_line.tunnel IS 'If empty, assume not a tunnel.  If not empty, check value for details.';
 COMMENT ON COLUMN osm.water_polygon.tunnel IS 'If empty, assume not a tunnel.  If not empty, check value for details.';
 
+COMMENT ON COLUMN osm.water_point.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
+COMMENT ON COLUMN osm.water_line.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
+COMMENT ON COLUMN osm.water_polygon.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
+
 
 ALTER TABLE osm.water_point
     ADD CONSTRAINT pk_osm_water_point_osm_id
