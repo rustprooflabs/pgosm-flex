@@ -4,6 +4,14 @@ COMMENT ON TABLE osm.shop_polygon IS 'OpenStreetMap shop related polygons. Gener
 COMMENT ON COLUMN osm.shop_point.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 COMMENT ON COLUMN osm.shop_polygon.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 
+COMMENT ON COLUMN osm.shop_point.geom IS 'Geometry loaded by osm2pgsql.';
+COMMENT ON COLUMN osm.shop_polygon.geom IS 'Geometry loaded by osm2pgsql.';
+
+
+COMMENT ON COLUMN osm.shop_point.wheelchair IS 'Indicates if building is wheelchair accessible.';
+COMMENT ON COLUMN osm.shop_point.wheelchair IS 'Indicates if building is wheelchair accessible.';
+
+
 ALTER TABLE osm.shop_point
     ADD CONSTRAINT pk_osm_shop_point_osm_id
     PRIMARY KEY (osm_id)
@@ -51,6 +59,7 @@ COMMENT ON COLUMN osm.shop_polygon.street IS 'Value from addr:street tag';
 COMMENT ON COLUMN osm.shop_polygon.city IS 'Value from addr:city tag';
 COMMENT ON COLUMN osm.shop_polygon.state IS 'Value from addr:state tag';
 
+COMMENT ON COLUMN osm.shop_polygon.wheelchair IS 'Indicates if building is wheelchair accessible.';
 
 -- osm_type column only has shop/amenity values.
 -- Indexing osm_subtype b/c has more selective and seems more likely to be used.
@@ -73,3 +82,7 @@ COMMENT ON VIEW osm.vshop_all IS 'Converts polygon shops to point with ST_Centro
 COMMENT ON COLUMN osm.vshop_all.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.vshop_all.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
 COMMENT ON COLUMN osm.vshop_all.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
+COMMENT ON COLUMN osm.vshop_all.geom IS 'Geometry, mix of points loaded by osm2pgsql and points calculated from the ST_Centroid() of the polygons loaded by osm2pgsql.';
+
+COMMENT ON COLUMN osm.vshop_all.wheelchair IS 'Indicates if building is wheelchair accessible.';
+COMMENT ON COLUMN osm.vshop_all.geom_type IS 'Type of geometry. N(ode), W(ay) or R(elation).  Unique along with osm_id';
