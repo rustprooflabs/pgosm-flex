@@ -6,3 +6,4 @@ ALTER TABLE osm.unitable
     PRIMARY KEY (osm_id, geom_type)
 ;
 
+COMMENT ON COLUMN osm.unitable.geom IS 'Geometry loaded by osm2pgsql.';

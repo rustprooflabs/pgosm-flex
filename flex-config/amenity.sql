@@ -44,3 +44,7 @@ COMMENT ON COLUMN osm.amenity_polygon.state IS 'Value from addr:state tag';
 COMMENT ON COLUMN osm.amenity_point.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 COMMENT ON COLUMN osm.amenity_line.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 COMMENT ON COLUMN osm.amenity_polygon.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
+
+COMMENT ON COLUMN osm.amenity_point.geom IS 'Geometry loaded by osm2pgsql.';
+COMMENT ON COLUMN osm.amenity_line.geom IS 'Geometry loaded by osm2pgsql.';
+COMMENT ON COLUMN osm.amenity_polygon.geom IS 'Geometry loaded by osm2pgsql.';

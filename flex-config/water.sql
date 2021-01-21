@@ -30,6 +30,10 @@ COMMENT ON COLUMN osm.water_point.name IS 'Best name option determined by helper
 COMMENT ON COLUMN osm.water_line.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 COMMENT ON COLUMN osm.water_polygon.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 
+COMMENT ON COLUMN osm.water_point.geom IS 'Geometry loaded by osm2pgsql.';
+COMMENT ON COLUMN osm.water_line.geom IS 'Geometry loaded by osm2pgsql.';
+COMMENT ON COLUMN osm.water_polygon.geom IS 'Geometry loaded by osm2pgsql.';
+
 
 ALTER TABLE osm.water_point
     ADD CONSTRAINT pk_osm_water_point_osm_id

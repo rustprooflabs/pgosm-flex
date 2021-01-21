@@ -42,6 +42,11 @@ COMMENT ON COLUMN osm.indoor_point.name IS 'Best name option determined by helpe
 COMMENT ON COLUMN osm.indoor_line.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 COMMENT ON COLUMN osm.indoor_polygon.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 
+COMMENT ON COLUMN osm.indoor_point.geom IS 'Geometry loaded by osm2pgsql.';
+COMMENT ON COLUMN osm.indoor_line.geom IS 'Geometry loaded by osm2pgsql.';
+COMMENT ON COLUMN osm.indoor_polygon.geom IS 'Geometry loaded by osm2pgsql.';
+
+
 ALTER TABLE osm.indoor_point
     ADD CONSTRAINT pk_osm_indoor_point_osm_id
     PRIMARY KEY (osm_id)

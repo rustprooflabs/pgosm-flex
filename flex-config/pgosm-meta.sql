@@ -7,4 +7,5 @@ COMMENT ON COLUMN osm.pgosm_flex.ts IS 'Indicates when the post-processing SQL s
 COMMENT ON COLUMN osm.pgosm_flex.project_url IS 'PgOSM-Flex project URL.';
 COMMENT ON COLUMN osm.pgosm_flex.srid IS 'SRID used to run PgOSM-Flex.';
 COMMENT ON COLUMN osm.pgosm_flex.pgosm_flex_version IS 'Version of PgOSM-Flex used to generate schema.';
+COMMENT ON COLUMN osm.pgosm_flex.osm2pgsql_version IS 'Version of osm2pgsql used to load data.';
 

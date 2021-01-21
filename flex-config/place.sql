@@ -18,6 +18,9 @@ COMMENT ON COLUMN osm.place_point.name IS 'Best name option determined by helper
 COMMENT ON COLUMN osm.place_line.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 COMMENT ON COLUMN osm.place_polygon.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 
+COMMENT ON COLUMN osm.place_point.geom IS 'Geometry loaded by osm2pgsql.';
+COMMENT ON COLUMN osm.place_line.geom IS 'Geometry loaded by osm2pgsql.';
+COMMENT ON COLUMN osm.place_polygon.geom IS 'Geometry loaded by osm2pgsql.';
 
 
 ALTER TABLE osm.place_point
@@ -126,6 +129,9 @@ COMMENT ON COLUMN osm.place_polygon_nested.admin_level_path IS 'Array of admin_l
 COMMENT ON COLUMN osm.place_polygon_nested.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 COMMENT ON COLUMN osm.place_polygon_nested.row_innermost IS 'Indicates if the osm_id is the most inner ID of the current row.  Used to calculated innermost after all nesting paths have been calculated.';
 COMMENT ON COLUMN osm.place_polygon_nested.innermost IS 'Indiciates this row is the innermost admin level of the current data set and does **not** itself contain another admin polygon.  Calculated by procedure osm.build_nested_admin_polygons() defined in pgosm-flex/flex-config/place.sql.';
+
+COMMENT ON COLUMN osm.place_polygon_nested.geom IS 'Geometry loaded by osm2pgsql.';
+
 
 INSERT INTO osm.place_polygon_nested (osm_id, name, osm_type, admin_level, geom)
 SELECT p.osm_id, p.name, p.osm_type,
