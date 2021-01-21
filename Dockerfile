@@ -21,7 +21,7 @@ RUN git clone git://github.com/openstreetmap/osm2pgsql.git \
 	&& make \
 	&& make install \
 	&& apt remove -y \
-		git make cmake g++ \
+		make cmake g++ \
 	    libboost-dev libboost-system-dev \
 	    libboost-filesystem-dev libexpat1-dev zlib1g-dev \
 	    libbz2-dev libpq-dev libproj-dev \
