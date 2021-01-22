@@ -26,6 +26,10 @@ COMMENT ON COLUMN osm.building_polygon.name IS 'Best name option determined by h
 COMMENT ON COLUMN osm.building_point.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.building_polygon.geom IS 'Geometry loaded by osm2pgsql.';
 
+COMMENT ON COLUMN osm.building_point.operator IS 'Entity in charge of operations. https://wiki.openstreetmap.org/wiki/Key:operator';
+COMMENT ON COLUMN osm.building_polygon.operator IS 'Entity in charge of operations. https://wiki.openstreetmap.org/wiki/Key:operator';
+
+
 
 ALTER TABLE osm.building_polygon
     ADD CONSTRAINT pk_osm_building_polygon_osm_id
@@ -67,3 +71,4 @@ COMMENT ON COLUMN osm.vbuilding_all.height IS 'Object height.  Should be in mete
 COMMENT ON COLUMN osm.vbuilding_all.wheelchair IS 'Indicates if building is wheelchair accessible.';
 COMMENT ON COLUMN osm.vbuilding_all.geom_type IS 'Type of geometry. N(ode), W(ay) or R(elation).  Unique along with osm_id';
 COMMENT ON COLUMN osm.vbuilding_all.geom IS 'Geometry loaded by osm2pgsql.';
+COMMENT ON COLUMN osm.vbuilding_all.operator IS 'Entity in charge of operations. https://wiki.openstreetmap.org/wiki/Key:operator';

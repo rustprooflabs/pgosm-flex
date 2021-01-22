@@ -10,6 +10,11 @@ COMMENT ON COLUMN osm.shop_polygon.geom IS 'Geometry loaded by osm2pgsql.';
 
 COMMENT ON COLUMN osm.shop_point.wheelchair IS 'Indicates if building is wheelchair accessible.';
 COMMENT ON COLUMN osm.shop_point.wheelchair IS 'Indicates if building is wheelchair accessible.';
+COMMENT ON COLUMN osm.shop_point.operator IS 'Entity in charge of operations. https://wiki.openstreetmap.org/wiki/Key:operator';
+COMMENT ON COLUMN osm.shop_polygon.operator IS 'Entity in charge of operations. https://wiki.openstreetmap.org/wiki/Key:operator';
+
+COMMENT ON COLUMN osm.shop_point.website IS 'Official website for the feature.  https://wiki.openstreetmap.org/wiki/Key:website';
+COMMENT ON COLUMN osm.shop_polygon.website IS 'Official website for the feature.  https://wiki.openstreetmap.org/wiki/Key:website';
 
 
 ALTER TABLE osm.shop_point
@@ -60,6 +65,14 @@ COMMENT ON COLUMN osm.shop_polygon.city IS 'Value from addr:city tag';
 COMMENT ON COLUMN osm.shop_polygon.state IS 'Value from addr:state tag';
 
 COMMENT ON COLUMN osm.shop_polygon.wheelchair IS 'Indicates if building is wheelchair accessible.';
+COMMENT ON COLUMN osm.shop_point.brand IS 'Identity of product, service or business. https://wiki.openstreetmap.org/wiki/Key:brand';
+COMMENT ON COLUMN osm.shop_polygon.brand IS 'Identity of product, service or business. https://wiki.openstreetmap.org/wiki/Key:brand';
+
+
+COMMENT ON COLUMN osm.shop_point.phone IS 'Phone number associated with the feature. https://wiki.openstreetmap.org/wiki/Key:phone';
+COMMENT ON COLUMN osm.shop_polygon.phone IS 'Phone number associated with the feature. https://wiki.openstreetmap.org/wiki/Key:phone';
+
+
 
 -- osm_type column only has shop/amenity values.
 -- Indexing osm_subtype b/c has more selective and seems more likely to be used.
@@ -86,3 +99,7 @@ COMMENT ON COLUMN osm.vshop_all.geom IS 'Geometry, mix of points loaded by osm2p
 
 COMMENT ON COLUMN osm.vshop_all.wheelchair IS 'Indicates if building is wheelchair accessible.';
 COMMENT ON COLUMN osm.vshop_all.geom_type IS 'Type of geometry. N(ode), W(ay) or R(elation).  Unique along with osm_id';
+COMMENT ON COLUMN osm.vshop_all.operator IS 'Entity in charge of operations. https://wiki.openstreetmap.org/wiki/Key:operator';
+COMMENT ON COLUMN osm.vshop_all.website IS 'Official website for the feature.  https://wiki.openstreetmap.org/wiki/Key:website';
+COMMENT ON COLUMN osm.vshop_all.brand IS 'Identity of product, service or business. https://wiki.openstreetmap.org/wiki/Key:brand';
+COMMENT ON COLUMN osm.vshop_all.phone IS 'Phone number associated with the feature. https://wiki.openstreetmap.org/wiki/Key:phone';

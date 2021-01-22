@@ -16,4 +16,5 @@ COMMENT ON COLUMN osm.infrastructure_point.name IS 'Best name option determined 
 COMMENT ON COLUMN osm.infrastructure_point.height IS 'Object height.  Should be in meters (m) but is not enforced.  Please fix data in OpenStreetMap.org if incorrect values are discovered.';
 COMMENT ON COLUMN osm.infrastructure_point.material IS 'Describes the main material of a physical feature.  https://wiki.openstreetmap.org/wiki/Key:material';
 COMMENT ON COLUMN osm.infrastructure_point.geom IS 'Geometry loaded by osm2pgsql.';
+COMMENT ON COLUMN osm.infrastructure_point.operator IS 'Entity in charge of operations. https://wiki.openstreetmap.org/wiki/Key:operator';
 
