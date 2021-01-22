@@ -89,6 +89,34 @@ psql -d pgosm -f ./run-all.sql
 
 > Note: The `run-all` scripts exclude `unitable` and `road_major`.
 
+A peek at some of the tables loaded. 
+
+```sql
+SELECT s_name, t_name, rows, size_plus_indexes 
+    FROM dd.tables 
+    WHERE s_name = 'osm' 
+    ORDER BY t_name LIMIT 10;
+```
+
+```bash
+    ┌────────┬──────────────────────┬────────┬───────────────────┐
+    │ s_name │        t_name        │  rows  │ size_plus_indexes │
+    ╞════════╪══════════════════════╪════════╪═══════════════════╡
+    │ osm    │ amenity_line         │      7 │ 56 kB             │
+    │ osm    │ amenity_point        │   5796 │ 1136 kB           │
+    │ osm    │ amenity_polygon      │   7593 │ 3704 kB           │
+    │ osm    │ building_point       │    525 │ 128 kB            │
+    │ osm    │ building_polygon     │ 161256 │ 55 MB             │
+    │ osm    │ indoor_line          │      1 │ 40 kB             │
+    │ osm    │ indoor_point         │      5 │ 40 kB             │
+    │ osm    │ indoor_polygon       │    288 │ 136 kB            │
+    │ osm    │ infrastructure_point │    884 │ 216 kB            │
+    │ osm    │ landuse_point        │     18 │ 56 kB             │
+    └────────┴──────────────────────┴────────┴───────────────────┘
+```
+
+
+> Query available via the [PostgreSQL Data Dictionary (PgDD) extension](https://github.com/rustprooflabs/pgdd).
 
 
 ## Meta table
@@ -119,11 +147,9 @@ For more example queries with data loaded by PgOSM-Flex see [QUERY.md](QUERY.md)
 
 ## Additional Styles
 
-
 Loading the full data set results in a lot of data, see
 [the LOAD-DATA.md instructions](LOAD-DATA.md)
 for more load options using PgOSM-Flex.
-
 
 
 
@@ -152,14 +178,14 @@ SELECT COUNT(*) AS row_count,
 To move data loaded on one Postgres instance to another, use `pg_dump`.
 
 Create a directory to export.  Using `-Fd` for directory format to allow using
-`pg_dump`/`pg_restore` with multiple processes (`-j 8`).  For the small data set for
+`pg_dump`/`pg_restore` with multiple processes (`-j 4`).  For the small data set for
 Washington D.C. used here this isn't necessary, though can seriously speed up with larger areas, e.g. Europe or North America.
 
 ```bash
 mkdir -p ~/tmp/osm_dc
-pg_dump --no-owner --no-privileges --schema=osm \
+pg_dump --schema=osm \
     -d pgosm \
-    -Fd -j 8 \
+    -Fd -j 4 \
     -f ~/tmp/osm_dc
 tar -cvf osm_dc.tar -C ~/tmp osm_dc
 ```
@@ -168,18 +194,9 @@ Move the `.tar`.  Untar and restore.
 
 ```bash
 tar -xvf osm_eu.tar
-pg_restore -j 8 -d pgosm_eu -Fd osm_eu/
+pg_restore -j 4 -d pgosm_eu -Fd osm_eu/
 ```
 
-## Adding new feature layers
-
-Checklist for feature layers:
-
-* Create `<feature>.lua`
-* Create `<feature>.sql`
-* Update `run-no-tags.lua`
-* Update `run-no-tags.sql`
-* Update `db/qc/features_not_in_run_all.sql`
 
 # Extras
 
