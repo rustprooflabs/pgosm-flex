@@ -34,6 +34,10 @@ COMMENT ON COLUMN osm.water_point.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.water_line.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.water_polygon.geom IS 'Geometry loaded by osm2pgsql.';
 
+COMMENT ON COLUMN osm.water_point.boat IS 'Access details for boat travel.  https://wiki.openstreetmap.org/wiki/Key:boat';
+COMMENT ON COLUMN osm.water_line.boat IS 'Access details for boat travel.  https://wiki.openstreetmap.org/wiki/Key:boat';
+COMMENT ON COLUMN osm.water_polygon.boat IS 'Access details for boat travel.  https://wiki.openstreetmap.org/wiki/Key:boat';
+
 
 ALTER TABLE osm.water_point
     ADD CONSTRAINT pk_osm_water_point_osm_id

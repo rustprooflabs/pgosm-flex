@@ -6,7 +6,9 @@ COMMENT ON COLUMN osm.road_line.osm_id IS 'OpenStreetMap ID. Unique along with g
 COMMENT ON COLUMN osm.road_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 
 COMMENT ON COLUMN osm.road_line.osm_type IS 'Value from "highway" key from OpenStreetMap data.  e.g. motorway, residential, service, footway, etc.';
+COMMENT ON COLUMN osm.road_point.maxspeed IS 'Maximum posted speed limit in kilometers per hour (km/kr).  Units not enforced by OpenStreetMap.  Please fix values in MPH in OpenStreetMap.org to either the value in km/hr OR with the suffix "mph" so it can be properly converted.  See https://wiki.openstreetmap.org/wiki/Key:maxspeed';
 COMMENT ON COLUMN osm.road_line.maxspeed IS 'Maximum posted speed limit in kilometers per hour (km/kr).  Units not enforced by OpenStreetMap.  Please fix values in MPH in OpenStreetMap.org to either the value in km/hr OR with the suffix "mph" so it can be properly converted.  See https://wiki.openstreetmap.org/wiki/Key:maxspeed';
+
 COMMENT ON COLUMN osm.road_line.major IS 'Indicates feature is a "major" road, classification handled by helpers.major_road().';
 
 COMMENT ON COLUMN osm.road_point.layer IS 'Vertical ordering layer (Z) to handle crossing/overlapping features. "All ways without an explicit value are assumed to have layer 0." - per Wiki - https://wiki.openstreetmap.org/wiki/Key:layer';
