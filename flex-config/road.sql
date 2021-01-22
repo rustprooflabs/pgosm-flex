@@ -6,23 +6,24 @@ COMMENT ON COLUMN osm.road_line.osm_id IS 'OpenStreetMap ID. Unique along with g
 COMMENT ON COLUMN osm.road_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 
 COMMENT ON COLUMN osm.road_line.osm_type IS 'Value from "highway" key from OpenStreetMap data.  e.g. motorway, residential, service, footway, etc.';
+COMMENT ON COLUMN osm.road_point.maxspeed IS 'Maximum posted speed limit in kilometers per hour (km/kr).  Units not enforced by OpenStreetMap.  Please fix values in MPH in OpenStreetMap.org to either the value in km/hr OR with the suffix "mph" so it can be properly converted.  See https://wiki.openstreetmap.org/wiki/Key:maxspeed';
 COMMENT ON COLUMN osm.road_line.maxspeed IS 'Maximum posted speed limit in kilometers per hour (km/kr).  Units not enforced by OpenStreetMap.  Please fix values in MPH in OpenStreetMap.org to either the value in km/hr OR with the suffix "mph" so it can be properly converted.  See https://wiki.openstreetmap.org/wiki/Key:maxspeed';
 COMMENT ON COLUMN osm.road_line.major IS 'Indicates feature is a "major" road, classification handled by helpers.major_road().';
-
 COMMENT ON COLUMN osm.road_point.layer IS 'Vertical ordering layer (Z) to handle crossing/overlapping features. "All ways without an explicit value are assumed to have layer 0." - per Wiki - https://wiki.openstreetmap.org/wiki/Key:layer';
 COMMENT ON COLUMN osm.road_line.layer IS 'Vertical ordering layer (Z) to handle crossing/overlapping features. "All ways without an explicit value are assumed to have layer 0." - per Wiki - https://wiki.openstreetmap.org/wiki/Key:layer';
-
 COMMENT ON COLUMN osm.road_point.bridge IS 'If empty, assume not a bridge.  If not empty, check value for details.';
 COMMENT ON COLUMN osm.road_line.bridge IS 'If empty, assume not a bridge.  If not empty, check value for details.';
-
 COMMENT ON COLUMN osm.road_point.tunnel IS 'If empty, assume not a tunnel.  If not empty, check value for details.';
 COMMENT ON COLUMN osm.road_line.tunnel IS 'If empty, assume not a tunnel.  If not empty, check value for details.';
-
 COMMENT ON COLUMN osm.road_point.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 COMMENT ON COLUMN osm.road_line.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
-
 COMMENT ON COLUMN osm.road_point.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.road_line.geom IS 'Geometry loaded by osm2pgsql.';
+COMMENT ON COLUMN osm.road_point.oneway IS 'Indicates if travel is one-way only.';
+COMMENT ON COLUMN osm.road_line.oneway IS 'Indicates if travel is one-way only.';
+
+COMMENT ON COLUMN osm.road_point.ref IS 'Reference number or code. https://wiki.openstreetmap.org/wiki/Key:ref';
+COMMENT ON COLUMN osm.road_line.ref IS 'Reference number or code. https://wiki.openstreetmap.org/wiki/Key:ref';
 
 ALTER TABLE osm.road_point
     ADD CONSTRAINT pk_osm_road_point_osm_id
