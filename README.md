@@ -91,7 +91,7 @@ psql -d pgosm -f ./run-all.sql
 
 
 
-### Meta table
+## Meta table
 
 PgOSM-Flex tracks basic metadata in table ``osm.pgosm_flex``.
 The `ts` is set by the post-processing script.  It does not necessarily
@@ -116,71 +116,16 @@ SELECT pgosm_flex_version, srid, project_url, ts
 For more example queries with data loaded by PgOSM-Flex see [QUERY.md](QUERY.md).
 
 
-## Customize PgOSM
 
-Some behavior can be customized at run time with the use of environment variables.
-Current environment variables:
-
-* `PGOSM_SRID`
-* `PGOSM_SCHEMA`
-
-> WARNING:  Customizing the schema name will cause the `.sql` scripts to break.
-
-To use SRID 4326:
-
-```bash
-export PGOSM_SRID=4326
-```
-
-Changes reflected in output printed.
-
-```bash
-2021-01-08 15:01:15  osm2pgsql version 1.4.0 (1.4.0-72-gc3eb0fb6)
-2021-01-08 15:01:15  Database version: 13.1 (Ubuntu 13.1-1.pgdg20.10+1)
-2021-01-08 15:01:15  Node-cache: cache=800MB, maxblocks=12800*65536, allocation method=11
-Custom SRID: 4326
-Default Schema: osm
-...
-```
+## Additional Styles
 
 
-## Load main tables, No Tags
-
-The `run-no-tags.lua` and `.sql` scripts run the same loads as the `run-all`,
-just skipping the `osm.tags` table.  The `tags` table contains all OSM key/value
-pairs with their `osm_id`.
+Loading the full data set results in a lot of data, see
+[the LOAD-DATA.md instructions](LOAD-DATA.md)
+for more load options using PgOSM-Flex.
 
 
 
-```bash
-osm2pgsql --slim --drop \
-    --output=flex --style=./run-no-tags.lua \
-    -d pgosm \
-    ~/tmp/district-of-columbia-latest.osm.pbf
-```
-
-Matching SQL scripts.
-
-```bash
-psql -d pgosm -f ./run-no-tags.sql
-```
-
-
-## Load individual layer
-
-A single layer can be added with commands such as this.  Each `.lua` script and matchi
-`.sql` script is intended to be a standalone, or combined with others.
-
-```bash
-osm2pgsql --slim --drop \
-    --output=flex --style=./road_major.lua \
-    -d pgosm \
-    ~/tmp/district-of-columbia-latest.osm.pbf
-```
-
-```bash
-psql -d pgosm -f ./road_major.sql
-```
 
 ## Nested admin polygons
 
@@ -200,24 +145,6 @@ SELECT COUNT(*) AS row_count,
 ;
 ```
 
-
-
-## One table to rule them all
-
-Load the `unitable.lua` script to make the full OpenStreetMap data set available in one 
-table.  This violates all sorts of best practices established in this project by shoving all features into a single
-unstructured table.  However, this table is helpful for exploring the full data set
-when you don't really know what you are looking for, but you know **where** you are 
-looking.  It is also helpful for exploring the full gambit of tags and geometries.
-
-> The `unitable.lua` script include in PgOSM-Flex was [adapted from the example from osm2pgsql](https://github.com/openstreetmap/osm2pgsql/blob/master/flex-config/unitable.lua) to use JSONB instead of HSTORE and take advantage of `helpers.lua` to easily change SRID.
-
-```bash
-osm2pgsql --slim --drop \
-    --output=flex --style=./unitable.lua \
-    -d pgosm \
-    ~/tmp/district-of-columbia-latest.osm.pbf
-```
 
 
 ## Dump and reload data
@@ -244,41 +171,6 @@ tar -xvf osm_eu.tar
 pg_restore -j 8 -d pgosm_eu -Fd osm_eu/
 ```
 
-## Quality Control
-
-The process of selectively load specific features and not others always has the chance
-of accidentally missing important data.
-
-Running and examine tags from the SQL script `db/qc/features_not_in_run_all.sql`.
-Run within `psql` (using `\i db/qc/features_not_in_run_all.sql`) or a GUI client
-to explore the temp table used to return the aggregated results, `osm_missing`.
-The table is a `TEMP TABLE` so will disappear when the session ends.
-
-Example results from initial run (v0.0.4) showed some obvious omissions from the
-current layer definitions.
-
-```bash
-┌────────────────────────────────────────┬────────┐
-│           jsonb_object_keys            │ count  │
-╞════════════════════════════════════════╪════════╡
-│ landuse                                │ 110965 │
-│ addr:street                            │  89482 │
-│ addr:housenumber                       │  89210 │
-│ name                                   │  47151 │
-│ leisure                                │  25351 │
-│ addr:state                             │  19051 │
-│ power                                  │  16933 │
-│ addr:unit                              │  13973 │
-│ building:part                          │  13773 │
-│ golf                                   │  13427 │
-│ railway                                │  13032 │
-│ addr:city                              │  12426 │
-│ addr:postcode                          │  12358 │
-│ height                                 │  12113 │
-│ building:colour                        │  11124 │
-│ roof:colour                            │  11115 │
-```
-
 ## Adding new feature layers
 
 Checklist for feature layers:
@@ -292,7 +184,7 @@ Checklist for feature layers:
 # Extras
 
 
-## Additional schema and helper data
+## Additional structure and helper data
 
 **Optional**
 
