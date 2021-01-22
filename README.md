@@ -33,32 +33,55 @@ Minimum versions supported:
 * osm2pgsql 1.4.0
 
 
-## Load main tables
+## Standard Import
 
-Create database, PostGIS extension and `osm` schema.
+### Prepare
+
+Download the file, this example uses the Washington D.C. extract from Geofabrik.
+It's always a good idea to check the MD5 hash of the file to verify integrity.
+
+```bash
+mkdir ~/tmp
+cd ~/tmp
+wget https://download.geofabrik.de/north-america/us/district-of-columbia-latest.osm.pbf
+wget https://download.geofabrik.de/north-america/us/district-of-columbia-latest.osm.pbf.md5
+
+cat ~/tmp/district-of-columbia-latest.osm.pbf.md5
+md5sum ~/tmp/district-of-columbia-latest.osm.pbf
+```
+
+Prepare the `pgosm` database in Postgres.
+Need the PostGIS extension and the `osm` schema.
 
 ```bash
 psql -c "CREATE DATABASE pgosm;"
 psql -d pgosm -c "CREATE EXTENSION postgis; CREATE SCHEMA osm;"
 ```
 
-### Load data
 
-The `run-all.lua` script is a good starting point if you want the most complete set of OpenStreetMap
+### Run osm2pgsql w/ PgOSM-Flex
+
+The PgOSM-Flex styles are required to run, clone the repo and change into the directory
+with the `.lua` and `.sql` scripts.
+The `run-all.lua` script provides the most complete set of OpenStreetMap
 data.  The list of main tables in PgOSM-Flex will continue to grow and evolve.
 
 
 ```bash
+mkdir ~/git
+cd ~/git
+git clone https://github.com/rustprooflabs/pgosm-flex.git
+cd pgosm-flex/flex-config
+
 osm2pgsql --slim --drop \
     --output=flex --style=./run-all.lua \
     -d pgosm \
     ~/tmp/district-of-columbia-latest.osm.pbf
 ```
 
-### Post-processing SQL
-
-Run matching SQL scripts, each `.lua` has a matching `.sql` to create
-primary keys, indexes, comments, views and more.
+After osm2pgsql completes the main load, run the matching SQL scripts. 
+Each `.lua` has a matching `.sql` to create primary keys, indexes, comments,
+views and more.
 
 ```bash
 psql -d pgosm -f ./run-all.sql
@@ -66,7 +89,37 @@ psql -d pgosm -f ./run-all.sql
 
 > Note: The `run-all` scripts exclude `unitable` and `road_major`.
 
-### Meta table
+A peek at some of the tables loaded. 
+
+```sql
+SELECT s_name, t_name, rows, size_plus_indexes 
+    FROM dd.tables 
+    WHERE s_name = 'osm' 
+    ORDER BY t_name LIMIT 10;
+```
+
+```bash
+    ┌────────┬──────────────────────┬────────┬───────────────────┐
+    │ s_name │        t_name        │  rows  │ size_plus_indexes │
+    ╞════════╪══════════════════════╪════════╪═══════════════════╡
+    │ osm    │ amenity_line         │      7 │ 56 kB             │
+    │ osm    │ amenity_point        │   5796 │ 1136 kB           │
+    │ osm    │ amenity_polygon      │   7593 │ 3704 kB           │
+    │ osm    │ building_point       │    525 │ 128 kB            │
+    │ osm    │ building_polygon     │ 161256 │ 55 MB             │
+    │ osm    │ indoor_line          │      1 │ 40 kB             │
+    │ osm    │ indoor_point         │      5 │ 40 kB             │
+    │ osm    │ indoor_polygon       │    288 │ 136 kB            │
+    │ osm    │ infrastructure_point │    884 │ 216 kB            │
+    │ osm    │ landuse_point        │     18 │ 56 kB             │
+    └────────┴──────────────────────┴────────┴───────────────────┘
+```
+
+
+> Query available via the [PostgreSQL Data Dictionary (PgDD) extension](https://github.com/rustprooflabs/pgdd).
+
+
+## Meta table
 
 PgOSM-Flex tracks basic metadata in table ``osm.pgosm_flex``.
 The `ts` is set by the post-processing script.  It does not necessarily
@@ -91,71 +144,14 @@ SELECT pgosm_flex_version, srid, project_url, ts
 For more example queries with data loaded by PgOSM-Flex see [QUERY.md](QUERY.md).
 
 
-## Customize PgOSM
 
-Some behavior can be customized at run time with the use of environment variables.
-Current environment variables:
+## Additional Styles
 
-* `PGOSM_SRID`
-* `PGOSM_SCHEMA`
-
-> WARNING:  Customizing the schema name will cause the `.sql` scripts to break.
-
-To use SRID 4326:
-
-```bash
-export PGOSM_SRID=4326
-```
-
-Changes reflected in output printed.
-
-```bash
-2021-01-08 15:01:15  osm2pgsql version 1.4.0 (1.4.0-72-gc3eb0fb6)
-2021-01-08 15:01:15  Database version: 13.1 (Ubuntu 13.1-1.pgdg20.10+1)
-2021-01-08 15:01:15  Node-cache: cache=800MB, maxblocks=12800*65536, allocation method=11
-Custom SRID: 4326
-Default Schema: osm
-...
-```
+Loading the full data set results in a lot of data, see
+[the LOAD-DATA.md instructions](LOAD-DATA.md)
+for more load options using PgOSM-Flex.
 
 
-## Load main tables, No Tags
-
-The `run-no-tags.lua` and `.sql` scripts run the same loads as the `run-all`,
-just skipping the `osm.tags` table.  The `tags` table contains all OSM key/value
-pairs with their `osm_id`.
-
-
-
-```bash
-osm2pgsql --slim --drop \
-    --output=flex --style=./run-no-tags.lua \
-    -d pgosm \
-    ~/tmp/district-of-columbia-latest.osm.pbf
-```
-
-Matching SQL scripts.
-
-```bash
-psql -d pgosm -f ./run-no-tags.sql
-```
-
-
-## Load individual layer
-
-A single layer can be added with commands such as this.  Each `.lua` script and matchi
-`.sql` script is intended to be a standalone, or combined with others.
-
-```bash
-osm2pgsql --slim --drop \
-    --output=flex --style=./road_major.lua \
-    -d pgosm \
-    ~/tmp/district-of-columbia-latest.osm.pbf
-```
-
-```bash
-psql -d pgosm -f ./road_major.sql
-```
 
 ## Nested admin polygons
 
@@ -177,37 +173,19 @@ SELECT COUNT(*) AS row_count,
 
 
 
-## One table to rule them all
-
-Load the `unitable.lua` script to make the full OpenStreetMap data set available in one 
-table.  This violates all sorts of best practices established in this project by shoving all features into a single
-unstructured table.  However, this table is helpful for exploring the full data set
-when you don't really know what you are looking for, but you know **where** you are 
-looking.  It is also helpful for exploring the full gambit of tags and geometries.
-
-> The `unitable.lua` script include in PgOSM-Flex was [adapted from the example from osm2pgsql](https://github.com/openstreetmap/osm2pgsql/blob/master/flex-config/unitable.lua) to use JSONB instead of HSTORE and take advantage of `helpers.lua` to easily change SRID.
-
-```bash
-osm2pgsql --slim --drop \
-    --output=flex --style=./unitable.lua \
-    -d pgosm \
-    ~/tmp/district-of-columbia-latest.osm.pbf
-```
-
-
 ## Dump and reload data
 
 To move data loaded on one Postgres instance to another, use `pg_dump`.
 
 Create a directory to export.  Using `-Fd` for directory format to allow using
-`pg_dump`/`pg_restore` with multiple processes (`-j 8`).  For the small data set for
+`pg_dump`/`pg_restore` with multiple processes (`-j 4`).  For the small data set for
 Washington D.C. used here this isn't necessary, though can seriously speed up with larger areas, e.g. Europe or North America.
 
 ```bash
 mkdir -p ~/tmp/osm_dc
-pg_dump --no-owner --no-privileges --schema=osm \
+pg_dump --schema=osm \
     -d pgosm \
-    -Fd -j 8 \
+    -Fd -j 4 \
     -f ~/tmp/osm_dc
 tar -cvf osm_dc.tar -C ~/tmp osm_dc
 ```
@@ -216,58 +194,14 @@ Move the `.tar`.  Untar and restore.
 
 ```bash
 tar -xvf osm_eu.tar
-pg_restore -j 8 -d pgosm_eu -Fd osm_eu/
+pg_restore -j 4 -d pgosm_eu -Fd osm_eu/
 ```
 
-## Quality Control
-
-The process of selectively load specific features and not others always has the chance
-of accidentally missing important data.
-
-Running and examine tags from the SQL script `db/qc/features_not_in_run_all.sql`.
-Run within `psql` (using `\i db/qc/features_not_in_run_all.sql`) or a GUI client
-to explore the temp table used to return the aggregated results, `osm_missing`.
-The table is a `TEMP TABLE` so will disappear when the session ends.
-
-Example results from initial run (v0.0.4) showed some obvious omissions from the
-current layer definitions.
-
-```bash
-┌────────────────────────────────────────┬────────┐
-│           jsonb_object_keys            │ count  │
-╞════════════════════════════════════════╪════════╡
-│ landuse                                │ 110965 │
-│ addr:street                            │  89482 │
-│ addr:housenumber                       │  89210 │
-│ name                                   │  47151 │
-│ leisure                                │  25351 │
-│ addr:state                             │  19051 │
-│ power                                  │  16933 │
-│ addr:unit                              │  13973 │
-│ building:part                          │  13773 │
-│ golf                                   │  13427 │
-│ railway                                │  13032 │
-│ addr:city                              │  12426 │
-│ addr:postcode                          │  12358 │
-│ height                                 │  12113 │
-│ building:colour                        │  11124 │
-│ roof:colour                            │  11115 │
-```
-
-## Adding new feature layers
-
-Checklist for feature layers:
-
-* Create `<feature>.lua`
-* Create `<feature>.sql`
-* Update `run-no-tags.lua`
-* Update `run-no-tags.sql`
-* Update `db/qc/features_not_in_run_all.sql`
 
 # Extras
 
 
-## Additional schema and helper data
+## Additional structure and helper data
 
 **Optional**
 

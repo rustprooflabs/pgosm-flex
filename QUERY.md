@@ -43,3 +43,40 @@ count|
 
 > Note: The count here is different than in OpenStreetMap.org because this is only looking at polygons.  The OpenStreetMap.org view also includes nodes and lines where this query does not.
 
+
+## Quality Control Queries
+
+### Features not Loaded
+
+The process of selectively load specific features and not others always has the chance
+of accidentally missing important data.
+
+Running and examine tags from the SQL script `db/qc/features_not_in_run_all.sql`.
+Run within `psql` (using `\i db/qc/features_not_in_run_all.sql`) or a GUI client
+to explore the temp table used to return the aggregated results, `osm_missing`.
+The table is a `TEMP TABLE` so will disappear when the session ends.
+
+Example results from initial run (v0.0.4) showed some obvious omissions from the
+current layer definitions.
+
+```bash
+┌────────────────────────────────────────┬────────┐
+│           jsonb_object_keys            │ count  │
+╞════════════════════════════════════════╪════════╡
+│ landuse                                │ 110965 │
+│ addr:street                            │  89482 │
+│ addr:housenumber                       │  89210 │
+│ name                                   │  47151 │
+│ leisure                                │  25351 │
+│ addr:state                             │  19051 │
+│ power                                  │  16933 │
+│ addr:unit                              │  13973 │
+│ building:part                          │  13773 │
+│ golf                                   │  13427 │
+│ railway                                │  13032 │
+│ addr:city                              │  12426 │
+│ addr:postcode                          │  12358 │
+│ height                                 │  12113 │
+│ building:colour                        │  11124 │
+│ roof:colour                            │  11115 │
+```
