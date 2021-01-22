@@ -33,38 +33,63 @@ Minimum versions supported:
 * osm2pgsql 1.4.0
 
 
-## Load main tables
+## Standard Import
 
-Create database, PostGIS extension and `osm` schema.
+### Prepare
+
+Download the file, this example uses the Washington D.C. extract from Geofabrik.
+It's always a good idea to check the MD5 hash of the file to verify integrity.
+
+```bash
+mkdir ~/tmp
+cd ~/tmp
+wget https://download.geofabrik.de/north-america/us/district-of-columbia-latest.osm.pbf
+wget https://download.geofabrik.de/north-america/us/district-of-columbia-latest.osm.pbf.md5
+
+cat ~/tmp/district-of-columbia-latest.osm.pbf.md5
+md5sum ~/tmp/district-of-columbia-latest.osm.pbf
+```
+
+Prepare the `pgosm` database in Postgres.
+Need the PostGIS extension and the `osm` schema.
 
 ```bash
 psql -c "CREATE DATABASE pgosm;"
 psql -d pgosm -c "CREATE EXTENSION postgis; CREATE SCHEMA osm;"
 ```
 
-### Load data
 
-The `run-all.lua` script is a good starting point if you want the most complete set of OpenStreetMap
+### Run osm2pgsql w/ PgOSM-Flex
+
+The PgOSM-Flex styles are required to run, clone the repo and change into the directory
+with the `.lua` and `.sql` scripts.
+The `run-all.lua` script provides the most complete set of OpenStreetMap
 data.  The list of main tables in PgOSM-Flex will continue to grow and evolve.
 
 
 ```bash
+mkdir ~/git
+cd ~/git
+git clone https://github.com/rustprooflabs/pgosm-flex.git
+cd pgosm-flex/flex-config
+
 osm2pgsql --slim --drop \
     --output=flex --style=./run-all.lua \
     -d pgosm \
     ~/tmp/district-of-columbia-latest.osm.pbf
 ```
 
-### Post-processing SQL
-
-Run matching SQL scripts, each `.lua` has a matching `.sql` to create
-primary keys, indexes, comments, views and more.
+After osm2pgsql completes the main load, run the matching SQL scripts. 
+Each `.lua` has a matching `.sql` to create primary keys, indexes, comments,
+views and more.
 
 ```bash
 psql -d pgosm -f ./run-all.sql
 ```
 
 > Note: The `run-all` scripts exclude `unitable` and `road_major`.
+
+
 
 ### Meta table
 
