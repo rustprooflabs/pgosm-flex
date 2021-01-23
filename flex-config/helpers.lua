@@ -179,3 +179,19 @@ function get_name(tags)
     end
 end
 
+
+function parse_admin_level(input)
+    -- Quick return
+    if not input then
+        return
+    end
+
+    -- Try getting a number
+    local admin_level = tonumber(input)
+    if admin_level then
+        return admin_level
+    end
+
+    -- Fallback
+    return
+end
