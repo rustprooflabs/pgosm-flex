@@ -148,7 +148,9 @@ SELECT p.osm_id, p.name, p.osm_type,
         COALESCE(p.admin_level::INT, 99) AS admin_level,
         geom
     FROM osm.vplace_polygon p
-    WHERE p.boundary = 'administrative'
+    WHERE (p.boundary = 'administrative'
+            OR p.osm_type IN   ('neighborhood', 'city', 'suburb', 'town', 'admin_level', 'locality')
+       )
         AND p.name IS NOT NULL
 ;
 
