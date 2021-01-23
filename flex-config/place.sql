@@ -20,9 +20,9 @@ COMMENT ON COLUMN osm.place_point.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.place_line.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.place_polygon.geom IS 'Geometry loaded by osm2pgsql.';
 
-COMMENT ON COLUMN osm.place_point.admin_level IS 'Value from admin_level if it exists.';
-COMMENT ON COLUMN osm.place_line.admin_level IS 'Value from admin_level if it exists.';
-COMMENT ON COLUMN osm.place_polygon.admin_level IS 'Value from admin_level if it exists.';
+COMMENT ON COLUMN osm.place_point.admin_level IS 'Value from admin_level if it exists as integer value. Meaning of admin_level changes by region, see: https://wiki.openstreetmap.org/wiki/Key:admin_level';
+COMMENT ON COLUMN osm.place_line.admin_level IS 'Value from admin_level if it exists as integer value. Meaning of admin_level changes by region, see: https://wiki.openstreetmap.org/wiki/Key:admin_level';
+COMMENT ON COLUMN osm.place_polygon.admin_level IS 'Value from admin_level if it exists as integer value. Meaning of admin_level changes by region, see: https://wiki.openstreetmap.org/wiki/Key:admin_level';
 
 COMMENT ON COLUMN osm.place_point.boundary IS 'Value from boundary tag.  https://wiki.openstreetmap.org/wiki/Boundaries';
 COMMENT ON COLUMN osm.place_line.boundary IS 'Value from boundary tag.  https://wiki.openstreetmap.org/wiki/Boundaries';

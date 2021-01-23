@@ -12,7 +12,7 @@ tables.place_point = osm2pgsql.define_table({
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'boundary',     type = 'text' },
-        { column = 'admin_level',     type = 'text' },
+        { column = 'admin_level',     type = 'int4' },
         { column = 'name',     type = 'text' },
         { column = 'geom',     type = 'point' , projection = srid},
     }
@@ -25,7 +25,7 @@ tables.place_line = osm2pgsql.define_table({
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'boundary',     type = 'text' },
-        { column = 'admin_level',     type = 'text' },
+        { column = 'admin_level',     type = 'int4' },
         { column = 'name',     type = 'text' },
         { column = 'geom',     type = 'linestring' , projection = srid},
     }
@@ -39,7 +39,7 @@ tables.place_polygon = osm2pgsql.define_table({
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
         { column = 'boundary',     type = 'text' },
-        { column = 'admin_level',     type = 'text' },
+        { column = 'admin_level',     type = 'int4' },
         { column = 'name',     type = 'text' },
         { column = 'member_ids', type = 'jsonb'},
         { column = 'geom',     type = 'multipolygon' , projection = srid},
@@ -65,7 +65,7 @@ function place_process_node(object)
     end
     
     local boundary = object:grab_tag('boundary')
-    local admin_level = object:grab_tag('admin_level')
+    local admin_level = parse_admin_level(object:grab_tag('admin_level'))
     local name = get_name(object.tags)
 
     tables.place_point:add_row({
@@ -97,7 +97,7 @@ function place_process_way(object)
     
 
     local boundary = object:grab_tag('boundary')
-    local admin_level = object:grab_tag('admin_level')
+    local admin_level = parse_admin_level(object:grab_tag('admin_level'))
     local name = get_name(object.tags)
 
     if object.is_closed then
@@ -139,7 +139,7 @@ function place_process_relation(object)
     
 
     local boundary = object:grab_tag('boundary')
-    local admin_level = object:grab_tag('admin_level')
+    local admin_level = parse_admin_level(object:grab_tag('admin_level'))
     local name = object:grab_tag('name')
     local member_ids = osm2pgsql.way_member_ids(object)
 
