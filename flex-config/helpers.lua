@@ -155,6 +155,7 @@ end
 
 
 -- returns the first name type tag it encounters in order of priority
+--   Per: https://wiki.openstreetmap.org/wiki/Names
 function get_name(tags)
     if tags.name then
         return tags.name
