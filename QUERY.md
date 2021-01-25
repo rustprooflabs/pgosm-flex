@@ -44,6 +44,27 @@ count|
 > Note: The count here is different than in OpenStreetMap.org because this is only looking at polygons.  The OpenStreetMap.org view also includes nodes and lines where this query does not.
 
 
+## Nested admin polygons
+
+This is defined in `flex-config/place.sql` but not ran.  Can run quickly on
+small areas (Colorado), takes significantly longer on larger areas (North America).
+
+```sql
+CALL osm.build_nested_admin_polygons();
+```
+
+The above can take a long time.  Monitor progress with this query.
+
+```sql
+SELECT COUNT(*) AS row_count,
+        COUNT(*) FILTER (WHERE nest_level IS NOT NULL) AS nesting_set
+    FROM osm.place_polygon_nested
+;
+```
+
+
+
+
 ## Quality Control Queries
 
 ### Features not Loaded

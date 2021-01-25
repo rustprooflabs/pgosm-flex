@@ -8,9 +8,9 @@ the most commonly used OpenStreetMap data, such as roads, buildings, and points 
 
 The overall approach is to do as much processing in the `<name>.lua` script
 with post-processing steps creating indexes, constraints and comments in a companion `<name>.sql` script.
-For more details on using this project see [Hands on with osm2pgsql's new Flex output](https://blog.rustprooflabs.com/2020/12/osm2gpsql-flex-output-to-postgis).
 
-> Warning - The PgOSM Flex output is currently marked as experimental!  All testing done with osm2pgsql v1.4.0 or later.
+
+> Note: While osm2pgsql is still marked as experimental, this project is already being used to support production workloads.
 
 
 ## Project decisions
@@ -24,6 +24,7 @@ A few decisions made in this project:
 * Data not deemed worthy of a dedicated column goes in side table `osm.tags`. Raw key/value data stored in `JSONB` column
 * Points, Lines, and Polygons are not mixed in a single table
 
+
 ## Versions Supported
 
 Minimum versions supported:
@@ -32,13 +33,31 @@ Minimum versions supported:
 * PostGIS 3.0
 * osm2pgsql 1.4.0
 
+## Additional resources
+
+Blog posts covering various details and background information.
+
+* [Better OpenStreetMap places in PostGIS](https://blog.rustprooflabs.com/2021/01/pgosm-flex-improved-openstreetmap-places-postgis)
+* [Improved OpenStreetMap data structure in PostGIS](https://blog.rustprooflabs.com/2021/01/postgis-openstreetmap-flex-structure) 
+* [Hands on with osm2pgsql's new Flex output](https://blog.rustprooflabs.com/2020/12/osm2gpsql-flex-output-to-postgis).
+
+
+Use QGIS?  See [the README documenting using the QGIS styles](https://github.com/rustprooflabs/pgosm-flex/blob/main/db/qgis-style/README.md).
+
+
 
 ## Standard Import
 
+A basic working example, uses Washington D.C. for a small, fast test of the
+process.
+
+> Loading the full data set with `run-all` as shown here results in a lot of data.  See [the instructions in LOAD-DATA.md](LOAD-DATA.md) for more ways to use and customize PgOSM-Flex.
+
+
 ### Prepare
 
-Download the file, this example uses the Washington D.C. extract from Geofabrik.
-It's always a good idea to check the MD5 hash of the file to verify integrity.
+Download the PBF file and MD5 from Geofabrik, verify integrity.  The output
+from the `md5sum` command should always match the contents of the `.md5` file.
 
 ```bash
 mkdir ~/tmp
@@ -51,7 +70,7 @@ md5sum ~/tmp/district-of-columbia-latest.osm.pbf
 ```
 
 Prepare the `pgosm` database in Postgres.
-Need the PostGIS extension and the `osm` schema.
+Need to create the `postgis` extension and the `osm` schema.
 
 ```bash
 psql -c "CREATE DATABASE pgosm;"
@@ -61,8 +80,9 @@ psql -d pgosm -c "CREATE EXTENSION postgis; CREATE SCHEMA osm;"
 
 ### Run osm2pgsql w/ PgOSM-Flex
 
-The PgOSM-Flex styles are required to run, clone the repo and change into the directory
-with the `.lua` and `.sql` scripts.
+The PgOSM-Flex styles from this project are required to run the following.
+Clone the repo and change into the directory containing
+the `.lua` and `.sql` scripts.
 The `run-all.lua` script provides the most complete set of OpenStreetMap
 data.  The list of main tables in PgOSM-Flex will continue to grow and evolve.
 
@@ -89,7 +109,14 @@ psql -d pgosm -f ./run-all.sql
 
 > Note: The `run-all` scripts exclude `unitable` and `road_major`.
 
-A peek at some of the tables loaded. 
+
+### Explore data loaded
+
+A peek at some of the tables loaded.
+This query requires the
+[PostgreSQL Data Dictionary (PgDD) extension](https://github.com/rustprooflabs/pgdd),
+use `\dt+ osm.*` in `psql` for similar details.
+
 
 ```sql
 SELECT s_name, t_name, rows, size_plus_indexes 
@@ -116,8 +143,6 @@ SELECT s_name, t_name, rows, size_plus_indexes
 ```
 
 
-> Query available via the [PostgreSQL Data Dictionary (PgDD) extension](https://github.com/rustprooflabs/pgdd).
-
 
 ## Meta table
 
@@ -140,64 +165,12 @@ SELECT *
 └────────────────────┴──────┴─────────────────────────────────────────────┴───────────────────┴───────────────────────────────┘
 ```
 
-For more example queries with data loaded by PgOSM-Flex see [QUERY.md](QUERY.md).
 
+## Query examples
 
+For example queries with data loaded by PgOSM-Flex see
+[QUERY.md](QUERY.md).
 
-## Additional Styles
-
-Loading the full data set results in a lot of data, see
-[the LOAD-DATA.md instructions](LOAD-DATA.md)
-for more load options using PgOSM-Flex.
-
-
-
-## Nested admin polygons
-
-This is defined in `flex-config/place.sql` but not ran.  Can run quickly on
-small areas (Colorado), takes significantly longer on larger areas (North America).
-
-```sql
-CALL osm.build_nested_admin_polygons();
-```
-
-The above can take a long time.  Monitor progress with this query.
-
-```sql
-SELECT COUNT(*) AS row_count,
-        COUNT(*) FILTER (WHERE nest_level IS NOT NULL) AS nesting_set
-    FROM osm.place_polygon_nested
-;
-```
-
-
-
-## Dump and reload data
-
-To move data loaded on one Postgres instance to another, use `pg_dump`.
-
-Create a directory to export.  Using `-Fd` for directory format to allow using
-`pg_dump`/`pg_restore` with multiple processes (`-j 4`).  For the small data set for
-Washington D.C. used here this isn't necessary, though can seriously speed up with larger areas, e.g. Europe or North America.
-
-```bash
-mkdir -p ~/tmp/osm_dc
-pg_dump --schema=osm \
-    -d pgosm \
-    -Fd -j 4 \
-    -f ~/tmp/osm_dc
-tar -cvf osm_dc.tar -C ~/tmp osm_dc
-```
-
-Move the `.tar`.  Untar and restore.
-
-```bash
-tar -xvf osm_eu.tar
-pg_restore -j 4 -d pgosm_eu -Fd osm_eu/
-```
-
-
-# Extras
 
 
 ## Additional structure and helper data
@@ -214,7 +187,7 @@ cd ~/git/pgosm-flex/db
 sqitch deploy db:pg:pgosm
 ```
 
-- Load helper road data.
+With the structures created, load helper road data.
 
 ```bash
 cd ~/git/pgosm-flex/db
@@ -223,13 +196,6 @@ psql -d pgosm -f data/roads-us.sql
 
 
 Currently only U.S. region drafted, more regions with local `maxspeed` are welcome via PR!
-
-## QGIS Styles
-
-**Optional**
-
-See [the README documenting using the QGIS styles](https://github.com/rustprooflabs/pgosm-flex/blob/main/db/qgis-style/README.md).
-
 
 
 ## PgOSM via Docker

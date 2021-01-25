@@ -1,5 +1,9 @@
 # Load data with PgOSM-Flex
 
+This section expands on details established under the
+[Standard Import section of the main README](README.md).
+
+
 Options to load data via osm2pgsql's Flex output are defined in Lua "styles".
 PgOSM-Flex is using these styles with a mix-and-match approach.
 This is best illustrated by looking within the main `run-all.lua` script.
