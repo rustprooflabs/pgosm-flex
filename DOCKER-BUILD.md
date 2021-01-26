@@ -18,7 +18,7 @@ docker build -t rustprooflabs/pgosm-flex .
 Tag with Pg version.
 
 ```
-docker build -t rustprooflabs/pgosm-flex:pg13 .
+docker build -t rustprooflabs/pgosm-flex:0.0.8 .
 ```
 
 > Note: Update the Dockerfile to build with non-default Postgres/PostGIS version.
@@ -26,7 +26,6 @@ docker build -t rustprooflabs/pgosm-flex:pg13 .
 Push to Dockerhub
 
 ```
-docker push rustprooflabs/pgosm-flex:pg12
-docker push rustprooflabs/pgosm-flex:pg13
+docker push rustprooflabs/pgosm-flex:0.0.8
 docker push rustprooflabs/pgosm-flex:latest
 ```
