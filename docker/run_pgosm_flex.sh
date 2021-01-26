@@ -12,7 +12,7 @@
 # $4 - Layers to load - must match flex-config/$4.lua and flex-config/$4.sql
 
 BASE_PATH=/app/
-
+SQITCH_PATH=/app/db/
 OUT_PATH=/app/output/
 FLEX_PATH=/app/flex-config
 
@@ -71,13 +71,18 @@ else
     exit 1
 fi
 
-cd $BASE_PATH
 
 echo "Create empty pgosm database with extensions..." >> $LOG_FILE
 psql -U postgres -c "DROP DATABASE IF EXISTS pgosm;" >> $LOG_FILE
 psql -U postgres -c "CREATE DATABASE pgosm;" >> $LOG_FILE
 psql -U postgres -d pgosm -c "CREATE EXTENSION postgis;" >> $LOG_FILE
 psql -U postgres -d pgosm -c "CREATE SCHEMA osm;" >> $LOG_FILE
+
+echo "Deploy schema via Sqitch..." >> $LOG_FILE
+cd $SQITCH_PATH
+su -c "sqitch deploy db:pg:pgosm" postgres >> $LOG_FILE
+echo "Loading US Roads helper data" >> $LOG_FILE
+psql -U postgres -d pgosm -f data/roads-us.sql >> $LOG_FILE
 
 osm2pgsql --version >> $LOG_FILE
 
@@ -95,11 +100,11 @@ cd $BASE_PATH
 
 echo "Running pg_dump..." >> $LOG_FILE
 pg_dump -U postgres -d pgosm \
-   --schema=osm > /app/output/pgosm-flex-$2-$4.sql
+   --schema=osm --schema=pgosm > /app/output/pgosm-flex-$2-$4.sql
 
 
-echo "PgOSM processing complete. Final output file: pgosm-$2-$4.sql" >> $LOG_FILE
-echo "PgOSM processing complete. Final output file: pgosm-$2-$4.sql"
+echo "PgOSM processing complete. Final output file: pgosm-flex-$2-$4.sql" >> $LOG_FILE
+echo "PgOSM processing complete. Final output file: pgosm-flex-$2-$4.sql"
 echo "If you followed the README.md it is at: ~/pgosm-data/pgosm-flex-$2-$4.sql"
 
 exit 0
