@@ -101,3 +101,21 @@ current layer definitions.
 │ building:colour                        │  11124 │
 │ roof:colour                            │  11115 │
 ```
+
+## Unroutable routes
+
+The `helpers.lua` methods are probably not perfect.
+
+* `routable_foot()`
+* `routable_cycle()`
+* `routable_motor()`
+
+
+
+```sql
+SELECT * FROM osm.road_line
+    WHERE NOT route_foot AND NOT route_motor AND NOT route_cycle
+;
+```
+> Not all rows returned are errors.  `highway = 'construction'` is not necessarily determinate...
+
