@@ -196,3 +196,71 @@ function parse_admin_level(input)
     -- Fallback
     return
 end
+
+function routable_foot(tags)
+    if (tags.highway == 'footway'
+            or tags.footway
+            or tags.foot == 'yes'
+            or tags.highway == 'pedestrian'
+            or tags.highway == 'crossing'
+            or tags.highway == 'platform'
+            or tags.highway == 'social_path'
+            or tags.highway == 'steps'
+            or tags.highway == 'trailhead'
+            or tags.highway == 'track'
+            or tags.highway == 'path'
+            or tags.highway == 'unclassified'
+            or tags.highway == 'service'
+            or tags.highway == 'residential')
+            then
+        return true
+    end
+
+    return false
+end
+
+-- https://wiki.openstreetmap.org/wiki/Bicycle
+function routable_cycle(tags)
+    if (tags.cycleway
+            or tags.bicycle == 'yes'
+            or tags.bicycle == 'designated'
+            or tags.bicycle == 'permissive'
+            or tags.highway == 'track'
+            or tags.highway == 'path'
+            or tags.highway == 'unclassified'
+            or tags.highway == 'service'
+            or tags.highway == 'residential'
+            or tags.highway == 'tertiary'
+            or tags.highway == 'tertiary_link'
+            or tags.highway == 'secondary'
+            or tags.highway == 'secondary_link'
+            )
+            then
+        return true
+    end
+
+    return false
+end
+
+function routable_motor(tags)
+    if (tags.highway == 'motorway'
+            or tags.highway == 'motorway_link'
+            or tags.highway == 'trunk'
+            or tags.highway == 'trunk_link'
+            or tags.highway == 'primary'
+            or tags.highway == 'primary_link'
+            or tags.highway == 'secondary'
+            or tags.highway == 'secondary_link'
+            or tags.highway == 'tertiary'
+            or tags.highway == 'tertiary_link'
+            or tags.highway == 'residential'
+            or tags.highway == 'service'
+            or tags.highway == 'unclassified')
+            then
+        return true
+    end
+
+    return false
+end
+
+
