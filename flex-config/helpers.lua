@@ -211,7 +211,8 @@ function routable_foot(tags)
             or tags.highway == 'path'
             or tags.highway == 'unclassified'
             or tags.highway == 'service'
-            or tags.highway == 'residential')
+            or tags.highway == 'residential'
+            or tags.highway == 'living_street')
             then
         return true
     end
@@ -225,6 +226,7 @@ function routable_cycle(tags)
             or tags.bicycle == 'yes'
             or tags.bicycle == 'designated'
             or tags.bicycle == 'permissive'
+            or tags.highway == 'cycleway'
             or tags.highway == 'track'
             or tags.highway == 'path'
             or tags.highway == 'unclassified'
@@ -234,6 +236,7 @@ function routable_cycle(tags)
             or tags.highway == 'tertiary_link'
             or tags.highway == 'secondary'
             or tags.highway == 'secondary_link'
+            or tags.highway == 'living_street'
             )
             then
         return true
@@ -255,7 +258,8 @@ function routable_motor(tags)
             or tags.highway == 'tertiary_link'
             or tags.highway == 'residential'
             or tags.highway == 'service'
-            or tags.highway == 'unclassified')
+            or tags.highway == 'unclassified'
+            or tags.highway == 'living_street')
             then
         return true
     end
