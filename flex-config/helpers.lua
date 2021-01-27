@@ -212,7 +212,10 @@ function routable_foot(tags)
             or tags.highway == 'unclassified'
             or tags.highway == 'service'
             or tags.highway == 'residential'
-            or tags.highway == 'living_street')
+            or tags.highway == 'living_street'
+            or tags.highway == 'elevator'
+            or tags.highway == 'corridor'
+            or tags.highway == 'foot')
             then
         return true
     end
@@ -259,7 +262,9 @@ function routable_motor(tags)
             or tags.highway == 'residential'
             or tags.highway == 'service'
             or tags.highway == 'unclassified'
-            or tags.highway == 'living_street')
+            or tags.highway == 'living_street'
+            or tags.highway == 'rest_area'
+            or tags.highway == 'raceway')
             then
         return true
     end
