@@ -92,12 +92,9 @@ osm2pgsql --slim --drop \
 ## Customize PgOSM
 
 Some behavior can be customized at run time with the use of environment variables.
-Current environment variables:
 
 * `PGOSM_SRID`
-* `PGOSM_SCHEMA`
-
-> WARNING:  Customizing the schema name will cause the `.sql` scripts to break.
+* `OSM_DATE` (coming soon!)
 
 To use `SRID 4326` instead of the default `SRID 3857`, set the `PGOSM_SRID`
 environment variable before running osm2pgsql.
@@ -113,7 +110,6 @@ Changes to the SRID are reflected in output printed.
 2021-01-08 15:01:15  Database version: 13.1 (Ubuntu 13.1-1.pgdg20.10+1)
 2021-01-08 15:01:15  Node-cache: cache=800MB, maxblocks=12800*65536, allocation method=11
 Custom SRID: 4326
-Default Schema: osm
 ...
 ```
 
