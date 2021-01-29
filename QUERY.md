@@ -65,9 +65,9 @@ SELECT COUNT(*) AS row_count,
 
 
 
-## Quality Control Queries
+# Quality Control Queries
 
-### Features not Loaded
+## Features not Loaded
 
 The process of selectively load specific features and not others always has the chance
 of accidentally missing important data.
@@ -118,4 +118,19 @@ SELECT * FROM osm.road_line
 ;
 ```
 > Not all rows returned are errors.  `highway = 'construction'` is not necessarily determinate...
+
+
+## Relations missing from unitable
+
+```sql
+SELECT t.*
+    FROM osm.tags t
+    WHERE t.geom_type = 'R' 
+        AND NOT EXISTS (
+            SELECT 1
+            FROM osm.unitable u
+            WHERE u.geom_type = t.geom_type AND t.osm_id = u.osm_id
+);
+```
+
 

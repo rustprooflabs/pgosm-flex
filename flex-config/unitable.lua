@@ -55,16 +55,31 @@ function osm2pgsql.process_way(object)
     process(object, 'line')
 end
 
+-- Main relation types from https://wiki.openstreetmap.org/wiki/Types_of_relation
 function osm2pgsql.process_relation(object)
     if clean_tags(object.tags) then
         return
     end
 
-    if object.tags.type == 'multipolygon' or object.tags.type == 'boundary' then
+    if (object.tags.type == 'multipolygon'
+            or object.tags.type == 'boundary')
+            then
         dtable:add_row({
             tags = json.encode(object.tags),
             geom = { create = 'area' }
         })
+    elseif (object.tags.type == 'route'
+            or object.tags.type == 'route_master'
+            or object.tags.type == 'public_transport'
+            or object.tags.type == 'waterway')
+            then
+        dtable:add_row({
+            tags = json.encode(object.tags),
+            geom = { create = 'line' }
+        })
+
     end
+
+
 end
 
