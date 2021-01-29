@@ -10,6 +10,20 @@ else
     print('Default SRID: ' .. srid)
 end
 
+
+local pgosm_date_env = os.getenv("PGOSM_DATE")
+if pgosm_date_env then
+    pgosm_date = pgosm_date_env
+    default_date = false
+    print('Explicit Date: ' .. pgosm_date)
+else
+    pgosm_date = os.date("%Y-%m-%d")
+    default_date = true
+    print('Default Date (today): ' .. pgosm_date)
+end
+
+-- Best way to change schema name is post-processing.
+-- Use ALTER SCHEMA osm RENAME TO your_schema;
 schema_name = 'osm'
 
 
