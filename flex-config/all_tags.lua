@@ -26,7 +26,7 @@ function clean_tags(tags)
     return next(tags) == nil
 end
 
-function process(object, geometry_type)
+function process(object)
     if clean_tags(object.tags) then
         return
     end
@@ -36,24 +36,15 @@ function process(object, geometry_type)
 end
 
 function all_tags_process_node(object)
-    process(object, 'point')
+    process(object)
 end
 
 function all_tags_process_way(object)
-    process(object, 'line')
+    process(object)
 end
 
 function all_tags_process_relation(object)
-    if clean_tags(object.tags) then
-        return
-    end
-
-    if object.tags.type == 'multipolygon' or object.tags.type == 'boundary' then
-        tags_table:add_row({
-            tags = json.encode(object.tags),
-            geom = { create = 'area' }
-        })
-    end
+    process(object)
 end
 
 
