@@ -83,14 +83,43 @@ psql -d pgosm -c "CREATE EXTENSION postgis; CREATE SCHEMA osm;"
 The PgOSM-Flex styles from this project are required to run the following.
 Clone the repo and change into the directory containing
 the `.lua` and `.sql` scripts.
-The `run-all.lua` script provides the most complete set of OpenStreetMap
-data.  The list of main tables in PgOSM-Flex will continue to grow and evolve.
 
 
 ```bash
 mkdir ~/git
 cd ~/git
 git clone https://github.com/rustprooflabs/pgosm-flex.git
+cd pgosm-flex/flex-config
+```
+
+(Optional) Set the `PGOSM_DATE` env var to indicate the date the OpenStreetMap
+data was sourced.  This is most helpful when the PBF file was saved
+more than a couple days ago to indicate to users of the data when the data was from.  The default is to use the current date.
+
+```bash
+export PGOSM_DATE='2021-01-27'
+```
+
+The date is in the `osm.pgosm_flex` table.
+
+```sql
+SELECT osm_date FROM osm.pgosm_flex;
+```
+
+```bash
+osm_date  |
+----------|
+2021-01-27|
+```
+
+
+
+The `run-all.lua` script provides the most complete set of OpenStreetMap
+data.  The list of main tables in PgOSM-Flex will continue to grow and evolve.
+See [LOAD-DATA.md](LOAD-DATA.md) for more about loading data.
+
+
+```bash
 cd pgosm-flex/flex-config
 
 osm2pgsql --slim --drop \

@@ -93,8 +93,19 @@ osm2pgsql --slim --drop \
 
 Some behavior can be customized at run time with the use of environment variables.
 
+* `OSM_DATE`
 * `PGOSM_SRID`
-* `OSM_DATE` (coming soon!)
+
+Users will often want to set the `PGOSM_DATE` env var to record the date of
+the data being loaded.  This value ends up in the `osm_date` column of
+`osm.pgosm_meta`.  The default is today's date.
+
+```bash
+export PGOSM_DATE='2021-01-27'
+```
+
+> Setting `PGOSM_DATE` is especially helpful if you are loading data from more than 24-48 hours old.
+
 
 To use `SRID 4326` instead of the default `SRID 3857`, set the `PGOSM_SRID`
 environment variable before running osm2pgsql.
