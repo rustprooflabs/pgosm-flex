@@ -116,6 +116,7 @@ osm_date  |
 
 The `run-all.lua` script provides the most complete set of OpenStreetMap
 data.  The list of main tables in PgOSM-Flex will continue to grow and evolve.
+See [LOAD-DATA.md](LOAD-DATA.md) for more about loading data.
 
 
 ```bash
