@@ -4,8 +4,9 @@ This page provides a rough guide of how PgOSM-Flex performance compares
 against the legacy osm2pgsql load.  **This comparison is apples to oranges** but
 is hopefully still helpful for planning.
 The data loaded via PgOSM-Flex is of much higher quality than the
-legacy three-table load.  Due to this it does not require the massive cleanup
-required post-import.
+legacy three-table load.  Due to this fundamental switch, data loaded
+via PgOSM-Flex is ready-to-use as soon as the load is done...
+it does not require massive post-import cleanup!
 
 The current findings show a given region will take a few times longer using the
 full PgOSM-Flex (`run-all.lua`) than using the legacy method.
