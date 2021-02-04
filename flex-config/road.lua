@@ -27,7 +27,6 @@ tables.road_line = osm2pgsql.define_table({
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'major',   type = 'boolean', not_null = true},
         { column = 'name',     type = 'text' },
         { column = 'ref',     type = 'text' },
         { column = 'maxspeed', type = 'int' },
@@ -35,6 +34,7 @@ tables.road_line = osm2pgsql.define_table({
         { column = 'layer',   type = 'int', not_null = true },
         { column = 'tunnel',     type = 'text' },
         { column = 'bridge',     type = 'text' },
+        { column = 'major',   type = 'boolean', not_null = true},
         { column = 'route_foot',     type = 'boolean' },
         { column = 'route_cycle',     type = 'boolean' },
         { column = 'route_motor',     type = 'boolean' },
