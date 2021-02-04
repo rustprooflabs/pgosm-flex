@@ -1,2 +1,2 @@
-require "all_tags"
+require "tags"
 require "run-no-tags"
