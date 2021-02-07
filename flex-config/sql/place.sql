@@ -184,6 +184,9 @@ CREATE OR REPLACE PROCEDURE osm.build_nested_admin_polygons(
                              'neighbourhood')
                 )
     ;
+    CREATE UNIQUE INDEX tmp_ix_places_for_nesting
+        ON places_for_nesting (osm_id);
+
 
     DROP TABLE IF EXISTS place_batch;
     CREATE TEMP TABLE place_batch AS
@@ -250,11 +253,7 @@ END $$;
 
 
 
-COMMENT ON PROCEDURE osm.build_nested_admin_polygons IS 'Warning: Expensive procedure!  Use to populate the osm.place_polygon_nested table.  Not ran as part of SQL script automatically due to excessive run time on large regions.';
-
--- Commented out on purpose -- see comment above
---CALL osm.build_nested_admin_polygons();
-
+COMMENT ON PROCEDURE osm.build_nested_admin_polygons IS 'Warning: Expensive procedure!  Use to populate the osm.place_polygon_nested table. This procedure is not ran as part of SQL script automatically due to excessive run time on large regions.';
 
 
 CREATE MATERIALIZED VIEW osm.vplace_polygon_subdivide AS
