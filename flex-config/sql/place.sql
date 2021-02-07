@@ -174,18 +174,35 @@ CREATE OR REPLACE PROCEDURE osm.build_nested_admin_polygons(
 
  FOR counter IN 1..rows_to_update by $1 LOOP
 
+    DROP TABLE IF EXISTS places_for_nesting;
+    CREATE TEMP TABLE places_for_nesting AS
+    SELECT p.osm_id
+        FROM osm.place_polygon_nested p
+        WHERE p.name IS NOT NULL
+            AND (admin_level IS NOT NULL
+                OR osm_type IN ('boundary', 'admin_level', 'suburb',
+                             'neighbourhood')
+                )
+    ;
+    CREATE UNIQUE INDEX tmp_ix_places_for_nesting
+        ON places_for_nesting (osm_id);
+
+
     DROP TABLE IF EXISTS place_batch;
     CREATE TEMP TABLE place_batch AS
     SELECT p.osm_id, t.nest_level, t.name_path, t.osm_id_path, t.admin_level_path
         FROM osm.vplace_polygon p
         INNER JOIN LATERAL (
             SELECT COUNT(i.osm_id) AS nest_level,
-                    ARRAY_AGG(i.name ORDER BY i.admin_level ASC) AS name_path,
-                    ARRAY_AGG(i.osm_id ORDER BY i.admin_level ASC) AS osm_id_path,
+                    ARRAY_AGG(i.name ORDER BY COALESCE(i.admin_level::INT, 99::INT) ASC) AS name_path,
+                    ARRAY_AGG(i.osm_id ORDER BY COALESCE(i.admin_level::INT, 99::INT) ASC) AS osm_id_path,
                     ARRAY_AGG(COALESCE(i.admin_level::INT, 99::INT) ORDER BY i.admin_level ASC) AS admin_level_path
                 FROM osm.vplace_polygon i
                 WHERE ST_Within(p.geom, i.geom)
-                    AND i.boundary = p.boundary
+                    AND EXISTS (
+                            SELECT 1 FROM places_for_nesting include
+                                WHERE i.osm_id = include.osm_id
+                        )
                     AND i.name IS NOT NULL
                ) t ON True
         WHERE EXISTS (
@@ -193,8 +210,12 @@ CREATE OR REPLACE PROCEDURE osm.build_nested_admin_polygons(
                     WHERE miss.nest_level IS NULL
                     AND p.osm_id = miss.osm_id
         )
+        AND EXISTS (
+                SELECT 1 FROM places_for_nesting include
+                    WHERE p.osm_id = include.osm_id
+            )
     LIMIT $1
-;
+    ;
 
     UPDATE osm.place_polygon_nested n 
         SET nest_level = t.nest_level,
@@ -208,6 +229,7 @@ CREATE OR REPLACE PROCEDURE osm.build_nested_admin_polygons(
     END LOOP;
 
     DROP TABLE IF EXISTS place_batch;
+    DROP TABLE IF EXISTS places_for_nesting;
 
     -- With all nested paths calculated the innermost value can be determined.
     WITH calc_inner AS (
@@ -231,11 +253,7 @@ END $$;
 
 
 
-COMMENT ON PROCEDURE osm.build_nested_admin_polygons IS 'Warning: Expensive procedure!  Use to populate the osm.place_polygon_nested table.  Not ran as part of SQL script automatically due to excessive run time on large regions.';
-
--- Commented out on purpose -- see comment above
---CALL osm.build_nested_admin_polygons();
-
+COMMENT ON PROCEDURE osm.build_nested_admin_polygons IS 'Warning: Expensive procedure!  Use to populate the osm.place_polygon_nested table. This procedure is not ran as part of SQL script automatically due to excessive run time on large regions.';
 
 
 CREATE MATERIALIZED VIEW osm.vplace_polygon_subdivide AS
