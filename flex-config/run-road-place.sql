@@ -1,3 +1,3 @@
-\i pgosm-meta.sql
-\i road.sql
-\i place.sql
+\i sql/pgosm-meta.sql
+\i sql/road.sql
+\i sql/place.sql
