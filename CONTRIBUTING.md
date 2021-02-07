@@ -9,8 +9,8 @@ Fork the project into your own repo, create a topic branch there and then make o
 
 Checklist for adding new feature layers:
 
-* Create `<feature>.lua`
-* Create `<feature>.sql`
-* Update `run-no-tags.lua`
-* Update `run-no-tags.sql`
+* Create `flex-config/style/<feature>.lua`
+* Create `flex-config/sql/<feature>.sql`
+* Update `flex-config/run-no-tags.lua`
+* Update `flex-config/run-no-tags.sql`
 * Update `db/qc/features_not_in_run_all.sql`
