@@ -71,13 +71,18 @@ function osm2pgsql.process_relation(object)
     elseif (object.tags.type == 'route'
             or object.tags.type == 'route_master'
             or object.tags.type == 'public_transport'
-            or object.tags.type == 'waterway')
+            or object.tags.type == 'waterway'
+            or object.tags.type == 'network'
+            or object.tags.type == 'building'
+            or object.tags.type == 'street'
+            or object.tags.type == 'bridge'
+            or object.tags.type == 'tunnel'
+            )
             then
         dtable:add_row({
             tags = json.encode(object.tags),
             geom = { create = 'line' }
         })
-
     end
 
 
