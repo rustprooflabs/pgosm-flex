@@ -1,3 +1,3 @@
-require "pgosm-meta"
-require "road"
-require "place"
+require "style.pgosm-meta"
+require "style.road"
+require "style.place"
