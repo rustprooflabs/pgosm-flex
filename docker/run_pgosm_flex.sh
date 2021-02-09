@@ -84,6 +84,11 @@ su -c "sqitch deploy db:pg:pgosm" postgres >> $LOG_FILE
 echo "Loading US Roads helper data" >> $LOG_FILE
 psql -U postgres -d pgosm -f data/roads-us.sql >> $LOG_FILE
 
+
+REGION="$1--$2"
+echo "Setting PGOSM_REGION to $REGION" >> $LOG_FILE
+export PGOSM_REGION=$REGION
+
 osm2pgsql --version >> $LOG_FILE
 
 echo "Running osm2pgsql..." >> $LOG_FILE
