@@ -62,6 +62,22 @@ else
 fi
 
 
+if [ -z $PGOSM_DATA_SCHEMA_ONLY ]; then
+  echo "DATA_SCHEMA_ONLY NOT SET"
+  DATA_SCHEMA_ONLY=false
+else
+  DATA_SCHEMA_ONLY=$PGOSM_DATA_SCHEMA_ONLY
+  echo "DATA_SCHEMA_ONLY set to $DATA_SCHEMA_ONLY"
+fi
+
+if [ -z $PGOSM_DATA_SCHEMA_NAME ]; then
+  echo "PGOSM_DATA_SCHEMA_NAME NOT SET"
+  DATA_SCHEMA_NAME="osm"
+else
+  DATA_SCHEMA_NAME=$PGOSM_DATA_SCHEMA_NAME
+  echo "DATA_SCHEMA_NAME set to $DATA_SCHEMA_NAME"
+fi
+
 if cd $OUT_PATH && md5sum -c $MD5_FILE; then
     echo 'MD5 checksum validated' >> $LOG_FILE
 else
@@ -84,6 +100,11 @@ su -c "sqitch deploy db:pg:pgosm" postgres >> $LOG_FILE
 echo "Loading US Roads helper data" >> $LOG_FILE
 psql -U postgres -d pgosm -f data/roads-us.sql >> $LOG_FILE
 
+
+REGION="$1--$2"
+echo "Setting PGOSM_REGION to $REGION" >> $LOG_FILE
+export PGOSM_REGION=$REGION
+
 osm2pgsql --version >> $LOG_FILE
 
 echo "Running osm2pgsql..." >> $LOG_FILE
@@ -96,15 +117,29 @@ osm2pgsql -U postgres --create --slim --drop \
 echo "Running post-processing SQL script..." >> $LOG_FILE
 psql -U postgres -d pgosm -f $4.sql >> $LOG_FILE
 
+if [ $DATA_SCHEMA_NAME != "osm" ]; then
+    echo 'Change schema name from osm to $DATA_SCHEMA_NAME'
+    psql -U postgres -d pgosm \
+      -c "ALTER SCHEMA osm RENAME TO $DATA_SCHEMA_NAME;"
+fi
+
 cd $BASE_PATH
 
-echo "Running pg_dump..." >> $LOG_FILE
-pg_dump -U postgres -d pgosm \
-   --schema=osm --schema=pgosm > /app/output/pgosm-flex-$2-$4.sql
+OUT_NAME="pgosm-flex-$2-$4.sql"
+OUT_PATH="/app/output/$OUT_NAME"
 
+if $DATA_SCHEMA_ONLY; then
+  echo "Running pg_dump, only data schema..." >> $LOG_FILE
+  pg_dump -U postgres -d pgosm \
+     --schema=$DATA_SCHEMA_NAME > $OUT_PATH
+else
+  echo "Running pg_dump including pgosm schema..." >> $LOG_FILE
+  pg_dump -U postgres -d pgosm \
+     --schema=$DATA_SCHEMA_NAME --schema=pgosm > $OUT_PATH
+fi
 
-echo "PgOSM processing complete. Final output file: pgosm-flex-$2-$4.sql" >> $LOG_FILE
-echo "PgOSM processing complete. Final output file: pgosm-flex-$2-$4.sql"
-echo "If you followed the README.md it is at: ~/pgosm-data/pgosm-flex-$2-$4.sql"
+echo "PgOSM processing complete. Final output file: $OUT_PATH" >> $LOG_FILE
+echo "PgOSM processing complete. Final output file: $OUT_PATH"
+echo "If you followed the README.md it is at: ~/pgosm-data/$OUT_NAME"
 
 exit 0

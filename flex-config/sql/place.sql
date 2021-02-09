@@ -28,6 +28,11 @@ COMMENT ON COLUMN osm.place_point.boundary IS 'Value from boundary tag.  https:/
 COMMENT ON COLUMN osm.place_line.boundary IS 'Value from boundary tag.  https://wiki.openstreetmap.org/wiki/Boundaries';
 COMMENT ON COLUMN osm.place_polygon.boundary IS 'Value from boundary tag.  https://wiki.openstreetmap.org/wiki/Boundaries';
 
+COMMENT ON COLUMN osm.place_point.pgosm_region IS 'Region specified at run time via env var PGOSM_REGION.';
+COMMENT ON COLUMN osm.place_line.pgosm_region IS 'Region specified at run time via env var PGOSM_REGION.';
+COMMENT ON COLUMN osm.place_polygon.pgosm_region IS 'Region specified at run time via env var PGOSM_REGION.';
+
+
 
 ALTER TABLE osm.place_point
     ADD CONSTRAINT pk_osm_place_point_osm_id

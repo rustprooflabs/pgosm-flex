@@ -95,6 +95,7 @@ Some behavior can be customized at run time with the use of environment variable
 
 * `OSM_DATE`
 * `PGOSM_SRID`
+* `PGOSM_REGION`
 
 Users will often want to set the `PGOSM_DATE` env var to record the date of
 the data being loaded.  This value ends up in the `osm_date` column of
@@ -122,5 +123,11 @@ Changes to the SRID are reflected in output printed.
 2021-01-08 15:01:15  Node-cache: cache=800MB, maxblocks=12800*65536, allocation method=11
 Custom SRID: 4326
 ...
+```
+
+
+
+```bash
+export PGOSM_REGION='us-dc'
 ```
 

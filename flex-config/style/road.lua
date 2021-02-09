@@ -15,6 +15,7 @@ tables.road_point = osm2pgsql.define_table({
         { column = 'layer',   type = 'int', not_null = true },
         { column = 'tunnel',     type = 'text' },
         { column = 'bridge',     type = 'text' },
+        { column = 'pgosm_region',     type = 'text', not_null = true },
         { column = 'geom',     type = 'point', projection = srid }
     }
 })
@@ -38,6 +39,7 @@ tables.road_line = osm2pgsql.define_table({
         { column = 'route_foot',     type = 'boolean' },
         { column = 'route_cycle',     type = 'boolean' },
         { column = 'route_motor',     type = 'boolean' },
+        { column = 'pgosm_region',     type = 'text', not_null = true },
         { column = 'geom',     type = 'linestring', projection = srid }
     }
 })
@@ -70,6 +72,7 @@ function road_process_node(object)
         layer = layer,
         tunnel = tunnel,
         bridge = bridge,
+        pgosm_region = pgosm_region,
         geom = { create = 'point' }
     })
 
@@ -109,6 +112,7 @@ function road_process_way(object)
         route_foot = route_foot,
         route_cycle = route_cycle,
         route_motor = route_motor,
+        pgosm_region = pgosm_region,
         geom = { create = 'line' }
     })
 

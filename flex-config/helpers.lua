@@ -22,6 +22,17 @@ else
     print('Default Date (today): ' .. pgosm_date)
 end
 
+
+local pgosm_region_env = os.getenv("PGOSM_REGION")
+if pgosm_region_env then
+    pgosm_region = pgosm_region_env
+    print('Region: ' .. pgosm_region)
+else
+    pgosm_region = 'Not Specified'
+    print('INFO - Set PGOSM_REGION env var to customize region. ')
+end
+
+
 -- Best way to change schema name is post-processing.
 -- Use ALTER SCHEMA osm RENAME TO your_schema;
 schema_name = 'osm'

@@ -29,6 +29,10 @@ COMMENT ON COLUMN osm.road_line.route_foot IS 'Best guess if the segment is rout
 COMMENT ON COLUMN osm.road_line.route_cycle IS 'Best guess if the segment is routable for bicycle traffic. WARNING: This does not indicte that this method of travel is safe OR allowed!';
 COMMENT ON COLUMN osm.road_line.route_motor IS 'Best guess if the segment is routable for motorized traffic. WARNING: This does not indicte that this method of travel is safe OR allowed!';
 
+COMMENT ON COLUMN osm.road_point.pgosm_region IS 'Region specified at run time via env var PGOSM_REGION.';
+COMMENT ON COLUMN osm.road_line.pgosm_region IS 'Region specified at run time via env var PGOSM_REGION.';
+
+
 ALTER TABLE osm.road_point
     ADD CONSTRAINT pk_osm_road_point_osm_id
     PRIMARY KEY (osm_id)
