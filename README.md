@@ -239,13 +239,13 @@ output file from ``pg_dump`` containing the ``osm`` schema to load into a produc
 The ``.osm.pbf`` file and associated ``md5``are saved here.  Custom templates, and custom OSM file inputs can be stored here.
 
 
-```
+```bash
 mkdir ~/pgosm-data
 ```
 
 Start the `pgosm` container to make PostgreSQL/PostGIS available.  This command exposes Postgres inside Docker on port 5433 and establishes links to local directories.
 
-```
+```bash
 docker run --name pgosm -d \
     -v ~/pgosm-data:/app/output \
     -e POSTGRES_PASSWORD=mysecretpassword \
@@ -256,7 +256,7 @@ docker run --name pgosm -d \
 Run the PgOSM-flex processing.  Using the Washington D.C. sub-region is great
 for testing, it runs fast even on the smallest hardware.
 
-```
+```bash
 docker exec -it \
     -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_USER=postgres \
     pgosm bash docker/run_pgosm_flex.sh \
@@ -266,6 +266,19 @@ docker exec -it \
     run-all
 ```
 
+Change schema name from `osm` before exporting and skip the 
+
+```bash
+docker exec -it \
+    -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_USER=postgres \
+    -e PGOSM_DATA_SCHEMA_ONLY=true \
+    -e PGOSM_DATA_SCHEMA_NAME=osm_dc \
+    pgosm bash docker/run_pgosm_flex.sh \
+    north-america/us \
+    district-of-columbia \
+    400 \
+    run-all
+```
 
 ## Always download
 
