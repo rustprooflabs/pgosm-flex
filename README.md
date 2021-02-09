@@ -266,7 +266,9 @@ docker exec -it \
     run-all
 ```
 
-Change schema name from `osm` before exporting and skip the 
+Change schema name from `osm` to `osm_dc` before exporting and only export
+this data schema (excluding `pgosm`).
+
 
 ```bash
 docker exec -it \
