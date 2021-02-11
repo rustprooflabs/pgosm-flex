@@ -14,7 +14,6 @@ tables.place_point = osm2pgsql.define_table({
         { column = 'boundary',     type = 'text' },
         { column = 'admin_level',     type = 'int4' },
         { column = 'name',     type = 'text' },
-        { column = 'pgosm_region',     type = 'text', not_null = true },
         { column = 'geom',     type = 'point' , projection = srid},
     }
 })
@@ -28,7 +27,6 @@ tables.place_line = osm2pgsql.define_table({
         { column = 'boundary',     type = 'text' },
         { column = 'admin_level',     type = 'int4' },
         { column = 'name',     type = 'text' },
-        { column = 'pgosm_region',     type = 'text', not_null = true },
         { column = 'geom',     type = 'linestring' , projection = srid},
     }
 })
@@ -44,7 +42,6 @@ tables.place_polygon = osm2pgsql.define_table({
         { column = 'admin_level',     type = 'int4' },
         { column = 'name',     type = 'text' },
         { column = 'member_ids', type = 'jsonb'},
-        { column = 'pgosm_region',     type = 'text', not_null = true },
         { column = 'geom',     type = 'multipolygon' , projection = srid},
     }
 })
@@ -76,7 +73,6 @@ function place_process_node(object)
         boundary = boundary,
         admin_level = admin_level,
         name = name,
-        pgosm_region = pgosm_region,
         geom = { create = 'point' }
     })
 
@@ -110,7 +106,6 @@ function place_process_way(object)
             boundary = boundary,
             admin_level = admin_level,
             name = name,
-            pgosm_region = pgosm_region,
             geom = { create = 'area' }
         })
     else
@@ -119,7 +114,6 @@ function place_process_way(object)
             boundary = boundary,
             admin_level = admin_level,
             name = name,
-            pgosm_region = pgosm_region,
             geom = { create = 'line' }
         })
     end
@@ -156,7 +150,6 @@ function place_process_relation(object)
             admin_level = admin_level,
             name = name,
             member_ids = json.encode(member_ids),
-            pgosm_region = pgosm_region,
             geom = { create = 'area' }
         })
     end
