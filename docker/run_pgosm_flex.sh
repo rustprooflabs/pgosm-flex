@@ -118,7 +118,7 @@ echo "Running post-processing SQL script..." >> $LOG_FILE
 psql -U postgres -d pgosm -f $4.sql >> $LOG_FILE
 
 if [ $DATA_SCHEMA_NAME != "osm" ]; then
-    echo 'Change schema name from osm to $DATA_SCHEMA_NAME'
+    echo "Changing schema name from osm to $DATA_SCHEMA_NAME" >> $LOG_FILE
     psql -U postgres -d pgosm \
       -c "ALTER SCHEMA osm RENAME TO $DATA_SCHEMA_NAME;"
 fi

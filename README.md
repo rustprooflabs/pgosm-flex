@@ -267,7 +267,8 @@ docker exec -it \
 ```
 
 Change schema name from `osm` to `osm_dc` before exporting and only export
-this data schema (excluding `pgosm`).
+this data schema (excluding `pgosm`).  This example assumes the PBF and MD5 files from
+October 11, 2020 (2020-10-11) are in the `~/pgosm-data` directory linked during `docker run`.
 
 
 ```bash
@@ -275,6 +276,7 @@ docker exec -it \
     -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_USER=postgres \
     -e PGOSM_DATA_SCHEMA_ONLY=true \
     -e PGOSM_DATA_SCHEMA_NAME=osm_dc \
+    -e PGOSM_DATE='2020-10-11' \
     pgosm bash docker/run_pgosm_flex.sh \
     north-america/us \
     district-of-columbia \
