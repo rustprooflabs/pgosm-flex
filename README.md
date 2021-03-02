@@ -275,13 +275,13 @@ October 11, 2020 (2020-10-11) are in the `~/pgosm-data` directory linked during 
 docker exec -it \
     -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_USER=postgres \
     -e PGOSM_DATA_SCHEMA_ONLY=true \
-    -e PGOSM_DATA_SCHEMA_NAME=osm_dc \
-    -e PGOSM_DATE='2020-10-11' \
+    -e PGOSM_DATA_SCHEMA_NAME=osm_co \
+    -e PGOSM_DATE='2021-01-13' \
     pgosm bash docker/run_pgosm_flex.sh \
     north-america/us \
-    district-of-columbia \
-    400 \
-    run-all
+    colorado \
+    4000 \
+    run-road-place
 ```
 
 ## Always download
