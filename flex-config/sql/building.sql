@@ -36,26 +36,32 @@ ALTER TABLE osm.building_polygon
     PRIMARY KEY (osm_id)
 ;
 
+ALTER TABLE osm.building_point ADD COLUMN address TEXT
+    GENERATED ALWAYS AS (
+        COALESCE(housenumber, '')
+            || COALESCE(' ' || street, '')
+            || COALESCE(', ' || city || ' ', '')
+            || COALESCE(', ' || state || ' ', '')
+        ) STORED
+;
+ALTER TABLE osm.building_polygon ADD COLUMN address TEXT
+    GENERATED ALWAYS AS (
+        COALESCE(housenumber, '')
+            || COALESCE(' ' || street, '')
+            || COALESCE(', ' || city || ' ', '')
+            || COALESCE(', ' || state || ' ', '')
+        ) STORED
+;
 CREATE INDEX ix_osm_building_polygon_type ON osm.building_polygon (osm_type);
 
 
 CREATE VIEW osm.vbuilding_all AS
 SELECT osm_id, 'N' AS geom_type, name, levels, height, operator, wheelchair,
-        COALESCE(housenumber, '')
-        || COALESCE(' ' || street, '')
-        || COALESCE(', ' || city || ' ', '')
-        || COALESCE(', ' || state || ' ', '')
-            AS address,
-        geom
+        address, geom
     FROM osm.building_point
 UNION
 SELECT osm_id, 'W' AS geom_type, name, levels, height, operator, wheelchair,
-        COALESCE(housenumber, '')
-        || COALESCE(' ' || street, '')
-        || COALESCE(', ' || city || ' ', '')
-        || COALESCE(', ' || state || ' ', '')
-            AS address,
-        ST_Centroid(geom) AS geom
+        address, ST_Centroid(geom) AS geom
     FROM osm.building_polygon
 ;
 
