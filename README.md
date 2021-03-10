@@ -63,7 +63,7 @@ Install prereqs as user with sudo.  Example for Ubuntu 20.04.
 ```bash
 sudo apt update
 sudo apt install -y --no-install-recommends \
-        sqitch wget ca-certificates \
+        sqitch wget curl ca-certificates \
         git make cmake g++ \
         libboost-dev libboost-system-dev \
         libboost-filesystem-dev libexpat1-dev zlib1g-dev \
@@ -80,6 +80,17 @@ cd osm2pgsql/build
 cmake ..
 make
 sudo make install
+```
+
+Add PGDG repo and install Postgres.  More [on Postgres Wiki](https://wiki.postgresql.org/wiki/Apt).
+
+```bash
+curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add - 
+sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+sudo apt-get update
+sudo apt-get install postgresql-13 \
+    postgresql-13-postgis-3 \
+    postgresql-13-postgis-3-scripts
 ```
 
 
