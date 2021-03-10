@@ -16,6 +16,38 @@ ALTER TABLE osm.amenity_polygon
     PRIMARY KEY (osm_id)
 ;
 
+ALTER TABLE osm.amenity_point 
+    ADD address TEXT NOT NULL
+    GENERATED ALWAYS AS (
+        COALESCE(housenumber, '')
+            || COALESCE(' ' || street, '')
+            || COALESCE(', ' || city || ' ', '')
+            || COALESCE(', ' || state || ' ', '')
+        )
+    STORED
+;
+
+ALTER TABLE osm.amenity_line
+    ADD address TEXT NOT NULL
+    GENERATED ALWAYS AS (
+        COALESCE(housenumber, '')
+            || COALESCE(' ' || street, '')
+            || COALESCE(', ' || city || ' ', '')
+            || COALESCE(', ' || state || ' ', '')
+        )
+    STORED
+;
+
+ALTER TABLE osm.amenity_polygon
+    ADD address TEXT NOT NULL
+    GENERATED ALWAYS AS (
+        COALESCE(housenumber, '')
+            || COALESCE(' ' || street, '')
+            || COALESCE(', ' || city || ' ', '')
+            || COALESCE(', ' || state || ' ', '')
+        )
+    STORED
+;
 
 CREATE INDEX ix_osm_amenity_point_type ON osm.amenity_point (osm_type);
 CREATE INDEX ix_osm_amenity_line_type ON osm.amenity_line (osm_type);
@@ -48,3 +80,7 @@ COMMENT ON COLUMN osm.amenity_polygon.name IS 'Best name option determined by he
 COMMENT ON COLUMN osm.amenity_point.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.amenity_line.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.amenity_polygon.geom IS 'Geometry loaded by osm2pgsql.';
+
+COMMENT ON COLUMN osm.amenity_point.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
+COMMENT ON COLUMN osm.amenity_line.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
+COMMENT ON COLUMN osm.amenity_polygon.address IS 'Simple attempt to combine address parts into single column with COALESCE.';

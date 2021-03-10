@@ -72,6 +72,8 @@ COMMENT ON COLUMN osm.shop_polygon.brand IS 'Identity of product, service or bus
 COMMENT ON COLUMN osm.shop_point.phone IS 'Phone number associated with the feature. https://wiki.openstreetmap.org/wiki/Key:phone';
 COMMENT ON COLUMN osm.shop_polygon.phone IS 'Phone number associated with the feature. https://wiki.openstreetmap.org/wiki/Key:phone';
 
+COMMENT ON COLUMN osm.shop_point.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
+COMMENT ON COLUMN osm.shop_polygon.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
 
 
 -- osm_type column only has shop/amenity values.
