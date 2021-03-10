@@ -83,8 +83,17 @@ function shop_process_node(object)
             geom = { create = 'point' }
         })
 
+    -- This creates overlap between this layer and amenity layer
     elseif object.tags.amenity == 'vending_machine'
             or object.tags.amenity == 'car_rental'
+            or object.tags.amenity == 'motorcycle_rental'
+            or object.tags.amenity == 'cafe'
+            or object.tags.amenity == 'phone_repair'
+            or object.tags.amenity == 'music_school'
+            or object.tags.amenity == 'pub'
+            or object.tags.amenity == 'pharmacy'
+            or object.tags.amenity == 'ticket_booth'
+            or object.tags.amenity == 'shop'
             then
         local osm_type = 'amenity'
         local osm_subtype = object:grab_tag('amenity')
@@ -153,6 +162,14 @@ function shop_process_way(object)
 
     elseif object.tags.amenity == 'vending_machine'
             or object.tags.amenity == 'car_rental'
+            or object.tags.amenity == 'motorcycle_rental'
+            or object.tags.amenity == 'cafe'
+            or object.tags.amenity == 'phone_repair'
+            or object.tags.amenity == 'music_school'
+            or object.tags.amenity == 'pub'
+            or object.tags.amenity == 'pharmacy'
+            or object.tags.amenity == 'ticket_booth'
+            or object.tags.amenity == 'shop'
             then
         local osm_type = 'amenity'
         local osm_subtype = object:grab_tag('amenity')
