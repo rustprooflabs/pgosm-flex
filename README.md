@@ -56,8 +56,35 @@ process.
 
 > Loading the full data set with `run-all` as shown here results in a lot of data.  See [the instructions in LOAD-DATA.md](LOAD-DATA.md) for more ways to use and customize PgOSM-Flex.
 
+### Pre-reqs
 
-### Prepare
+Install prereqs as user with sudo.  Example for Ubuntu 20.04.
+
+```bash
+sudo apt update
+sudo apt install -y --no-install-recommends \
+        sqitch wget ca-certificates \
+        git make cmake g++ \
+        libboost-dev libboost-system-dev \
+        libboost-filesystem-dev libexpat1-dev zlib1g-dev \
+        libbz2-dev libpq-dev libproj-dev lua5.2 liblua5.2-dev \
+        lua-dkjson
+```
+
+Install osm2pgsql from source.
+
+```bash
+git clone git://github.com/openstreetmap/osm2pgsql.git
+mkdir osm2pgsql/build
+cd osm2pgsql/build
+cmake ..
+make
+sudo make install
+```
+
+
+### Prepare data / database
+
 
 Download the PBF file and MD5 from Geofabrik, verify integrity.  The output
 from the `md5sum` command should always match the contents of the `.md5` file.
