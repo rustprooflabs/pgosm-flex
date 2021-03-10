@@ -78,3 +78,6 @@ COMMENT ON COLUMN osm.vbuilding_all.wheelchair IS 'Indicates if building is whee
 COMMENT ON COLUMN osm.vbuilding_all.geom_type IS 'Type of geometry. N(ode), W(ay) or R(elation).  Unique along with osm_id';
 COMMENT ON COLUMN osm.vbuilding_all.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.vbuilding_all.operator IS 'Entity in charge of operations. https://wiki.openstreetmap.org/wiki/Key:operator';
+
+COMMENT ON COLUMN osm.building_point.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
+COMMENT ON COLUMN osm.building_polygon.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
