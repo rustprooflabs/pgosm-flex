@@ -169,6 +169,46 @@ psql -d pgosm -f ./run-all.sql
 > Note: The `run-all` scripts exclude `unitable` and `road_major`.
 
 
+### (Optional) Calculate Nested place polygons
+
+Nested places refers to administrative boundaries that are contained, or contain,
+other administrative boundaries. An example of this is the State of Colorado
+contains the boundary for Jefferson County, Colorado.
+
+See [Better OpenStreetMap places in PostGIS](https://blog.rustprooflabs.com/2021/01/pgosm-flex-improved-openstreetmap-places-postgis)
+for more.
+
+
+```sql
+CALL osm.build_nested_admin_polygons();
+```
+
+Example record showing the nesting calculated.
+
+```sql
+SELECT osm_id, name, osm_type, admin_level, nest_level,
+        name_path, osm_id_path, admin_level_path,
+        innermost
+    FROM osm.place_polygon_nested
+    WHERE name = 'Shepherd Park'
+;
+```
+
+```bash
+Name            |Value                                          |
+----------------|-----------------------------------------------|
+osm_id          |-4603194                                       |
+name            |Shepherd Park                                  |
+osm_type        |suburb                                         |
+admin_level     |10                                             |
+nest_level      |3                                              |
+name_path       |{District of Columbia,Washington,Shepherd Park}|
+osm_id_path     |{-162069,-5396194,-4603194}                    |
+admin_level_path|{4,6,10}                                       |
+innermost       |true                                           |
+```
+
+
 ### Explore data loaded
 
 A peek at some of the tables loaded.
