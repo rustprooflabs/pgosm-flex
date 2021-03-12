@@ -57,11 +57,11 @@ ALWAYS_DOWNLOAD=${PGOSM_ALWAYS_DOWNLOAD:-0}
 
 if [ $ALWAYS_DOWNLOAD == "1" ] && [ $PGOSM_DATE_TODAY == true ]; then
   echo 'Removing PBF and md5 files if exists...' >> $LOG_FILE
-  BE_NICE = 'NOTE: Be nice to Geofabrik''s download server!'
+  BE_NICE='NOTE: Be nice to Geofabrik''s download server!'
   echo "$BE_NICE" >> $LOG_FILE
   echo "$BE_NICE"
-  rm $PBF_FILE
-  rm $MD5_FILE
+  rm $PBF_DATE_FILE
+  rm $MD5_DATE_FILE
 fi
 
 # Download file only if the file (with date) does not exist && historic date not selected.

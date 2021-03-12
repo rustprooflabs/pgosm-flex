@@ -33,154 +33,88 @@ Minimum versions supported:
 * PostGIS 3.0
 * osm2pgsql 1.4.0
 
+
+## Layer Sets
+
+Layer sets are defined under the directory [pgosm-flex/flex-config/](https://github.com/rustprooflabs/pgosm-flex/tree/main/flex-config), the current `run-*` options are:
+
+* `run-all`
+* `run-no-tags`
+* `run-road-place`
+* `run-unitable`
+
+
 ----
 
 ## PgOSM via Docker
 
-The easiest quick-start option to use PgOSM-Flex is with the Docker image.
-See the Docker image on [Docker Hub for instructions](https://hub.docker.com/r/rustprooflabs/pgosm-flex).
+The easiest quick-start option to use PgOSM-Flex is with the
+[Docker image](https://hub.docker.com/r/rustprooflabs/pgosm-flex).
+The image has all the pre-reqs installs, handles downloading an OSM subregion
+from Geofabrik, and saves a `.sql` file with the processed data to load into
+your database(s).
+
+
+### Basic Docker usage
+
+This section outlines the basic operations for using Docker to run PgOSM-Flex.
+See [the full details in DOCKER-RUN.md](DOCKER-RUN.md). 
+
+Create directory for the `.osm.pbf` file and output `.sql` file.
+
+```bash
+mkdir ~/pgosm-data
+```
+
+Start the `pgosm` Docker container to make PostgreSQL / PostGIS available and prepare
+to run the PgOSM-Flex script.
+
+
+```bash
+docker run --name pgosm -d \
+    -v ~/pgosm-data:/app/output \
+    -v /etc/localtime:/etc/localtime:ro \
+    -e POSTGRES_PASSWORD=mysecretpassword \
+    -p 5433:5432 -d rustprooflabs/pgosm-flex
+```
+
+----
+
+**The Postgres instance is not immediately ready for connections.  Wait a few seconds before running the following `docker exec` command.**
+
+----
+
+Run the processing for the Washington D.C. sub-region.  This small sub-region is great
+for testing, it runs fast even on the smallest hardware.
+
+```bash
+docker exec -it \
+    -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_USER=postgres \
+    pgosm bash docker/run_pgosm_flex.sh \
+    north-america/us \
+    district-of-columbia \
+    500 \
+    run-all
+```
+
+The command  `bash docker/run_pgosm_flex.sh` handles the steps required to download,
+process and export OpenStreetMap data in plain `.sql`. The data is available in the
+running `pgosm` container (`psql -h localhost -p 5433 -d pgosm`) but designed intent
+is to load the data into your PostGIS database(s).
+
+The script uses a region (`north-america/us`) and sub-region (`district-of-columbia`) that must match values in URLs from the Geofabrik download server.  The osm2pgsql cache is set (`2000`) and the PgOSM-Flex layer set is defined (`run-all`).
 
 
 ----
 
-
 ## Standard Import
 
-These instructions show how to manually run the PgOSM-Flex process.
-This is the best option for scaling to larger regions (North America, Europe, etc.)
-due to the need to customize a number of configurations.  Review the
-`docker/run_pgosm_flex.sh` for a starting point to automating the process.
-
-This basic working example uses Washington D.C. for a small, fast test of the
-process.
-
-> Loading the full data set with `run-all` as shown here results in a lot of data.  See [the instructions in LOAD-DATA.md](LOAD-DATA.md) for more ways to use and customize PgOSM-Flex.
-
-### Pre-reqs
-
-Install prereqs as user with sudo.  Example for Ubuntu 20.04.
-
-```bash
-sudo apt update
-sudo apt install -y --no-install-recommends \
-        sqitch wget curl ca-certificates \
-        git make cmake g++ \
-        libboost-dev libboost-system-dev \
-        libboost-filesystem-dev libexpat1-dev zlib1g-dev \
-        libbz2-dev libpq-dev libproj-dev lua5.2 liblua5.2-dev \
-        lua-dkjson
-```
-
-Install osm2pgsql from source.
-
-```bash
-git clone git://github.com/openstreetmap/osm2pgsql.git
-mkdir osm2pgsql/build
-cd osm2pgsql/build
-cmake ..
-make
-sudo make install
-```
-
-Add PGDG repo and install Postgres.  More [on Postgres Wiki](https://wiki.postgresql.org/wiki/Apt).
-
-```bash
-curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add - 
-sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-sudo apt-get update
-sudo apt-get install postgresql-13 \
-    postgresql-13-postgis-3 \
-    postgresql-13-postgis-3-scripts
-```
-
-
-### Prepare data / database
-
-
-Download the PBF file and MD5 from Geofabrik, verify integrity.  The output
-from the `md5sum` command should always match the contents of the `.md5` file.
-
-```bash
-mkdir ~/tmp
-cd ~/tmp
-wget https://download.geofabrik.de/north-america/us/district-of-columbia-latest.osm.pbf
-wget https://download.geofabrik.de/north-america/us/district-of-columbia-latest.osm.pbf.md5
-
-cat ~/tmp/district-of-columbia-latest.osm.pbf.md5
-md5sum ~/tmp/district-of-columbia-latest.osm.pbf
-```
-
-Prepare the `pgosm` database in Postgres.
-Need to create the `postgis` extension and the `osm` schema.
-
-```bash
-psql -c "CREATE DATABASE pgosm;"
-psql -d pgosm -c "CREATE EXTENSION postgis; CREATE SCHEMA osm;"
-```
-
-
-### Run osm2pgsql w/ PgOSM-Flex
-
-The PgOSM-Flex styles from this project are required to run the following.
-Clone the repo and change into the directory containing
-the `.lua` and `.sql` scripts.
-
-
-```bash
-mkdir ~/git
-cd ~/git
-git clone https://github.com/rustprooflabs/pgosm-flex.git
-cd pgosm-flex/flex-config
-```
-
-(Optional) Set the `PGOSM_DATE` env var to indicate the date the OpenStreetMap
-data was sourced.  This is most helpful when the PBF file was saved
-more than a couple days ago to indicate to users of the data when the data was from.  The default is to use the current date.
-
-```bash
-export PGOSM_DATE='2021-01-27'
-```
-
-The date is in the `osm.pgosm_flex` table.
-
-```sql
-SELECT osm_date FROM osm.pgosm_flex;
-```
-
-```bash
-osm_date  |
-----------|
-2021-01-27|
-```
+See [MANUAL-STEPS-RUN.md](MANUAL-STEPS-RUN.md) for prereqs and steps for
+running without Docker.
 
 
 
-The `run-all.lua` script provides the most complete set of OpenStreetMap
-data.  The list of main tables in PgOSM-Flex will continue to grow and evolve.
-See [LOAD-DATA.md](LOAD-DATA.md) for more about loading data.
-
-
-```bash
-cd pgosm-flex/flex-config
-
-osm2pgsql --slim --drop \
-    --output=flex --style=./run-all.lua \
-    -d pgosm \
-    ~/tmp/district-of-columbia-latest.osm.pbf
-```
-
-After osm2pgsql completes the main load, run the matching SQL scripts. 
-Each `.lua` has a matching `.sql` to create primary keys, indexes, comments,
-views and more.
-
-```bash
-psql -d pgosm -f ./run-all.sql
-```
-
-> Note: The `run-all` scripts exclude `unitable` and `road_major`.
-
-
-### (Optional) Calculate Nested place polygons
+## (Optional) Calculate Nested place polygons
 
 Nested places refers to administrative boundaries that are contained, or contain,
 other administrative boundaries. An example of this is the State of Colorado
@@ -220,7 +154,7 @@ innermost       |true                                           |
 ```
 
 
-### Explore data loaded
+## Explore data loaded
 
 A peek at some of the tables loaded.
 This query requires the
