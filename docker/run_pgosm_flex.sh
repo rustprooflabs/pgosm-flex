@@ -16,18 +16,11 @@ SQITCH_PATH=/app/db/
 OUT_PATH=/app/output/
 FLEX_PATH=/app/flex-config
 
-# Naming scheme must match Geofabrik's for MD5 sums to validatate
-PBF_FILE=$OUT_PATH$2-latest.osm.pbf
-MD5_FILE=$OUT_PATH$2-latest.osm.pbf.md5
-
 LOG_FILE=$OUT_PATH$2.log
 
 echo "Monitor $LOG_FILE for progress..."
 echo "If paths setup as outlined in README.md, use:"
 echo "    tail -f ~/pgosm-data/$2.log"
-
-ALWAYS_DOWNLOAD=${PGOSM_ALWAYS_DOWNLOAD:-0}
-
 
 echo "" >> $LOG_FILE
 echo "---------------------------------" >> $LOG_FILE
@@ -38,30 +31,81 @@ echo "Cache: $3" >> $LOG_FILE
 echo "PgOSM Flex Style: $4" >> $LOG_FILE
 
 
-if [ $ALWAYS_DOWNLOAD == "1" ]; then
-  echo 'Removing PBF and md5 files if exists...' >> $LOG_FILE
-  BE_NICE = 'NOTE: Be nice to Geofabrik''s download server!'
-  echo "$BE_NICE" >> $LOG_FILE
-  echo "$BE_NICE"
-  rm $PBF_FILE
-  rm $MD5_FILE
+# Naming scheme must match Geofabrik's for MD5 sums to validatate
+PBF_FILE=$OUT_PATH$2-latest.osm.pbf
+MD5_FILE=$OUT_PATH$2-latest.osm.pbf.md5
+
+
+if [ -z $PGOSM_DATE ]; then
+  PGOSM_DATE=$(date '+%Y-%m-%d')
 fi
 
-if [ -f $PBF_FILE ]; then
-    echo "$PBF_FILE exists. Not downloading."  >> $LOG_FILE
+if [ $PGOSM_DATE == $(date '+%Y-%m-%d') ]; then
+  PGOSM_DATE_TODAY=true
+else
+  PGOSM_DATE_TODAY=false
+fi
+
+echo "PGOSM_DATE: $PGOSM_DATE (Today? $PGOSM_DATE_TODAY)" >> $LOG_FILE
+
+# Filenames with the PgOSM Date
+PBF_DATE_FILE=$OUT_PATH$2-$PGOSM_DATE.osm.pbf
+MD5_DATE_FILE=$OUT_PATH$2-$PGOSM_DATE.osm.pbf.md5
+
+
+ALWAYS_DOWNLOAD=${PGOSM_ALWAYS_DOWNLOAD:-0}
+
+if [ $ALWAYS_DOWNLOAD == "1" ] && [ $PGOSM_DATE_TODAY == true ]; then
+  echo 'Removing PBF and md5 files if exists...' >> $LOG_FILE
+  BE_NICE='NOTE: Be nice to Geofabrik''s download server!'
+  echo "$BE_NICE" >> $LOG_FILE
+  echo "$BE_NICE"
+  rm $PBF_DATE_FILE
+  rm $MD5_DATE_FILE
+fi
+
+# Download file only if the file (with date) does not exist && historic date not selected.
+# Historic date obviously requires having that date's files available.
+# This is not a time machine
+if [ -f $PBF_DATE_FILE ]; then
+    echo "$PBF_DATE_FILE exists. Copying to $PBF_FILE"  >> $LOG_FILE
+    cp $PBF_DATE_FILE $PBF_FILE
+elif [ $PGOSM_DATE_TODAY == false ]; then
+  ERR_MSG='ERROR - Historic date selected but file does not exist.  Ensure the file $PBF_DATE_FILE exists'
+  echo $ERR_MSG
+  echo $ERR_MSG >> $LOG_FILE
+  exit 1
 else 
-    echo "$PBF_FILE does not exist.  Downloading..."  >> $LOG_FILE
+    echo "$PBF_DATE_FILE does not exist.  Downloading... $PBF_FILE"  >> $LOG_FILE
     wget https://download.geofabrik.de/$1/$2-latest.osm.pbf -O $PBF_FILE --quiet &>> $LOG_FILE
 fi
 
-if [ -f $MD5_FILE ]; then
-  echo "$MD5_FILE exists. Not downloading."  >> $LOG_FILE
+
+if [ -f $MD5_DATE_FILE ]; then
+  echo "$MD5_DATE_FILE exists. Copying to $MD5_FILE"  >> $LOG_FILE
+  cp $MD5_DATE_FILE $MD5_FILE
+elif [ $PGOSM_DATE_TODAY == false ]; then
+  ERR_MSG='ERROR - Historic date selected but MD5 file does not exist. Ensure the file $MD5_DATE_FILE exists'
+  echo $ERR_MSG
+  echo $ERR_MSG >> $LOG_FILE
+  exit 1
 else
-  echo "$MD5_FILE does not exist.  Downloading..." >> $LOG_FILE
+  echo "$MD5_DATE_FILE does not exist.  Downloading... $MD5_FILE" >> $LOG_FILE
   wget https://download.geofabrik.de/$1/$2-latest.osm.pbf.md5 -O $MD5_FILE --quiet &>> $LOG_FILE
 fi
 
 
+# Runtime config to override default data schema name
+if [ -z $PGOSM_DATA_SCHEMA_NAME ]; then
+  echo "PGOSM_DATA_SCHEMA_NAME NOT SET"
+  DATA_SCHEMA_NAME="osm"
+else
+  DATA_SCHEMA_NAME=$PGOSM_DATA_SCHEMA_NAME
+  echo "DATA_SCHEMA_NAME set to $DATA_SCHEMA_NAME"
+fi
+
+
+# Runtime config to only export the data schema.
 if [ -z $PGOSM_DATA_SCHEMA_ONLY ]; then
   echo "DATA_SCHEMA_ONLY NOT SET"
   DATA_SCHEMA_ONLY=false
@@ -70,13 +114,6 @@ else
   echo "DATA_SCHEMA_ONLY set to $DATA_SCHEMA_ONLY"
 fi
 
-if [ -z $PGOSM_DATA_SCHEMA_NAME ]; then
-  echo "PGOSM_DATA_SCHEMA_NAME NOT SET"
-  DATA_SCHEMA_NAME="osm"
-else
-  DATA_SCHEMA_NAME=$PGOSM_DATA_SCHEMA_NAME
-  echo "DATA_SCHEMA_NAME set to $DATA_SCHEMA_NAME"
-fi
 
 if cd $OUT_PATH && md5sum -c $MD5_FILE; then
     echo 'MD5 checksum validated' >> $LOG_FILE
@@ -114,8 +151,19 @@ osm2pgsql -U postgres --create --slim --drop \
   --output=flex --style=./$4.lua \
   -d pgosm  $PBF_FILE &>> $LOG_FILE
 
-echo "Running post-processing SQL script..." >> $LOG_FILE
+echo "Running PgOSM-Flex post-processing SQL script: $4.sql" >> $LOG_FILE
 psql -U postgres -d pgosm -f $4.sql >> $LOG_FILE
+
+
+if [ $PGOSM_DATE_TODAY == true ]; then
+  echo "Archiving today's PBF and MD5 files..." >> $LOG_FILE
+  mv $PBF_FILE $PBF_DATE_FILE
+  mv $MD5_FILE $MD5_DATE_FILE
+else
+  echo "Removing copy of PBF and MD5 files..." >> $LOG_FILE
+  rm $PBF_FILE
+  rm $MD5_FILE
+fi
 
 if [ $DATA_SCHEMA_NAME != "osm" ]; then
     echo "Changing schema name from osm to $DATA_SCHEMA_NAME" >> $LOG_FILE
