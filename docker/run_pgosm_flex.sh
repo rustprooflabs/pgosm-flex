@@ -124,6 +124,34 @@ else
     exit 1
 fi
 
+SLEEP_SEC=5
+
+function wait_postgres_is_up {
+  # Initial Sleep
+  echo 'Pause to ensure Postgres instance is up and ready' >> $LOG_FILE
+  sleep 10
+
+  # Does two check cycles w/ break in between to avoid false positive
+  echo 'Now checking...'
+  until pg_isready; do
+    sleep $SLEEP_SEC
+  done
+
+  echo 'Postgres detected once, pausing before double check' >> $LOG_FILE
+  sleep $SLEEP_SEC
+
+  until pg_isready; do
+    sleep $SLEEP_SEC
+  done
+
+  echo 'Postgres service should be reliably available now' >> $LOG_FILE
+}
+
+
+wait_postgres_is_up
+
+
+echo "Database passed two checks - should be ready!" >> $LOG_FILE
 
 echo "Create empty pgosm database with extensions..." >> $LOG_FILE
 psql -U postgres -c "DROP DATABASE IF EXISTS pgosm;" >> $LOG_FILE
