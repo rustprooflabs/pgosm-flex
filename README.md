@@ -78,12 +78,6 @@ docker run --name pgosm -d \
     -p 5433:5432 -d rustprooflabs/pgosm-flex
 ```
 
-----
-
-**The Postgres instance is not immediately ready for connections.  Wait a few seconds before running the following `docker exec` command.**
-
-----
-
 Run the processing for the Washington D.C. sub-region.  This small sub-region is great
 for testing, it runs fast even on the smallest hardware.
 
