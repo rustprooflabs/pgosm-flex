@@ -1,6 +1,4 @@
-
-
-## Standard Import
+# PgOSM-Flex Standard Import
 
 These instructions show how to manually run the PgOSM-Flex process.
 This is the best option for scaling to larger regions (North America, Europe, etc.)
@@ -12,7 +10,7 @@ process.
 
 > Loading the full data set with `run-all` as shown here results in a lot of data.  See [the instructions in LOAD-DATA.md](LOAD-DATA.md) for more ways to use and customize PgOSM-Flex.
 
-### Ubuntu Pre-reqs
+## Ubuntu Pre-reqs
 
 This section covers installation of prerequisites required to install Postgres,
 osm2pgsql, and PgOSM-Flex on Ubuntu 20.04.  The only pre-req specific to PgOSM-Flex
@@ -58,7 +56,7 @@ sudo apt-get install postgresql-13 \
     postgresql-13-postgis-3-scripts
 ```
 
-### Prepare data / database
+## Prepare data / database
 
 Download the PBF file and MD5 from Geofabrik.
 
@@ -85,7 +83,7 @@ psql -d pgosm -c "CREATE EXTENSION postgis; CREATE SCHEMA osm;"
 ```
 
 
-### Run osm2pgsql w/ PgOSM-Flex
+## Prepare PgOSM-Flex
 
 The PgOSM-Flex styles from this project are required to run the following.
 Clone the repo and change into the directory containing
@@ -99,31 +97,44 @@ git clone https://github.com/rustprooflabs/pgosm-flex.git
 cd pgosm-flex/flex-config
 ```
 
-(Optional) Set the `PGOSM_DATE` env var to indicate the date the OpenStreetMap
-data was sourced.  This is most helpful when the PBF file was saved
-more than a couple days ago to indicate to users of the data when the data was from.  The default is to use the current date.
+
+## Set PgOSM variables
+
+*(Recommended)* 
+
+Set the `PGOSM_DATE` and `PGOSM_REGION` env vars to indicate the
+date and region of the downloaded OpenStreetMap data.
+This data is saved in the `osm.pgosm_flex` table to allow end users in the resulting
+data to know what each dataset should contain.
+
 
 ```bash
-export PGOSM_DATE='2021-01-27'
+export PGOSM_DATE='2021-03-14'
+export PGOSM_REGION='north-america/us--district-of-columbia'
 ```
 
-The date is in the `osm.pgosm_flex` table.
+These values show up in the `osm.pgosm_flex` table.
 
 ```sql
-SELECT osm_date FROM osm.pgosm_flex;
+SELECT osm_date, region FROM osm.pgosm_flex;
 ```
 
 ```bash
-osm_date  |
-----------|
-2021-01-27|
+┌────────────┬────────────────────────────────────────┐
+│  osm_date  │                 region                 │
+╞════════════╪════════════════════════════════════════╡
+│ 2021-03-14 │ north-america/us--district-of-columbia │
+└────────────┴────────────────────────────────────────┘
 ```
 
 
+
+## Run osm2pgsql w/ PgOSM-Flex
 
 The `run-all.lua` script provides the most complete set of OpenStreetMap
 data.  The list of main tables in PgOSM-Flex will continue to grow and evolve.
 See [LOAD-DATA.md](LOAD-DATA.md) for more about loading data.
+
 
 
 ```bash
@@ -135,9 +146,11 @@ osm2pgsql --slim --drop \
     ~/tmp/district-of-columbia-latest.osm.pbf
 ```
 
-After osm2pgsql completes the main load, run the matching SQL scripts. 
-Each `.lua` has a matching `.sql` to create primary keys, indexes, comments,
-views and more.
+## Run post-processing SQL
+
+Each `.lua` script as an associated `.sql` script to create 
+primary keys, indexes, comments, views and more.
+
 
 ```bash
 psql -d pgosm -f ./run-all.sql
@@ -145,3 +158,44 @@ psql -d pgosm -f ./run-all.sql
 
 > Note: The `run-all` scripts exclude `unitable` and `road_major`.
 
+
+
+
+# More options
+
+
+## Load main tables, No Tags
+
+As seen above, the `run_all.lua` style includes the tags table and then includes
+`run-no-tags` to load the rest of the data.  If you want the main data
+**without the full tags** table, use the `run-no-tags.lua` and `.sql` scripts instead.
+
+
+```bash
+osm2pgsql --slim --drop \
+    --output=flex --style=./run-no-tags.lua \
+    -d pgosm \
+    ~/tmp/district-of-columbia-latest.osm.pbf
+
+psql -d pgosm -f ./run-no-tags.sql
+```
+
+
+## Load individual layers
+
+One layer at a time can be added with commands such as this.  This example includes
+the `road_major` style followed by the `pgosm-meta` style to track osm2pgsql
+and PgOSM-Flex versions used to load the data.
+
+```bash
+osm2pgsql --slim --drop \
+    --output=flex --style=./style/road_major.lua \
+    -d pgosm \
+    ~/tmp/district-of-columbia-latest.osm.pbf
+
+psql -d pgosm -f ./sql/road_major.sql
+```
+
+
+
+> WARNING:  Running multiple `osm2pgsql` commands requires processing the source PBF multiple times. This can waste consdierable time on larger imports.  Further, attempting to define multiple styles with additional `--style=style.lua` switches results in only the last style being processed.  To mix and match multiple styles, create a custom Lua script similar to `run-all.lua` or `run-no-tags.lua`.

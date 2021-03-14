@@ -43,6 +43,53 @@ Layer sets are defined under the directory [pgosm-flex/flex-config/](https://git
 * `run-road-place`
 * `run-unitable`
 
+Each of these layer sets includes the core layer defintions
+(see `style/*.lua`)
+and post-processing SQL (see `sql/*.sql`).
+The `.lua` scripts work with osm2pgsql's Flex output.
+PgOSM-Flex is using these styles with a mix-and-match approach.
+This is best illustrated by looking within the main `run-all.lua` script.
+As the following shows, it does not define any actual styles, only includes
+a single style, and runs another layer set (`run-no-tags`).
+
+
+```lua
+require "style.tags"
+require "run-no-tags"
+```
+
+The `style.tags` script creates a table `osm.tags` that contains all OSM key/value
+pairs, but with no geometry.  This is the largest table loaded by the `run-all`
+layer set and enables joining any OSM data in another layer (e.g. `osm.road_line`)
+to find any additional tags.
+
+
+## Customize PgOSM
+
+Track additional details in the `osm.pgosm_meta` table (see more below)
+and customize behavior with the use of environment variables.
+
+* `OSM_DATE`
+* `PGOSM_SRID`
+* `PGOSM_REGION`
+
+
+To use `SRID 4326` instead of the default `SRID 3857`, set the `PGOSM_SRID`
+environment variable before running osm2pgsql.
+
+```bash
+export PGOSM_SRID=4326
+```
+
+Changes to the SRID are reflected in output printed.
+
+```bash
+2021-01-08 15:01:15  osm2pgsql version 1.4.0 (1.4.0-72-gc3eb0fb6)
+2021-01-08 15:01:15  Database version: 13.1 (Ubuntu 13.1-1.pgdg20.10+1)
+2021-01-08 15:01:15  Node-cache: cache=800MB, maxblocks=12800*65536, allocation method=11
+Custom SRID: 4326
+...
+```
 
 ----
 
@@ -54,6 +101,9 @@ The image has all the pre-reqs installs, handles downloading an OSM subregion
 from Geofabrik, and saves a `.sql` file with the processed data to load into
 your database(s).
 
+
+Using `PGOSM_DATE` allows the Docker process to archive source PBF files
+and easily reload them at a later date.
 
 ### Basic Docker usage
 
@@ -98,6 +148,7 @@ is to load the data into your PostGIS database(s).
 
 The script uses a region (`north-america/us`) and sub-region (`district-of-columbia`) that must match values in URLs from the Geofabrik download server.  The osm2pgsql cache is set (`2000`) and the PgOSM-Flex layer set is defined (`run-all`).
 
+See [the full details in DOCKER-RUN.md](DOCKER-RUN.md).
 
 ----
 
@@ -235,6 +286,30 @@ psql -d pgosm -f data/roads-us.sql
 
 
 Currently only U.S. region drafted, more regions with local `maxspeed` are welcome via PR!
+
+
+
+
+## One table to rule them all
+
+From the perspective of database design, the `osm.unitable` option is the **worst**!
+
+> This style included in PgOSM-Flex is intended to be used for troublshooting and quality control.  It is not intended to be used for real production workloads! This table is helpful for exploring the full data set when you don't really know what you are looking for, but you know **where** you are looking.
+
+Load the `unitable.lua` script to make the full OpenStreetMap data set available in
+one table. This violates all sorts of best practices established in this project
+by shoving all features into a single unstructured table.
+
+
+```bash
+osm2pgsql --slim --drop \
+    --output=flex --style=./unitable.lua \
+    -d pgosm \
+    ~/tmp/district-of-columbia-latest.osm.pbf
+```
+
+> The `unitable.lua` script include in in this project was [adapted from the unitable example from osm2pgsql](https://github.com/openstreetmap/osm2pgsql/blob/master/flex-config/unitable.lua). This version uses JSONB instead of HSTORE and takes advantage of `helpers.lua` to easily customize SRID.
+
 
 
 
