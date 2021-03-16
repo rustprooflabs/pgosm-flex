@@ -8,6 +8,7 @@
 \i sql/natural.sql
 \i sql/traffic.sql
 \i sql/place.sql
+\i sql/poi.sql
 \i sql/road.sql
 \i sql/shop.sql
 \i sql/water.sql

@@ -159,6 +159,70 @@ running without Docker.
 
 
 
+## Points of Interest (POIs)
+
+
+Loads an range of tags into a materialized view (`osm.poi_all`) for easy searching POIs.
+Line and polygon data is forced to point geometry using
+`ST_Centroid()`.  This layer duplicates a bunch of other more specific layers
+(shop, amenity, etc.) to provide a single place for simplified POI searches.
+
+Special layer included by layer sets `run-all` and `run-no-tags`.
+See `style/poi.lua` for logic on how to include POIs.
+The topic of POIs is subject and likely is not inclusive of everything that probably should be considered
+a POI. If there are POIs missing
+from this table please submit a [new issue](https://github.com/rustprooflabs/pgosm-flex/issues/new)
+with sufficient details about what is missing.
+Pull requests also welcome! [See CONTRIBUTING.md](CONTRIBUTING.md).
+
+
+Counts of POIs by `osm_type`.
+
+```sql
+SELECT osm_type, COUNT(*)
+    FROM osm.vpoi_all
+    GROUP BY osm_type
+    ORDER BY COUNT(*) DESC;
+```
+
+Results from Washington D.C. subregion (March 2020).
+
+```
+┌──────────┬───────┐
+│ osm_type │ count │
+╞══════════╪═══════╡
+│ amenity  │ 12663 │
+│ leisure  │  2701 │
+│ building │  2045 │
+│ shop     │  1739 │
+│ tourism  │   729 │
+│ man_made │   570 │
+│ landuse  │    32 │
+│ natural  │    19 │
+└──────────┴───────┘
+```
+
+Includes Points (`N`), Lines (`L`) and Polygons (`W`).
+
+
+```sql
+SELECT geom_type, COUNT(*) 
+    FROM osm.vpoi_all
+    GROUP BY geom_type
+    ORDER BY COUNT(*) DESC;
+```
+
+```
+┌───────────┬───────┐
+│ geom_type │ count │
+╞═══════════╪═══════╡
+│ W         │ 10740 │
+│ N         │  9556 │
+│ L         │   202 │
+└───────────┴───────┘
+```
+
+
 ## (Optional) Calculate Nested place polygons
 
 Nested places refers to administrative boundaries that are contained, or contain,
@@ -286,8 +350,6 @@ psql -d pgosm -f data/roads-us.sql
 
 
 Currently only U.S. region drafted, more regions with local `maxspeed` are welcome via PR!
-
-
 
 
 ## One table to rule them all
