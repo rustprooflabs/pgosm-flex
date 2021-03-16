@@ -76,9 +76,8 @@ function natural_process_node(object)
 
 end
 
--- Change function name here
+
 function natural_process_way(object)
-    -- We are only interested in highways
     if not object.tags.natural then
         return
     end

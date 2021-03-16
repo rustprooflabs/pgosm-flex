@@ -159,6 +159,23 @@ running without Docker.
 
 
 
+## Points of Interest (POIs)
+
+
+Special layer included in `run-all` and `run-no-tags`.  Loads an range of tags into a materialized view
+(`osm.poi_all`) for easy searching POIs.  Line and polygon data is forced to point geometry using
+`ST_Centroid()`.  This layer duplicates a bunch of other more specific layers
+(shop, amenity, etc.) to provide a single place for simplified POI searches.
+
+
+
+```sql
+SELECT osm_type, COUNT(*) FROM osm.vpoi_all GROUP BY osm_type;
+SELECT geom_type, COUNT(*) FROM osm.vpoi_all GROUP BY geom_type;
+```
+
+
+
 ## (Optional) Calculate Nested place polygons
 
 Nested places refers to administrative boundaries that are contained, or contain,
@@ -286,8 +303,6 @@ psql -d pgosm -f data/roads-us.sql
 
 
 Currently only U.S. region drafted, more regions with local `maxspeed` are welcome via PR!
-
-
 
 
 ## One table to rule them all
