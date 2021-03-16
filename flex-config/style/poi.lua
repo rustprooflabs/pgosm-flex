@@ -110,8 +110,9 @@ function get_osm_type_subtype(object)
         osm_type_table['osm_type'] = 'tourism'
         osm_type_table['osm_subtype'] = object:grab_tag('tourism')
     else
+        -- Cannot be NULL
         osm_type_table['osm_type'] = 'Unknown'
-        osm_type_table['osm_subtype'] = object:grab_tag('Unknown')
+        osm_type_table['osm_subtype'] = 'Unknown'
     end
 
     return osm_type_table
