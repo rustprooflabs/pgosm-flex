@@ -179,7 +179,10 @@ Pull requests also welcome! [See CONTRIBUTING.md](CONTRIBUTING.md).
 Counts of POIs by `osm_type`.
 
 ```sql
-SELECT osm_type, COUNT(*) FROM osm.vpoi_all GROUP BY osm_type;
+SELECT osm_type, COUNT(*)
+    FROM osm.vpoi_all
+    GROUP BY osm_type
+    ORDER BY COUNT(*) DESC;
 ```
 
 Results from Washington D.C. subregion (March 2020).
@@ -189,13 +192,13 @@ Results from Washington D.C. subregion (March 2020).
 │ osm_type │ count │
 ╞══════════╪═══════╡
 │ amenity  │ 12663 │
-│ building │  2045 │
-│ landuse  │    32 │
 │ leisure  │  2701 │
-│ man_made │   570 │
-│ natural  │    19 │
+│ building │  2045 │
 │ shop     │  1739 │
 │ tourism  │   729 │
+│ man_made │   570 │
+│ landuse  │    32 │
+│ natural  │    19 │
 └──────────┴───────┘
 ```
 
@@ -203,16 +206,19 @@ Includes Points (`N`), Lines (`L`) and Polygons (`W`).
 
 
 ```sql
-SELECT geom_type, COUNT(*) FROM osm.vpoi_all GROUP BY geom_type;
+SELECT geom_type, COUNT(*) 
+    FROM osm.vpoi_all
+    GROUP BY geom_type
+    ORDER BY COUNT(*) DESC;
 ```
 
 ```
 ┌───────────┬───────┐
 │ geom_type │ count │
 ╞═══════════╪═══════╡
+│ W         │ 10740 │
 │ N         │  9556 │
 │ L         │   202 │
-│ W         │ 10740 │
 └───────────┴───────┘
 ```
 
