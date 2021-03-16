@@ -162,10 +162,18 @@ running without Docker.
 ## Points of Interest (POIs)
 
 
-Special layer included in `run-all` and `run-no-tags`.  Loads an range of tags into a materialized view
-(`osm.poi_all`) for easy searching POIs.  Line and polygon data is forced to point geometry using
+Loads an range of tags into a materialized view (`osm.poi_all`) for easy searching POIs.
+Line and polygon data is forced to point geometry using
 `ST_Centroid()`.  This layer duplicates a bunch of other more specific layers
 (shop, amenity, etc.) to provide a single place for simplified POI searches.
+
+Special layer included by layer sets `run-all` and `run-no-tags`.
+See `style/poi.lua` for logic on how to include POIs.
+The topic of POIs is subject and likely is not inclusive of everything that probably should be considered
+a POI. If there are POIs missing
+from this table please submit a [new issue](https://github.com/rustprooflabs/pgosm-flex/issues/new)
+with sufficient details about what is missing.
+Pull requests also welcome! [See CONTRIBUTING.md](CONTRIBUTING.md).
 
 
 

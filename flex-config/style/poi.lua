@@ -19,7 +19,7 @@ local is_first_level_poi = make_check_in_list_func(poi_first_level_keys)
 
 function building_poi(object)
     local bldg_name = get_name(object.tags)
-    if (bldg_name ~= nil or object.tags.operator) then
+    if (bldg_name or object.tags.operator) then
         return true
     end
 
