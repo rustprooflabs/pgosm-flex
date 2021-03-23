@@ -48,6 +48,34 @@ fi
 
 echo "PGOSM_DATE: $PGOSM_DATE (Today? $PGOSM_DATE_TODAY)" >> $LOG_FILE
 
+
+# Runtime config to override default data schema name
+if [ -z $PGOSM_DATA_SCHEMA_NAME ]; then
+  echo "Env var not set: PGOSM_DATA_SCHEMA_NAME" >> $LOG_FILE
+  DATA_SCHEMA_NAME="osm"
+else
+  DATA_SCHEMA_NAME=$PGOSM_DATA_SCHEMA_NAME
+  echo "DATA_SCHEMA_NAME set to $DATA_SCHEMA_NAME" >> $LOG_FILE
+fi
+
+
+# Runtime config to only export the data schema.
+if [ -z $PGOSM_DATA_SCHEMA_ONLY ]; then
+  echo "Env var not set: PGOSM_DATA_SCHEMA_ONLY. Using default" >> $LOG_FILE
+  DATA_SCHEMA_ONLY=false
+else
+  DATA_SCHEMA_ONLY=$PGOSM_DATA_SCHEMA_ONLY
+  echo "DATA_SCHEMA_ONLY set to $DATA_SCHEMA_ONLY" >> $LOG_FILE
+fi
+
+# Runtime config to run Postgres procedure to calculate nested place polygons
+if [ -z $PGOSM_SKIP_NESTED_POLYGON ]; then
+  NESTED_POLYGON=true
+else
+  NESTED_POLYGON=false
+  echo "Skipping Nested Polygon calculation!" >> $LOG_FILE
+fi
+
 # Filenames with the PgOSM Date
 PBF_DATE_FILE=$OUT_PATH$2-$PGOSM_DATE.osm.pbf
 MD5_DATE_FILE=$OUT_PATH$2-$PGOSM_DATE.osm.pbf.md5
@@ -94,25 +122,6 @@ else
   wget https://download.geofabrik.de/$1/$2-latest.osm.pbf.md5 -O $MD5_FILE --quiet &>> $LOG_FILE
 fi
 
-
-# Runtime config to override default data schema name
-if [ -z $PGOSM_DATA_SCHEMA_NAME ]; then
-  echo "PGOSM_DATA_SCHEMA_NAME NOT SET"
-  DATA_SCHEMA_NAME="osm"
-else
-  DATA_SCHEMA_NAME=$PGOSM_DATA_SCHEMA_NAME
-  echo "DATA_SCHEMA_NAME set to $DATA_SCHEMA_NAME"
-fi
-
-
-# Runtime config to only export the data schema.
-if [ -z $PGOSM_DATA_SCHEMA_ONLY ]; then
-  echo "DATA_SCHEMA_ONLY NOT SET"
-  DATA_SCHEMA_ONLY=false
-else
-  DATA_SCHEMA_ONLY=$PGOSM_DATA_SCHEMA_ONLY
-  echo "DATA_SCHEMA_ONLY set to $DATA_SCHEMA_ONLY"
-fi
 
 
 if cd $OUT_PATH && md5sum -c $MD5_FILE; then
@@ -181,6 +190,15 @@ osm2pgsql -U postgres --create --slim --drop \
 
 echo "Running PgOSM-Flex post-processing SQL script: $4.sql" >> $LOG_FILE
 psql -U postgres -d pgosm -f $4.sql >> $LOG_FILE
+
+
+if [ $NESTED_POLYGON == true ]; then
+  echo "Building Nested Place polygons.  Set env var $PGOSM_SKIP_NESTED_POLYGON to skip." >> $LOG_FILE
+  psql -U postgres -d pgosm -c "CALL osm.build_nested_admin_polygons();" >> $LOG_FILE
+else
+  echo "Not calculating nested place polygons." >> $LOG_FILE
+fi
+
 
 
 if [ $PGOSM_DATE_TODAY == true ]; then

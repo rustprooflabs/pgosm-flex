@@ -56,6 +56,17 @@ docker exec -it \
     run-all
 ```
 
+## Skip nested polygon calculation
+
+The default is to run the nested polygon calculation. This can take considerable time on larger regions or may
+be otherwise unwanted.  Define the env var `PGOSM_SKIP_NESTED_POLYGON` with the `docker exec` command
+to skip this process.
+
+```bash
+ -e PGOSM_SKIP_NESTED_POLYGON=anything
+```
+
+
 ## Always download
 
 To force the processing to remove existing files and re-download the latest PBF and MD5 files from Geofabrik, set the `PGOSM_ALWAYS_DOWNLOAD` env var when running the Docker container.
