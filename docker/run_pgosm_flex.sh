@@ -193,7 +193,7 @@ psql -U postgres -d pgosm -f $4.sql >> $LOG_FILE
 
 
 if [ $NESTED_POLYGON == true ]; then
-  echo "Building Nested Place polygons.  Set env var $PGOSM_SKIP_NESTED_POLYGON to skip." >> $LOG_FILE
+  echo "Building Nested Place polygons.  Set env var PGOSM_SKIP_NESTED_POLYGON to skip." >> $LOG_FILE
   psql -U postgres -d pgosm -c "CALL osm.build_nested_admin_polygons();" >> $LOG_FILE
 else
   echo "Not calculating nested place polygons." >> $LOG_FILE
