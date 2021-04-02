@@ -16,38 +16,6 @@ ALTER TABLE osm.amenity_polygon
     PRIMARY KEY (osm_id)
 ;
 
-ALTER TABLE osm.amenity_point 
-    ADD address TEXT NOT NULL
-    GENERATED ALWAYS AS (
-        COALESCE(housenumber, '')
-            || COALESCE(' ' || street, '')
-            || COALESCE(', ' || city || ' ', '')
-            || COALESCE(', ' || state || ' ', '')
-        )
-    STORED
-;
-
-ALTER TABLE osm.amenity_line
-    ADD address TEXT NOT NULL
-    GENERATED ALWAYS AS (
-        COALESCE(housenumber, '')
-            || COALESCE(' ' || street, '')
-            || COALESCE(', ' || city || ' ', '')
-            || COALESCE(', ' || state || ' ', '')
-        )
-    STORED
-;
-
-ALTER TABLE osm.amenity_polygon
-    ADD address TEXT NOT NULL
-    GENERATED ALWAYS AS (
-        COALESCE(housenumber, '')
-            || COALESCE(' ' || street, '')
-            || COALESCE(', ' || city || ' ', '')
-            || COALESCE(', ' || state || ' ', '')
-        )
-    STORED
-;
 
 CREATE INDEX ix_osm_amenity_point_type ON osm.amenity_point (osm_type);
 CREATE INDEX ix_osm_amenity_line_type ON osm.amenity_line (osm_type);

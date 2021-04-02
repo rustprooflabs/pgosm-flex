@@ -290,3 +290,49 @@ function routable_motor(tags)
 end
 
 
+
+function get_address(tags)
+    local housenumber  = tags['addr:housenumber']
+    local street = tags['addr:street']
+    local city = tags['addr:city']
+    local state = tags['addr:state']
+
+    local housenumber_street = ''
+
+    if housenumber ~= nil and street ~= nil then
+        housenumber_street = housenumber  .. ' ' .. street
+    elseif housenumber == nil and street == nil then
+        housenumber_street = ''
+    elseif housenumber == nil then
+        housenumber_street = street
+    else
+        housenumber_street = housenumber
+    end
+
+    if city == nil then
+        city = ''
+    end
+
+    if state == nil then
+        state = ''
+    end
+
+    local all_but_state = ''
+
+    if housenumber_street ~= '' and city ~= '' then
+        all_but_state = housenumber_street .. ', ' .. city
+    else
+        all_but_state = housenumber_street .. city
+    end
+
+    local address = ''
+
+    if all_but_state ~= '' and state ~= '' then
+        address = all_but_state .. ', ' .. state
+    else
+        address = all_but_state .. state
+    end
+
+    return address
+
+end
