@@ -38,44 +38,9 @@ COMMENT ON COLUMN osm.poi_polygon.geom IS 'Geometry loaded by osm2pgsql.';
 
 
 
-ALTER TABLE osm.poi_point 
-    ADD address TEXT NOT NULL
-    GENERATED ALWAYS AS (
-        COALESCE(housenumber, '')
-            || COALESCE(' ' || street, '')
-            || COALESCE(', ' || city || ' ', '')
-            || COALESCE(', ' || state || ' ', '')
-        )
-    STORED
-;
-
-
-ALTER TABLE osm.poi_line
-    ADD address TEXT NOT NULL
-    GENERATED ALWAYS AS (
-        COALESCE(housenumber, '')
-            || COALESCE(' ' || street, '')
-            || COALESCE(', ' || city || ' ', '')
-            || COALESCE(', ' || state || ' ', '')
-        )
-    STORED
-;
-
-ALTER TABLE osm.poi_polygon
-    ADD address TEXT NOT NULL
-    GENERATED ALWAYS AS (
-        COALESCE(housenumber, '')
-            || COALESCE(' ' || street, '')
-            || COALESCE(', ' || city || ' ', '')
-            || COALESCE(', ' || state || ' ', '')
-        )
-    STORED
-;
-
-
-COMMENT ON COLUMN osm.poi_point.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
-COMMENT ON COLUMN osm.poi_line.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
-COMMENT ON COLUMN osm.poi_polygon.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
+COMMENT ON COLUMN osm.poi_point.address IS 'Address combined from address parts in helpers.get_address().';
+COMMENT ON COLUMN osm.poi_line.address IS 'Address combined from address parts in helpers.get_address().';
+COMMENT ON COLUMN osm.poi_polygon.address IS 'Address combined from address parts in helpers.get_address().';
 
 
 CREATE MATERIALIZED VIEW osm.vpoi_all AS
@@ -102,6 +67,6 @@ CREATE INDEX ix_osm_vpoi_all_osm_type ON osm.vpoi_all (osm_type);
 
 
 COMMENT ON MATERIALIZED VIEW osm.vpoi_all IS 'Cobmined POI view. Converts lines and polygons to point with ST_Centroid(), stacks using UNION';
-COMMENT ON COLUMN osm.vpoi_all.address IS 'Simple attempt to combine address parts into single column with COALESCE. See base tables for individual address parts';
+COMMENT ON COLUMN osm.vpoi_all.address IS 'Address combined from address parts in helpers.get_address(). See base tables for individual address parts';
 
 COMMENT ON COLUMN osm.vpoi_all.geom_type IS 'Indicates source table, N (point) L (line) W (polygon).  Using L for line differs from how osm2pgsql classifies lines ("W") in order to provide a direct link to which table the data comes from.';

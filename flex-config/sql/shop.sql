@@ -26,33 +26,12 @@ ALTER TABLE osm.shop_polygon
     PRIMARY KEY (osm_id)
 ;
 
-ALTER TABLE osm.shop_point 
-    ADD address TEXT NOT NULL
-    GENERATED ALWAYS AS (
-        COALESCE(housenumber, '')
-            || COALESCE(' ' || street, '')
-            || COALESCE(', ' || city || ' ', '')
-            || COALESCE(', ' || state || ' ', '')
-        )
-    STORED
-;
-
-ALTER TABLE osm.shop_polygon
-    ADD address TEXT NOT NULL
-    GENERATED ALWAYS AS (
-        COALESCE(housenumber, '')
-            || COALESCE(' ' || street, '')
-            || COALESCE(', ' || city || ' ', '')
-            || COALESCE(', ' || state || ' ', '')
-        )
-    STORED
-;
 
 COMMENT ON COLUMN osm.shop_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.shop_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 
-COMMENT ON COLUMN osm.shop_point.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
-COMMENT ON COLUMN osm.shop_polygon.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
+COMMENT ON COLUMN osm.shop_point.address IS 'Address combined from address parts in helpers.get_address().';
+COMMENT ON COLUMN osm.shop_polygon.address IS 'Address combined from address parts in helpers.get_address().';
 
 COMMENT ON COLUMN osm.shop_point.housenumber IS 'Value from addr:housenumber tag';
 COMMENT ON COLUMN osm.shop_point.street IS 'Value from addr:street tag';
@@ -72,8 +51,8 @@ COMMENT ON COLUMN osm.shop_polygon.brand IS 'Identity of product, service or bus
 COMMENT ON COLUMN osm.shop_point.phone IS 'Phone number associated with the feature. https://wiki.openstreetmap.org/wiki/Key:phone';
 COMMENT ON COLUMN osm.shop_polygon.phone IS 'Phone number associated with the feature. https://wiki.openstreetmap.org/wiki/Key:phone';
 
-COMMENT ON COLUMN osm.shop_point.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
-COMMENT ON COLUMN osm.shop_polygon.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
+COMMENT ON COLUMN osm.shop_point.address IS 'Address combined from address parts in helpers.get_address().';
+COMMENT ON COLUMN osm.shop_polygon.address IS 'Address combined from address parts in helpers.get_address().';
 
 
 -- osm_type column only has shop/amenity values.
@@ -95,7 +74,7 @@ SELECT osm_id, 'W' AS geom_type, osm_type, osm_subtype, name,
 
 COMMENT ON VIEW osm.vshop_all IS 'Converts polygon shops to point with ST_Centroid(), combines with source points using UNION.';
 COMMENT ON COLUMN osm.vshop_all.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
-COMMENT ON COLUMN osm.vshop_all.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
+COMMENT ON COLUMN osm.vshop_all.address IS 'Address combined from address parts in helpers.get_address().';
 COMMENT ON COLUMN osm.vshop_all.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 COMMENT ON COLUMN osm.vshop_all.geom IS 'Geometry, mix of points loaded by osm2pgsql and points calculated from the ST_Centroid() of the polygons loaded by osm2pgsql.';
 

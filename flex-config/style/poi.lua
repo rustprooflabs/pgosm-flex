@@ -131,6 +131,7 @@ tables.poi_point = osm2pgsql.define_table({
         { column = 'street',     type = 'text' },
         { column = 'city',     type = 'text' },
         { column = 'state', type = 'text'},
+        { column = 'address', type = 'text', not_null = true},
         { column = 'operator', type = 'text'},
         { column = 'geom',     type = 'point' , projection = srid},
     }
@@ -149,6 +150,7 @@ tables.poi_line = osm2pgsql.define_table({
         { column = 'street',     type = 'text' },
         { column = 'city',     type = 'text' },
         { column = 'state', type = 'text'},
+        { column = 'address', type = 'text', not_null = true},
         { column = 'operator', type = 'text'},
         { column = 'geom',     type = 'linestring' , projection = srid},
     }
@@ -166,6 +168,7 @@ tables.poi_polygon = osm2pgsql.define_table({
         { column = 'street',     type = 'text' },
         { column = 'city',     type = 'text' },
         { column = 'state', type = 'text'},
+        { column = 'address', type = 'text', not_null = true},
         { column = 'operator', type = 'text'},
         { column = 'geom',     type = 'multipolygon' , projection = srid},
     }
@@ -200,10 +203,12 @@ function poi_process_node(object)
     local osm_types = get_osm_type_subtype(object)
 
     local name = get_name(object.tags)
-    local housenumber  = object:grab_tag('addr:housenumber')
-    local street = object:grab_tag('addr:street')
-    local city = object:grab_tag('addr:city')
-    local state = object:grab_tag('addr:state')
+    local housenumber  = object.tags['addr:housenumber']
+    local street = object.tags['addr:street']
+    local city = object.tags['addr:city']
+    local state = object.tags['addr:state']
+    local address = get_address(object.tags)
+
     local operator  = object:grab_tag('operator')
 
     tables.poi_point:add_row({
@@ -214,6 +219,7 @@ function poi_process_node(object)
         street = street,
         city = city,
         state = state,
+        address = address,
         operator = operator,
         geom = { create = 'point' }
     })
@@ -250,10 +256,11 @@ function poi_process_way(object)
     local osm_types = get_osm_type_subtype(object)
 
     local name = get_name(object.tags)
-    local housenumber  = object:grab_tag('addr:housenumber')
-    local street = object:grab_tag('addr:street')
-    local city = object:grab_tag('addr:city')
-    local state = object:grab_tag('addr:state')
+    local housenumber  = object.tags['addr:housenumber']
+    local street = object.tags['addr:street']
+    local city = object.tags['addr:city']
+    local state = object.tags['addr:state']
+    local address = get_address(object.tags)
     local operator  = object:grab_tag('operator')
 
 
@@ -268,6 +275,7 @@ function poi_process_way(object)
             street = street,
             city = city,
             state = state,
+            address = address,
             operator = operator,
             geom = { create = 'area' }
         })
@@ -280,6 +288,7 @@ function poi_process_way(object)
             street = street,
             city = city,
             state = state,
+            address = address,
             operator = operator,
             geom = { create = 'line' }
         })
