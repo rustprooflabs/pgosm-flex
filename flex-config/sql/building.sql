@@ -36,22 +36,7 @@ ALTER TABLE osm.building_polygon
     PRIMARY KEY (osm_id)
 ;
 
-ALTER TABLE osm.building_point ADD COLUMN address TEXT
-    GENERATED ALWAYS AS (
-        COALESCE(housenumber, '')
-            || COALESCE(' ' || street, '')
-            || COALESCE(', ' || city || ' ', '')
-            || COALESCE(', ' || state || ' ', '')
-        ) STORED
-;
-ALTER TABLE osm.building_polygon ADD COLUMN address TEXT
-    GENERATED ALWAYS AS (
-        COALESCE(housenumber, '')
-            || COALESCE(' ' || street, '')
-            || COALESCE(', ' || city || ' ', '')
-            || COALESCE(', ' || state || ' ', '')
-        ) STORED
-;
+
 CREATE INDEX ix_osm_building_polygon_type ON osm.building_polygon (osm_type);
 
 
@@ -66,7 +51,7 @@ SELECT osm_id, 'W' AS geom_type, name, levels, height, operator, wheelchair,
 ;
 
 COMMENT ON VIEW osm.vbuilding_all IS 'Converts polygon buildings to point with ST_Centroid(), combines with source points using UNION.';
-COMMENT ON COLUMN osm.vbuilding_all.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
+COMMENT ON COLUMN osm.vbuilding_all.address IS 'Address combined from address parts in helpers.get_address().';
 
 COMMENT ON COLUMN osm.building_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.building_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
@@ -79,5 +64,5 @@ COMMENT ON COLUMN osm.vbuilding_all.geom_type IS 'Type of geometry. N(ode), W(ay
 COMMENT ON COLUMN osm.vbuilding_all.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.vbuilding_all.operator IS 'Entity in charge of operations. https://wiki.openstreetmap.org/wiki/Key:operator';
 
-COMMENT ON COLUMN osm.building_point.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
-COMMENT ON COLUMN osm.building_polygon.address IS 'Simple attempt to combine address parts into single column with COALESCE.';
+COMMENT ON COLUMN osm.building_point.address IS 'Address combined from address parts in helpers.get_address().';
+COMMENT ON COLUMN osm.building_polygon.address IS 'Address combined from address parts in helpers.get_address().';

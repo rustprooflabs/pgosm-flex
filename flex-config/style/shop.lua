@@ -14,6 +14,7 @@ tables.shop_point = osm2pgsql.define_table({
         { column = 'street',     type = 'text' },
         { column = 'city',     type = 'text' },
         { column = 'state', type = 'text'},
+        { column = 'address', type = 'text', not_null = true},
         { column = 'phone', type = 'text'},
         { column = 'wheelchair', type = 'bool'},
         { column = 'operator', type = 'text'},
@@ -36,6 +37,7 @@ tables.shop_polygon = osm2pgsql.define_table({
         { column = 'street',     type = 'text' },
         { column = 'city',     type = 'text' },
         { column = 'state', type = 'text'},
+        { column = 'address', type = 'text', not_null = true},
         { column = 'phone', type = 'text'},
         { column = 'wheelchair', type = 'bool'},
         { column = 'operator', type = 'text'},
@@ -53,10 +55,11 @@ function shop_process_node(object)
     end
 
     local name = get_name(object.tags)
-    local housenumber  = object:grab_tag('addr:housenumber')
-    local street = object:grab_tag('addr:street')
-    local city = object:grab_tag('addr:city')
-    local state = object:grab_tag('addr:state')
+    local housenumber  = object.tags['addr:housenumber']
+    local street = object.tags['addr:street']
+    local city = object.tags['addr:city']
+    local state = object.tags['addr:state']
+    local address = get_address(object.tags)
     local wheelchair = object:grab_tag('wheelchair')
     local phone = object:grab_tag('phone')
     local operator  = object:grab_tag('operator')
@@ -75,6 +78,7 @@ function shop_process_node(object)
             street = street,
             city = city,
             state = state,
+            address = address,
             wheelchair = wheelchair,
             phone = phone,
             operator = operator,
@@ -106,6 +110,7 @@ function shop_process_node(object)
             street = street,
             city = city,
             state = state,
+            address = address,
             wheelchair = wheelchair,
             phone = phone,
             operator = operator,
@@ -127,10 +132,11 @@ function shop_process_way(object)
     end
 
     local name = get_name(object.tags)
-    local housenumber = object:grab_tag('addr:housenumber')
-    local street = object:grab_tag('addr:street')
-    local city = object:grab_tag('addr:city')
-    local state = object:grab_tag('addr:state')
+    local housenumber  = object.tags['addr:housenumber']
+    local street = object.tags['addr:street']
+    local city = object.tags['addr:city']
+    local state = object.tags['addr:state']
+    local address = get_address(object.tags)
     local wheelchair = object:grab_tag('wheelchair')
     local phone = object:grab_tag('phone')
     local operator = object:grab_tag('operator')
@@ -150,6 +156,7 @@ function shop_process_way(object)
                 street = street,
                 city = city,
                 state = state,
+                address = address,
                 wheelchair = wheelchair,
                 phone = phone,
                 operator = operator,
@@ -183,6 +190,7 @@ function shop_process_way(object)
                 street = street,
                 city = city,
                 state = state,
+                address = address,
                 wheelchair = wheelchair,
                 phone = phone,
                 operator = operator,

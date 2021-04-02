@@ -234,6 +234,6 @@ fi
 
 echo "PgOSM processing complete. Final output file: $OUT_PATH" >> $LOG_FILE
 echo "PgOSM processing complete. Final output file: $OUT_PATH"
-echo "If you followed the README.md it is at: ~/pgosm-data/$OUT_NAME"
+echo "If you followed the README.md it is at: ~/pgosm-data/$OUT_NAME" >> $LOG_FILE
 
 exit 0

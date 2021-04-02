@@ -16,6 +16,7 @@ tables.building_point = osm2pgsql.define_table({
         { column = 'street',     type = 'text' },
         { column = 'city',     type = 'text' },
         { column = 'state', type = 'text'},
+        { column = 'address', type = 'text', not_null = true},
         { column = 'wheelchair', type = 'bool'},
         { column = 'operator', type = 'text'},
         { column = 'geom',     type = 'point', projection = srid},
@@ -36,6 +37,7 @@ tables.building_polygon = osm2pgsql.define_table({
         { column = 'street',     type = 'text' },
         { column = 'city',     type = 'text' },
         { column = 'state', type = 'text'},
+        { column = 'address', type = 'text', not_null = true},
         { column = 'wheelchair', type = 'bool'},
         { column = 'operator', type = 'text'},
         { column = 'geom',     type = 'multipolygon', projection = srid},
@@ -61,13 +63,14 @@ function building_process_node(object)
     end
 
     local name = get_name(object.tags)
-    local street = object:grab_tag('addr:street')
-    local city = object:grab_tag('addr:city')
-    local state = object:grab_tag('addr:state')
+    local housenumber  = object.tags['addr:housenumber']
+    local street = object.tags['addr:street']
+    local city = object.tags['addr:city']
+    local state = object.tags['addr:state']
+    local address = get_address(object.tags)
     local wheelchair = object:grab_tag('wheelchair')
     local levels = object:grab_tag('building:levels')
     local height = parse_to_meters(object.tags['height'])
-    local housenumber  = object:grab_tag('addr:housenumber')
     local operator  = object:grab_tag('operator')
 
     tables.building_point:add_row({
@@ -77,6 +80,7 @@ function building_process_node(object)
         street = street,
         city = city,
         state = state,
+        address = address,
         wheelchair = wheelchair,
         levels = levels,
         height = height,
@@ -109,13 +113,14 @@ function building_process_way(object)
     end
 
     local name = get_name(object.tags)
-    local street = object:grab_tag('addr:street')
-    local city = object:grab_tag('addr:city')
-    local state = object:grab_tag('addr:state')
+    local housenumber  = object.tags['addr:housenumber']
+    local street = object.tags['addr:street']
+    local city = object.tags['addr:city']
+    local state = object.tags['addr:state']
+    local address = get_address(object.tags)
     local wheelchair = object:grab_tag('wheelchair')
     local levels = object:grab_tag('building:levels')
     local height = parse_to_meters(object.tags['height'])
-    local housenumber  = object:grab_tag('addr:housenumber')
     local operator  = object:grab_tag('operator')
 
     tables.building_polygon:add_row({
@@ -125,6 +130,7 @@ function building_process_way(object)
         street = street,
         city = city,
         state = state,
+        address = address,
         wheelchair = wheelchair,
         levels = levels,
         height = height,
