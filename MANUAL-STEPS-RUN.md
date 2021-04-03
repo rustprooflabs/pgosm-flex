@@ -179,7 +179,7 @@ primary keys, indexes, comments, views and more.
 
 
 ```bash
-psql -d pgosm -f ./run-all.sql
+psql -d $PGOSM_CONN -f ./run-all.sql
 ```
 
 > Note: The `run-all` scripts exclude `unitable` and `road_major`.
@@ -193,7 +193,7 @@ The post-processing SQL scripts create a procedure to calculate the nested place
 
 
 ```sql
-psql -d pgosm -c "CALL osm.build_nested_admin_polygons();"
+psql -d $PGOSM_CONN -c "CALL osm.build_nested_admin_polygons();"
 ```
 
 
@@ -210,10 +210,10 @@ As seen above, the `run_all.lua` style includes the tags table and then includes
 ```bash
 osm2pgsql --slim --drop \
     --output=flex --style=./run-no-tags.lua \
-    -d pgosm \
+    -d $PGOSM_CONN \
     ~/tmp/district-of-columbia-latest.osm.pbf
 
-psql -d pgosm -f ./run-no-tags.sql
+psql -d $PGOSM_CONN -f ./run-no-tags.sql
 ```
 
 
@@ -226,10 +226,10 @@ and PgOSM-Flex versions used to load the data.
 ```bash
 osm2pgsql --slim --drop \
     --output=flex --style=./style/road_major.lua \
-    -d pgosm \
+    -d $PGOSM_CONN \
     ~/tmp/district-of-columbia-latest.osm.pbf
 
-psql -d pgosm -f ./sql/road_major.sql
+psql -d $PGOSM_CONN -f ./sql/road_major.sql
 ```
 
 
