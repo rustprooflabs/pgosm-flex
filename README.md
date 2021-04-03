@@ -372,7 +372,13 @@ osm2pgsql --slim --drop \
 
 > The `unitable.lua` script include in in this project was [adapted from the unitable example from osm2pgsql](https://github.com/openstreetmap/osm2pgsql/blob/master/flex-config/unitable.lua). This version uses JSONB instead of HSTORE and takes advantage of `helpers.lua` to easily customize SRID.
 
+## QGIS Layer Styles
 
+Use QGIS to visualize OpenStreetMap data? This project includes a few basic
+styles using the `public.layer_styles` table created by QGIS.
+
+See [the QGIS Style README.md](https://github.com/rustprooflabs/pgosm-flex/blob/main/db/qgis-style/README.md)
+for more information.
 
 
 ## Additional resources
@@ -383,6 +389,4 @@ Blog posts covering various details and background information.
 * [Improved OpenStreetMap data structure in PostGIS](https://blog.rustprooflabs.com/2021/01/postgis-openstreetmap-flex-structure) 
 * [Hands on with osm2pgsql's new Flex output](https://blog.rustprooflabs.com/2020/12/osm2gpsql-flex-output-to-postgis).
 
-
-Use QGIS?  See [the README documenting using the QGIS styles](https://github.com/rustprooflabs/pgosm-flex/blob/main/db/qgis-style/README.md).
 
