@@ -127,6 +127,7 @@ SELECT osm_date, region FROM osm.pgosm_flex;
 └────────────┴────────────────────────────────────────┘
 ```
 
+> Note:  See the [Customize PgOSM on the main README.md](https://github.com/rustprooflabs/pgosm-flex#customize-pgosm) for all runtime customization options.
 
 
 ## Run osm2pgsql w/ PgOSM-Flex
@@ -159,6 +160,16 @@ psql -d pgosm -f ./run-all.sql
 > Note: The `run-all` scripts exclude `unitable` and `road_major`.
 
 
+## Generated nested place polygons
+
+*(Recommended)*
+
+The post-processing SQL scripts create a procedure to calculate the nested place polygon data.  It does not run by default in the previous step because it can be expensive (slow) on large regions.
+
+
+```sql
+psql -d pgosm -c "CALL osm.build_nested_admin_polygons();"
+```
 
 
 # More options
