@@ -56,7 +56,11 @@ sudo apt-get install postgresql-13 \
     postgresql-13-postgis-3-scripts
 ```
 
-## Prepare data / database
+See the [osm2pgsql documentation](https://osm2pgsql.org/doc/manual.html#preparing-the-database) for advice on tuning Postgres configuration
+for running osm2pgsql and Postgres on the same host.
+
+
+## Download data
 
 Download the PBF file and MD5 from Geofabrik.
 
@@ -74,12 +78,33 @@ md5sum -c district-of-columbia-latest.osm.pbf
 district-of-columbia-latest.osm.pbf: OK
 ```
 
-Prepare the `pgosm` database in Postgres.
-Need to create the `postgis` extension and the `osm` schema.
+## Prepare database
+
+The typical use case is to run osm2pgsql and Postgres/PostGIS on the same node.
+When using Postgres locally, only add the database name to the connection strings.
 
 ```bash
-psql -c "CREATE DATABASE pgosm;"
-psql -d pgosm -c "CREATE EXTENSION postgis; CREATE SCHEMA osm;"
+export PGOSM_CONN_PG="postgres"
+export PGOSM_CONN="pgosm"
+```
+
+To run with a non-local Postgres connection, use a connection string such as:
+
+```bash
+export PGOSM_CONN_PG="postgresql://your_user:password@your_postgres_host/postgres"
+export PGOSM_CONN="postgresql://your_user:password@your_postgres_host/pgosm"
+```
+
+Create the `pgosm` database.
+
+```bash
+psql -d $PGOSM_CONN_PG -c "CREATE DATABASE pgosm;"
+```
+
+Create the `postgis` extension and the `osm` schema.
+
+```bash
+psql -d $PGOSM_CONN -c "CREATE EXTENSION postgis; CREATE SCHEMA osm;"
 ```
 
 
@@ -143,7 +168,7 @@ cd pgosm-flex/flex-config
 
 osm2pgsql --slim --drop \
     --output=flex --style=./run-all.lua \
-    -d pgosm \
+    -d $PGOSM_CONN \
     ~/tmp/district-of-columbia-latest.osm.pbf
 ```
 
