@@ -41,11 +41,11 @@ CREATE INDEX ix_osm_building_polygon_type ON osm.building_polygon (osm_type);
 
 
 CREATE VIEW osm.vbuilding_all AS
-SELECT osm_id, 'N' AS geom_type, name, levels, height, operator, wheelchair,
+SELECT osm_id, 'N' AS geom_type, osm_type, name, levels, height, operator, wheelchair,
         address, geom
     FROM osm.building_point
 UNION
-SELECT osm_id, 'W' AS geom_type, name, levels, height, operator, wheelchair,
+SELECT osm_id, 'W' AS geom_type, osm_type, name, levels, height, operator, wheelchair,
         address, ST_Centroid(geom) AS geom
     FROM osm.building_polygon
 ;
@@ -66,3 +66,8 @@ COMMENT ON COLUMN osm.vbuilding_all.operator IS 'Entity in charge of operations.
 
 COMMENT ON COLUMN osm.building_point.address IS 'Address combined from address parts in helpers.get_address().';
 COMMENT ON COLUMN osm.building_polygon.address IS 'Address combined from address parts in helpers.get_address().';
+
+
+COMMENT ON COLUMN osm.building_point.osm_type IS 'Value from "building" tag if it exists, "building_part" if building:part exists, "address" if an address existed with no other major keys to group it in a more specific layer.  See address_only_building() in building.lua';
+COMMENT ON COLUMN osm.building_polygon.osm_type IS 'Value from "building" tag if it exists, "building_part" if building:part exists, "address" if an address existed with no other major keys to group it in a more specific layer.  See address_only_building() in building.lua';
+COMMENT ON COLUMN osm.vbuilding_all.osm_type IS 'Value from "building" tag if it exists, "building_part" if building:part exists, "address" if an address existed with no other major keys to group it in a more specific layer.  See address_only_building() in building.lua';

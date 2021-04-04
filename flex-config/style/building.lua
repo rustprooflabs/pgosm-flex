@@ -45,19 +45,47 @@ tables.building_polygon = osm2pgsql.define_table({
 })
 
 
+function address_only_building(tags)
+    -- Cannot have any of these tags
+    if tags.shop
+        or tags.amenity
+        or tags.building
+        or tags.landuse
+        or tags.leisure
+        or tags.tourism then
+            return false
+    end
+
+    -- Looking for any addr: tag might be too wide of a net.
+    for k, v in pairs(tags) do
+        if k ~= nil then
+            if starts_with(k, "addr:") then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 
 function building_process_node(object)
+    local address_only = address_only_building(object.tags)
+
     if not object.tags.building
             and not object.tags['building:part']
+            and not address_only
             then
         return
     end
 
     local osm_type
+
     if object.tags.building then
         osm_type = object:grab_tag('building')
     elseif object.tags['building:part'] then
         osm_type = 'building_part'
+    elseif address_only then
+        osm_type = 'address'
     else
         osm_type = 'unknown'
     end
@@ -93,8 +121,11 @@ end
 
 
 function building_process_way(object)
+    local address_only = address_only_building(object.tags)
+
     if not object.tags.building
             and not object.tags['building:part']
+            and not address_only
             then
         return
     end
@@ -108,6 +139,8 @@ function building_process_way(object)
         osm_type = object:grab_tag('building')
     elseif object.tags['building:part'] then
         osm_type = 'building_part'
+    elseif address_only then
+        osm_type = 'address'
     else
         osm_type = 'unknown'
     end

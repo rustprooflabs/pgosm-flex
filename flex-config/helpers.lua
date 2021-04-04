@@ -161,12 +161,12 @@ function major_road(highway)
     end
 
 -- From https://github.com/openstreetmap/osm2pgsql/blob/master/flex-config/places.lua
-local function starts_with(str, start)
+function starts_with(str, start)
    return str:sub(1, #start) == start
 end
 
 -- From http://lua-users.org/wiki/StringRecipes
-local function ends_with(str, ending)
+function ends_with(str, ending)
    return ending == "" or str:sub(-#ending) == ending
 end
 
