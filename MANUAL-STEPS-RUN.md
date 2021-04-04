@@ -234,4 +234,4 @@ psql -d $PGOSM_CONN -f ./sql/road_major.sql
 
 
 
-> WARNING:  Running multiple `osm2pgsql` commands requires processing the source PBF multiple times. This can waste consdierable time on larger imports.  Further, attempting to define multiple styles with additional `--style=style.lua` switches results in only the last style being processed.  To mix and match multiple styles, create a custom Lua script similar to `run-all.lua` or `run-no-tags.lua`.
+> WARNING:  Running multiple `osm2pgsql` commands requires processing the source PBF multiple times. This can waste considerable time on larger imports.  Further, attempting to define multiple styles with additional `--style=style.lua` switches results in only the last style being processed.  To mix and match multiple styles, create a custom Lua script similar to `run-all.lua` or `run-no-tags.lua`.
