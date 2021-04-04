@@ -56,7 +56,11 @@ sudo apt-get install postgresql-13 \
     postgresql-13-postgis-3-scripts
 ```
 
-## Prepare data / database
+See the [osm2pgsql documentation](https://osm2pgsql.org/doc/manual.html#preparing-the-database) for advice on tuning Postgres configuration
+for running osm2pgsql and Postgres on the same host.
+
+
+## Download data
 
 Download the PBF file and MD5 from Geofabrik.
 
@@ -74,12 +78,33 @@ md5sum -c district-of-columbia-latest.osm.pbf
 district-of-columbia-latest.osm.pbf: OK
 ```
 
-Prepare the `pgosm` database in Postgres.
-Need to create the `postgis` extension and the `osm` schema.
+## Prepare database
+
+The typical use case is to run osm2pgsql and Postgres/PostGIS on the same node.
+When using Postgres locally, only add the database name to the connection strings.
 
 ```bash
-psql -c "CREATE DATABASE pgosm;"
-psql -d pgosm -c "CREATE EXTENSION postgis; CREATE SCHEMA osm;"
+export PGOSM_CONN_PG="postgres"
+export PGOSM_CONN="pgosm"
+```
+
+To run with a non-local Postgres connection, use a connection string such as:
+
+```bash
+export PGOSM_CONN_PG="postgresql://your_user:password@your_postgres_host/postgres"
+export PGOSM_CONN="postgresql://your_user:password@your_postgres_host/pgosm"
+```
+
+Create the `pgosm` database.
+
+```bash
+psql -d $PGOSM_CONN_PG -c "CREATE DATABASE pgosm;"
+```
+
+Create the `postgis` extension and the `osm` schema.
+
+```bash
+psql -d $PGOSM_CONN -c "CREATE EXTENSION postgis; CREATE SCHEMA osm;"
 ```
 
 
@@ -127,6 +152,7 @@ SELECT osm_date, region FROM osm.pgosm_flex;
 └────────────┴────────────────────────────────────────┘
 ```
 
+> Note:  See the [Customize PgOSM on the main README.md](https://github.com/rustprooflabs/pgosm-flex#customize-pgosm) for all runtime customization options.
 
 
 ## Run osm2pgsql w/ PgOSM-Flex
@@ -142,7 +168,7 @@ cd pgosm-flex/flex-config
 
 osm2pgsql --slim --drop \
     --output=flex --style=./run-all.lua \
-    -d pgosm \
+    -d $PGOSM_CONN \
     ~/tmp/district-of-columbia-latest.osm.pbf
 ```
 
@@ -153,12 +179,22 @@ primary keys, indexes, comments, views and more.
 
 
 ```bash
-psql -d pgosm -f ./run-all.sql
+psql -d $PGOSM_CONN -f ./run-all.sql
 ```
 
 > Note: The `run-all` scripts exclude `unitable` and `road_major`.
 
 
+## Generated nested place polygons
+
+*(Recommended)*
+
+The post-processing SQL scripts create a procedure to calculate the nested place polygon data.  It does not run by default in the previous step because it can be expensive (slow) on large regions.
+
+
+```sql
+psql -d $PGOSM_CONN -c "CALL osm.build_nested_admin_polygons();"
+```
 
 
 # More options
@@ -174,10 +210,10 @@ As seen above, the `run_all.lua` style includes the tags table and then includes
 ```bash
 osm2pgsql --slim --drop \
     --output=flex --style=./run-no-tags.lua \
-    -d pgosm \
+    -d $PGOSM_CONN \
     ~/tmp/district-of-columbia-latest.osm.pbf
 
-psql -d pgosm -f ./run-no-tags.sql
+psql -d $PGOSM_CONN -f ./run-no-tags.sql
 ```
 
 
@@ -190,12 +226,12 @@ and PgOSM-Flex versions used to load the data.
 ```bash
 osm2pgsql --slim --drop \
     --output=flex --style=./style/road_major.lua \
-    -d pgosm \
+    -d $PGOSM_CONN \
     ~/tmp/district-of-columbia-latest.osm.pbf
 
-psql -d pgosm -f ./sql/road_major.sql
+psql -d $PGOSM_CONN -f ./sql/road_major.sql
 ```
 
 
 
-> WARNING:  Running multiple `osm2pgsql` commands requires processing the source PBF multiple times. This can waste consdierable time on larger imports.  Further, attempting to define multiple styles with additional `--style=style.lua` switches results in only the last style being processed.  To mix and match multiple styles, create a custom Lua script similar to `run-all.lua` or `run-no-tags.lua`.
+> WARNING:  Running multiple `osm2pgsql` commands requires processing the source PBF multiple times. This can waste considerable time on larger imports.  Further, attempting to define multiple styles with additional `--style=style.lua` switches results in only the last style being processed.  To mix and match multiple styles, create a custom Lua script similar to `run-all.lua` or `run-no-tags.lua`.
