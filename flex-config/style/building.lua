@@ -9,6 +9,7 @@ tables.building_point = osm2pgsql.define_table({
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text' , not_null = true},
+        { column = 'osm_subtype',   type = 'text'},
         { column = 'name',     type = 'text' },
         { column = 'levels',  type = 'int'},
         { column = 'height',  type = 'numeric'},
@@ -30,6 +31,7 @@ tables.building_polygon = osm2pgsql.define_table({
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text' , not_null = true},
+        { column = 'osm_subtype',   type = 'text'},
         { column = 'name',     type = 'text' },
         { column = 'levels',  type = 'int'},
         { column = 'height',  type = 'numeric'},
@@ -45,21 +47,62 @@ tables.building_polygon = osm2pgsql.define_table({
 })
 
 
+function address_only_building(tags)
+    -- Cannot have any of these tags
+    if tags.shop
+        or tags.amenity
+        or tags.building
+        or tags['building:part']
+        or tags.landuse
+        or tags.leisure
+        or tags.office
+        or tags.tourism then
+            return false
+    end
+
+    -- Opting to include any addr: tag that was not excluded explicitly above
+    --   This might be too wide of a net, but trying to be too picky risks
+    --   excluding potentially important data
+    for k, v in pairs(tags) do
+        if k ~= nil then
+            if starts_with(k, "addr:") then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 
 function building_process_node(object)
+    local address_only = address_only_building(object.tags)
+
     if not object.tags.building
             and not object.tags['building:part']
+            and not object.tags.office
+            and not address_only
             then
         return
     end
 
     local osm_type
+    local osm_subtype
+
     if object.tags.building then
-        osm_type = object:grab_tag('building')
+        osm_type = 'building'
+        osm_subtype = object.tags.building
     elseif object.tags['building:part'] then
         osm_type = 'building_part'
+        osm_subtype = object.tags['building:part']
+    elseif object.tags.office then
+        osm_type = 'office'
+        osm_subtype = object.tags.office
+    elseif address_only then
+        osm_type = 'address'
+        osm_subtype = nil
     else
         osm_type = 'unknown'
+        osm_subtype = nil
     end
 
     local name = get_name(object.tags)
@@ -75,6 +118,7 @@ function building_process_node(object)
 
     tables.building_point:add_row({
         osm_type = osm_type,
+        osm_subtype = osm_subtype,
         name = name,
         housenumber = housenumber,
         street = street,
@@ -93,9 +137,13 @@ end
 
 
 function building_process_way(object)
+    local address_only = address_only_building(object.tags)
+
     if not object.tags.building
             and not object.tags['building:part']
-            then
+            and not address_only
+            and not object.tags.office
+                then
         return
     end
 
@@ -103,13 +151,21 @@ function building_process_way(object)
         return
     end
 
-    local osm_type
     if object.tags.building then
-        osm_type = object:grab_tag('building')
+        osm_type = 'building'
+        osm_subtype = object.tags.building
     elseif object.tags['building:part'] then
         osm_type = 'building_part'
+        osm_subtype = object.tags['building:part']
+    elseif object.tags.office then
+        osm_type = 'office'
+        osm_subtype = object.tags.office
+    elseif address_only then
+        osm_type = 'address'
+        osm_subtype = nil
     else
         osm_type = 'unknown'
+        osm_subtype = nil
     end
 
     local name = get_name(object.tags)
@@ -125,6 +181,7 @@ function building_process_way(object)
 
     tables.building_polygon:add_row({
         osm_type = osm_type,
+        osm_subtype = osm_subtype,
         name = name,
         housenumber = housenumber,
         street = street,
