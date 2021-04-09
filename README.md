@@ -72,7 +72,10 @@ and customize behavior with the use of environment variables.
 * `OSM_DATE`
 * `PGOSM_SRID`
 * `PGOSM_REGION`
+* `PGOSM_LANGUAGE`
 
+
+### Custom SRID
 
 To use `SRID 4326` instead of the default `SRID 3857`, set the `PGOSM_SRID`
 environment variable before running osm2pgsql.
@@ -89,6 +92,20 @@ Changes to the SRID are reflected in output printed.
 2021-01-08 15:01:15  Node-cache: cache=800MB, maxblocks=12800*65536, allocation method=11
 Custom SRID: 4326
 ...
+```
+
+### Preferred Language
+
+The `name` column throughout PgOSM-Flex defaults to using the highest priority
+name tag according to the [OSM Wiki](https://wiki.openstreetmap.org/wiki/Names). Setting `PGOSM_LANGUAGE` allows giving preference to name tags with the
+given language.
+The value of `PGOSM_LANGUAGE` should match the codes used by OSM:
+
+> where code is a lowercase language's ISO 639-1 alpha2 code, or a lowercase ISO 639-2 code if an ISO 639-1 code doesn't exist." -- [Multilingual names on OSM Wiki](https://wiki.openstreetmap.org/wiki/Multilingual_names)
+
+
+```bash
+export PGOSM_LANGUAGE=kn
 ```
 
 ----

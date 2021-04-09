@@ -140,7 +140,7 @@ function place_process_relation(object)
 
     local boundary = object:grab_tag('boundary')
     local admin_level = parse_admin_level(object:grab_tag('admin_level'))
-    local name = object:grab_tag('name')
+    local name = get_name(object.tags)
     local member_ids = osm2pgsql.way_member_ids(object)
 
     if object.tags.type == 'multipolygon' or object.tags.type == 'boundary' then

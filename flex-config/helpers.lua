@@ -26,10 +26,20 @@ end
 local pgosm_region_env = os.getenv("PGOSM_REGION")
 if pgosm_region_env then
     pgosm_region = pgosm_region_env
-    print('Region: ' .. pgosm_region)
+    print('INFO - Region: ' .. pgosm_region)
 else
     pgosm_region = 'Not Specified'
     print('INFO - Set PGOSM_REGION env var to customize region. ')
+end
+
+
+local pgosm_language_env = os.getenv("PGOSM_LANGUAGE")
+if pgosm_language_env then
+    pgosm_language = pgosm_language_env
+    print('INFO - Language Code set to ' .. pgosm_language)
+else
+    pgosm_language = nil
+    print('INFO - Default language not set. Using OSM Wiki priority for name. Set PGOSM_LANGUAGE to customize.')
 end
 
 
@@ -171,19 +181,44 @@ function ends_with(str, ending)
 end
 
 
--- returns the first name type tag it encounters in order of priority
---   Per: https://wiki.openstreetmap.org/wiki/Names
+-- Returns a single "best" name for each object when possible.
+-- First check is if name::<pgosm_language> exists, return it if it does...
+-- If pgosm_language is not set, or not found...
+--    the first name type tag it encounters in order of priority
+--    Priority based on OSM Wiki: https://wiki.openstreetmap.org/wiki/Names
 function get_name(tags)
-    if tags.name then
-        return tags.name
-    elseif tags.short_name then
-        return tags.short_name
-    elseif tags.alt_name then
-        return tags.alt_name
-    elseif tags.loc_name then
-        return tags.loc_name
+    local best_name
+    if pgosm_language ~= nil then
+        best_name = tags['name:' .. pgosm_language]
     end
 
+    -- I tried nesting this logic above but it always resulted in nil values
+    -- Probably a better way...
+    if best_name ~= nil then
+        return best_name
+    end
+
+    if tags.name then
+        best_name = tags.name
+    elseif tags.short_name then
+        best_name = tags.short_name
+    elseif tags.alt_name then
+        best_name = tags.alt_name
+    elseif tags.loc_name then
+        best_name = tags.loc_name
+    else
+        best_name = get_name_last_ditch(tags)
+    end
+
+    return best_name
+
+end
+
+-- Looks for any name tag associated with a colon.
+-- Gives zero priority, simply the first found value.
+-- Uses tags.old_name as last hope for a value.
+-- And empty string for real last ditch, no NULL.
+function get_name_last_ditch(tags)
     for k, v in pairs(tags) do
         if starts_with(k, "name:")
             or ends_with(k, ":NAME")
@@ -191,10 +226,10 @@ function get_name(tags)
             return v
         end
     end
-
     if tags.old_name then
         return tags.old_name
     end
+    return ''
 end
 
 
