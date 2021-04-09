@@ -214,11 +214,15 @@ function get_name(tags)
 
 end
 
+-- Uses tags.old_name first if exists.
 -- Looks for any name tag associated with a colon.
 -- Gives zero priority, simply the first found value.
--- Uses tags.old_name as last hope for a value.
--- And empty string for real last ditch, no NULL.
+-- And empty string for real last ditch.
 function get_name_last_ditch(tags)
+    if tags.old_name then
+        return tags.old_name
+    end
+
     for k, v in pairs(tags) do
         if starts_with(k, "name:")
             or ends_with(k, ":NAME")
@@ -226,9 +230,7 @@ function get_name_last_ditch(tags)
             return v
         end
     end
-    if tags.old_name then
-        return tags.old_name
-    end
+
     return ''
 end
 
