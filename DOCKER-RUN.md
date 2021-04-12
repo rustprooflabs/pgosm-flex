@@ -35,6 +35,7 @@ The following command sets the four (4) main env vars used to customize PgOSM-Fl
 * `PGOSM_DATA_SCHEMA_NAME` - Final schema name for the OpenStreetMap data. Default `osm`
 * `PGOSM_DATA_SCHEMA_ONLY` - When `false` (default) the `pgosm` schema is exported along with the `PGOSM_DATA_SCHEMA_NAME` schema
 * `PGOSM_DATE` - Used to document data loaded to DB in `osm.pgosm_flex.pgosm_date`, and for archiving PBF/MD5 files.  Defaults to today.
+* `PGOSM_LANGUAGE` - Used to prefer specific language when it exists.
 
 The command  `bash docker/run_pgosm_flex.sh` runs the full process. The
 script uses a region (`north-america/us`) and sub-region (`district-of-columbia`)
@@ -49,6 +50,7 @@ docker exec -it \
     -e PGOSM_DATA_SCHEMA_ONLY=true \
     -e PGOSM_DATA_SCHEMA_NAME=osm_dc \
     -e PGOSM_DATE='2021-03-11' \
+    -e PGOSM_LANGUAGE=kn \
     pgosm bash docker/run_pgosm_flex.sh \
     north-america/us \
     district-of-columbia \
