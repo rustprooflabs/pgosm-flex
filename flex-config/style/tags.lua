@@ -1,7 +1,10 @@
+-- tags.lua
+-- All OSM tag data in a single table w/out geometry
 require "helpers"
 
--- Put all OSM tag data into a single table w/out geometry
-local json = require('dkjson')
+-- flex-config/rxi-json.lua sourced from:
+--   https://raw.githubusercontent.com/rxi/json.lua/master/json.lua
+local json = require('rxi-json')
 
 
 local tags_table = osm2pgsql.define_table{

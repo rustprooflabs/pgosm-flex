@@ -13,15 +13,7 @@ process.
 ## Ubuntu Pre-reqs
 
 This section covers installation of prerequisites required to install Postgres,
-osm2pgsql, and PgOSM-Flex on Ubuntu 20.04.  The only pre-req specific to PgOSM-Flex
-itself is `lua-dkjson` to allow loading the `tags` column to Postgres
-using the built-in `JSONB` data type instead of using the legacy `HSTORE` extension.
-See the blog post
-[Hands on with osm2pgsql's new Flex output](https://blog.rustprooflabs.com/2020/12/osm2gpsql-flex-output-to-postgis)
-for more on this decision.
-If you do not want to install / use JSON you can skip the tags table by
-using `run-no-tags` instead of `run-all`.
-
+osm2pgsql, and PgOSM-Flex on Ubuntu 20.04.
 
 ```bash
 sudo apt update
@@ -30,8 +22,7 @@ sudo apt install -y \
         git make cmake g++ \
         libboost-dev libboost-system-dev \
         libboost-filesystem-dev libexpat1-dev zlib1g-dev \
-        libbz2-dev libpq-dev libproj-dev lua5.2 liblua5.2-dev \
-        lua-dkjson
+        libbz2-dev libpq-dev libproj-dev lua5.2 liblua5.2-dev
 ```
 
 Install osm2pgsql from source.

@@ -11,7 +11,10 @@
 --
 require "helpers"
 
-local json = require('dkjson')
+-- flex-config/rxi-json.lua sourced from:
+--   https://raw.githubusercontent.com/rxi/json.lua/master/json.lua
+local json = require('rxi-json')
+
 
 -- Single table that can take any OSM object and any geometry.
 local dtable = osm2pgsql.define_table{

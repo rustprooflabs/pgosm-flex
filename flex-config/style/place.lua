@@ -1,6 +1,8 @@
 require "helpers"
 
-local json = require('dkjson')
+-- flex-config/rxi-json.lua sourced from:
+--   https://raw.githubusercontent.com/rxi/json.lua/master/json.lua
+local json = require('rxi-json')
 
 local tables = {}
 
