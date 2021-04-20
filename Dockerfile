@@ -9,7 +9,6 @@ RUN apt-get update \
         libboost-dev libboost-system-dev \
         libboost-filesystem-dev libexpat1-dev zlib1g-dev \
         libbz2-dev libpq-dev libproj-dev lua5.2 liblua5.2-dev \
-        lua-dkjson \
     && rm -rf /var/lib/apt/lists/*
 
 

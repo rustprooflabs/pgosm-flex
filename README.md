@@ -398,6 +398,21 @@ See [the QGIS Style README.md](https://github.com/rustprooflabs/pgosm-flex/blob/
 for more information.
 
 
+## JSON support
+
+JSON support for OpenStreetMap tags data is made possible using
+[rxi's json.lua](https://github.com/rxi/json.lua).
+A static copy of `json.lua` is available under
+`flex-config/rxi-json.lua`.
+
+
+The file was downloaded to this project using:
+
+```bash
+cd flex-config/
+curl -sS -o rxi-json.lua https://raw.githubusercontent.com/rxi/json.lua/master/json.lua
+```
+
 ## Additional resources
 
 Blog posts covering various details and background information.
