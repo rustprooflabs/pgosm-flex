@@ -56,8 +56,8 @@ for running osm2pgsql and Postgres on the same host.
 Download the PBF file and MD5 from Geofabrik.
 
 ```bash
-mkdir ~/tmp
-cd ~/tmp
+mkdir ~/pgosm-data
+cd ~/pgosm-data
 wget https://download.geofabrik.de/north-america/us/district-of-columbia-latest.osm.pbf
 wget https://download.geofabrik.de/north-america/us/district-of-columbia-latest.osm.pbf.md5
 ```
@@ -160,7 +160,7 @@ cd pgosm-flex/flex-config
 osm2pgsql --slim --drop \
     --output=flex --style=./run-all.lua \
     -d $PGOSM_CONN \
-    ~/tmp/district-of-columbia-latest.osm.pbf
+    ~/pgosm-data/district-of-columbia-latest.osm.pbf
 ```
 
 ## Run post-processing SQL
@@ -183,7 +183,7 @@ psql -d $PGOSM_CONN -f ./run-all.sql
 The post-processing SQL scripts create a procedure to calculate the nested place polygon data.  It does not run by default in the previous step because it can be expensive (slow) on large regions.
 
 
-```sql
+```bash
 psql -d $PGOSM_CONN -c "CALL osm.build_nested_admin_polygons();"
 ```
 
