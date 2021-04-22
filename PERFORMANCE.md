@@ -25,12 +25,12 @@ Timings to run `flex-config/run-road-place.lua` and `flex-config/run-road-place.
 four (4) sub-region sizes.
 
 
-| Sub-region | PBF Size | Import (s) | Post-import (s) | Nested Places (s) | Size in PostGIS (incl. index) |
+| Sub-region | PBF Size | PostGIS Size | Import (s) | Post-import (s) | Nested Places (s) |
 | :---                  |    :-:    |  :-:  |    :-:    |     :-:    |    :-:    |
-| District of Columbia  |   17 MB   |  10   |    0.3     |     0.08    |    60 MB    |
-| Colorado              |   208 MB  |  111  |    4.3    |    2.5    |    398 MB    |
-| Norway                |   909 MB  |  402  |    34    |   20     |    797 MB    |
-| North America         |   11 GB   |  4884 |    281    |    4174    |   17 GB     |
+| District of Columbia  |   17 MB   |    60 MB    |  10   |    0.3     |     0.08    |
+| Colorado              |   208 MB  |    398 MB    |  111  |    4.3    |    2.5    |
+| Norway                |   909 MB  |    797 MB    |  402  |    34    |   20     |
+| North America         |   11 GB   |   17 GB     |  4884 |    281    |    4174    |
 
 
 
@@ -73,6 +73,22 @@ Timings are an average of at least two recorded test runs.  For example, the Nor
 two runs was only 1 minute 17 seconds for a test that runs nearly 1.5 hours.
 
 Time for the import step is reported directly from osm2gpsql while the psql commands use the Linux `time` command as shown in the commands above.
+
+
+`PostGIS Size` reported is according to the meta-data in Postgres exposed through
+the [PgDD extension](https://github.com/rustprooflabs/pgdd) using this query.
+
+```sql
+SELECT size_plus_indexes
+	FROM dd.schemas
+	WHERE s_name = 'osm'
+;
+```
+
+
+PostGIS Size
+
+
 
 ## Postgres Config
 
