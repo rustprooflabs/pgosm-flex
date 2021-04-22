@@ -21,49 +21,34 @@ Versions used for testing:
 
 ## Road / Place
 
-Timings to run `flex-config/run-road-place.lua` and `flex-config/run-road-place.sql` for
-four (4) sub-region sizes.
-
-
-| Sub-region | PBF Size | PostGIS Size | Import (s) | Post-import (s) | Nested Places (s) |
-| :---                  |    :-:    |  :-:  |    :-:    |     :-:    |    :-:    |
-| District of Columbia  |   17 MB   |    60 MB    |  10   |    0.3     |     0.08    |
-| Colorado              |   208 MB  |    398 MB    |  111  |    4.3    |    2.5    |
-| Norway                |   909 MB  |    797 MB    |  402  |    34    |   20     |
-| North America         |   11 GB   |   17 GB     |  4884 |    281    |    4174    |
+The `run-road-place` layer set is a minimal set only loads roads and places,
+7 tables and 3 views.
 
 
 
-### Commands
+| Sub-region            | PBF Size | PostGIS Size | Import (s) | Post-import (s) | Nested Places (s) |
+| :---                  |    :-:    |      :-:    |    :-:    |       :-:        |   :-:   |
+| District of Columbia  |   17 MB   |    60 MB    |    10     |       0.3        |   0.08  |
+| Colorado              |   208 MB  |    398 MB   |    111    |       4.3        |   2.5   |
+| Norway                |   909 MB  |    797 MB   |    402    |       34         |   20    |
+| North America         |   11 GB   |     17 GB   |    4884   |       281        |   4174  |
 
-D.C., Colorado, and Norway imports used this command.
 
 
-```bash
-osm2pgsql --slim --drop \
-    --cache=30000 \
-    --output=flex --style=./run-road-place.lua \
-    -d $PGOSM_CONN \
-    ~/pgosm-data/<subregion>-latest.osm.pbf
-```
+## No Tags
 
-North America loaded using `--flat-nodes` and sets `--cache=0`.
+The `run-no-tags` layer set loads nearly all of the data, excluding the unstructured
+`tags` data.  35 tables and 6 views.
 
-```bash
-osm2pgsql --slim --drop \
-    --cache=0 \
-    --flat-nodes=/tmp/nodes \
-    --output=flex --style=./run-road-place.lua \
-    -d $PGOSM_CONN \
-    ~/pgosm-data/<subregion>-latest.osm.pbf
-```
 
-All regions use the same post-processing command and build nested polygons.
 
-```bash
-time psql -d $PGOSM_CONN -f run-road-place.sql
-time psql -d $PGOSM_CONN -c "CALL osm.build_nested_admin_polygons();"
-```
+| Sub-region            | PBF Size  | PostGIS Size | Import (s) | Post-import (s) |
+| :---                  |    :-:    |     :-:      |    :-:     |       :-:       |
+| District of Columbia  |   17 MB   |    182 MB    |    42      |      2.3        |
+| Colorado              |   208 MB  |    1449 MB   |    391     |       19        |
+| Norway                |   909 MB  |    3.8 GB    |    1403    |       57        |
+| North America         |   11 GB   |    65 GB     |    18809   |       1076      |
+
 
 
 
@@ -86,7 +71,37 @@ SELECT size_plus_indexes
 ```
 
 
-PostGIS Size
+
+### Commands
+
+D.C., Colorado, and Norway imports used this command.
+
+
+```bash
+osm2pgsql --slim --drop \
+    --cache=30000 \
+    --output=flex --style=./run-<layer-set-name>.lua \
+    -d $PGOSM_CONN \
+    ~/pgosm-data/<subregion>-latest.osm.pbf
+```
+
+North America loaded using `--flat-nodes` and sets `--cache=0`.
+
+```bash
+osm2pgsql --slim --drop \
+    --cache=0 \
+    --flat-nodes=/tmp/nodes \
+    --output=flex --style=./run-<layer-set-name>lua \
+    -d $PGOSM_CONN \
+    ~/pgosm-data/<subregion>-latest.osm.pbf
+```
+
+All regions use the same post-processing command and build nested polygons.
+
+```bash
+time psql -d $PGOSM_CONN -f run-<layer-set-name>.sql
+time psql -d $PGOSM_CONN -c "CALL osm.build_nested_admin_polygons();"
+```
 
 
 
