@@ -54,8 +54,11 @@ The `run-no-tags` layer set loads nearly all of the data, excluding the unstruct
 
 ## Methodology
 
-Timings are an average of at least two recorded test runs.  For example, the North America `run-road-place.lua` had two times: 4,845 seconds and 4,922 seconds.  The difference of these
-two runs was only 1 minute 17 seconds for a test that runs nearly 1.5 hours.
+Timings are an average of multiple recorded test runs over more than one day.
+For example, the North America `run-road-place.lua` had two times: 4,845 seconds and 4,922 seconds for an average of 4,884 s
+(1 hour 21 minutes).
+The difference of these two runs was only 1 minute 17 seconds, a rather small
+amount of variation.
 
 Time for the import step is reported directly from osm2gpsql while the psql commands use the Linux `time` command as shown in the commands above.
 
@@ -74,7 +77,7 @@ SELECT size_plus_indexes
 
 ### Commands
 
-D.C., Colorado, and Norway imports used this command.
+D.C., Colorado, and Norway imports used this command format.
 
 
 ```bash
@@ -103,9 +106,9 @@ time psql -d $PGOSM_CONN -f run-<layer-set-name>.sql
 time psql -d $PGOSM_CONN -c "CALL osm.build_nested_admin_polygons();"
 ```
 
-
-
 ## Postgres Config
+
+Postgres is configured per the [suggestions in the osm2pgsql manual](https://osm2pgsql.org/doc/manual.html#preparing-the-database).
 
 
 ```bash
