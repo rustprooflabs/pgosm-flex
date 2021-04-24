@@ -333,6 +333,7 @@ function get_address(tags)
     local street = tags['addr:street']
     local city = tags['addr:city']
     local state = tags['addr:state']
+    local postcode = tags['addr:postcode']
 
     local housenumber_street = ''
 
@@ -354,20 +355,32 @@ function get_address(tags)
         state = ''
     end
 
-    local all_but_state = ''
+    if postcode == nil then
+        postcode = ''
+    end
+
+    local all_but_state_postcode = ''
 
     if housenumber_street ~= '' and city ~= '' then
-        all_but_state = housenumber_street .. ', ' .. city
+        all_but_state_postcode = housenumber_street .. ', ' .. city
     else
-        all_but_state = housenumber_street .. city
+        all_but_state_postcode = housenumber_street .. city
+    end
+
+    local all_but_postcode = ''
+
+    if all_but_state_postcode ~= '' and state ~= '' then
+        all_but_postcode = all_but_state_postcode .. ', ' .. state
+    else
+        all_but_postcode = all_but_state_postcode .. state
     end
 
     local address = ''
 
-    if all_but_state ~= '' and state ~= '' then
-        address = all_but_state .. ', ' .. state
+    if all_but_postcode ~= '' and postcode ~= '' then
+        address = all_but_postcode .. ', ' .. postcode
     else
-        address = all_but_state .. state
+        address = all_but_postcode .. postcode
     end
 
     return address

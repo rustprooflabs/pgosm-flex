@@ -45,6 +45,22 @@ DELETE FROM osm_missing m
             WHERE m.osm_id = i.osm_id AND m.geom_type = 'N'
 );
 
+
+DELETE FROM osm_missing m
+    WHERE EXISTS (
+        SELECT 1
+            FROM osm.landuse_point i
+            WHERE m.osm_id = i.osm_id AND m.geom_type = 'N'
+);
+
+DELETE FROM osm_missing m
+    WHERE EXISTS (
+        SELECT 1
+            FROM osm.leisure_point i
+            WHERE m.osm_id = i.osm_id AND m.geom_type = 'N'
+);
+
+
 DELETE FROM osm_missing m
     WHERE EXISTS (
         SELECT 1
@@ -58,6 +74,23 @@ DELETE FROM osm_missing m
             FROM osm.place_point i
             WHERE m.osm_id = i.osm_id AND m.geom_type = 'N'
 );
+
+
+DELETE FROM osm_missing m
+    WHERE EXISTS (
+        SELECT 1
+            FROM osm.poi_point i
+            WHERE m.osm_id = i.osm_id AND m.geom_type = 'N'
+);
+
+
+DELETE FROM osm_missing m
+    WHERE EXISTS (
+        SELECT 1
+            FROM osm.road_point i
+            WHERE m.osm_id = i.osm_id AND m.geom_type = 'N'
+);
+
 
 DELETE FROM osm_missing m
     WHERE EXISTS (
@@ -77,20 +110,6 @@ DELETE FROM osm_missing m
     WHERE EXISTS (
         SELECT 1
             FROM osm.water_point i
-            WHERE m.osm_id = i.osm_id AND m.geom_type = 'N'
-);
-
-DELETE FROM osm_missing m
-    WHERE EXISTS (
-        SELECT 1
-            FROM osm.landuse_point i
-            WHERE m.osm_id = i.osm_id AND m.geom_type = 'N'
-);
-
-DELETE FROM osm_missing m
-    WHERE EXISTS (
-        SELECT 1
-            FROM osm.leisure_point i
             WHERE m.osm_id = i.osm_id AND m.geom_type = 'N'
 );
 
@@ -130,6 +149,30 @@ DELETE FROM osm_missing m
             WHERE m.osm_id = i.osm_id AND m.geom_type = 'W'
 );
 
+
+DELETE FROM osm_missing m
+    WHERE EXISTS (
+        SELECT 1
+            FROM osm.indoor_polygon i
+            WHERE m.osm_id = i.osm_id AND m.geom_type = 'W'
+);
+
+
+DELETE FROM osm_missing m
+    WHERE EXISTS (
+        SELECT 1
+            FROM osm.landuse_polygon i
+            WHERE m.osm_id = i.osm_id AND m.geom_type = 'W'
+);
+
+DELETE FROM osm_missing m
+    WHERE EXISTS (
+        SELECT 1
+            FROM osm.leisure_polygon i
+            WHERE m.osm_id = i.osm_id AND m.geom_type = 'W'
+);
+
+
 DELETE FROM osm_missing m
     WHERE EXISTS (
         SELECT 1
@@ -155,6 +198,20 @@ DELETE FROM osm_missing m
     WHERE EXISTS (
         SELECT 1
             FROM osm.place_polygon i
+            WHERE m.osm_id = i.osm_id AND m.geom_type = 'W'
+);
+
+DELETE FROM osm_missing m
+    WHERE EXISTS (
+        SELECT 1
+            FROM osm.poi_line i
+            WHERE m.osm_id = i.osm_id AND m.geom_type = 'W'
+);
+
+DELETE FROM osm_missing m
+    WHERE EXISTS (
+        SELECT 1
+            FROM osm.poi_polygon i
             WHERE m.osm_id = i.osm_id AND m.geom_type = 'W'
 );
 
@@ -200,31 +257,32 @@ DELETE FROM osm_missing m
             WHERE m.osm_id = i.osm_id AND m.geom_type = 'W'
 );
 
-DELETE FROM osm_missing m
-    WHERE EXISTS (
-        SELECT 1
-            FROM osm.landuse_polygon i
-            WHERE m.osm_id = i.osm_id AND m.geom_type = 'W'
-);
-
-DELETE FROM osm_missing m
-    WHERE EXISTS (
-        SELECT 1
-            FROM osm.leisure_polygon i
-            WHERE m.osm_id = i.osm_id AND m.geom_type = 'W'
-);
 
 
 
-
-WITH missing_tags AS (
+-- Query to look at keys
+DROP TABLE IF EXISTS missing_tags;
+CREATE TEMP TABLE missing_tags AS
 SELECT t.*
     FROM osm_missing m 
     INNER JOIN osm.tags t ON m.geom_type = t.geom_type AND m.osm_id = t.osm_id
-)
+;
+
+
 SELECT jsonb_object_keys(tags), COUNT(*)
     FROM missing_tags
     GROUP BY  jsonb_object_keys(tags)
     ORDER BY COUNT(*) DESC
 ;
+
+
+SELECT geom_type, COUNT(*)
+    FROM missing_tags
+    GROUP BY geom_type;
+
+
+
+SELECT *
+    FROM missing_tags
+    WHERE tags->>'type' IS NOT NULL;
 
