@@ -1,5 +1,9 @@
 require "helpers"
 
+-- flex-config/rxi-json.lua sourced from:
+--   https://raw.githubusercontent.com/rxi/json.lua/master/json.lua
+local json = require('rxi-json')
+
 local tables = {}
 
 -- Keys to include for further checking.  Not all values from each key will be preserved
@@ -11,7 +15,8 @@ local poi_first_level_keys = {
     'man_made',
     'tourism',
     'landuse',
-    'natural'
+    'natural',
+    'historic'
 }
 
 local is_first_level_poi = make_check_in_list_func(poi_first_level_keys)
@@ -19,7 +24,7 @@ local is_first_level_poi = make_check_in_list_func(poi_first_level_keys)
 
 function building_poi(object)
     local bldg_name = get_name(object.tags)
-    if (bldg_name or object.tags.operator) then
+    if (bldg_name ~= '' or object.tags.operator) then
         return true
     end
 
@@ -109,6 +114,9 @@ function get_osm_type_subtype(object)
     elseif object.tags.tourism then
         osm_type_table['osm_type'] = 'tourism'
         osm_type_table['osm_subtype'] = object:grab_tag('tourism')
+    elseif object.tags.historic then
+        osm_type_table['osm_type'] = 'historic'
+        osm_type_table['osm_subtype'] = object.tags['historic']
     else
         -- Cannot be NULL
         osm_type_table['osm_type'] = 'Unknown'
@@ -173,6 +181,7 @@ tables.poi_polygon = osm2pgsql.define_table({
         { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
         { column = 'operator', type = 'text'},
+        { column = 'member_ids', type = 'jsonb'},
         { column = 'geom',     type = 'multipolygon' , projection = srid},
     }
 })
@@ -305,6 +314,63 @@ function poi_process_way(object)
 end
 
 
+
+function poi_process_relation(object)
+    -- Quickly remove any that don't match the 1st level of checks
+    if not is_first_level_poi(object.tags) then
+        return
+    end
+
+    -- Deeper checks for specific osm_type details
+    if (object.tags.natural and not natural_poi(object)) then
+        return
+    end
+
+    if (object.tags.landuse and not landuse_poi(object)) then
+        return
+    end
+
+    if (object.tags.building and not building_poi(object)) then
+        return
+    end
+
+    if (object.tags.man_made and not man_made_poi(object)) then
+        return
+    end
+
+    -- Gets osm_type and osm_subtype
+    local osm_types = get_osm_type_subtype(object)
+
+    local name = get_name(object.tags)
+    local housenumber  = object.tags['addr:housenumber']
+    local street = object.tags['addr:street']
+    local city = object.tags['addr:city']
+    local state = object.tags['addr:state']
+    local postcode = object.tags['addr:postcode']
+    local address = get_address(object.tags)
+    local operator  = object:grab_tag('operator')
+
+    local member_ids = osm2pgsql.way_member_ids(object)
+
+    if object.tags.type == 'multipolygon' or object.tags.type == 'boundary' then
+        tables.poi_polygon:add_row({
+            osm_type = osm_types.osm_type,
+            osm_subtype = osm_types.osm_subtype,
+            name = name,
+            housenumber = housenumber,
+            street = street,
+            city = city,
+            state = state,
+            postcode = postcode,
+            address = address,
+            operator = operator,
+            geom = { create = 'area' }
+        })
+    end
+
+end
+
+
 if osm2pgsql.process_node == nil then
     -- Change function name here
     osm2pgsql.process_node = poi_process_node
@@ -331,3 +397,18 @@ else
         poi_process_way(object_copy)
     end
 end
+
+
+if osm2pgsql.process_relation == nil then
+    -- Change function name here
+    osm2pgsql.process_relation = poi_process_relation
+else
+    local nested = osm2pgsql.process_relation
+    osm2pgsql.process_relation = function(object)
+        local object_copy = deep_copy(object)
+        nested(object)
+        -- Change function name here
+        poi_process_relation(object_copy)
+    end
+end
+
