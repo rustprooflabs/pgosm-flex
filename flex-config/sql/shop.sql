@@ -37,11 +37,13 @@ COMMENT ON COLUMN osm.shop_point.housenumber IS 'Value from addr:housenumber tag
 COMMENT ON COLUMN osm.shop_point.street IS 'Value from addr:street tag';
 COMMENT ON COLUMN osm.shop_point.city IS 'Value from addr:city tag';
 COMMENT ON COLUMN osm.shop_point.state IS 'Value from addr:state tag';
+COMMENT ON COLUMN osm.shop_point.postcode IS 'Value from addr:postcode tag';
 
 COMMENT ON COLUMN osm.shop_polygon.housenumber IS 'Value from addr:housenumber tag';
 COMMENT ON COLUMN osm.shop_polygon.street IS 'Value from addr:street tag';
 COMMENT ON COLUMN osm.shop_polygon.city IS 'Value from addr:city tag';
 COMMENT ON COLUMN osm.shop_polygon.state IS 'Value from addr:state tag';
+COMMENT ON COLUMN osm.shop_polygon.postcode IS 'Value from addr:postcode tag';
 
 COMMENT ON COLUMN osm.shop_polygon.wheelchair IS 'Indicates if building is wheelchair accessible.';
 COMMENT ON COLUMN osm.shop_point.brand IS 'Identity of product, service or business. https://wiki.openstreetmap.org/wiki/Key:brand';
