@@ -364,6 +364,7 @@ function poi_process_relation(object)
             postcode = postcode,
             address = address,
             operator = operator,
+            member_ids = json.encode(member_ids),
             geom = { create = 'area' }
         })
     end
