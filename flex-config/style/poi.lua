@@ -131,6 +131,7 @@ tables.poi_point = osm2pgsql.define_table({
         { column = 'street',     type = 'text' },
         { column = 'city',     type = 'text' },
         { column = 'state', type = 'text'},
+        { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
         { column = 'operator', type = 'text'},
         { column = 'geom',     type = 'point' , projection = srid},
@@ -150,6 +151,7 @@ tables.poi_line = osm2pgsql.define_table({
         { column = 'street',     type = 'text' },
         { column = 'city',     type = 'text' },
         { column = 'state', type = 'text'},
+        { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
         { column = 'operator', type = 'text'},
         { column = 'geom',     type = 'linestring' , projection = srid},
@@ -168,6 +170,7 @@ tables.poi_polygon = osm2pgsql.define_table({
         { column = 'street',     type = 'text' },
         { column = 'city',     type = 'text' },
         { column = 'state', type = 'text'},
+        { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
         { column = 'operator', type = 'text'},
         { column = 'geom',     type = 'multipolygon' , projection = srid},
@@ -207,6 +210,7 @@ function poi_process_node(object)
     local street = object.tags['addr:street']
     local city = object.tags['addr:city']
     local state = object.tags['addr:state']
+    local postcode = object.tags['addr:postcode']
     local address = get_address(object.tags)
 
     local operator  = object:grab_tag('operator')
@@ -219,6 +223,7 @@ function poi_process_node(object)
         street = street,
         city = city,
         state = state,
+        postcode = postcode,
         address = address,
         operator = operator,
         geom = { create = 'point' }
@@ -260,6 +265,7 @@ function poi_process_way(object)
     local street = object.tags['addr:street']
     local city = object.tags['addr:city']
     local state = object.tags['addr:state']
+    local postcode = object.tags['addr:postcode']
     local address = get_address(object.tags)
     local operator  = object:grab_tag('operator')
 
@@ -275,6 +281,7 @@ function poi_process_way(object)
             street = street,
             city = city,
             state = state,
+            postcode = postcode,
             address = address,
             operator = operator,
             geom = { create = 'area' }
@@ -288,6 +295,7 @@ function poi_process_way(object)
             street = street,
             city = city,
             state = state,
+            postcode = postcode,
             address = address,
             operator = operator,
             geom = { create = 'line' }

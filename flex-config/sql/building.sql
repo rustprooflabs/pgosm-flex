@@ -14,11 +14,13 @@ COMMENT ON COLUMN osm.building_point.housenumber IS 'Value from addr:housenumber
 COMMENT ON COLUMN osm.building_point.street IS 'Value from addr:street tag';
 COMMENT ON COLUMN osm.building_point.city IS 'Value from addr:city tag';
 COMMENT ON COLUMN osm.building_point.state IS 'Value from addr:state tag';
+COMMENT ON COLUMN osm.building_point.postcode IS 'Value from addr:postcode tag';
 
 COMMENT ON COLUMN osm.building_polygon.housenumber IS 'Value from addr:housenumber tag';
 COMMENT ON COLUMN osm.building_polygon.street IS 'Value from addr:street tag';
 COMMENT ON COLUMN osm.building_polygon.city IS 'Value from addr:city tag';
 COMMENT ON COLUMN osm.building_polygon.state IS 'Value from addr:state tag';
+COMMENT ON COLUMN osm.building_polygon.postcode IS 'Value from addr:postcode tag';
 
 COMMENT ON COLUMN osm.building_point.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 COMMENT ON COLUMN osm.building_polygon.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';

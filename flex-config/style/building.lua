@@ -17,6 +17,7 @@ tables.building_point = osm2pgsql.define_table({
         { column = 'street',     type = 'text' },
         { column = 'city',     type = 'text' },
         { column = 'state', type = 'text'},
+        { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
         { column = 'wheelchair', type = 'bool'},
         { column = 'operator', type = 'text'},
@@ -39,6 +40,7 @@ tables.building_polygon = osm2pgsql.define_table({
         { column = 'street',     type = 'text' },
         { column = 'city',     type = 'text' },
         { column = 'state', type = 'text'},
+        { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
         { column = 'wheelchair', type = 'bool'},
         { column = 'operator', type = 'text'},
@@ -110,6 +112,7 @@ function building_process_node(object)
     local street = object.tags['addr:street']
     local city = object.tags['addr:city']
     local state = object.tags['addr:state']
+    local postcode = object.tags['addr:postcode']
     local address = get_address(object.tags)
     local wheelchair = object:grab_tag('wheelchair')
     local levels = object:grab_tag('building:levels')
@@ -124,6 +127,7 @@ function building_process_node(object)
         street = street,
         city = city,
         state = state,
+        postcode = postcode,
         address = address,
         wheelchair = wheelchair,
         levels = levels,
@@ -173,6 +177,7 @@ function building_process_way(object)
     local street = object.tags['addr:street']
     local city = object.tags['addr:city']
     local state = object.tags['addr:state']
+    local postcode = object.tags['addr:postcode']
     local address = get_address(object.tags)
     local wheelchair = object:grab_tag('wheelchair')
     local levels = object:grab_tag('building:levels')
@@ -187,6 +192,7 @@ function building_process_way(object)
         street = street,
         city = city,
         state = state,
+        postcode = postcode,
         address = address,
         wheelchair = wheelchair,
         levels = levels,

@@ -36,7 +36,23 @@ COMMENT ON COLUMN osm.poi_point.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.poi_line.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.poi_polygon.geom IS 'Geometry loaded by osm2pgsql.';
 
+COMMENT ON COLUMN osm.poi_point.housenumber IS 'Value from addr:housenumber tag';
+COMMENT ON COLUMN osm.poi_point.street IS 'Value from addr:street tag';
+COMMENT ON COLUMN osm.poi_point.city IS 'Value from addr:city tag';
+COMMENT ON COLUMN osm.poi_point.state IS 'Value from addr:state tag';
+COMMENT ON COLUMN osm.poi_point.postcode IS 'Value from addr:postcode tag';
 
+COMMENT ON COLUMN osm.poi_line.housenumber IS 'Value from addr:housenumber tag';
+COMMENT ON COLUMN osm.poi_line.street IS 'Value from addr:street tag';
+COMMENT ON COLUMN osm.poi_line.city IS 'Value from addr:city tag';
+COMMENT ON COLUMN osm.poi_line.state IS 'Value from addr:state tag';
+COMMENT ON COLUMN osm.poi_line.postcode IS 'Value from addr:postcode tag';
+
+COMMENT ON COLUMN osm.poi_polygon.housenumber IS 'Value from addr:housenumber tag';
+COMMENT ON COLUMN osm.poi_polygon.street IS 'Value from addr:street tag';
+COMMENT ON COLUMN osm.poi_polygon.city IS 'Value from addr:city tag';
+COMMENT ON COLUMN osm.poi_polygon.state IS 'Value from addr:state tag';
+COMMENT ON COLUMN osm.poi_polygon.postcode IS 'Value from addr:postcode tag';
 
 COMMENT ON COLUMN osm.poi_point.address IS 'Address combined from address parts in helpers.get_address().';
 COMMENT ON COLUMN osm.poi_line.address IS 'Address combined from address parts in helpers.get_address().';
