@@ -398,11 +398,22 @@ See [the QGIS Style README.md](https://github.com/rustprooflabs/pgosm-flex/blob/
 for more information.
 
 
-## JSON support
+## JSONB support
 
-JSON support for OpenStreetMap tags data is made possible using
+PgOSM-Flex uses `JSONB` in Postgres to store the raw OpenSteetMap
+key/value data (`tags` column)
+and relation members (`member_ids`). Current `JSONB` columns:
+
+* `osm.tags.tags`
+* `osm.unitable.tags`
+* `osm.place_polygon.member_ids`
+* `osm.vplace_polygon.member_ids`
+* `osm.poi_polygon.member_ids`
+
+
+JSON support for OpenStreetMap data in Lua is made possible using
 [rxi's json.lua](https://github.com/rxi/json.lua).
-A static copy of `json.lua` is available under
+A static copy of `json.lua` is included in
 `flex-config/rxi-json.lua`.
 
 
