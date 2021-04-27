@@ -56,11 +56,20 @@ tables.amenity_polygon = osm2pgsql.define_table({
 
 
 function amenity_process_node(object)
-    if not object.tags.amenity then
+    if not object.tags.amenity
+        and not object.tags.bench then
         return
     end
 
-    local osm_type = object.tags['amenity']
+    if object.tags.bench == 'no' then
+        return
+    end
+
+    local osm_type = object.tags.amenity
+    if osm_type == nil and object.tags.bench == 'yes' then
+        osm_type = 'bench'
+    end
+
     local name = get_name(object.tags)
 
 
@@ -88,11 +97,20 @@ end
 
 -- Change function name here
 function amenity_process_way(object)
-    if not object.tags.amenity then
+    if not object.tags.amenity
+        and not object.tags.bench then
         return
     end
 
-    local osm_type = object.tags['amenity']
+    if object.tags.bench == 'no' then
+        return
+    end
+
+    local osm_type = object.tags.amenity
+    if osm_type == nil and object.tags.bench == 'yes' then
+        osm_type = 'bench'
+    end
+
     local name = get_name(object.tags)
 
     local housenumber  = object.tags['addr:housenumber']
@@ -133,11 +151,21 @@ end
 
 
 function amenity_process_relation(object)
-    if not object.tags.amenity then
+    if not object.tags.amenity
+        and not object.tags.bench then
         return
     end
 
-    local osm_type = object.tags['amenity']
+    if object.tags.bench == 'no' then
+        return
+    end
+
+    local osm_type = object.tags.amenity
+    if osm_type == nil and object.tags.bench == 'yes' then
+        osm_type = 'bench'
+    end
+
+
     local name = get_name(object.tags)
 
     local address = get_address(object.tags)
