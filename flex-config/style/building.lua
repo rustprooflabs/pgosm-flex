@@ -76,8 +76,9 @@ function address_only_building(tags)
 end
 
 
-local function get_osm_type_subtype(object, address_only)
+local function get_osm_type_subtype(object)
     local osm_type_table = {}
+    local address_only = address_only_building(object.tags)
 
     if object.tags.building then
         osm_type_table['osm_type'] = 'building'
