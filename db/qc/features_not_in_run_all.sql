@@ -137,8 +137,27 @@ DELETE FROM osm_missing m
 DELETE FROM osm_missing m
     WHERE EXISTS (
         SELECT 1
+            FROM osm.amenity_polygon i
+            WHERE i.osm_id < 0
+                AND m.osm_id = i.osm_id * -1 /* Flip the osm_id back to positive */
+                AND m.geom_type = 'R'
+);
+
+
+DELETE FROM osm_missing m
+    WHERE EXISTS (
+        SELECT 1
             FROM osm.building_polygon i
             WHERE m.osm_id = i.osm_id AND m.geom_type = 'W'
+);
+
+DELETE FROM osm_missing m
+    WHERE EXISTS (
+        SELECT 1
+            FROM osm.building_polygon i
+            WHERE i.osm_id < 0
+                AND m.osm_id = i.osm_id * -1 /* Flip the osm_id back to positive */
+                AND m.geom_type = 'R'
 );
 
 

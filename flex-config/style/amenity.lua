@@ -60,8 +60,7 @@ function amenity_process_node(object)
         return
     end
 
-    -- Using grab_tag() removes from remaining key/value saved to Pg
-    local osm_type = object:grab_tag('amenity')
+    local osm_type = object.tags['amenity']
     local name = get_name(object.tags)
 
 
@@ -93,7 +92,7 @@ function amenity_process_way(object)
         return
     end
 
-    local osm_type = object:grab_tag('amenity')
+    local osm_type = object.tags['amenity']
     local name = get_name(object.tags)
 
     local housenumber  = object.tags['addr:housenumber']
@@ -138,7 +137,7 @@ function amenity_process_relation(object)
         return
     end
 
-    local osm_type = object:grab_tag('amenity')
+    local osm_type = object.tags['amenity']
     local name = get_name(object.tags)
 
     local address = get_address(object.tags)
@@ -147,6 +146,11 @@ function amenity_process_relation(object)
         tables.amenity_polygon:add_row({
             osm_type = osm_type,
             name = name,
+            housenumber = housenumber,
+            street = street,
+            city = city,
+            state = state,
+            postcode = postcode,
             address = address,
             geom = { create = 'area' }
         })
