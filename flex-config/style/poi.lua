@@ -87,7 +87,7 @@ function natural_poi(object)
 end
 
 
-function get_osm_type_subtype(object)
+local function get_osm_type_subtype(object)
     local osm_type_table = {}
 
     if object.tags.shop then

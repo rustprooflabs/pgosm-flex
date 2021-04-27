@@ -76,6 +76,30 @@ function address_only_building(tags)
 end
 
 
+local function get_osm_type_subtype(object, address_only)
+    local osm_type_table = {}
+
+    if object.tags.building then
+        osm_type_table['osm_type'] = 'building'
+        osm_type_table['osm_subtype'] = object.tags.building
+    elseif object.tags['building:part'] then
+        osm_type_table['osm_type'] = 'building_part'
+        osm_type_table['osm_subtype'] = object.tags['building:part']
+    elseif object.tags.office then
+        osm_type_table['osm_type'] = 'office'
+        osm_type_table['osm_subtype'] = object.tags.office
+    elseif address_only then
+        osm_type_table['osm_type'] = 'address'
+        osm_type_table['osm_subtype'] = nil
+    else
+        osm_type_table['osm_type'] = 'unknown'
+        osm_type_table['osm_subtype'] = nil
+    end
+
+    return osm_type_table
+end
+
+
 function building_process_node(object)
     local address_only = address_only_building(object.tags)
 
@@ -87,25 +111,7 @@ function building_process_node(object)
         return
     end
 
-    local osm_type
-    local osm_subtype
-
-    if object.tags.building then
-        osm_type = 'building'
-        osm_subtype = object.tags.building
-    elseif object.tags['building:part'] then
-        osm_type = 'building_part'
-        osm_subtype = object.tags['building:part']
-    elseif object.tags.office then
-        osm_type = 'office'
-        osm_subtype = object.tags.office
-    elseif address_only then
-        osm_type = 'address'
-        osm_subtype = nil
-    else
-        osm_type = 'unknown'
-        osm_subtype = nil
-    end
+    local osm_types = get_osm_type_subtype(object)
 
     local name = get_name(object.tags)
     local housenumber  = object.tags['addr:housenumber']
@@ -114,14 +120,14 @@ function building_process_node(object)
     local state = object.tags['addr:state']
     local postcode = object.tags['addr:postcode']
     local address = get_address(object.tags)
-    local wheelchair = object:grab_tag('wheelchair')
-    local levels = object:grab_tag('building:levels')
+    local wheelchair = object.tags.wheelchair
+    local levels = object.tags['building:levels']
     local height = parse_to_meters(object.tags['height'])
-    local operator  = object:grab_tag('operator')
+    local operator  = object.tags.operator
 
     tables.building_point:add_row({
-        osm_type = osm_type,
-        osm_subtype = osm_subtype,
+        osm_type = osm_types.osm_type,
+        osm_subtype = osm_types.osm_subtype,
         name = name,
         housenumber = housenumber,
         street = street,
@@ -154,23 +160,7 @@ function building_process_way(object)
     if not object.is_closed then
         return
     end
-
-    if object.tags.building then
-        osm_type = 'building'
-        osm_subtype = object.tags.building
-    elseif object.tags['building:part'] then
-        osm_type = 'building_part'
-        osm_subtype = object.tags['building:part']
-    elseif object.tags.office then
-        osm_type = 'office'
-        osm_subtype = object.tags.office
-    elseif address_only then
-        osm_type = 'address'
-        osm_subtype = nil
-    else
-        osm_type = 'unknown'
-        osm_subtype = nil
-    end
+    local osm_types = get_osm_type_subtype(object)
 
     local name = get_name(object.tags)
     local housenumber  = object.tags['addr:housenumber']
@@ -179,14 +169,14 @@ function building_process_way(object)
     local state = object.tags['addr:state']
     local postcode = object.tags['addr:postcode']
     local address = get_address(object.tags)
-    local wheelchair = object:grab_tag('wheelchair')
-    local levels = object:grab_tag('building:levels')
+    local wheelchair = object.tags.wheelchair
+    local levels = object.tags['building:levels']
     local height = parse_to_meters(object.tags['height'])
-    local operator  = object:grab_tag('operator')
+    local operator  = object.tags.operator
 
     tables.building_polygon:add_row({
-        osm_type = osm_type,
-        osm_subtype = osm_subtype,
+        osm_type = osm_types.osm_type,
+        osm_subtype = osm_types.osm_subtype,
         name = name,
         housenumber = housenumber,
         street = street,
@@ -217,22 +207,7 @@ function building_process_relation(object)
         return
     end
 
-    if object.tags.building then
-        osm_type = 'building'
-        osm_subtype = object.tags.building
-    elseif object.tags['building:part'] then
-        osm_type = 'building_part'
-        osm_subtype = object.tags['building:part']
-    elseif object.tags.office then
-        osm_type = 'office'
-        osm_subtype = object.tags.office
-    elseif address_only then
-        osm_type = 'address'
-        osm_subtype = nil
-    else
-        osm_type = 'unknown'
-        osm_subtype = nil
-    end
+    local osm_types = get_osm_type_subtype(object)
 
     local name = get_name(object.tags)
     local housenumber  = object.tags['addr:housenumber']
@@ -241,15 +216,15 @@ function building_process_relation(object)
     local state = object.tags['addr:state']
     local postcode = object.tags['addr:postcode']
     local address = get_address(object.tags)
-    local wheelchair = object:grab_tag('wheelchair')
-    local levels = object:grab_tag('building:levels')
+    local wheelchair = object.tags.wheelchair
+    local levels = object.tags['building:levels']
     local height = parse_to_meters(object.tags['height'])
-    local operator  = object:grab_tag('operator')
+    local operator  = object.tags.operator
 
     if object.tags.type == 'multipolygon' or object.tags.type == 'boundary' then
         tables.building_polygon:add_row({
-            osm_type = osm_type,
-            osm_subtype = osm_subtype,
+            osm_type = osm_types.osm_type,
+            osm_subtype = osm_types.osm_subtype,
             name = name,
             housenumber = housenumber,
             street = street,

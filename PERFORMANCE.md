@@ -50,8 +50,6 @@ The `run-no-tags` layer set loads nearly all of the data, excluding the unstruct
 | North America         |   11 GB   |    65 GB     |    18809   |       1076      |
 
 
-
-
 ## Methodology
 
 Timings are an average of multiple recorded test runs over more than one day.
