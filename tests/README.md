@@ -18,6 +18,11 @@ cd tests/
 ```
 
 
+## Creating Tests
+
+Write query. Ensure results are ordered using `COLLATE "C"` to ensure consistent ordering across
+systems.
+
 
 ## Creating expected output
 
