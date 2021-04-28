@@ -13,6 +13,7 @@ on January 13, 2021.
 Run tests
 
 ```bash
+cd tests/
 ./run-tests.sh
 ```
 
