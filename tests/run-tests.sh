@@ -9,10 +9,8 @@ fi
 
 if [ -z $PGOSM_CONN ]; then
   PGOSM_CONN=pgosm
-  echo "Env var not set: PGOSM_CONN. Using default: $PGOSM_CONN"
 else
   PGOSM_CONN=$PGOSM_CONN
-  echo "PGOSM_CONN set to $PGOSM_CONN"
 fi
 
 failed=false
