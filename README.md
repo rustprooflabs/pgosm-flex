@@ -410,7 +410,6 @@ and relation members (`member_ids`). Current `JSONB` columns:
 * `osm.vplace_polygon.member_ids`
 * `osm.poi_polygon.member_ids`
 
-
 JSON support for OpenStreetMap data in Lua is made possible using
 [rxi's json.lua](https://github.com/rxi/json.lua).
 A static copy of `json.lua` is included in
