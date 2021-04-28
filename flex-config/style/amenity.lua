@@ -55,9 +55,17 @@ tables.amenity_polygon = osm2pgsql.define_table({
 })
 
 
+-- Keys to include for further checking.  Not all values from each key will be preserved
+local amenity_first_level_keys = {
+    'amenity',
+    'bench',
+    'brewery'
+}
+
+local is_first_level_amenity = make_check_in_list_func(amenity_first_level_keys)
+
 function amenity_process_node(object)
-    if not object.tags.amenity
-        and not object.tags.bench then
+    if not is_first_level_amenity(object.tags) then
         return
     end
 
@@ -68,6 +76,8 @@ function amenity_process_node(object)
     local osm_type = object.tags.amenity
     if osm_type == nil and object.tags.bench == 'yes' then
         osm_type = 'bench'
+    elseif osm_type == nil and object.tags.brewery then
+        osm_type = 'brewery'
     end
 
     local name = get_name(object.tags)
@@ -97,8 +107,7 @@ end
 
 -- Change function name here
 function amenity_process_way(object)
-    if not object.tags.amenity
-        and not object.tags.bench then
+    if not is_first_level_amenity(object.tags) then
         return
     end
 
@@ -109,6 +118,8 @@ function amenity_process_way(object)
     local osm_type = object.tags.amenity
     if osm_type == nil and object.tags.bench == 'yes' then
         osm_type = 'bench'
+    elseif osm_type == nil and object.tags.brewery then
+        osm_type = 'brewery'
     end
 
     local name = get_name(object.tags)
@@ -151,8 +162,7 @@ end
 
 
 function amenity_process_relation(object)
-    if not object.tags.amenity
-        and not object.tags.bench then
+    if not is_first_level_amenity(object.tags) then
         return
     end
 
@@ -163,6 +173,8 @@ function amenity_process_relation(object)
     local osm_type = object.tags.amenity
     if osm_type == nil and object.tags.bench == 'yes' then
         osm_type = 'bench'
+    elseif osm_type == nil and object.tags.brewery then
+        osm_type = 'brewery'
     end
 
 
