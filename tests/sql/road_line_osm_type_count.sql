@@ -1,5 +1,5 @@
-SELECT osm_type  COLLATE "C", COUNT(*)
-    FROM osm.amenity_point
+SELECT osm_type COLLATE "C", COUNT(*)
+    FROM osm.road_line
     GROUP BY osm_type COLLATE "C"
     ORDER BY osm_type COLLATE "C"
 ;
