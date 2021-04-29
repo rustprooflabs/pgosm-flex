@@ -92,6 +92,12 @@ local function get_osm_type_subtype(object)
     elseif address_only then
         osm_type_table['osm_type'] = 'address'
         osm_type_table['osm_subtype'] = nil
+    elseif object.tags.entrance then
+        osm_type_table['osm_type'] = 'entrance'
+        osm_type_table['osm_subtype'] = object.tags.entrance
+    elseif object.tags.door then
+        osm_type_table['osm_type'] = 'door'
+        osm_type_table['osm_subtype'] = object.tags.door
     else
         osm_type_table['osm_type'] = 'unknown'
         osm_type_table['osm_subtype'] = nil
@@ -101,12 +107,20 @@ local function get_osm_type_subtype(object)
 end
 
 
+local building_first_level_keys = {
+    'building',
+    'building:part',
+    'office',
+    'door',
+    'entrance'
+}
+
+local is_first_level_building = make_check_in_list_func(building_first_level_keys)
+
 function building_process_node(object)
     local address_only = address_only_building(object.tags)
 
-    if not object.tags.building
-            and not object.tags['building:part']
-            and not object.tags.office
+    if not is_first_level_building(object.tags)
             and not address_only
             then
         return
@@ -150,11 +164,9 @@ end
 function building_process_way(object)
     local address_only = address_only_building(object.tags)
 
-    if not object.tags.building
-            and not object.tags['building:part']
+    if not is_first_level_building(object.tags)
             and not address_only
-            and not object.tags.office
-                then
+            then
         return
     end
 
@@ -200,11 +212,9 @@ end
 function building_process_relation(object)
     local address_only = address_only_building(object.tags)
 
-    if not object.tags.building
-            and not object.tags['building:part']
+    if not is_first_level_building(object.tags)
             and not address_only
-            and not object.tags.office
-                then
+            then
         return
     end
 
