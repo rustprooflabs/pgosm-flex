@@ -64,20 +64,29 @@ local amenity_first_level_keys = {
 
 local is_first_level_amenity = make_check_in_list_func(amenity_first_level_keys)
 
+
+local function get_osm_type(object)
+    local osm_type = object.tags.amenity
+
+    if osm_type == nil and object.tags.bench == 'yes' then
+        osm_type = 'bench'
+    elseif osm_type == nil and object.tags.brewery then
+        osm_type = 'brewery'
+    end
+
+    return osm_type
+end
+
+
 function amenity_process_node(object)
     if not is_first_level_amenity(object.tags) then
         return
     end
 
-    if object.tags.bench == 'no' then
-        return
-    end
+    local osm_type = get_osm_type(object)
 
-    local osm_type = object.tags.amenity
-    if osm_type == nil and object.tags.bench == 'yes' then
-        osm_type = 'bench'
-    elseif osm_type == nil and object.tags.brewery then
-        osm_type = 'brewery'
+    if osm_type == nil then
+        return
     end
 
     local name = get_name(object.tags)
@@ -111,15 +120,10 @@ function amenity_process_way(object)
         return
     end
 
-    if object.tags.bench == 'no' then
-        return
-    end
+    local osm_type = get_osm_type(object)
 
-    local osm_type = object.tags.amenity
-    if osm_type == nil and object.tags.bench == 'yes' then
-        osm_type = 'bench'
-    elseif osm_type == nil and object.tags.brewery then
-        osm_type = 'brewery'
+    if osm_type == nil then
+        return
     end
 
     local name = get_name(object.tags)
@@ -166,17 +170,11 @@ function amenity_process_relation(object)
         return
     end
 
-    if object.tags.bench == 'no' then
+    local osm_type = get_osm_type(object)
+
+    if osm_type == nil then
         return
     end
-
-    local osm_type = object.tags.amenity
-    if osm_type == nil and object.tags.bench == 'yes' then
-        osm_type = 'bench'
-    elseif osm_type == nil and object.tags.brewery then
-        osm_type = 'brewery'
-    end
-
 
     local name = get_name(object.tags)
 
