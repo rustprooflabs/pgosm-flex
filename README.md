@@ -31,7 +31,7 @@ Minimum versions supported:
 
 * Postgres 12
 * PostGIS 3.0
-* osm2pgsql 1.4.0
+* osm2pgsql 1.4.2+ --> commit 94dae34 or newer
 
 
 ## Layer Sets
@@ -400,9 +400,12 @@ for more information.
 
 ## JSONB support
 
+
 PgOSM-Flex uses `JSONB` in Postgres to store the raw OpenSteetMap
 key/value data (`tags` column)
-and relation members (`member_ids`). Current `JSONB` columns:
+and relation members (`member_ids`).
+
+Current `JSONB` columns:
 
 * `osm.tags.tags`
 * `osm.unitable.tags`
@@ -410,18 +413,14 @@ and relation members (`member_ids`). Current `JSONB` columns:
 * `osm.vplace_polygon.member_ids`
 * `osm.poi_polygon.member_ids`
 
-JSON support for OpenStreetMap data in Lua is made possible using
-[rxi's json.lua](https://github.com/rxi/json.lua).
-A static copy of `json.lua` is included in
-`flex-config/rxi-json.lua`.
+### :warning: Breaking change :warning:
 
+The osm2pgsql project added built-in JSON support after v1.4.2 ([commit](https://github.com/openstreetmap/osm2pgsql/commit/94dae34b7aa1463339cdb6768d28a6e8ee53ef65)).
+Currently this change is not in a tagged release, only the latest `master` branch.
+Install osm2pgsql from source to use the current `main` branch of PgOSM-Flex.
 
-The file was downloaded to this project using:
+To use osm2pgsql v1.4.2, use PgOSM-Flex v0.1.5.
 
-```bash
-cd flex-config/
-curl -sS -o rxi-json.lua https://raw.githubusercontent.com/rxi/json.lua/master/json.lua
-```
 
 ## Additional resources
 

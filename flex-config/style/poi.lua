@@ -1,9 +1,5 @@
 require "helpers"
 
--- flex-config/rxi-json.lua sourced from:
---   https://raw.githubusercontent.com/rxi/json.lua/master/json.lua
-local json = require('rxi-json')
-
 local tables = {}
 
 -- Keys to include for further checking.  Not all values from each key will be preserved
@@ -364,7 +360,7 @@ function poi_process_relation(object)
             postcode = postcode,
             address = address,
             operator = operator,
-            member_ids = json.encode(member_ids),
+            member_ids = member_ids,
             geom = { create = 'area' }
         })
     end

@@ -2,10 +2,6 @@
 -- All OSM tag data in a single table w/out geometry
 require "helpers"
 
--- flex-config/rxi-json.lua sourced from:
---   https://raw.githubusercontent.com/rxi/json.lua/master/json.lua
-local json = require('rxi-json')
-
 
 local tags_table = osm2pgsql.define_table{
     name = "tags",
@@ -34,7 +30,7 @@ function process(object)
         return
     end
     tags_table:add_row({
-        tags = json.encode(object.tags)
+        tags = object.tags
     })
 end
 
