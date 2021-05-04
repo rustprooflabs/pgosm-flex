@@ -31,7 +31,7 @@ Minimum versions supported:
 
 * Postgres 12
 * PostGIS 3.0
-* osm2pgsql 1.4.0
+* osm2pgsql 1.4.2+ --> commit 94dae34 or newer
 
 
 ## Layer Sets
