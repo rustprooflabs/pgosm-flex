@@ -94,7 +94,7 @@ function indoor_process_node(object)
     local level = object.tags.level
     local room = object.tags.room
     local entrance = object.tags.entrance
-    local door = object:.tags.door
+    local door = object.tags.door
     local capacity = object.tags.capacity
     local highway = object.tags.highway
 
@@ -126,7 +126,7 @@ function indoor_process_way(object)
     local level = object.tags.level
     local room = object.tags.room
     local entrance = object.tags.entrance
-    local door = object:.tags.door
+    local door = object.tags.door
     local capacity = object.tags.capacity
     local highway = object.tags.highway
 
