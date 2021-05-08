@@ -6,8 +6,8 @@ COMMENT ON COLUMN osm.building_point.height IS 'Building height.  Should be in m
 
 COMMENT ON COLUMN osm.building_polygon.levels IS 'Number (#) of levels in the building.';
 COMMENT ON COLUMN osm.building_point.levels IS 'Number (#) of levels in the building.';
-COMMENT ON COLUMN osm.building_polygon.wheelchair IS 'Indicates if building is wheelchair accessible.';
-COMMENT ON COLUMN osm.building_point.wheelchair IS 'Indicates if building is wheelchair accessible.';
+COMMENT ON COLUMN osm.building_polygon.wheelchair IS 'Indicates if building is wheelchair accessible. Values:  yes, no, limited.  Per https://wiki.openstreetmap.org/wiki/Key:wheelchair';
+COMMENT ON COLUMN osm.building_point.wheelchair IS 'Indicates if building is wheelchair accessible. Values:  yes, no, limited.  Per https://wiki.openstreetmap.org/wiki/Key:wheelchair';
 
 
 COMMENT ON COLUMN osm.building_point.housenumber IS 'Value from addr:housenumber tag';

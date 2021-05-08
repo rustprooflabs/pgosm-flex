@@ -19,7 +19,7 @@ tables.building_point = osm2pgsql.define_table({
         { column = 'state', type = 'text'},
         { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
-        { column = 'wheelchair', type = 'bool'},
+        { column = 'wheelchair', type = 'text'},
         { column = 'operator', type = 'text'},
         { column = 'geom',     type = 'point', projection = srid},
     }
@@ -42,7 +42,7 @@ tables.building_polygon = osm2pgsql.define_table({
         { column = 'state', type = 'text'},
         { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
-        { column = 'wheelchair', type = 'bool'},
+        { column = 'wheelchair', type = 'text'},
         { column = 'operator', type = 'text'},
         { column = 'geom',     type = 'multipolygon', projection = srid},
     }
