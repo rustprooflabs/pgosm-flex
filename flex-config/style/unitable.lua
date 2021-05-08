@@ -11,10 +11,6 @@
 --
 require "helpers"
 
--- flex-config/rxi-json.lua sourced from:
---   https://raw.githubusercontent.com/rxi/json.lua/master/json.lua
-local json = require('rxi-json')
-
 
 -- Single table that can take any OSM object and any geometry.
 local dtable = osm2pgsql.define_table{
@@ -45,7 +41,7 @@ function process(object, geometry_type)
         return
     end
     dtable:add_row({
-        tags = json.encode(object.tags),
+        tags = object.tags,
         geom = { create = geometry_type }
     })
 end
@@ -68,7 +64,7 @@ function osm2pgsql.process_relation(object)
             or object.tags.type == 'boundary')
             then
         dtable:add_row({
-            tags = json.encode(object.tags),
+            tags = object.tags,
             geom = { create = 'area' }
         })
     elseif (object.tags.type == 'route'
@@ -83,7 +79,7 @@ function osm2pgsql.process_relation(object)
             )
             then
         dtable:add_row({
-            tags = json.encode(object.tags),
+            tags = object.tags,
             geom = { create = 'line' }
         })
     end
