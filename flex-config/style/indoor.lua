@@ -59,21 +59,44 @@ tables.indoor_polygon = osm2pgsql.define_table({
 })
 
 
+local function get_osm_type(object)
+    if object.tags.indoor then
+        osm_type = object.tags.indoor
+    elseif object.tags.door then
+        osm_type = 'door'
+    elseif object.tags.entrance then
+        osm_type = 'entrance'
+    else
+        osm_type = 'unknown'
+    end
+
+    return osm_type
+end
+
+
+local indoor_first_level_keys = {
+    'indoor',
+    'door',
+    'entrance'
+}
+
+local is_first_level_indoor = make_check_in_list_func(indoor_first_level_keys)
+
 
 function indoor_process_node(object)
-    if not object.tags.indoor then
+    if not is_first_level_indoor(object.tags) then
         return
     end
 
-    local osm_type = object:grab_tag('indoor')
+    local osm_type = get_osm_type(object)
     local name = get_name(object.tags)
     local layer = parse_layer_value(object.tags.layer)
-    local level = object:grab_tag('level')
-    local room = object:grab_tag('room')
-    local entrance = object:grab_tag('entrance')
-    local door = object:grab_tag('door')
-    local capacity = object:grab_tag('capacity')
-    local highway = object:grab_tag('highway')
+    local level = object.tags.level
+    local room = object.tags.room
+    local entrance = object.tags.entrance
+    local door = object:.tags.door
+    local capacity = object.tags.capacity
+    local highway = object.tags.highway
 
     tables.indoor_point:add_row({
         osm_type = osm_type,
@@ -92,19 +115,20 @@ end
 
 
 function indoor_process_way(object)
-    if not object.tags.indoor then
+    if not is_first_level_indoor(object.tags) then
         return
     end
 
-    local osm_type = object:grab_tag('indoor')
+
+    local osm_type = get_osm_type(object)
     local name = get_name(object.tags)
     local layer = parse_layer_value(object.tags.layer)
-    local level = object:grab_tag('level')
-    local room = object:grab_tag('room')
-    local entrance = object:grab_tag('entrance')
-    local door = object:grab_tag('door')
-    local capacity = object:grab_tag('capacity')
-    local highway = object:grab_tag('highway')
+    local level = object.tags.level
+    local room = object.tags.room
+    local entrance = object.tags.entrance
+    local door = object:.tags.door
+    local capacity = object.tags.capacity
+    local highway = object.tags.highway
 
     if object.is_closed then
         tables.indoor_polygon:add_row({
@@ -138,28 +162,24 @@ end
 
 
 if osm2pgsql.process_node == nil then
-    -- Change function name here
     osm2pgsql.process_node = indoor_process_node
 else
     local nested = osm2pgsql.process_node
     osm2pgsql.process_node = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         indoor_process_node(object_copy)
     end
 end
 
 
 if osm2pgsql.process_way == nil then
-    -- Change function name here
     osm2pgsql.process_way = indoor_process_way
 else
     local nested = osm2pgsql.process_way
     osm2pgsql.process_way = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         indoor_process_way(object_copy)
     end
 end
