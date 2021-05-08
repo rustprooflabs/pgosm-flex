@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - v0_2_0_rc
 jobs:
   push_to_registry:
     name: Push PgOSM-Flex image to Docker Hub
