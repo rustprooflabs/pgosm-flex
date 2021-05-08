@@ -6,8 +6,8 @@ COMMENT ON COLUMN osm.building_point.height IS 'Building height.  Should be in m
 
 COMMENT ON COLUMN osm.building_polygon.levels IS 'Number (#) of levels in the building.';
 COMMENT ON COLUMN osm.building_point.levels IS 'Number (#) of levels in the building.';
-COMMENT ON COLUMN osm.building_polygon.wheelchair IS 'Indicates if building is wheelchair accessible.';
-COMMENT ON COLUMN osm.building_point.wheelchair IS 'Indicates if building is wheelchair accessible.';
+COMMENT ON COLUMN osm.building_polygon.wheelchair IS 'Indicates if building is wheelchair accessible. Values:  yes, no, limited.  Per https://wiki.openstreetmap.org/wiki/Key:wheelchair';
+COMMENT ON COLUMN osm.building_point.wheelchair IS 'Indicates if building is wheelchair accessible. Values:  yes, no, limited.  Per https://wiki.openstreetmap.org/wiki/Key:wheelchair';
 
 
 COMMENT ON COLUMN osm.building_point.housenumber IS 'Value from addr:housenumber tag';
@@ -44,12 +44,12 @@ CREATE INDEX ix_osm_building_polygon_type ON osm.building_polygon (osm_type);
 
 CREATE VIEW osm.vbuilding_all AS
 SELECT osm_id, 'N' AS geom_type, osm_type, osm_subtype, name, levels,
-		height, operator, wheelchair, address,
+		height, operator, wheelchair, wheelchair_desc, address,
 		geom
     FROM osm.building_point
 UNION
 SELECT osm_id, 'W' AS geom_type, osm_type, osm_subtype, name, levels,
-		height, operator, wheelchair, address,
+		height, operator, wheelchair, wheelchair_desc, address,
 		ST_Centroid(geom) AS geom
     FROM osm.building_polygon
 ;

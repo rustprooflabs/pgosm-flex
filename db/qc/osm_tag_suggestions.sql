@@ -16,5 +16,13 @@ SELECT t.geom_type, t.osm_id,
     WHERE t.tags->>'amenity' IS NULL
         AND t.tags->>'bench' IS NOT NULL
         AND t.tags->>'bench' NOT IN ('yes', 'no')
+UNION
+SELECT t.geom_type, t.osm_id,
+        'Invald wheelchair value. Valid values for `wheelchar` are "yes", "no" and "limited" per https://wiki.openstreetmap.org/wiki/Key:wheelchair'::TEXT
+            AS suggestion,
+        t.osm_url, t.tags
+    FROM osm.tags t
+    WHERE tags->>'wheelchair' IS NOT NULL
+        AND tags->>'wheelchair' NOT IN ('yes', 'no', 'limited')
 ;
 
