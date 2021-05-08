@@ -15,6 +15,8 @@ tables.amenity_point = osm2pgsql.define_table({
         { column = 'state', type = 'text'},
         { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
+        { column = 'wheelchair', type = 'text'},
+        { column = 'wheelchair_desc', type = 'text'},
         { column = 'geom',     type = 'point' , projection = srid},
     }
 })
@@ -32,6 +34,8 @@ tables.amenity_line = osm2pgsql.define_table({
         { column = 'state', type = 'text'},
         { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
+        { column = 'wheelchair', type = 'text'},
+        { column = 'wheelchair_desc', type = 'text'},
         { column = 'geom',     type = 'linestring' , projection = srid},
     }
 })
@@ -50,6 +54,8 @@ tables.amenity_polygon = osm2pgsql.define_table({
         { column = 'state', type = 'text'},
         { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
+        { column = 'wheelchair', type = 'text'},
+        { column = 'wheelchair_desc', type = 'text'},
         { column = 'geom',     type = 'multipolygon' , projection = srid},
     }
 })
@@ -97,8 +103,9 @@ function amenity_process_node(object)
     local city = object.tags['addr:city']
     local state = object.tags['addr:state']
     local postcode = object.tags['addr:postcode']
-
     local address = get_address(object.tags)
+    local wheelchair = object.tags.wheelchair
+    local wheelchair_desc = get_wheelchair_desc(object.tags)
 
     tables.amenity_point:add_row({
         osm_type = osm_type,
@@ -109,6 +116,8 @@ function amenity_process_node(object)
         state = state,
         postcode = postcode,
         address = address,
+        wheelchair = wheelchair,
+        wheelchair_desc = wheelchair_desc,
         geom = { create = 'point' }
     })
 
@@ -133,8 +142,9 @@ function amenity_process_way(object)
     local city = object.tags['addr:city']
     local state = object.tags['addr:state']
     local postcode = object.tags['addr:postcode']
-
     local address = get_address(object.tags)
+    local wheelchair = object.tags.wheelchair
+    local wheelchair_desc = get_wheelchair_desc(object.tags)
 
     if object.is_closed then
         tables.amenity_polygon:add_row({
@@ -146,6 +156,8 @@ function amenity_process_way(object)
             state = state,
             postcode = postcode,
             address = address,
+            wheelchair = wheelchair,
+            wheelchair_desc = wheelchair_desc,
             geom = { create = 'area' }
         })
     else
@@ -158,6 +170,8 @@ function amenity_process_way(object)
             state = state,
             postcode = postcode,
             address = address,
+            wheelchair = wheelchair,
+            wheelchair_desc = wheelchair_desc,
             geom = { create = 'line' }
         })
     end
@@ -179,6 +193,8 @@ function amenity_process_relation(object)
     local name = get_name(object.tags)
 
     local address = get_address(object.tags)
+    local wheelchair = object.tags.wheelchair
+    local wheelchair_desc = get_wheelchair_desc(object.tags)
 
     if object.tags.type == 'multipolygon' or object.tags.type == 'boundary' then
         tables.amenity_polygon:add_row({
@@ -190,6 +206,8 @@ function amenity_process_relation(object)
             state = state,
             postcode = postcode,
             address = address,
+            wheelchair = wheelchair,
+            wheelchair_desc = wheelchair_desc,
             geom = { create = 'area' }
         })
     end

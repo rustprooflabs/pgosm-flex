@@ -65,11 +65,13 @@ CREATE INDEX ix_osm_shop_polygon_type ON osm.shop_polygon (osm_subtype);
 
 CREATE VIEW osm.vshop_all AS
 SELECT osm_id, 'N' AS geom_type, osm_type, osm_subtype, name,
-        address, phone, wheelchair, operator, brand, website, geom
+        address, phone, wheelchair, wheelchair_desc,
+        operator, brand, website, geom
     FROM osm.shop_point
 UNION
 SELECT osm_id, 'W' AS geom_type, osm_type, osm_subtype, name,
-        address, phone, wheelchair, operator, brand, website, 
+        address, phone, wheelchair, wheelchair_desc,
+        operator, brand, website,
         ST_Centroid(geom) AS geom
     FROM osm.shop_polygon
 ;

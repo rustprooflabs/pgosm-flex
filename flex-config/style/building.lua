@@ -20,6 +20,7 @@ tables.building_point = osm2pgsql.define_table({
         { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
         { column = 'wheelchair', type = 'text'},
+        { column = 'wheelchair_desc', type = 'text'},
         { column = 'operator', type = 'text'},
         { column = 'geom',     type = 'point', projection = srid},
     }
@@ -43,6 +44,7 @@ tables.building_polygon = osm2pgsql.define_table({
         { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
         { column = 'wheelchair', type = 'text'},
+        { column = 'wheelchair_desc', type = 'text'},
         { column = 'operator', type = 'text'},
         { column = 'geom',     type = 'multipolygon', projection = srid},
     }
@@ -136,6 +138,7 @@ function building_process_node(object)
     local postcode = object.tags['addr:postcode']
     local address = get_address(object.tags)
     local wheelchair = object.tags.wheelchair
+    local wheelchair_desc = get_wheelchair_desc(object.tags)
     local levels = object.tags['building:levels']
     local height = parse_to_meters(object.tags['height'])
     local operator  = object.tags.operator
@@ -151,6 +154,7 @@ function building_process_node(object)
         postcode = postcode,
         address = address,
         wheelchair = wheelchair,
+        wheelchair_desc = wheelchair_desc,
         levels = levels,
         height = height,
         operator = operator,
@@ -183,6 +187,7 @@ function building_process_way(object)
     local postcode = object.tags['addr:postcode']
     local address = get_address(object.tags)
     local wheelchair = object.tags.wheelchair
+    local wheelchair_desc = get_wheelchair_desc(object.tags)
     local levels = object.tags['building:levels']
     local height = parse_to_meters(object.tags['height'])
     local operator  = object.tags.operator
@@ -198,6 +203,7 @@ function building_process_way(object)
         postcode = postcode,
         address = address,
         wheelchair = wheelchair,
+        wheelchair_desc = wheelchair_desc,
         levels = levels,
         height = height,
         operator = operator,
@@ -228,6 +234,7 @@ function building_process_relation(object)
     local postcode = object.tags['addr:postcode']
     local address = get_address(object.tags)
     local wheelchair = object.tags.wheelchair
+    local wheelchair_desc = get_wheelchair_desc(object.tags)
     local levels = object.tags['building:levels']
     local height = parse_to_meters(object.tags['height'])
     local operator  = object.tags.operator
@@ -244,6 +251,7 @@ function building_process_relation(object)
             postcode = postcode,
             address = address,
             wheelchair = wheelchair,
+            wheelchair_desc = wheelchair_desc,
             levels = levels,
             height = height,
             operator = operator,

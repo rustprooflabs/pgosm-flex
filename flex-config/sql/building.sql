@@ -44,12 +44,12 @@ CREATE INDEX ix_osm_building_polygon_type ON osm.building_polygon (osm_type);
 
 CREATE VIEW osm.vbuilding_all AS
 SELECT osm_id, 'N' AS geom_type, osm_type, osm_subtype, name, levels,
-		height, operator, wheelchair, address,
+		height, operator, wheelchair, wheelchair_desc, address,
 		geom
     FROM osm.building_point
 UNION
 SELECT osm_id, 'W' AS geom_type, osm_type, osm_subtype, name, levels,
-		height, operator, wheelchair, address,
+		height, operator, wheelchair, wheelchair_desc, address,
 		ST_Centroid(geom) AS geom
     FROM osm.building_polygon
 ;

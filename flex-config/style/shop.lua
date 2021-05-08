@@ -18,6 +18,7 @@ tables.shop_point = osm2pgsql.define_table({
         { column = 'address', type = 'text', not_null = true},
         { column = 'phone', type = 'text'},
         { column = 'wheelchair', type = 'text'},
+        { column = 'wheelchair_desc', type = 'text'},
         { column = 'operator', type = 'text'},
         { column = 'brand', type = 'text'},
         { column = 'website', type = 'text'},
@@ -42,6 +43,7 @@ tables.shop_polygon = osm2pgsql.define_table({
         { column = 'address', type = 'text', not_null = true},
         { column = 'phone', type = 'text'},
         { column = 'wheelchair', type = 'text'},
+        { column = 'wheelchair_desc', type = 'text'},
         { column = 'operator', type = 'text'},
         { column = 'brand', type = 'text'},
         { column = 'website', type = 'text'},
@@ -63,7 +65,8 @@ function shop_process_node(object)
     local state = object.tags['addr:state']
     local postcode = object.tags['addr:postcode']
     local address = get_address(object.tags)
-    local wheelchair = object:grab_tag('wheelchair')
+    local wheelchair = object.tags.wheelchair
+    local wheelchair_desc = get_wheelchair_desc(object.tags)
     local phone = object:grab_tag('phone')
     local operator  = object:grab_tag('operator')
     local brand  = object:grab_tag('brand')
@@ -117,6 +120,7 @@ function shop_process_node(object)
             postcode = postcode,
             address = address,
             wheelchair = wheelchair,
+            wheelchair_desc = wheelchair_desc,
             phone = phone,
             operator = operator,
             brand = brand,
@@ -143,7 +147,8 @@ function shop_process_way(object)
     local state = object.tags['addr:state']
     local postcode = object.tags['addr:postcode']
     local address = get_address(object.tags)
-    local wheelchair = object:grab_tag('wheelchair')
+    local wheelchair = object.tags.wheelchair
+    local wheelchair_desc = get_wheelchair_desc(object.tags)
     local phone = object:grab_tag('phone')
     local operator = object:grab_tag('operator')
     local brand = object:grab_tag('brand')
@@ -165,6 +170,7 @@ function shop_process_way(object)
                 postcode = postcode,
                 address = address,
                 wheelchair = wheelchair,
+                wheelchair_desc = wheelchair_desc,
                 phone = phone,
                 operator = operator,
                 brand = brand,
@@ -200,6 +206,7 @@ function shop_process_way(object)
                 postcode = postcode,
                 address = address,
                 wheelchair = wheelchair,
+                wheelchair_desc = wheelchair_desc,
                 phone = phone,
                 operator = operator,
                 brand = brand,
