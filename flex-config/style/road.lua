@@ -43,6 +43,26 @@ tables.road_line = osm2pgsql.define_table({
 })
 
 
+tables.road_polygon = osm2pgsql.define_table({
+    name = 'road_polygon',
+    schema = schema_name,
+    ids = { type = 'way', id_column = 'osm_id' },
+    columns = {
+        { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'name',     type = 'text' },
+        { column = 'ref',     type = 'text' },
+        { column = 'maxspeed', type = 'int' },
+        { column = 'layer',   type = 'int', not_null = true },
+        { column = 'tunnel',     type = 'text' },
+        { column = 'bridge',     type = 'text' },
+        { column = 'major',   type = 'boolean', not_null = true},
+        { column = 'route_foot',     type = 'boolean' },
+        { column = 'route_cycle',     type = 'boolean' },
+        { column = 'route_motor',     type = 'boolean' },
+        { column = 'geom',     type = 'multipolygon', projection = srid }
+    }
+})
+
 
 
 function road_process_node(object)
@@ -96,21 +116,40 @@ function road_process_way(object)
     local tunnel = object:grab_tag('tunnel')
     local bridge = object:grab_tag('bridge')
 
-    tables.road_line:add_row({
-        name = name,
-        osm_type = osm_type,
-        ref = ref,
-        maxspeed = maxspeed,
-        oneway = oneway,
-        major = major,
-        layer = layer,
-        tunnel = tunnel,
-        bridge = bridge,
-        route_foot = route_foot,
-        route_cycle = route_cycle,
-        route_motor = route_motor,
-        geom = { create = 'line' }
-    })
+    if object.tags.area == 'yes'
+        or object.tags.indoor == 'room'
+            then
+        tables.road_polygon:add_row({
+            name = name,
+            osm_type = osm_type,
+            ref = ref,
+            maxspeed = maxspeed,
+            major = major,
+            layer = layer,
+            tunnel = tunnel,
+            bridge = bridge,
+            route_foot = route_foot,
+            route_cycle = route_cycle,
+            route_motor = route_motor,
+            geom = { create = 'area' }
+        })
+    else
+        tables.road_line:add_row({
+            name = name,
+            osm_type = osm_type,
+            ref = ref,
+            maxspeed = maxspeed,
+            oneway = oneway,
+            major = major,
+            layer = layer,
+            tunnel = tunnel,
+            bridge = bridge,
+            route_foot = route_foot,
+            route_cycle = route_cycle,
+            route_motor = route_motor,
+            geom = { create = 'line' }
+        })
+    end
 
 end
 
