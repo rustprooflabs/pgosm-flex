@@ -8,7 +8,7 @@
 #
 # $1 - Region - e.g. north-america/us
 # $2 - Subregion - e.g. district-of-columbia 
-# $3 - Cache (mb) - e.g. 4000
+# $3 - Server RAM (GB) - e.g. 8
 # $4 - Layers to load - must match flex-config/$4.lua and flex-config/$4.sql
 
 BASE_PATH=/app/
@@ -27,7 +27,8 @@ echo "---------------------------------" >> $LOG_FILE
 echo "Start PgOSM-Flex processing" >> $LOG_FILE
 echo "Region:  $1" >> $LOG_FILE
 echo "Sub-Region:  $2" >> $LOG_FILE
-echo "Cache: $3" >> $LOG_FILE
+#echo "Cache: $3" >> $LOG_FILE
+echo "Server RAM available (GB): $3" >> $LOG_FILE
 echo "PgOSM Flex Style: $4" >> $LOG_FILE
 
 
@@ -133,6 +134,9 @@ else
     exit 1
 fi
 
+#python3 osm2pgsql_recommendation.py colorado 8 /app/output/ run-road-place
+python3 /app/docker/osm2pgsql_recommendation.py $2 $3 $OUT_PATH $4
+
 SLEEP_SEC=5
 
 function wait_postgres_is_up {
@@ -183,10 +187,24 @@ osm2pgsql --version >> $LOG_FILE
 
 echo "Running osm2pgsql..." >> $LOG_FILE
 cd $FLEX_PATH
-osm2pgsql -U postgres --create --slim --drop \
-  --cache $3 \
-  --output=flex --style=./$4.lua \
-  -d pgosm  $PBF_FILE &>> $LOG_FILE
+
+# Hard coding for initial testing
+SAFE_MODE=false
+
+if [ $SAFE_MODE == true ]; then
+  # Cache was originally dynamic, now hard coding to osm2pgsql default. 
+  # Maybe not fair, but...?
+  osm2pgsql -U postgres --create --slim --drop \
+    --cache 800 \
+    --output=flex --style=./$4.lua \
+    -d pgosm  $PBF_FILE &>> $LOG_FILE
+else
+  echo 'WARNING - SAFE MODE NOT ENABLED' >> $LOG_FILE
+  echo 'Running command suggested by https://osm2pgsql-tuner.com : '
+  cat $OUT_PATH/osm2pgsql-$2.sh  >> $LOG_FILE
+  echo '\n' >> $LOG_FILE
+  bash $OUT_PATH/osm2pgsql-$2.sh &>> $LOG_FILE
+fi
 
 echo "Running PgOSM-Flex post-processing SQL script: $4.sql" >> $LOG_FILE
 psql -U postgres -d pgosm -f $4.sql >> $LOG_FILE
