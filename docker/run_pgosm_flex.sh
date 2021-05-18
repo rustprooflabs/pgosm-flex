@@ -134,8 +134,7 @@ else
     exit 1
 fi
 
-#python3 osm2pgsql_recommendation.py colorado 8 /app/output/ run-road-place
-python3 /app/docker/osm2pgsql_recommendation.py $2 $3 $OUT_PATH $4
+python3 /app/docker/osm2pgsql_recommendation.py $2 $3 $OUT_PATH $4 >> $LOG_FILE
 
 SLEEP_SEC=5
 
@@ -188,23 +187,10 @@ osm2pgsql --version >> $LOG_FILE
 echo "Running osm2pgsql..." >> $LOG_FILE
 cd $FLEX_PATH
 
-# Hard coding for initial testing
-SAFE_MODE=false
+echo 'Using command suggested by osm2pgsql-tuner: ' >> $LOG_FILE
+cat $OUT_PATH/osm2pgsql-$2.sh  >> $LOG_FILE
+bash $OUT_PATH/osm2pgsql-$2.sh &>> $LOG_FILE
 
-if [ $SAFE_MODE == true ]; then
-  # Cache was originally dynamic, now hard coding to osm2pgsql default. 
-  # Maybe not fair, but...?
-  osm2pgsql -U postgres --create --slim --drop \
-    --cache 800 \
-    --output=flex --style=./$4.lua \
-    -d pgosm  $PBF_FILE &>> $LOG_FILE
-else
-  echo 'WARNING - SAFE MODE NOT ENABLED' >> $LOG_FILE
-  echo 'Running command suggested by https://osm2pgsql-tuner.com : '
-  cat $OUT_PATH/osm2pgsql-$2.sh  >> $LOG_FILE
-  echo '\n' >> $LOG_FILE
-  bash $OUT_PATH/osm2pgsql-$2.sh &>> $LOG_FILE
-fi
 
 echo "Running PgOSM-Flex post-processing SQL script: $4.sql" >> $LOG_FILE
 psql -U postgres -d pgosm -f $4.sql >> $LOG_FILE

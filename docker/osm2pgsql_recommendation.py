@@ -1,4 +1,5 @@
-"""
+"""Used by PgOSM-Flex Docker image to get osm2pgsql command to run from
+the osm2pgsql-tuner API.
 
 Usage:
 	python3 osm2pgsql_recommendation.py colorado 8
@@ -33,6 +34,7 @@ api_endpoint += f'&pbf_filename={pbf_filename}'
 api_endpoint += f'&pgosm_layer_set={pgosm_layer_set}'
 
 headers = {"User-Agent": 'PgOSM-Flex-Docker'}
+print(f'osm2pgsql-tuner URL w/ parameters: {api_endpoint}')
 result = requests.get(api_endpoint, headers=headers)
 print(f'Status code: {result.status_code}')
 
@@ -41,11 +43,10 @@ rec = result.json()['osm2pgsql']
 osm2pgsql_cmd = rec['cmd']
 osm2pgsql_cmd = osm2pgsql_cmd.replace('~/pgosm-data/', output_path)
 osm2pgsql_cmd = osm2pgsql_cmd.replace('-d $PGOSM_CONN', '-U postgres -d pgosm')
-#print(f"\nCommand:\n{ osm2pgsql_cmd } ")
 
 script_filename = f'osm2pgsql-{region_name}.sh'
 osm2pgsql_script_path = os.path.join(output_path, script_filename)
 
 with open(osm2pgsql_script_path,'w') as out_script:
 	out_script.write(osm2pgsql_cmd)
-
+	out_script.write('\n')
