@@ -226,3 +226,30 @@ psql -d $PGOSM_CONN -f ./sql/road_major.sql
 
 
 > WARNING:  Running multiple `osm2pgsql` commands requires processing the source PBF multiple times. This can waste considerable time on larger imports.  Further, attempting to define multiple styles with additional `--style=style.lua` switches results in only the last style being processed.  To mix and match multiple styles, create a custom Lua script similar to `run-all.lua` or `run-no-tags.lua`.
+
+
+
+## Additional structure and helper data
+
+**Optional**
+
+Deploying the additional table structure is done via [sqitch](https://sqitch.org/).
+
+Assumes this repo is cloned under `~/git/pgosm-flex/` and a local Postgres
+DB named `pgosm` has been created with the `postgis` extension installed.
+
+```bash
+cd ~/git/pgosm-flex/db
+sqitch deploy db:pg:pgosm
+```
+
+With the structures created, load helper road data.
+
+```bash
+cd ~/git/pgosm-flex/db
+psql -d pgosm -f data/roads-us.sql
+```
+
+
+Currently only U.S. region drafted, more regions with local `maxspeed` are welcome via PR!
+

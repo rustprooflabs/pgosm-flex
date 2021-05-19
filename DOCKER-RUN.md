@@ -27,7 +27,29 @@ docker run --name pgosm -d \
     -p 5433:5432 -d rustprooflabs/pgosm-flex
 ```
 
-## Run and Customize PgOSM-Flex
+## Run PgOSM-Flex
+
+The following `docker exec` command runs PgOSM Flex to load the District of Columbia
+region
+
+The command  `bash docker/run_pgosm_flex.sh` runs the full process. The
+script uses a region (`north-america/us`) and sub-region (`district-of-columbia`)
+that must match values in URLs from the Geofabrik download server.
+The 3rd parameter tells the script the server has 8 GB RAM available for osm2pgsql, Postgres, and the OS.  The PgOSM-Flex layer set is defined (`run-all`).
+
+
+```bash
+docker exec -it \
+    -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_USER=postgres \
+    pgosm bash docker/run_pgosm_flex.sh \
+    north-america/us \
+    district-of-columbia \
+    8 \
+    run-all
+```
+
+
+## Customize PgOSM-Flex
 
 The following command sets the four (4) main env vars used to customize PgOSM-Flex.
 
@@ -36,11 +58,6 @@ The following command sets the four (4) main env vars used to customize PgOSM-Fl
 * `PGOSM_DATA_SCHEMA_ONLY` - When `false` (default) the `pgosm` schema is exported along with the `PGOSM_DATA_SCHEMA_NAME` schema
 * `PGOSM_DATE` - Used to document data loaded to DB in `osm.pgosm_flex.pgosm_date`, and for archiving PBF/MD5 files.  Defaults to today.
 * `PGOSM_LANGUAGE` - Used to prefer specific language when it exists.
-
-The command  `bash docker/run_pgosm_flex.sh` runs the full process. The
-script uses a region (`north-america/us`) and sub-region (`district-of-columbia`)
-that must match values in URLs from the Geofabrik download server.
-The osm2pgsql cache is set (`2000`) and the PgOSM-Flex layer set is defined (`run-all`).
 
 
 ```bash
@@ -54,7 +71,7 @@ docker exec -it \
     pgosm bash docker/run_pgosm_flex.sh \
     north-america/us \
     district-of-columbia \
-    500 \
+    8 \
     run-all
 ```
 
