@@ -6,9 +6,8 @@ using the
 This project provides a curated set of Lua and SQL scripts to clean and organize
 the most commonly used OpenStreetMap data, such as roads, buildings, and points of interest (POIs).
 
-The overall approach is to do as much processing in the `<name>.lua` script
+The approach to processing is to do as much processing in the `<name>.lua` script
 with post-processing steps creating indexes, constraints and comments in a companion `<name>.sql` script.
-
 
 > Note: While osm2pgsql is still marked as experimental, this project is already being used to support production workloads.
 
@@ -92,6 +91,7 @@ requires four (4) parameters:
 docker exec -it \
     -e POSTGRES_PASSWORD=mysecretpassword \
     -e POSTGRES_USER=postgres \
+    -e PGOSM_DATA_SCHEMA_ONLY=true \
     pgosm bash docker/run_pgosm_flex.sh \
     north-america/us \
     district-of-columbia \
@@ -112,22 +112,50 @@ If paths setup as outlined in README.md, use:
 
 After the `docker exec` command completes, the processed OpenStreetMap
 data is available in the Docker container on port `5433` and has automatically
-been exported to `~/pgosm-data/pgosm-flex-district-of-columbia-run-all.sql`
+been exported to `~/pgosm-data/pgosm-flex-district-of-columbia-run-all.sql`.
+This output is noted in the log file.
 
 ```bash
 PgOSM processing complete. Final output file: /app/output/pgosm-flex-district-of-columbia-run-all.sql
 ```
 
-The designed intent is to load the data processed by this Docker image into
-your PostGIS database(s).
+The `~/pgosm-data` directory now has four (4) files.
 
+```bash
+ls -alh ~/pgosm-data/
+
+-rw-r--r--  1 root        root         17M May 18 17:24 district-of-columbia-2021-05-18.osm.pbf
+-rw-r--r--  1 root        root          70 May 18 17:24 district-of-columbia-2021-05-18.osm.pbf.md5
+-rw-r--r--  1 root        root        799K May 18 17:25 district-of-columbia.log
+-rw-r--r--  1 root        root         117 May 18 17:24 osm2pgsql-district-of-columbia.sh
+-rw-r--r--  1 root        root        154M May 18 17:25 pgosm-flex-district-of-columbia-run-all.sql
+```
+
+The designed intent is to load the OpenStreetMap data processed by this
+Docker image into your PostGIS database(s).
+The process runs `pg_dump` on the resulting
+data to create the `.sql` output file.  This can be easily loaded into any
+Postgres/PostGIS database using `psql`.
+
+
+```bash
+psql -d $YOUR_DB_STRING \
+    -f ~/pgosm-data/pgosm-flex-district-of-columbia-run-all.sql
+```
+
+
+The source file (`.osm.pbf`)
+and its MD5 verificiation file (`osm.pbf.md5`) get renamed from `-latest`
+to the date (`-2021-05-18`).  This enables loading the file downloaded today 
+again in the future, either with the same version of PgOSM Flex or the latest version. The `docker exec` command uses the `PGOSM_DATE` environment variable
+to load these historic files.
 
 See [more in DOCKER-RUN.md](DOCKER-RUN.md).
 
 
 ----
 
-## Standard Import
+## On-server import
 
 See [MANUAL-STEPS-RUN.md](MANUAL-STEPS-RUN.md) for prereqs and steps for
 running without Docker.
