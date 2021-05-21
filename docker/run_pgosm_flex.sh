@@ -171,11 +171,28 @@ psql -U postgres -c "CREATE DATABASE pgosm;" >> $LOG_FILE
 psql -U postgres -d pgosm -c "CREATE EXTENSION postgis;" >> $LOG_FILE
 psql -U postgres -d pgosm -c "CREATE SCHEMA osm;" >> $LOG_FILE
 
-echo "Deploy schema via Sqitch..." >> $LOG_FILE
-cd $SQITCH_PATH
-su -c "sqitch deploy db:pg:pgosm" postgres >> $LOG_FILE
-echo "Loading US Roads helper data" >> $LOG_FILE
-psql -U postgres -d pgosm -f data/roads-us.sql >> $LOG_FILE
+
+if $DATA_SCHEMA_ONLY; then
+  echo "Skipping load of additional tables including QGIS styles" >> $LOG_FILE
+
+else
+  echo "Loading additional tables via sqitch" >> $LOG_FILE
+
+  echo "Deploy schema via Sqitch..." >> $LOG_FILE
+  cd $SQITCH_PATH
+  su -c "sqitch deploy db:pg:pgosm" postgres >> $LOG_FILE
+  echo "Loading US Roads helper data" >> $LOG_FILE
+  psql -U postgres -d pgosm -f data/roads-us.sql >> $LOG_FILE
+
+  echo "Loading QGIS layer styles" >> $LOG_FILE
+  psql -U postgres -d pgosm -f qgis-style/create_layer_styles.sql >> $LOG_FILE
+  psql -U postgres -d pgosm -f qgis-style/layer_styles.sql >> $LOG_FILE
+  psql -U postgres -d pgosm -f qgis-style/_update_layer_styles.sql
+  psql -U postgres -d pgosm -f qgis-style/_load_layer_styles.sql
+
+fi
+
+
 
 
 REGION="$1--$2"
