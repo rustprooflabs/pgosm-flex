@@ -91,7 +91,6 @@ requires four (4) parameters:
 docker exec -it \
     -e POSTGRES_PASSWORD=mysecretpassword \
     -e POSTGRES_USER=postgres \
-    -e PGOSM_DATA_SCHEMA_ONLY=true \
     pgosm bash docker/run_pgosm_flex.sh \
     north-america/us \
     district-of-columbia \
@@ -110,16 +109,38 @@ If paths setup as outlined in README.md, use:
     tail -f ~/pgosm-data/district-of-columbia.log
 ```
 
+
+### After processing
+
 After the `docker exec` command completes, the processed OpenStreetMap
 data is available in the Docker container on port `5433` and has automatically
 been exported to `~/pgosm-data/pgosm-flex-district-of-columbia-run-all.sql`.
-This output is noted in the log file.
+
+
+Connect and query directly in the Docker container.
 
 ```bash
-PgOSM processing complete. Final output file: /app/output/pgosm-flex-district-of-columbia-run-all.sql
+psql -h localhost -p 5433 -d pgosm -U postgres -c "SELECT COUNT(*) FROM osm.road_line;"
+
+┌───────┐
+│ count │
+╞═══════╡
+│ 38480 │
+└───────┘
 ```
 
-The `~/pgosm-data` directory now has four (4) files.
+Or load the processed data (now in `.sql` format) to the Postgres/PostGIS instance of your choice.
+
+```bash
+psql -d $YOUR_DB_STRING \
+    -f ~/pgosm-data/pgosm-flex-district-of-columbia-run-all.sql
+```
+
+
+
+The `~/pgosm-data` directory has four (4) files, the PBF and its MD5 chcksum,
+the processing log, and the processed output file (`.sql`).
+
 
 ```bash
 ls -alh ~/pgosm-data/

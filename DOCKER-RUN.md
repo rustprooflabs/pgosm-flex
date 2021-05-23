@@ -53,9 +53,9 @@ docker exec -it \
 
 The following command sets the four (4) main env vars used to customize PgOSM-Flex.
 
-* `PGOSM_SRID` - Override default SRID 3857 to custom SRID
+* `PGOSM_SRID` - Set custom SRID, must be in `public.spatial_ref_sys`.  Default `3857`
 * `PGOSM_DATA_SCHEMA_NAME` - Final schema name for the OpenStreetMap data. Default `osm`
-* `PGOSM_DATA_SCHEMA_ONLY` - When `false` (default) the `pgosm` schema is exported along with the `PGOSM_DATA_SCHEMA_NAME` schema
+* `PGOSM_DATA_SCHEMA_ONLY` - When `false` (default) the QGIS styles and `pgosm` schema are exported along with the `PGOSM_DATA_SCHEMA_NAME` schema
 * `PGOSM_DATE` - Used to document data loaded to DB in `osm.pgosm_flex.pgosm_date`, and for archiving PBF/MD5 files.  Defaults to today.
 * `PGOSM_LANGUAGE` - Used to prefer specific language when it exists.
 
@@ -67,7 +67,7 @@ docker exec -it \
     -e PGOSM_DATA_SCHEMA_ONLY=true \
     -e PGOSM_DATA_SCHEMA_NAME=osm_dc \
     -e PGOSM_DATE='2021-03-11' \
-    -e PGOSM_LANGUAGE=kn \
+    -e PGOSM_LANGUAGE=en \
     pgosm bash docker/run_pgosm_flex.sh \
     north-america/us \
     district-of-columbia \
