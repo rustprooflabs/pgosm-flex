@@ -2,8 +2,7 @@ name: Publish PgOSM-Flex Docker image
 on:
   push:
     branches:
-      - main
-      - v0_2_0_rc
+      - broken-see-gh132
 jobs:
   push_to_registry:
     name: Push PgOSM-Flex image to Docker Hub
