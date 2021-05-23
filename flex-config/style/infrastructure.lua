@@ -31,6 +31,38 @@ tables.infrastructure_point = osm2pgsql.define_table({
     }
 })
 
+tables.infrastructure_line = osm2pgsql.define_table({
+    name = 'infrastructure_line',
+    schema = schema_name,
+    ids = { type = 'way', id_column = 'osm_id' },
+    columns = {
+        { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'osm_subtype',   type = 'text'},
+        { column = 'name',     type = 'text' },
+        { column = 'ele', type = 'int' },
+        { column = 'height',  type = 'numeric'},
+        { column = 'operator', type = 'text'},
+        { column = 'material', type = 'text'},
+        { column = 'geom',     type = 'linestring' , projection = srid},
+    }
+})
+
+
+tables.infrastructure_polygon = osm2pgsql.define_table({
+    name = 'infrastructure_polygon',
+    schema = schema_name,
+    ids = { type = 'way', id_column = 'osm_id' },
+    columns = {
+        { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'osm_subtype',   type = 'text'},
+        { column = 'name',     type = 'text' },
+        { column = 'ele', type = 'int' },
+        { column = 'height',  type = 'numeric'},
+        { column = 'operator', type = 'text'},
+        { column = 'material', type = 'text'},
+        { column = 'geom',     type = 'multipolygon' , projection = srid},
+    }
+})
 
 local function get_osm_type_subtype(object)
     local osm_type_table = {}
@@ -111,17 +143,71 @@ function infrastructure_process_node(object)
 end
 
 
+function infrastructure_process_way(object)
+    -- We are only interested in some tags
+    if not is_infrastructure(object.tags) then
+        return
+    end
+
+    local osm_types = get_osm_type_subtype(object)
+
+    if osm_types.osm_type == 'unknown' then
+        return
+    end
+
+    local name = get_name(object.tags)
+    local ele = parse_to_meters(object.tags.ele)
+    local height = parse_to_meters(object.tags['height'])
+    local operator = object.tags.operator
+    local material = object.tags.material
+
+    if object.is_closed then
+        tables.infrastructure_polygon:add_row({
+            osm_type = osm_types.osm_type,
+            osm_subtype = osm_types.osm_subtype,
+            name = name,
+            ele = ele,
+            height = height,
+            operator = operator,
+            material = material,
+            geom = { create = 'area' }
+        })
+    else
+        tables.infrastructure_line:add_row({
+            osm_type = osm_types.osm_type,
+            osm_subtype = osm_types.osm_subtype,
+            name = name,
+            ele = ele,
+            height = height,
+            operator = operator,
+            material = material,
+            geom = { create = 'line' }
+        })
+    end
+
+end
+
+
 
 if osm2pgsql.process_node == nil then
-    -- Change function name here
     osm2pgsql.process_node = infrastructure_process_node
 else
     local nested = osm2pgsql.process_node
     osm2pgsql.process_node = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         infrastructure_process_node(object_copy)
     end
 end
 
+
+if osm2pgsql.process_way == nil then
+    osm2pgsql.process_way = infrastructure_process_way
+else
+    local nested = osm2pgsql.process_way
+    osm2pgsql.process_way = function(object)
+        local object_copy = deep_copy(object)
+        nested(object)
+        infrastructure_process_way(object_copy)
+    end
+end
