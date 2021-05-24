@@ -98,5 +98,26 @@ docker run --name pgosm -d \
     -p 5433:5432 -d rustprooflabs/pgosm
 ```
 
+## Configure Postgres in Docker
+
+Add customizations with the `-c` switch, e.g. `-c shared_buffers=1GB`,
+to customize Postgres' configuration at run-time in Docker.
+
+
+
+```bash
+docker run --name pgosm -d \
+    -v ~/pgosm-data:/app/output \
+    -v /etc/localtime:/etc/localtime:ro \
+    -e POSTGRES_PASSWORD=mysecretpassword \
+    -p 5433:5432 -d rustprooflabs/pgosm-flex \
+    -c shared_buffers=1GB \
+    -c maintenance_work_mem=1GB \
+    -c checkpoint_timeout=300min \
+    -c max_wal_senders=0 -c wal_level=minimal \
+    -c checkpoint_completion_target=0.9 \
+    -c random_page_cost=1.0
+```
+
 
 
