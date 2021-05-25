@@ -33,13 +33,18 @@ Minimum versions supported:
 * osm2pgsql 1.4.2+ --> commit 94dae34 or newer
 
 
-### :warning: Breaking change :warning:
+### :warning: Breaking change
 
-The osm2pgsql project added built-in JSON support after v1.4.2 ([commit](https://github.com/openstreetmap/osm2pgsql/commit/94dae34b7aa1463339cdb6768d28a6e8ee53ef65)).
-Currently this change is not in a tagged release, only the latest `master` branch.
-Install osm2pgsql from source to use the current `main` branch of PgOSM-Flex.
+The osm2pgsql project added built-in JSON support after the tagged
+v1.4.2 release.  This change ([commit](https://github.com/openstreetmap/osm2pgsql/commit/94dae34b7aa1463339cdb6768d28a6e8ee53ef65))
+is not yet in a tagged release of osm2pgsql, only the
+latest `master` branch.
 
-To use osm2pgsql v1.4.2, use PgOSM-Flex v0.1.5.
+This is only a concern when running on a server where you install osm2pgsql
+from a package manager. Following the instructions in
+[MANUAL-STEPS-RUN.md](MANUAL-STEPS-RUN.md) installs the latest
+version of osm2pgsql from source and avoids this issue.
+Also, using the PgOSM Flex Docker image makes this a non-issue.
 
 
 ## PgOSM via Docker
