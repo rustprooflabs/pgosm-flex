@@ -63,6 +63,14 @@ building_part|office|2
 building_part|roof|6
 building_part|steps|4
 building_part|yes|377
+door|yes|136
+entrance|apartments|6
+entrance|main|66
+entrance|secondary|1
+entrance|service|1
+entrance|staircase|2
+entrance|visitors|1
+entrance|yes|99
 office|Non-profit|1
 office|accountant|7
 office|administrative|1

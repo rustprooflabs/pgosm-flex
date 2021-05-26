@@ -8,7 +8,7 @@
 #
 # $1 - Region - e.g. north-america/us
 # $2 - Subregion - e.g. district-of-columbia 
-# $3 - Cache (mb) - e.g. 4000
+# $3 - Server RAM (GB) - e.g. 8
 # $4 - Layers to load - must match flex-config/$4.lua and flex-config/$4.sql
 
 BASE_PATH=/app/
@@ -27,7 +27,8 @@ echo "---------------------------------" >> $LOG_FILE
 echo "Start PgOSM-Flex processing" >> $LOG_FILE
 echo "Region:  $1" >> $LOG_FILE
 echo "Sub-Region:  $2" >> $LOG_FILE
-echo "Cache: $3" >> $LOG_FILE
+#echo "Cache: $3" >> $LOG_FILE
+echo "Server RAM available (GB): $3" >> $LOG_FILE
 echo "PgOSM Flex Style: $4" >> $LOG_FILE
 
 
@@ -133,6 +134,8 @@ else
     exit 1
 fi
 
+python3 /app/docker/osm2pgsql_recommendation.py $2 $3 $OUT_PATH $4 >> $LOG_FILE
+
 SLEEP_SEC=5
 
 function wait_postgres_is_up {
@@ -168,11 +171,28 @@ psql -U postgres -c "CREATE DATABASE pgosm;" >> $LOG_FILE
 psql -U postgres -d pgosm -c "CREATE EXTENSION postgis;" >> $LOG_FILE
 psql -U postgres -d pgosm -c "CREATE SCHEMA osm;" >> $LOG_FILE
 
-echo "Deploy schema via Sqitch..." >> $LOG_FILE
-cd $SQITCH_PATH
-su -c "sqitch deploy db:pg:pgosm" postgres >> $LOG_FILE
-echo "Loading US Roads helper data" >> $LOG_FILE
-psql -U postgres -d pgosm -f data/roads-us.sql >> $LOG_FILE
+
+if $DATA_SCHEMA_ONLY; then
+  echo "Skipping load of additional tables including QGIS styles" >> $LOG_FILE
+
+else
+  echo "Loading additional tables via sqitch" >> $LOG_FILE
+
+  echo "Deploy schema via Sqitch..." >> $LOG_FILE
+  cd $SQITCH_PATH
+  su -c "sqitch deploy db:pg:pgosm" postgres >> $LOG_FILE
+  echo "Loading US Roads helper data" >> $LOG_FILE
+  psql -U postgres -d pgosm -f data/roads-us.sql >> $LOG_FILE
+
+  echo "Loading QGIS layer styles" >> $LOG_FILE
+  psql -U postgres -d pgosm -f qgis-style/create_layer_styles.sql >> $LOG_FILE
+  psql -U postgres -d pgosm -f qgis-style/layer_styles.sql >> $LOG_FILE
+  psql -U postgres -d pgosm -f qgis-style/_update_layer_styles.sql
+  psql -U postgres -d pgosm -f qgis-style/_load_layer_styles.sql
+
+fi
+
+
 
 
 REGION="$1--$2"
@@ -183,10 +203,11 @@ osm2pgsql --version >> $LOG_FILE
 
 echo "Running osm2pgsql..." >> $LOG_FILE
 cd $FLEX_PATH
-osm2pgsql -U postgres --create --slim --drop \
-  --cache $3 \
-  --output=flex --style=./$4.lua \
-  -d pgosm  $PBF_FILE &>> $LOG_FILE
+
+echo 'Using command suggested by osm2pgsql-tuner: ' >> $LOG_FILE
+cat $OUT_PATH/osm2pgsql-$2.sh  >> $LOG_FILE
+bash $OUT_PATH/osm2pgsql-$2.sh &>> $LOG_FILE
+
 
 echo "Running PgOSM-Flex post-processing SQL script: $4.sql" >> $LOG_FILE
 psql -U postgres -d pgosm -f $4.sql >> $LOG_FILE

@@ -19,7 +19,8 @@ tables.building_point = osm2pgsql.define_table({
         { column = 'state', type = 'text'},
         { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
-        { column = 'wheelchair', type = 'bool'},
+        { column = 'wheelchair', type = 'text'},
+        { column = 'wheelchair_desc', type = 'text'},
         { column = 'operator', type = 'text'},
         { column = 'geom',     type = 'point', projection = srid},
     }
@@ -42,7 +43,8 @@ tables.building_polygon = osm2pgsql.define_table({
         { column = 'state', type = 'text'},
         { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
-        { column = 'wheelchair', type = 'bool'},
+        { column = 'wheelchair', type = 'text'},
+        { column = 'wheelchair_desc', type = 'text'},
         { column = 'operator', type = 'text'},
         { column = 'geom',     type = 'multipolygon', projection = srid},
     }
@@ -92,6 +94,12 @@ local function get_osm_type_subtype(object)
     elseif address_only then
         osm_type_table['osm_type'] = 'address'
         osm_type_table['osm_subtype'] = nil
+    elseif object.tags.entrance then
+        osm_type_table['osm_type'] = 'entrance'
+        osm_type_table['osm_subtype'] = object.tags.entrance
+    elseif object.tags.door then
+        osm_type_table['osm_type'] = 'door'
+        osm_type_table['osm_subtype'] = object.tags.door
     else
         osm_type_table['osm_type'] = 'unknown'
         osm_type_table['osm_subtype'] = nil
@@ -101,12 +109,20 @@ local function get_osm_type_subtype(object)
 end
 
 
+local building_first_level_keys = {
+    'building',
+    'building:part',
+    'office',
+    'door',
+    'entrance'
+}
+
+local is_first_level_building = make_check_in_list_func(building_first_level_keys)
+
 function building_process_node(object)
     local address_only = address_only_building(object.tags)
 
-    if not object.tags.building
-            and not object.tags['building:part']
-            and not object.tags.office
+    if not is_first_level_building(object.tags)
             and not address_only
             then
         return
@@ -122,6 +138,7 @@ function building_process_node(object)
     local postcode = object.tags['addr:postcode']
     local address = get_address(object.tags)
     local wheelchair = object.tags.wheelchair
+    local wheelchair_desc = get_wheelchair_desc(object.tags)
     local levels = object.tags['building:levels']
     local height = parse_to_meters(object.tags['height'])
     local operator  = object.tags.operator
@@ -137,6 +154,7 @@ function building_process_node(object)
         postcode = postcode,
         address = address,
         wheelchair = wheelchair,
+        wheelchair_desc = wheelchair_desc,
         levels = levels,
         height = height,
         operator = operator,
@@ -150,11 +168,9 @@ end
 function building_process_way(object)
     local address_only = address_only_building(object.tags)
 
-    if not object.tags.building
-            and not object.tags['building:part']
+    if not is_first_level_building(object.tags)
             and not address_only
-            and not object.tags.office
-                then
+            then
         return
     end
 
@@ -171,6 +187,7 @@ function building_process_way(object)
     local postcode = object.tags['addr:postcode']
     local address = get_address(object.tags)
     local wheelchair = object.tags.wheelchair
+    local wheelchair_desc = get_wheelchair_desc(object.tags)
     local levels = object.tags['building:levels']
     local height = parse_to_meters(object.tags['height'])
     local operator  = object.tags.operator
@@ -186,6 +203,7 @@ function building_process_way(object)
         postcode = postcode,
         address = address,
         wheelchair = wheelchair,
+        wheelchair_desc = wheelchair_desc,
         levels = levels,
         height = height,
         operator = operator,
@@ -200,11 +218,9 @@ end
 function building_process_relation(object)
     local address_only = address_only_building(object.tags)
 
-    if not object.tags.building
-            and not object.tags['building:part']
+    if not is_first_level_building(object.tags)
             and not address_only
-            and not object.tags.office
-                then
+            then
         return
     end
 
@@ -218,6 +234,7 @@ function building_process_relation(object)
     local postcode = object.tags['addr:postcode']
     local address = get_address(object.tags)
     local wheelchair = object.tags.wheelchair
+    local wheelchair_desc = get_wheelchair_desc(object.tags)
     local levels = object.tags['building:levels']
     local height = parse_to_meters(object.tags['height'])
     local operator  = object.tags.operator
@@ -234,6 +251,7 @@ function building_process_relation(object)
             postcode = postcode,
             address = address,
             wheelchair = wheelchair,
+            wheelchair_desc = wheelchair_desc,
             levels = levels,
             height = height,
             operator = operator,

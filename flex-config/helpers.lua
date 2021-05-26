@@ -235,6 +235,12 @@ function get_name_last_ditch(tags)
 end
 
 
+function get_wheelchair_desc(tags)
+    local wheelchair_desc = tags['wheelchair:description']
+    return wheelchair_desc
+end
+
+
 function parse_admin_level(input)
     -- Quick return
     if not input then

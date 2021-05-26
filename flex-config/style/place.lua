@@ -1,9 +1,5 @@
 require "helpers"
 
--- flex-config/rxi-json.lua sourced from:
---   https://raw.githubusercontent.com/rxi/json.lua/master/json.lua
-local json = require('rxi-json')
-
 local tables = {}
 
 
@@ -151,7 +147,7 @@ function place_process_relation(object)
             boundary = boundary,
             admin_level = admin_level,
             name = name,
-            member_ids = json.encode(member_ids),
+            member_ids = member_ids,
             geom = { create = 'area' }
         })
     end

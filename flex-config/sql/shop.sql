@@ -8,8 +8,8 @@ COMMENT ON COLUMN osm.shop_point.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.shop_polygon.geom IS 'Geometry loaded by osm2pgsql.';
 
 
-COMMENT ON COLUMN osm.shop_point.wheelchair IS 'Indicates if building is wheelchair accessible.';
-COMMENT ON COLUMN osm.shop_point.wheelchair IS 'Indicates if building is wheelchair accessible.';
+COMMENT ON COLUMN osm.shop_point.wheelchair IS 'Indicates if building is wheelchair accessible. Values:  yes, no, limited.  Per https://wiki.openstreetmap.org/wiki/Key:wheelchair';
+COMMENT ON COLUMN osm.shop_polygon.wheelchair IS 'Indicates if building is wheelchair accessible. Values:  yes, no, limited.  Per https://wiki.openstreetmap.org/wiki/Key:wheelchair';
 COMMENT ON COLUMN osm.shop_point.operator IS 'Entity in charge of operations. https://wiki.openstreetmap.org/wiki/Key:operator';
 COMMENT ON COLUMN osm.shop_polygon.operator IS 'Entity in charge of operations. https://wiki.openstreetmap.org/wiki/Key:operator';
 
@@ -65,11 +65,13 @@ CREATE INDEX ix_osm_shop_polygon_type ON osm.shop_polygon (osm_subtype);
 
 CREATE VIEW osm.vshop_all AS
 SELECT osm_id, 'N' AS geom_type, osm_type, osm_subtype, name,
-        address, phone, wheelchair, operator, brand, website, geom
+        address, phone, wheelchair, wheelchair_desc,
+        operator, brand, website, geom
     FROM osm.shop_point
 UNION
 SELECT osm_id, 'W' AS geom_type, osm_type, osm_subtype, name,
-        address, phone, wheelchair, operator, brand, website, 
+        address, phone, wheelchair, wheelchair_desc,
+        operator, brand, website,
         ST_Centroid(geom) AS geom
     FROM osm.shop_polygon
 ;

@@ -6,9 +6,8 @@ using the
 This project provides a curated set of Lua and SQL scripts to clean and organize
 the most commonly used OpenStreetMap data, such as roads, buildings, and points of interest (POIs).
 
-The overall approach is to do as much processing in the `<name>.lua` script
+The approach to processing is to do as much processing in the `<name>.lua` script
 with post-processing steps creating indexes, constraints and comments in a companion `<name>.sql` script.
-
 
 > Note: While osm2pgsql is still marked as experimental, this project is already being used to support production workloads.
 
@@ -31,7 +30,164 @@ Minimum versions supported:
 
 * Postgres 12
 * PostGIS 3.0
-* osm2pgsql 1.4.0
+* osm2pgsql 1.4.2+ --> commit 94dae34 or newer
+
+
+### :warning: Breaking change
+
+The osm2pgsql project added built-in JSON support after the tagged
+v1.4.2 release.  This change ([commit](https://github.com/openstreetmap/osm2pgsql/commit/94dae34b7aa1463339cdb6768d28a6e8ee53ef65))
+is not yet in a tagged release of osm2pgsql, only the
+latest `master` branch.
+
+This is only a concern when running on a server where you install osm2pgsql
+from a package manager. Following the instructions in
+[MANUAL-STEPS-RUN.md](MANUAL-STEPS-RUN.md) installs the latest
+version of osm2pgsql from source and avoids this issue.
+Also, using the PgOSM Flex Docker image makes this a non-issue.
+
+
+## PgOSM via Docker
+
+The easiest option to use PgOSM-Flex is with the
+[Docker image](https://hub.docker.com/r/rustprooflabs/pgosm-flex).
+The image has all the pre-reqs installed, handles downloading an OSM subregion
+from Geofabrik, and saves an output `.sql` file with the processed data
+ready to load into your database(s).
+
+The script in the Docker image uses `PGOSM_DATE` to enable the Docker process
+to archive source PBF files and easily reload them at a later date.
+
+
+### Basic Docker usage
+
+This section outlines the basic operations for using Docker to run PgOSM-Flex.
+See [the full Docker instructions in DOCKER-RUN.md](DOCKER-RUN.md).
+
+Create directory for the `.osm.pbf` file, output `.sql` file, log output, and
+the osm2pgsql command ran.
+
+
+```bash
+mkdir ~/pgosm-data
+```
+
+Start the `pgosm` Docker container. At this point, PostgreSQL / PostGIS
+is available on port `5433`.
+
+```bash
+docker run --name pgosm -d \
+    -v ~/pgosm-data:/app/output \
+    -v /etc/localtime:/etc/localtime:ro \
+    -e POSTGRES_PASSWORD=mysecretpassword \
+    -p 5433:5432 -d rustprooflabs/pgosm-flex
+```
+
+Run the processing for the Washington D.C.  The `run_pgosm_flex.sh` script
+requires four (4) parameters:
+
+* Region (`north-america/us`)
+* Sub-region (`district-of-columbia`)
+* Total RAM for osm2pgsql, Postgres and OS (`8`)
+* PgOSM-Flex layer set (`run-all`)
+
+
+```bash
+docker exec -it \
+    -e POSTGRES_PASSWORD=mysecretpassword \
+    -e POSTGRES_USER=postgres \
+    pgosm bash docker/run_pgosm_flex.sh \
+    north-america/us \
+    district-of-columbia \
+    8 \
+    run-all
+```
+
+The initial output with the `docker exec` command points to the log file
+(linked in the `docker run` command above), monitor this file to track
+progress of the import.
+
+
+```bash
+Monitor /app/output/district-of-columbia.log for progress...
+If paths setup as outlined in README.md, use:
+    tail -f ~/pgosm-data/district-of-columbia.log
+```
+
+
+### After processing
+
+After the `docker exec` command completes, the processed OpenStreetMap
+data is available in the Docker container on port `5433` and has automatically
+been exported to `~/pgosm-data/pgosm-flex-district-of-columbia-run-all.sql`.
+
+
+Connect and query directly in the Docker container.
+
+```bash
+psql -h localhost -p 5433 -d pgosm -U postgres -c "SELECT COUNT(*) FROM osm.road_line;"
+
+┌───────┐
+│ count │
+╞═══════╡
+│ 38480 │
+└───────┘
+```
+
+Or load the processed data (now in `.sql` format) to the Postgres/PostGIS instance of your choice.
+
+```bash
+psql -d $YOUR_DB_STRING \
+    -f ~/pgosm-data/pgosm-flex-district-of-columbia-run-all.sql
+```
+
+
+
+The `~/pgosm-data` directory has four (4) files, the PBF and its MD5 chcksum,
+the processing log, and the processed output file (`.sql`).
+
+
+```bash
+ls -alh ~/pgosm-data/
+
+-rw-r--r--  1 root        root         17M May 18 17:24 district-of-columbia-2021-05-18.osm.pbf
+-rw-r--r--  1 root        root          70 May 18 17:24 district-of-columbia-2021-05-18.osm.pbf.md5
+-rw-r--r--  1 root        root        799K May 18 17:25 district-of-columbia.log
+-rw-r--r--  1 root        root         117 May 18 17:24 osm2pgsql-district-of-columbia.sh
+-rw-r--r--  1 root        root        154M May 18 17:25 pgosm-flex-district-of-columbia-run-all.sql
+```
+
+The designed intent is to load the OpenStreetMap data processed by this
+Docker image into your PostGIS database(s).
+The process runs `pg_dump` on the resulting
+data to create the `.sql` output file.  This can be easily loaded into any
+Postgres/PostGIS database using `psql`.
+
+
+```bash
+psql -d $YOUR_DB_STRING \
+    -f ~/pgosm-data/pgosm-flex-district-of-columbia-run-all.sql
+```
+
+
+The source file (`.osm.pbf`)
+and its MD5 verificiation file (`osm.pbf.md5`) get renamed from `-latest`
+to the date (`-2021-05-18`).  This enables loading the file downloaded today 
+again in the future, either with the same version of PgOSM Flex or the latest version. The `docker exec` command uses the `PGOSM_DATE` environment variable
+to load these historic files.
+
+See [more in DOCKER-RUN.md](DOCKER-RUN.md).
+
+
+----
+
+## On-server import
+
+See [MANUAL-STEPS-RUN.md](MANUAL-STEPS-RUN.md) for prereqs and steps for
+running without Docker.
+
+----
+
 
 
 ## Layer Sets
@@ -108,72 +264,16 @@ The value of `PGOSM_LANGUAGE` should match the codes used by OSM:
 export PGOSM_LANGUAGE=kn
 ```
 
-----
-
-## PgOSM via Docker
-
-The easiest quick-start option to use PgOSM-Flex is with the
-[Docker image](https://hub.docker.com/r/rustprooflabs/pgosm-flex).
-The image has all the pre-reqs installs, handles downloading an OSM subregion
-from Geofabrik, and saves a `.sql` file with the processed data to load into
-your database(s).
 
 
-Using `PGOSM_DATE` allows the Docker process to archive source PBF files
-and easily reload them at a later date.
 
-### Basic Docker usage
+## QGIS Layer Styles
 
-This section outlines the basic operations for using Docker to run PgOSM-Flex.
-See [the full details in DOCKER-RUN.md](DOCKER-RUN.md). 
+Use QGIS to visualize OpenStreetMap data? This project includes a few basic
+styles using the `public.layer_styles` table created by QGIS.
 
-Create directory for the `.osm.pbf` file and output `.sql` file.
-
-```bash
-mkdir ~/pgosm-data
-```
-
-Start the `pgosm` Docker container to make PostgreSQL / PostGIS available and prepare
-to run the PgOSM-Flex script.
-
-
-```bash
-docker run --name pgosm -d \
-    -v ~/pgosm-data:/app/output \
-    -v /etc/localtime:/etc/localtime:ro \
-    -e POSTGRES_PASSWORD=mysecretpassword \
-    -p 5433:5432 -d rustprooflabs/pgosm-flex
-```
-
-Run the processing for the Washington D.C. sub-region.  This small sub-region is great
-for testing, it runs fast even on the smallest hardware.
-
-```bash
-docker exec -it \
-    -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_USER=postgres \
-    pgosm bash docker/run_pgosm_flex.sh \
-    north-america/us \
-    district-of-columbia \
-    500 \
-    run-all
-```
-
-The command  `bash docker/run_pgosm_flex.sh` handles the steps required to download,
-process and export OpenStreetMap data in plain `.sql`. The data is available in the
-running `pgosm` container (`psql -h localhost -p 5433 -d pgosm`) but designed intent
-is to load the data into your PostGIS database(s).
-
-The script uses a region (`north-america/us`) and sub-region (`district-of-columbia`) that must match values in URLs from the Geofabrik download server.  The osm2pgsql cache is set (`2000`) and the PgOSM-Flex layer set is defined (`run-all`).
-
-See [the full details in DOCKER-RUN.md](DOCKER-RUN.md).
-
-----
-
-## Standard Import
-
-See [MANUAL-STEPS-RUN.md](MANUAL-STEPS-RUN.md) for prereqs and steps for
-running without Docker.
-
+See [the QGIS Style README.md](https://github.com/rustprooflabs/pgosm-flex/blob/main/db/qgis-style/README.md)
+for more information.
 
 
 ## Points of Interest (POIs)
@@ -240,45 +340,6 @@ SELECT geom_type, COUNT(*)
 ```
 
 
-## (Optional) Calculate Nested place polygons
-
-Nested places refers to administrative boundaries that are contained, or contain,
-other administrative boundaries. An example of this is the State of Colorado
-contains the boundary for Jefferson County, Colorado.
-
-See [Better OpenStreetMap places in PostGIS](https://blog.rustprooflabs.com/2021/01/pgosm-flex-improved-openstreetmap-places-postgis)
-for more.
-
-
-```sql
-CALL osm.build_nested_admin_polygons();
-```
-
-Example record showing the nesting calculated.
-
-```sql
-SELECT osm_id, name, osm_type, admin_level, nest_level,
-        name_path, osm_id_path, admin_level_path,
-        innermost
-    FROM osm.place_polygon_nested
-    WHERE name = 'Shepherd Park'
-;
-```
-
-```bash
-Name            |Value                                          |
-----------------|-----------------------------------------------|
-osm_id          |-4603194                                       |
-name            |Shepherd Park                                  |
-osm_type        |suburb                                         |
-admin_level     |10                                             |
-nest_level      |3                                              |
-name_path       |{District of Columbia,Washington,Shepherd Park}|
-osm_id_path     |{-162069,-5396194,-4603194}                    |
-admin_level_path|{4,6,10}                                       |
-innermost       |true                                           |
-```
-
 
 ## Explore data loaded
 
@@ -344,31 +405,6 @@ For example queries with data loaded by PgOSM-Flex see
 
 
 
-## Additional structure and helper data
-
-**Optional**
-
-Deploying the additional table structure is done via [sqitch](https://sqitch.org/).
-
-Assumes this repo is cloned under `~/git/pgosm-flex/` and a local Postgres
-DB named `pgosm` has been created with the `postgis` extension installed.
-
-```bash
-cd ~/git/pgosm-flex/db
-sqitch deploy db:pg:pgosm
-```
-
-With the structures created, load helper road data.
-
-```bash
-cd ~/git/pgosm-flex/db
-psql -d pgosm -f data/roads-us.sql
-```
-
-
-Currently only U.S. region drafted, more regions with local `maxspeed` are welcome via PR!
-
-
 ## One table to rule them all
 
 From the perspective of database design, the `osm.unitable` option is the **worst**!
@@ -389,20 +425,14 @@ osm2pgsql --slim --drop \
 
 > The `unitable.lua` script include in in this project was [adapted from the unitable example from osm2pgsql](https://github.com/openstreetmap/osm2pgsql/blob/master/flex-config/unitable.lua). This version uses JSONB instead of HSTORE and takes advantage of `helpers.lua` to easily customize SRID.
 
-## QGIS Layer Styles
-
-Use QGIS to visualize OpenStreetMap data? This project includes a few basic
-styles using the `public.layer_styles` table created by QGIS.
-
-See [the QGIS Style README.md](https://github.com/rustprooflabs/pgosm-flex/blob/main/db/qgis-style/README.md)
-for more information.
-
 
 ## JSONB support
 
 PgOSM-Flex uses `JSONB` in Postgres to store the raw OpenSteetMap
 key/value data (`tags` column)
-and relation members (`member_ids`). Current `JSONB` columns:
+and relation members (`member_ids`).
+
+Current `JSONB` columns:
 
 * `osm.tags.tags`
 * `osm.unitable.tags`
@@ -410,18 +440,6 @@ and relation members (`member_ids`). Current `JSONB` columns:
 * `osm.vplace_polygon.member_ids`
 * `osm.poi_polygon.member_ids`
 
-JSON support for OpenStreetMap data in Lua is made possible using
-[rxi's json.lua](https://github.com/rxi/json.lua).
-A static copy of `json.lua` is included in
-`flex-config/rxi-json.lua`.
-
-
-The file was downloaded to this project using:
-
-```bash
-cd flex-config/
-curl -sS -o rxi-json.lua https://raw.githubusercontent.com/rxi/json.lua/master/json.lua
-```
 
 ## Additional resources
 
@@ -430,5 +448,4 @@ Blog posts covering various details and background information.
 * [Better OpenStreetMap places in PostGIS](https://blog.rustprooflabs.com/2021/01/pgosm-flex-improved-openstreetmap-places-postgis)
 * [Improved OpenStreetMap data structure in PostGIS](https://blog.rustprooflabs.com/2021/01/postgis-openstreetmap-flex-structure) 
 * [Hands on with osm2pgsql's new Flex output](https://blog.rustprooflabs.com/2020/12/osm2gpsql-flex-output-to-postgis).
-
 
