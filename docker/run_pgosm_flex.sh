@@ -252,7 +252,7 @@ fi
 
 cd $BASE_PATH
 
-OUT_NAME="pgosm-flex-$REGION_FILENAME-$4.sql"
+OUT_NAME="pgosm-flex-$REGION-$4.sql"
 OUT_PATH="/app/output/$OUT_NAME"
 
 if $DATA_SCHEMA_ONLY; then
