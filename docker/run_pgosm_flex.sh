@@ -128,7 +128,7 @@ fi
 if cd $OUT_PATH && md5sum -c $MD5_FILE; then
     echo 'MD5 checksum validated' >> $LOG_FILE
 else
-    ERR_MSG = 'ERROR - MD5 sum did not match.  Try re-running with PGOSM_ALWAYS_DOWNLOAD=1'
+    ERR_MSG='ERROR - MD5 sum did not match.  Try re-running with PGOSM_ALWAYS_DOWNLOAD=1'
     echo "$ERR_MSG" >> $LOG_FILE
     echo "$ERR_MSG"
     exit 1
