@@ -24,7 +24,8 @@ if [ $2 == 'None' ]; then
   PBF_DOWNLOAD_URL=https://download.geofabrik.de/$1-latest.osm.pbf
 else
   REGION_FILENAME=$2
-  REGION="$1--$2"
+  # Cannot simply add region ($1), e.g. north-america/us -- Needs escaping
+  REGION="$2"
   PBF_DOWNLOAD_URL=https://download.geofabrik.de/$1/$2-latest.osm.pbf
 fi
 
