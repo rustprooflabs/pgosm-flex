@@ -16,11 +16,29 @@ SQITCH_PATH=/app/db/
 OUT_PATH=/app/output/
 FLEX_PATH=/app/flex-config
 
-LOG_FILE=$OUT_PATH$2.log
+
+# To match Geofabrik file name conventions
+if [ $2 == 'None' ]; then
+  REGION_FILENAME=$1
+  REGION="$1"
+  PBF_DOWNLOAD_URL=https://download.geofabrik.de/$1-latest.osm.pbf
+else
+  REGION_FILENAME=$2
+  REGION="$1--$2"
+  PBF_DOWNLOAD_URL=https://download.geofabrik.de/$1/$2-latest.osm.pbf
+fi
+
+
+LOG_FILE=$OUT_PATH$REGION_FILENAME.log
+
+echo "Region name for files: ${REGION_FILENAME}" >> $LOG_FILE
+echo "Setting PGOSM_REGION to $REGION" >> $LOG_FILE
+export PGOSM_REGION=$REGION
+
 
 echo "Monitor $LOG_FILE for progress..."
 echo "If paths setup as outlined in README.md, use:"
-echo "    tail -f ~/pgosm-data/$2.log"
+echo "    tail -f ~/pgosm-data/$REGION_FILENAME.log"
 
 echo "" >> $LOG_FILE
 echo "---------------------------------" >> $LOG_FILE
@@ -31,10 +49,9 @@ echo "Sub-Region:  $2" >> $LOG_FILE
 echo "Server RAM available (GB): $3" >> $LOG_FILE
 echo "PgOSM Flex Style: $4" >> $LOG_FILE
 
-
 # Naming scheme must match Geofabrik's for MD5 sums to validatate
-PBF_FILE=$OUT_PATH$2-latest.osm.pbf
-MD5_FILE=$OUT_PATH$2-latest.osm.pbf.md5
+PBF_FILE=$OUT_PATH$REGION_FILENAME-latest.osm.pbf
+MD5_FILE=$OUT_PATH$REGION_FILENAME-latest.osm.pbf.md5
 
 
 if [ -z $PGOSM_DATE ]; then
@@ -78,8 +95,8 @@ else
 fi
 
 # Filenames with the PgOSM Date
-PBF_DATE_FILE=$OUT_PATH$2-$PGOSM_DATE.osm.pbf
-MD5_DATE_FILE=$OUT_PATH$2-$PGOSM_DATE.osm.pbf.md5
+PBF_DATE_FILE=$OUT_PATH$REGION_FILENAME-$PGOSM_DATE.osm.pbf
+MD5_DATE_FILE=$OUT_PATH$REGION_FILENAME-$PGOSM_DATE.osm.pbf.md5
 
 
 ALWAYS_DOWNLOAD=${PGOSM_ALWAYS_DOWNLOAD:-0}
@@ -106,7 +123,7 @@ elif [ $PGOSM_DATE_TODAY == false ]; then
   exit 1
 else 
     echo "$PBF_DATE_FILE does not exist.  Downloading... $PBF_FILE"  >> $LOG_FILE
-    wget https://download.geofabrik.de/$1/$2-latest.osm.pbf -O $PBF_FILE --quiet &>> $LOG_FILE
+    wget $PBF_DOWNLOAD_URL -O $PBF_FILE --quiet &>> $LOG_FILE
 fi
 
 
@@ -120,7 +137,7 @@ elif [ $PGOSM_DATE_TODAY == false ]; then
   exit 1
 else
   echo "$MD5_DATE_FILE does not exist.  Downloading... $MD5_FILE" >> $LOG_FILE
-  wget https://download.geofabrik.de/$1/$2-latest.osm.pbf.md5 -O $MD5_FILE --quiet &>> $LOG_FILE
+  wget $PBF_DOWNLOAD_URL.md5 -O $MD5_FILE --quiet &>> $LOG_FILE
 fi
 
 
@@ -134,7 +151,7 @@ else
     exit 1
 fi
 
-python3 /app/docker/osm2pgsql_recommendation.py $2 $3 $OUT_PATH $4 >> $LOG_FILE
+python3 /app/docker/osm2pgsql_recommendation.py $REGION_FILENAME $3 $OUT_PATH $4 >> $LOG_FILE
 
 SLEEP_SEC=5
 
@@ -194,19 +211,14 @@ fi
 
 
 
-
-REGION="$1--$2"
-echo "Setting PGOSM_REGION to $REGION" >> $LOG_FILE
-export PGOSM_REGION=$REGION
-
 osm2pgsql --version >> $LOG_FILE
 
 echo "Running osm2pgsql..." >> $LOG_FILE
 cd $FLEX_PATH
 
 echo 'Using command suggested by osm2pgsql-tuner: ' >> $LOG_FILE
-cat $OUT_PATH/osm2pgsql-$2.sh  >> $LOG_FILE
-bash $OUT_PATH/osm2pgsql-$2.sh &>> $LOG_FILE
+cat $OUT_PATH/osm2pgsql-$REGION_FILENAME.sh  >> $LOG_FILE
+bash $OUT_PATH/osm2pgsql-$REGION_FILENAME.sh &>> $LOG_FILE
 
 
 echo "Running PgOSM-Flex post-processing SQL script: $4.sql" >> $LOG_FILE
@@ -240,7 +252,7 @@ fi
 
 cd $BASE_PATH
 
-OUT_NAME="pgosm-flex-$2-$4.sql"
+OUT_NAME="pgosm-flex-$REGION-$4.sql"
 OUT_PATH="/app/output/$OUT_NAME"
 
 if $DATA_SCHEMA_ONLY; then
