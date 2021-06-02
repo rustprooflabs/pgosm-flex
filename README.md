@@ -9,8 +9,6 @@ the most commonly used OpenStreetMap data, such as roads, buildings, and points 
 The approach to processing is to do as much processing in the `<name>.lua` script
 with post-processing steps creating indexes, constraints and comments in a companion `<name>.sql` script.
 
-> Note: While osm2pgsql is still marked as experimental, this project is already being used to support production workloads.
-
 
 ## Project decisions
 
@@ -30,21 +28,7 @@ Minimum versions supported:
 
 * Postgres 12
 * PostGIS 3.0
-* osm2pgsql 1.4.2+ --> commit 94dae34 or newer
-
-
-### :warning: Breaking change
-
-The osm2pgsql project added built-in JSON support after the tagged
-v1.4.2 release.  This change ([commit](https://github.com/openstreetmap/osm2pgsql/commit/94dae34b7aa1463339cdb6768d28a6e8ee53ef65))
-is not yet in a tagged release of osm2pgsql, only the
-latest `master` branch.
-
-This is only a concern when running on a server where you install osm2pgsql
-from a package manager. Following the instructions in
-[MANUAL-STEPS-RUN.md](MANUAL-STEPS-RUN.md) installs the latest
-version of osm2pgsql from source and avoids this issue.
-Also, using the PgOSM Flex Docker image makes this a non-issue.
+* osm2pgsql 1.5.0
 
 
 ## PgOSM via Docker
