@@ -7,7 +7,7 @@ tables.pgosm_flex_meta = osm2pgsql.define_table({
     name = 'pgosm_flex',
     schema = schema_name,
     columns = {
-        { column = 'osm_date',            type = 'date', not_null = true },
+        { column = 'osm_date',            sql_type = 'date', not_null = true },
         { column = 'default_date',        type = 'bool', not_null = true },
         { column = 'region',              type = 'text', not_null = true},
         { column = 'pgosm_flex_version',  type = 'text', not_null = true },
