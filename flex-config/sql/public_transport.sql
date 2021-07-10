@@ -30,9 +30,9 @@ COMMENT ON COLUMN osm.public_transport_point.geom IS 'Geometry loaded by osm2pgs
 COMMENT ON COLUMN osm.public_transport_line.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.public_transport_polygon.geom IS 'Geometry loaded by osm2pgsql.';
 
-COMMENT ON COLUMN osm.public_transport_point.osm_type IS 'Key indicating type of public transport feature, not the public_transport tag. e.g. highway, bus, train, etc';
-COMMENT ON COLUMN osm.public_transport_line.osm_type IS 'Key indicating type of public transport feature, not the public_transport tag. e.g. highway, bus, train, etc';
-COMMENT ON COLUMN osm.public_transport_polygon.osm_type IS 'Key indicating type of public transport feature, not the public_transport tag. e.g. highway, bus, train, etc';
+COMMENT ON COLUMN osm.public_transport_point.osm_type IS 'Key indicating type of public transport feature if detail exists, falls back to public_transport tag. e.g. highway, bus, train, etc';
+COMMENT ON COLUMN osm.public_transport_line.osm_type IS 'Key indicating type of public transport feature if detail exists, falls back to public_transport tag. e.g. highway, bus, train, etc';
+COMMENT ON COLUMN osm.public_transport_polygon.osm_type IS 'Key indicating type of public transport feature if detail exists, falls back to public_transport tag. e.g. highway, bus, train, etc';
 
 COMMENT ON COLUMN osm.public_transport_point.osm_subtype IS 'Value describing osm_type key, e.g. osm_type = "highway", osm_subtype = "bus_stop".';
 COMMENT ON COLUMN osm.public_transport_line.osm_subtype IS 'Value describing osm_type key, e.g. osm_type = "highway", osm_subtype = "bus_stop".';

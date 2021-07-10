@@ -98,7 +98,7 @@ local function get_osm_type_subtype(object)
         osm_type_table['osm_type'] = 'train'
         osm_type_table['osm_subtype'] = object.tags.train
     else
-        osm_type_table['osm_type'] = 'unknown'
+        osm_type_table['osm_type'] = object.tags.public_transport
         osm_type_table['osm_subtype'] = nil
     end
 

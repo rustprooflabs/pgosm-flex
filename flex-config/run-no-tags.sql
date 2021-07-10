@@ -9,6 +9,7 @@
 \i sql/traffic.sql
 \i sql/place.sql
 \i sql/poi.sql
+\i sql/public_transport.sql
 \i sql/road.sql
 \i sql/shop.sql
 \i sql/water.sql
