@@ -8,8 +8,8 @@ COMMENT ON COLUMN osm.shop_point.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.shop_polygon.geom IS 'Geometry loaded by osm2pgsql.';
 
 
-COMMENT ON COLUMN osm.shop_point.wheelchair IS 'Indicates if building is wheelchair accessible. Values:  yes, no, limited.  Per https://wiki.openstreetmap.org/wiki/Key:wheelchair';
-COMMENT ON COLUMN osm.shop_polygon.wheelchair IS 'Indicates if building is wheelchair accessible. Values:  yes, no, limited.  Per https://wiki.openstreetmap.org/wiki/Key:wheelchair';
+COMMENT ON COLUMN osm.shop_point.wheelchair IS 'Indicates if feature is wheelchair accessible. Values:  yes, no, limited.  Per https://wiki.openstreetmap.org/wiki/Key:wheelchair';
+COMMENT ON COLUMN osm.shop_polygon.wheelchair IS 'Indicates if feature is wheelchair accessible. Values:  yes, no, limited.  Per https://wiki.openstreetmap.org/wiki/Key:wheelchair';
 COMMENT ON COLUMN osm.shop_point.operator IS 'Entity in charge of operations. https://wiki.openstreetmap.org/wiki/Key:operator';
 COMMENT ON COLUMN osm.shop_polygon.operator IS 'Entity in charge of operations. https://wiki.openstreetmap.org/wiki/Key:operator';
 
@@ -45,7 +45,6 @@ COMMENT ON COLUMN osm.shop_polygon.city IS 'Value from addr:city tag';
 COMMENT ON COLUMN osm.shop_polygon.state IS 'Value from addr:state tag';
 COMMENT ON COLUMN osm.shop_polygon.postcode IS 'Value from addr:postcode tag';
 
-COMMENT ON COLUMN osm.shop_polygon.wheelchair IS 'Indicates if building is wheelchair accessible.';
 COMMENT ON COLUMN osm.shop_point.brand IS 'Identity of product, service or business. https://wiki.openstreetmap.org/wiki/Key:brand';
 COMMENT ON COLUMN osm.shop_polygon.brand IS 'Identity of product, service or business. https://wiki.openstreetmap.org/wiki/Key:brand';
 
@@ -82,7 +81,7 @@ COMMENT ON COLUMN osm.vshop_all.address IS 'Address combined from address parts 
 COMMENT ON COLUMN osm.vshop_all.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 COMMENT ON COLUMN osm.vshop_all.geom IS 'Geometry, mix of points loaded by osm2pgsql and points calculated from the ST_Centroid() of the polygons loaded by osm2pgsql.';
 
-COMMENT ON COLUMN osm.vshop_all.wheelchair IS 'Indicates if building is wheelchair accessible.';
+COMMENT ON COLUMN osm.vshop_all.wheelchair IS 'Indicates if feature is wheelchair accessible. Values:  yes, no, limited.  Per https://wiki.openstreetmap.org/wiki/Key:wheelchair';
 COMMENT ON COLUMN osm.vshop_all.geom_type IS 'Type of geometry. N(ode), W(ay) or R(elation).  Unique along with osm_id';
 COMMENT ON COLUMN osm.vshop_all.operator IS 'Entity in charge of operations. https://wiki.openstreetmap.org/wiki/Key:operator';
 COMMENT ON COLUMN osm.vshop_all.website IS 'Official website for the feature.  https://wiki.openstreetmap.org/wiki/Key:website';
