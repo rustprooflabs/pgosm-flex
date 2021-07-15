@@ -26,6 +26,10 @@ COMMENT ON COLUMN osm.amenity_point.osm_id IS 'OpenStreetMap ID. Unique along wi
 COMMENT ON COLUMN osm.amenity_line.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.amenity_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 
+COMMENT ON COLUMN osm.amenity_point.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer.';
+COMMENT ON COLUMN osm.amenity_line.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer.';
+COMMENT ON COLUMN osm.amenity_polygon.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer.';
+
 COMMENT ON COLUMN osm.amenity_point.housenumber IS 'Value from addr:housenumber tag';
 COMMENT ON COLUMN osm.amenity_point.street IS 'Value from addr:street tag';
 COMMENT ON COLUMN osm.amenity_point.city IS 'Value from addr:city tag';

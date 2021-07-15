@@ -30,6 +30,12 @@ ALTER TABLE osm.shop_polygon
 COMMENT ON COLUMN osm.shop_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.shop_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 
+COMMENT ON COLUMN osm.shop_point.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer. Value from key stored in osm_subtype.';
+COMMENT ON COLUMN osm.shop_polygon.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer. Value from key stored in osm_subtype.';
+
+COMMENT ON COLUMN osm.shop_point.osm_subtype IS 'Value detail describing the key (osm_type).';
+COMMENT ON COLUMN osm.shop_polygon.osm_subtype IS 'Value detail describing the key (osm_type).';
+
 COMMENT ON COLUMN osm.shop_point.address IS 'Address combined from address parts in helpers.get_address().';
 COMMENT ON COLUMN osm.shop_polygon.address IS 'Address combined from address parts in helpers.get_address().';
 
@@ -77,6 +83,8 @@ SELECT osm_id, 'W' AS geom_type, osm_type, osm_subtype, name,
 
 COMMENT ON VIEW osm.vshop_all IS 'Converts polygon shops to point with ST_Centroid(), combines with source points using UNION.';
 COMMENT ON COLUMN osm.vshop_all.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
+COMMENT ON COLUMN osm.vshop_all.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer. Value from key stored in osm_subtype.';
+COMMENT ON COLUMN osm.vshop_all.osm_subtype IS 'Value detail describing the key (osm_type).';
 COMMENT ON COLUMN osm.vshop_all.address IS 'Address combined from address parts in helpers.get_address().';
 COMMENT ON COLUMN osm.vshop_all.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 COMMENT ON COLUMN osm.vshop_all.geom IS 'Geometry, mix of points loaded by osm2pgsql and points calculated from the ST_Centroid() of the polygons loaded by osm2pgsql.';
