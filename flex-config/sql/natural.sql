@@ -29,6 +29,11 @@ COMMENT ON COLUMN osm.natural_point.osm_id IS 'OpenStreetMap ID. Unique along wi
 COMMENT ON COLUMN osm.natural_line.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.natural_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 
+COMMENT ON COLUMN osm.natural_point.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer.';
+COMMENT ON COLUMN osm.natural_line.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer.';
+COMMENT ON COLUMN osm.natural_polygon.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer.';
+
+
 COMMENT ON COLUMN osm.natural_point.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 COMMENT ON COLUMN osm.natural_line.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 COMMENT ON COLUMN osm.natural_polygon.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';

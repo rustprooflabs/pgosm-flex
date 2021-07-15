@@ -24,6 +24,14 @@ CREATE INDEX ix_osm_poi_line_type ON osm.poi_line (osm_type);
 CREATE INDEX ix_osm_poi_polygon_type ON osm.poi_polygon (osm_type);
 
 
+COMMENT ON COLUMN osm.poi_point.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer. Value from key stored in osm_subtype.';
+COMMENT ON COLUMN osm.poi_line.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer. Value from key stored in osm_subtype.';
+COMMENT ON COLUMN osm.poi_polygon.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer. Value from key stored in osm_subtype.';
+
+COMMENT ON COLUMN osm.poi_point.osm_subtype IS 'Value detail describing the key (osm_type).';
+COMMENT ON COLUMN osm.poi_line.osm_subtype IS 'Value detail describing the key (osm_type).';
+COMMENT ON COLUMN osm.poi_polygon.osm_subtype IS 'Value detail describing the key (osm_type).';
+
 COMMENT ON COLUMN osm.poi_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.poi_line.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.poi_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
@@ -83,6 +91,9 @@ CREATE INDEX ix_osm_vpoi_all_osm_type ON osm.vpoi_all (osm_type);
 
 
 COMMENT ON MATERIALIZED VIEW osm.vpoi_all IS 'Cobmined POI view. Converts lines and polygons to point with ST_Centroid(), stacks using UNION';
-COMMENT ON COLUMN osm.vpoi_all.address IS 'Address combined from address parts in helpers.get_address(). See base tables for individual address parts';
 
+COMMENT ON COLUMN osm.vpoi_all.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer. Value from key stored in osm_subtype.';
+COMMENT ON COLUMN osm.vpoi_all.address IS 'Address combined from address parts in helpers.get_address(). See base tables for individual address parts';
 COMMENT ON COLUMN osm.vpoi_all.geom_type IS 'Indicates source table, N (point) L (line) W (polygon).  Using L for line differs from how osm2pgsql classifies lines ("W") in order to provide a direct link to which table the data comes from.';
+COMMENT ON COLUMN osm.vpoi_all.osm_subtype IS 'Value detail describing the key (osm_type).';
+
