@@ -32,8 +32,8 @@ function road_major_process_way(object)
     local major = true
 
     local name = get_name(object.tags)
-    local osm_type = object:grab_tag('highway')
-    local ref = object:grab_tag('ref')
+    local osm_type = object.tags.highway
+    local ref = get_ref(object.tags)
     
     -- in km/hr
     local maxspeed = parse_speed(object.tags.maxspeed)

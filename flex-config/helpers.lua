@@ -241,6 +241,30 @@ function get_wheelchair_desc(tags)
 end
 
 
+-- Returns a single "best" ref for each object when possible.
+-- * Returns nil if ref not set
+function get_ref(tags)
+    local best_ref
+
+    if tags.local_ref then
+        best_ref = tags.local_ref
+    elseif tags.route_ref then
+        best_ref = tags.route_ref
+    elseif tags.nat_ref then
+        best_ref = tags.nat_ref
+    elseif tags.ref then
+        best_ref = tags.ref
+    elseif tags.alt_ref then
+        best_ref = tags.alt_ref
+    elseif tags.old_ref then
+        best_ref = tags.old_ref
+    else
+        best_ref = nil
+    end
+
+    return best_ref
+end
+
 function parse_admin_level(input)
     -- Quick return
     if not input then
