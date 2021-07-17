@@ -25,8 +25,8 @@ COMMENT ON COLUMN osm.road_line.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.road_point.oneway IS 'Indicates if travel is one-way only.';
 COMMENT ON COLUMN osm.road_line.oneway IS 'Indicates if travel is one-way only.';
 
-COMMENT ON COLUMN osm.road_point.ref IS 'Reference number or code. https://wiki.openstreetmap.org/wiki/Key:ref';
-COMMENT ON COLUMN osm.road_line.ref IS 'Reference number or code. https://wiki.openstreetmap.org/wiki/Key:ref';
+COMMENT ON COLUMN osm.road_point.ref IS 'Reference number or code. Best ref option determined by helpers.get_ref(). https://wiki.openstreetmap.org/wiki/Key:ref';
+COMMENT ON COLUMN osm.road_line.ref IS 'Reference number or code. Best ref option determined by helpers.get_ref(). https://wiki.openstreetmap.org/wiki/Key:ref';
 
 COMMENT ON COLUMN osm.road_line.route_foot IS 'Best guess if the segment is routable for foot traffic. WARNING: This does not indicte that this method of travel is safe OR allowed!';
 COMMENT ON COLUMN osm.road_line.route_cycle IS 'Best guess if the segment is routable for bicycle traffic. WARNING: This does not indicte that this method of travel is safe OR allowed!';

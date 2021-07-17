@@ -46,3 +46,6 @@ COMMENT ON COLUMN osm.public_transport_point.wheelchair IS 'Indicates if feature
 COMMENT ON COLUMN osm.public_transport_line.wheelchair IS 'Indicates if feature is wheelchair accessible. Expected values:  yes, no, limited.  Per https://wiki.openstreetmap.org/wiki/Key:wheelchair';
 COMMENT ON COLUMN osm.public_transport_polygon.wheelchair IS 'Indicates if feature is wheelchair accessible. Expected values:  yes, no, limited.  Per https://wiki.openstreetmap.org/wiki/Key:wheelchair';
 
+COMMENT ON COLUMN osm.public_transport_point.ref IS 'Reference number or code. Best ref option determined by helpers.get_ref(). https://wiki.openstreetmap.org/wiki/Key:ref';
+COMMENT ON COLUMN osm.public_transport_line.ref IS 'Reference number or code. Best ref option determined by helpers.get_ref(). https://wiki.openstreetmap.org/wiki/Key:ref';
+COMMENT ON COLUMN osm.public_transport_polygon.ref IS 'Reference number or code. Best ref option determined by helpers.get_ref(). https://wiki.openstreetmap.org/wiki/Key:ref';

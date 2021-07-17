@@ -71,8 +71,8 @@ function road_process_node(object)
     end
 
     local name = get_name(object.tags)
-    local osm_type = object:grab_tag('highway')
-    local ref = object:grab_tag('ref')
+    local osm_type = object.tags.highway
+    local ref = get_ref(object.tags)
 
     -- in km/hr
     local maxspeed = parse_speed(object.tags.maxspeed)
@@ -105,8 +105,8 @@ function road_process_way(object)
     local route_cycle = routable_cycle(object.tags)
     local route_motor = routable_motor(object.tags)
 
-    local osm_type = object:grab_tag('highway')
-    local ref = object:grab_tag('ref')
+    local osm_type = object.tags.highway
+    local ref = get_ref(object.tags)
 
     -- in km/hr
     local maxspeed = parse_speed(object.tags.maxspeed)

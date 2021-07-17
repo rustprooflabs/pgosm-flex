@@ -124,6 +124,7 @@ local function public_transport_process_node(object)
 
     local public_transport = object.tags.public_transport
     local name = get_name(object.tags)
+    local ref = get_ref(object.tags)
     local wheelchair = object.tags.wheelchair
     local wheelchair_desc = get_wheelchair_desc(object.tags)
     local operator  = object.tags.operator
@@ -141,6 +142,7 @@ local function public_transport_process_node(object)
         osm_subtype = osm_types.osm_subtype,
         public_transport = public_transport,
         name = name,
+        ref = ref,
         operator = operator,
         layer = layer,
         network = network,
@@ -168,6 +170,7 @@ local function public_transport_process_way(object)
 
     local public_transport = object.tags.public_transport
     local name = get_name(object.tags)
+    local ref = get_ref(object.tags)
     local wheelchair = object.tags.wheelchair
     local wheelchair_desc = get_wheelchair_desc(object.tags)
     local operator  = object.tags.operator
@@ -188,6 +191,7 @@ local function public_transport_process_way(object)
             osm_subtype = osm_types.osm_subtype,
             public_transport = public_transport,
             name = name,
+            ref = ref,
             operator = operator,
             layer = layer,
             network = network,
@@ -206,6 +210,7 @@ local function public_transport_process_way(object)
             osm_subtype = osm_types.osm_subtype,
             public_transport = public_transport,
             name = name,
+            ref = ref,
             operator = operator,
             layer = layer,
             network = network,
@@ -234,6 +239,7 @@ function public_transport_process_relation(object)
 
     local public_transport = object.tags.public_transport
     local name = get_name(object.tags)
+    local ref = get_ref(object.tags)
     local wheelchair = object.tags.wheelchair
     local wheelchair_desc = get_wheelchair_desc(object.tags)
     local operator  = object.tags.operator
@@ -252,6 +258,7 @@ function public_transport_process_relation(object)
             osm_subtype = osm_types.osm_subtype,
             public_transport = public_transport,
             name = name,
+            ref = ref,
             operator = operator,
             layer = layer,
             network = network,
