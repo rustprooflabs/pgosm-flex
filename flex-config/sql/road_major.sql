@@ -11,6 +11,8 @@ COMMENT ON COLUMN osm.road_major.tunnel IS 'If empty, assume not a tunnel.  If n
 COMMENT ON COLUMN osm.road_major.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 COMMENT ON COLUMN osm.road_major.geom IS 'Geometry loaded by osm2pgsql.';
 
+COMMENT ON COLUMN osm.road_major.ref IS 'Reference number or code. Best ref option determined by helpers.get_ref(). https://wiki.openstreetmap.org/wiki/Key:ref';
+
 
 ALTER TABLE osm.road_major
 	ADD CONSTRAINT pk_osm_road_major_osm_id
