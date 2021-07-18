@@ -152,7 +152,13 @@ else
     exit 1
 fi
 
-python3 /app/docker/osm2pgsql_recommendation.py $REGION_FILENAME $3 $OUT_PATH $4 >> $LOG_FILE
+python3 /app/docker/osm2pgsql_recommendation.py \
+  --region=$REGION_FILENAME \
+  --ram=$3 \
+  --output=$OUT_PATH \
+  --layerset=$4 \
+  >> $LOG_FILE
+
 
 SLEEP_SEC=5
 
