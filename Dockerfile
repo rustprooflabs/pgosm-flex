@@ -17,7 +17,7 @@ RUN curl -o /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py \
     && python3 /tmp/get-pip.py \
     && rm /tmp/get-pip.py
 
-RUN pip install requests
+RUN pip install requests click
 
 
 WORKDIR /tmp
