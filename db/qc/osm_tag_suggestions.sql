@@ -38,4 +38,11 @@ SELECT t.geom_type, t.osm_id,
         t.osm_url, t.tags
     FROM osm.tags  t
     WHERE t.tags->>'shop' = 'cafe'
+UNION
+SELECT t.geom_type, t.osm_id,
+        'Invalid natural value.  Consider highway=street_lamp.  If a light is attached to a tree, consider adding support=tree as well. https://wiki.openstreetmap.org/wiki/Tag:highway%3Dstreet_lamp'::TEXT
+            AS suggestion,
+        t.osm_url, t.tags
+    FROM osm.tags  t
+    WHERE t.tags->>'natural' = 'street_lamp'
 ;
