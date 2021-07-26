@@ -30,8 +30,10 @@ def osm2pgsql_recommendation(region, ram, output, layerset):
     """
     region_name = region
     system_ram_gb = ram
-    output_path = output
     pgosm_layer_set = layerset
+
+    # FIXME:  Remove output_path after .sh script retired. Not needed in Python runtime
+    output_path = output
 
     pbf_filename = f'{region_name}-latest'
     pbf_file = f'{pbf_filename}.osm.pbf'
@@ -56,6 +58,7 @@ def osm2pgsql_recommendation(region, ram, output, layerset):
         out_script.write(osm2pgsql_cmd)
         out_script.write('\n')
 
+    return osm2pgsql_cmd
 
 def get_recommended_script(system_ram_gb, osm_pbf_gb,
                            append, pbf_filename,
