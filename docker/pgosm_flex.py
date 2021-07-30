@@ -10,6 +10,7 @@ import sys
 import os
 import time
 import datetime
+import shutil
 import osm2pgsql_recommendation as rec
 
 
@@ -60,14 +61,16 @@ def run_pgosm_flex(layerset, ram, region, subregion, pgosm_date,
 
     logging.info('PgOSM Flex starting...')
 
-    prepare_data(region=region,
-                 subregion=subregion,
-                 pgosm_date=pgosm_date,
-                 paths=paths)
+    pbf_file = prepare_data(region=region,
+                            subregion=subregion,
+                            pgosm_date=pgosm_date,
+                            paths=paths)
     get_osm2pgsql_recommendation(region=region,
                                  subregion=subregion,
                                  ram=ram,
-                                 layerset=layerset)
+                                 layerset=layerset,
+                                 pbf_file=pbf_file,
+                                 paths=paths)
     wait_for_postgres()
 
 
@@ -201,9 +204,12 @@ def prepare_data(region, subregion, pgosm_date, paths):
     else:
         logging.error('MISSING - Need to copy archived files to -latest filenames!')
 
-    logging.error('MISSING - Verify checksum')
+    verify_checksum(pbf_file, md5_file, paths)
 
-    logging.error('MISSING - Copy latest to DATE file for archive')
+    archive_data(pbf_file, md5_file,
+                 pbf_file_with_date, md5_file_with_date)
+
+    return pbf_file
 
 
 def pbf_download_needed(pbf_file_with_date, md5_file_with_date):
@@ -261,7 +267,33 @@ def download_data(region, subregion, pbf_file, md5_file):
     )
 
 
-def get_osm2pgsql_recommendation(region, subregion, ram, layerset):
+def verify_checksum(pbf_file, md5_file, paths):
+    """If verfication fails, raises `CalledProcessError`
+    """
+    cmd = subprocess.run(['md5sum', '-c', md5_file],
+                          capture_output=True,
+                          text=True,
+                          check=True,
+                          cwd=paths['out_path'])
+    return cmd
+
+
+def archive_data(pbf_file, md5_file,
+                 pbf_file_with_date, md5_file_with_date):
+
+    if os.path.exists(pbf_file_with_date):
+        pass # Do nothing
+    else:
+        shutil.copy2(pbf_file, pbf_file_with_date)
+
+    if os.path.exists(md5_file_with_date):
+        pass # Do nothing
+    else:
+        shutil.copy2(md5_file, md5_file_with_date)
+
+
+def get_osm2pgsql_recommendation(region, subregion, ram, layerset,
+                                 pbf_file, paths):
     if subregion == None:
         region = region
     else:
@@ -269,7 +301,9 @@ def get_osm2pgsql_recommendation(region, subregion, ram, layerset):
 
     rec_cmd = rec.osm2pgsql_recommendation(region=region,
                                            ram=ram,
-                                           layerset=layerset)
+                                           layerset=layerset,
+                                           pbf_filename=pbf_file,
+                                           out_path=paths['out_path'])
     print(rec_cmd)
     print('FIXME: Not fully functional!')
 

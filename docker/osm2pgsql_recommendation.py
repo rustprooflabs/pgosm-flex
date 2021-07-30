@@ -5,7 +5,8 @@ import os
 import sys
 import requests
 
-def osm2pgsql_recommendation(region, ram, layerset):
+def osm2pgsql_recommendation(region, ram, layerset, pbf_filename,
+                             out_path):
     """Writes osm2pgsql recommendation to disk.
 
     Recommendation from https://osm2pgsql-tuner.com
@@ -26,11 +27,7 @@ def osm2pgsql_recommendation(region, ram, layerset):
     system_ram_gb = ram
     pgosm_layer_set = layerset
 
-    pbf_filename = f'{region_name}-latest'
-    pbf_file = f'{pbf_filename}.osm.pbf'
-    print(pbf_file)
-
-    osm_pbf_gb = os.path.getsize(pbf_file) / 1024 / 1024 / 1024
+    osm_pbf_gb = os.path.getsize(pbf_filename) / 1024 / 1024 / 1024
 
     # PgOSM-Flex currently does not support/test append mode.
     append = False
@@ -39,7 +36,8 @@ def osm2pgsql_recommendation(region, ram, layerset):
                                            osm_pbf_gb,
                                            append,
                                            pbf_filename,
-                                           pgosm_layer_set)
+                                           pgosm_layer_set,
+                                           out_path)
 
     return osm2pgsql_cmd
 
