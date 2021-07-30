@@ -53,13 +53,16 @@ def run_pgosm_flex(layerset, ram, region, subregion, pgosm_date,
     """Matches Geofabrik naming conventions"""
 
     log_file = get_log_path(region, subregion, paths)
+    print(f'Logging output to {log_file}')
 
-    logging.basicConfig(filename=log_file, encoding='utf-8',
-                        level=logging.DEBUG,
-                        format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
+    # Docker image has Python 3.7, this doesn't work for some reason.
+    # Need to revisit and fix....
+    #logging.basicConfig(filename=log_file, encoding='utf-8',
+    #                    level=logging.DEBUG,
+    #                    format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
 
 
-    logging.info('PgOSM Flex starting...')
+    print('PgOSM Flex starting...')
 
     pbf_file = prepare_data(region=region,
                             subregion=subregion,
@@ -155,8 +158,12 @@ def wait_for_postgres():
     required_checks = 2
     found = 0
     i = 0
+    max_loops = 30
 
     while found < required_checks:
+        if i > max_loops:
+            sys.exit('Postgres still has not started. Exiting.')
+
         time.sleep(5)
 
         if _check_pg_up():
@@ -191,7 +198,7 @@ def _check_pg_up():
 def prepare_data(region, subregion, pgosm_date, paths):
     out_path = paths['out_path']
     pbf_filename = get_region_filename(region, subregion)
-    logging.info(pbf_filename)
+
     pbf_file = os.path.join(out_path, pbf_filename)
     pbf_file_with_date = pbf_file.replace('latest', pgosm_date)
 
@@ -199,10 +206,10 @@ def prepare_data(region, subregion, pgosm_date, paths):
     md5_file_with_date = f'{pbf_file_with_date}.md5'
 
     if pbf_download_needed(pbf_file_with_date, md5_file_with_date):
-        logging.info('Downloading PBF and MD5 files...')
+        print('Downloading PBF and MD5 files...')
         download_data(region, subregion, pbf_file, md5_file)
     else:
-        logging.error('MISSING - Need to copy archived files to -latest filenames!')
+        print('MISSING - Need to copy archived files to -latest filenames!')
 
     verify_checksum(pbf_file, md5_file, paths)
 
@@ -220,7 +227,7 @@ def pbf_download_needed(pbf_file_with_date, md5_file_with_date):
     """
     # If the PBF file exists, check for the MD5 file too.
     if os.path.exists(pbf_file_with_date):
-        logging.info('PBF File exists {pbf_file_with_date}')
+        print('PBF File exists {pbf_file_with_date}')
 
 
         if os.path.exists(md5_file_with_date):
@@ -235,17 +242,15 @@ def pbf_download_needed(pbf_file_with_date, md5_file_with_date):
                 logging.error(err)
                 sys.exit(err)
     else:
-        logging.info('PBF file not found locally. Download required')
+        print('PBF file not found locally. Download required')
         download_needed = True
 
     return download_needed
 
 def download_data(region, subregion, pbf_file, md5_file):
     # Download if Not
-    logging.info(f'Downloading PBF data to {pbf_file}')
+    print(f'Downloading PBF data to {pbf_file}')
     pbf_url = get_pbf_url(region, subregion)
-
-    #cmd = f'wget $PBF_DOWNLOAD_URL -O $PBF_FILE --quiet &>> $LOG_FILE'
 
     result = subprocess.run(
         ['/usr/bin/wget', pbf_url,
@@ -308,5 +313,6 @@ def get_osm2pgsql_recommendation(region, subregion, ram, layerset,
     print('FIXME: Not fully functional!')
 
 if __name__ == "__main__":
+    print('Running PgOSM Flex!')
     run_pgosm_flex()
 

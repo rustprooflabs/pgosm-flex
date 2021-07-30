@@ -11,14 +11,14 @@ class PgOSMFlexTests(unittest.TestCase):
         region = REGION_US
         subregion = SUBREGION_DC
         result = pgosm_flex.get_region_filename(region, subregion)
-        expected = f'{SUBREGION_DC}.osm.pbf'
+        expected = f'{SUBREGION_DC}-latest.osm.pbf'
         self.assertEqual(expected, result)
 
     def test_get_region_filename_returns_region_when_subregion_None(self):
         region = REGION_US
         subregion = None
         result = pgosm_flex.get_region_filename(region, subregion)
-        expected = f'{REGION_US}.osm.pbf'
+        expected = f'{REGION_US}-latest.osm.pbf'
         self.assertEqual(expected, result)
 
 
