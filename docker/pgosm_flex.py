@@ -1,9 +1,25 @@
+"""Python script to run PgOSM Flex.
+
+Designed to be ran in Docker image:
+    https://hub.docker.com/r/rustprooflabs/pgosm-flex
+"""
 import click
 import subprocess
+import logging
 import sys
+import os
 import time
+import datetime
 import osm2pgsql_recommendation as rec
 
+
+BASE_PATH_DEFAULT = '/app'
+"""Default path for pgosm-flex project for Docker.
+"""
+
+def get_today():
+    today = datetime.datetime.today().strftime('%Y-%m-%d')
+    return today
 
 @click.command()
 @click.option('--layerset', required=True,
@@ -16,14 +32,113 @@ import osm2pgsql_recommendation as rec
               prompt="Region name",
               help='Region name matching the filename for data sourced from Geofabrik. e.g. north-america/us')
 @click.option('--subregion', required=False,
-              prompt="Sub-region name",
+              default=None,
               help='Sub-region name matching the filename for data sourced from Geofabrik. e.g. district-of-columbia')
 @click.option('--pgosm-date', required=False,
-              envvar="PGOSM_DATE")
-def run_pgosm_flex(layerset, ram, region, subregion, pgosm_date):
-    prepare_data(region=region, subregion=subregion, pgosm_date=pgosm_date)
-    get_osm2pgsql_recommendation(region=region, ram=ram, layerset=layerset)
+              default=get_today(),
+              envvar="PGOSM_DATE",
+              help="Date of the data in YYYY-MM-DD format.")
+@click.option('--basepath',
+              required=False,
+              default=BASE_PATH_DEFAULT,
+              help='Used when testing locally and not within Docker')
+def run_pgosm_flex(layerset, ram, region, subregion, pgosm_date,
+                   basepath):
+    """Main logic to run PgOSM Flex within Docker.
+    """
+
+    paths = get_paths(base_path=basepath)
+    region_filename = get_region_filename(region, subregion)
+    """Matches Geofabrik naming conventions"""
+
+    log_file = get_log_path(region, subregion, paths)
+
+    logging.basicConfig(filename=log_file, encoding='utf-8',
+                        level=logging.DEBUG,
+                        format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
+
+
+    logging.info('PgOSM Flex starting...')
+
+    prepare_data(region=region,
+                 subregion=subregion,
+                 pgosm_date=pgosm_date,
+                 paths=paths)
+    get_osm2pgsql_recommendation(region=region,
+                                 subregion=subregion,
+                                 ram=ram,
+                                 layerset=layerset)
     wait_for_postgres()
+
+
+def get_log_path(region, subregion, paths):
+    region_clean = region.replace('/', '-')
+    if subregion == None:
+        filename = f'{region_clean}.log'
+    else:
+        filename = f'{region_clean}-{subregion}.log'
+
+    log_file = os.path.join(paths['out_path'], filename)
+    return log_file
+
+
+def get_paths(base_path):
+    """Returns dictionary of various paths used.
+
+    Returns
+    -------------------
+    paths : dict
+    """
+    sqitch_path = os.path.join(base_path, 'db')
+    out_path = os.path.join(base_path, 'output')
+    flex_path = os.path.join(base_path, 'flex-config')
+    paths = {'base_path': base_path,
+             'sqitch_path': sqitch_path,
+             'out_path': out_path,
+             'flex_path': flex_path}
+    return paths
+
+def get_region_filename(region, subregion):
+    """Returns the filename needed to download/manage PBF files.
+
+    Parameters
+    ----------------------
+    region : str
+    subregion : str
+
+    Returns
+    ----------------------
+    region_filename : str
+    """
+    base_name = '{}-latest.osm.pbf'
+    if subregion == None:
+        region_filename = base_name.format(region)
+    else:
+        region_filename = base_name.format(subregion)
+
+    return region_filename
+
+
+def get_pbf_url(region, subregion):
+    """Returns the URL to the PBF for the region / subregion.
+
+    Parameters
+    ----------------------
+    region : str
+    subregion : str
+
+    Returns
+    ----------------------
+    pbf_url : str
+    """
+    base_url = 'https://download.geofabrik.de'
+
+    if subregion == None:
+        pbf_url = f'{base_url}/{region}-latest.osm.pbf'
+    else:
+        pbf_url = f'{base_url}/{region}/{subregion}-latest.osm.pbf'
+
+    return pbf_url
 
 
 def wait_for_postgres():
@@ -70,22 +185,93 @@ def _check_pg_up():
         return False
 
 
-def prepare_data(region, subregion, pgosm_date):
-    # Check if data  region + subregion + date exists (and verifies MD5)
+def prepare_data(region, subregion, pgosm_date, paths):
+    out_path = paths['out_path']
+    pbf_filename = get_region_filename(region, subregion)
+    logging.info(pbf_filename)
+    pbf_file = os.path.join(out_path, pbf_filename)
+    pbf_file_with_date = pbf_file.replace('latest', pgosm_date)
 
+    md5_file = f'{pbf_file}.md5'
+    md5_file_with_date = f'{pbf_file_with_date}.md5'
+
+    if pbf_download_needed(pbf_file_with_date, md5_file_with_date):
+        logging.info('Downloading PBF and MD5 files...')
+        download_data(region, subregion, pbf_file, md5_file)
+    else:
+        logging.error('MISSING - Need to copy archived files to -latest filenames!')
+
+    logging.error('MISSING - Verify checksum')
+
+    logging.error('MISSING - Copy latest to DATE file for archive')
+
+
+def pbf_download_needed(pbf_file_with_date, md5_file_with_date):
+    """
+    Returns
+    --------------------------
+    download_needed : bool
+    """
+    # If the PBF file exists, check for the MD5 file too.
+    if os.path.exists(pbf_file_with_date):
+        logging.info('PBF File exists {pbf_file_with_date}')
+
+
+        if os.path.exists(md5_file_with_date):
+            print('PBF & MD5 files exist.  Download not needed')
+            download_needed = False
+        else:
+            if pgosm_date == get_today():
+                print('PBF for today available but not MD5... download needed')
+                download_needed = True
+            else:
+                err = 'Cannot validate historic PBF file. Exiting'
+                logging.error(err)
+                sys.exit(err)
+    else:
+        logging.info('PBF file not found locally. Download required')
+        download_needed = True
+
+    return download_needed
+
+def download_data(region, subregion, pbf_file, md5_file):
     # Download if Not
+    logging.info(f'Downloading PBF data to {pbf_file}')
+    pbf_url = get_pbf_url(region, subregion)
 
-    # Verify MD5
+    #cmd = f'wget $PBF_DOWNLOAD_URL -O $PBF_FILE --quiet &>> $LOG_FILE'
 
-    pass
+    result = subprocess.run(
+        ['/usr/bin/wget', pbf_url,
+         "-O", pbf_file , "--quiet"
+        ],
+        capture_output=True,
+        text=True,
+        check=True
+    )
+
+    logging.info(f'Downloading MD5 checksum to {md5_file}')
+    result_md5 = subprocess.run(
+        ['/usr/bin/wget', f'{pbf_url}.md5',
+         "-O", md5_file , "--quiet"
+        ],
+        capture_output=True,
+        text=True,
+        check=True
+    )
 
 
-def get_osm2pgsql_recommendation(region, ram, layerset):
+def get_osm2pgsql_recommendation(region, subregion, ram, layerset):
+    if subregion == None:
+        region = region
+    else:
+        region = subregion
+
     rec_cmd = rec.osm2pgsql_recommendation(region=region,
                                            ram=ram,
-                                           output=None,
                                            layerset=layerset)
     print(rec_cmd)
+    print('FIXME: Not fully functional!')
 
 if __name__ == "__main__":
     run_pgosm_flex()

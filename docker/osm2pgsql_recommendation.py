@@ -1,39 +1,30 @@
 """Used by PgOSM-Flex Docker image to get osm2pgsql command to run from
 the osm2pgsql-tuner API.
-
-Usage:
-    python3 osm2pgsql_recommendation.py colorado 8
 """
 import os
 import sys
 import requests
-import click
 
-
-@click.command()
-@click.option('--region', required=True,
-              prompt="Region name",
-              help='Region name matching the filename for data sourced from Geofabrik. e.g. district-of-columbia')
-@click.option('--ram', required=True,
-              prompt="System RAM (GB)",
-              help='Total system RAM available in GB')
-@click.option('--output', required=True,
-              prompt="Ouptut path",
-              help='Output path')
-@click.option('--layerset', default='run-all',
-              prompt="PgOSM Flex layer set",
-              help='Layer set from PgOSM Flex.  e.g. run-all, run-no-tags')
-def osm2pgsql_recommendation(region, ram, output, layerset):
+def osm2pgsql_recommendation(region, ram, layerset):
     """Writes osm2pgsql recommendation to disk.
 
-    Recommendation from osm2pgsql-tuner.com.
+    Recommendation from https://osm2pgsql-tuner.com
+
+    Parameters
+    ----------------------
+    region : str
+        Region name matching the filename for data sourced from Geofabrik.
+        e.g. district-of-columbia
+
+    ram : float
+        Total system RAM available in GB
+
+    layerset : str
+        Layer set from PgOSM Flex.  e.g. run-all, run-no-tags
     """
     region_name = region
     system_ram_gb = ram
     pgosm_layer_set = layerset
-
-    # FIXME:  Remove output_path after .sh script retired. Not needed in Python runtime
-    output_path = output
 
     pbf_filename = f'{region_name}-latest'
     pbf_file = f'{pbf_filename}.osm.pbf'
@@ -48,15 +39,7 @@ def osm2pgsql_recommendation(region, ram, output, layerset):
                                            osm_pbf_gb,
                                            append,
                                            pbf_filename,
-                                           pgosm_layer_set,
-                                           output_path)
-
-    script_filename = f'osm2pgsql-{region_name}.sh'
-    osm2pgsql_script_path = os.path.join(output_path, script_filename)
-
-    with open(osm2pgsql_script_path,'w') as out_script:
-        out_script.write(osm2pgsql_cmd)
-        out_script.write('\n')
+                                           pgosm_layer_set)
 
     return osm2pgsql_cmd
 
@@ -83,8 +66,3 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb,
     osm2pgsql_cmd = osm2pgsql_cmd.replace('-d $PGOSM_CONN',
                                           '-U postgres -d pgosm')
     return osm2pgsql_cmd
-
-
-if __name__ == '__main__':
-    osm2pgsql_recommendation()
-
