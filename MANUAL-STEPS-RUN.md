@@ -3,7 +3,7 @@
 These instructions show how to manually run the PgOSM-Flex process.
 This is the best option for scaling to larger regions (North America, Europe, etc.)
 due to the need to customize a number of configurations.  Review the
-`docker/run_pgosm_flex.sh` for a starting point to automating the process.
+`python3 docker/pgosm_flex.py` for a starting point to automating the process.
 
 This basic working example uses Washington D.C. for a small, fast test of the
 process.

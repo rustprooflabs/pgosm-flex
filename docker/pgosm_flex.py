@@ -1,16 +1,20 @@
+#!/usr/bin/env python3
 """Python script to run PgOSM Flex.
 
 Designed to be ran in Docker image:
     https://hub.docker.com/r/rustprooflabs/pgosm-flex
 """
-import click
-import subprocess
-import logging
-import sys
-import os
-import time
 import datetime
+import logging
+import os
+from pathlib import Path
 import shutil
+import sys
+import subprocess
+
+import click
+import time
+
 import osm2pgsql_recommendation as rec
 
 
@@ -151,7 +155,7 @@ def wait_for_postgres():
     """Ensures Postgres service is reliably ready for use.
 
     Required b/c Postgres process in Docker gets restarted shortly
-    after starting.    
+    after starting.
     """
     print('Checking for Postgres service to be available')
 
@@ -187,12 +191,9 @@ def _check_pg_up():
     """
     output = subprocess.run(['pg_isready'], text=True, capture_output=True)
     code = output.returncode
-    if code == 0:
-        return True
-    elif code == 3:
+    if code == 3:
         sys.exit('ERROR - Postgres check is misconfigured.')
-    else:
-        return False
+    return code == 0
 
 
 def prepare_data(region, subregion, pgosm_date, paths):
@@ -200,6 +201,8 @@ def prepare_data(region, subregion, pgosm_date, paths):
     pbf_filename = get_region_filename(region, subregion)
 
     pbf_file = os.path.join(out_path, pbf_filename)
+    # create oputput folder if not already there
+    Path(out_path).mkdir(parents=True, exist_ok=True)
     pbf_file_with_date = pbf_file.replace('latest', pgosm_date)
 
     md5_file = f'{pbf_file}.md5'

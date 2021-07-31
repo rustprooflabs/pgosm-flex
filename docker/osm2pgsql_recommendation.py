@@ -2,7 +2,6 @@
 the osm2pgsql-tuner API.
 """
 import os
-import sys
 import requests
 
 def osm2pgsql_recommendation(region, ram, layerset, pbf_filename,
