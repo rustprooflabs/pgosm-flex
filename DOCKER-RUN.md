@@ -41,10 +41,10 @@ The 3rd parameter tells the script the server has 8 GB RAM available for osm2pgs
 ```bash
 docker exec -it \
     -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_USER=postgres \
-    pgosm python3 -c docker/pgosm_flex.py \
+    pgosm python3 docker/pgosm_flex.py \
     --layerset=run-all --ram=8 \
     --region=north-america/us \
-    --subregion=district-of-columbia"
+    --subregion=district-of-columbia
 ```
 
 

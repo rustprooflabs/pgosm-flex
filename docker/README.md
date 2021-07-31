@@ -3,8 +3,6 @@
 Requires Python packages installed by `Dockerfile`. Look for `
 RUN pip install` and install those in a `venv` named `pgosm`.
 
-
-
 ### Run unit tests normally.
 
 ```bash
@@ -27,5 +25,3 @@ coverage run -m unittest tests/*.py
 ```bash
 coverage report -m webapp/*.py
 ```
-
-
