@@ -1,7 +1,7 @@
 # Using PgOSM-Flex within Docker
 
 This README provides details about running PgOSM-Flex using the image defined
-in `Dockerfile` and the script loaded from `docker/run_pgosm_flex.sh`.
+in `Dockerfile` and the script loaded from `docker/pgosm_flex.py`.
 
 
 ## Setup and Run Container
@@ -32,7 +32,7 @@ docker run --name pgosm -d \
 The following `docker exec` command runs PgOSM Flex to load the District of Columbia
 region
 
-The command  `bash docker/run_pgosm_flex.sh` runs the full process. The
+The command  `python3 docker/pgosm_flex.py` runs the full process. The
 script uses a region (`north-america/us`) and sub-region (`district-of-columbia`)
 that must match values in URLs from the Geofabrik download server.
 The 3rd parameter tells the script the server has 8 GB RAM available for osm2pgsql, Postgres, and the OS.  The PgOSM-Flex layer set is defined (`run-all`).
@@ -67,7 +67,7 @@ docker exec -it \
     -e PGOSM_DATA_SCHEMA_NAME=osm_dc \
     -e PGOSM_DATE='2021-03-11' \
     -e PGOSM_LANGUAGE=en \
-    pgosm bash docker/run_pgosm_flex.sh \
+    pgosm python3 docker/pgosm_flex.py \
     north-america/us \
     district-of-columbia \
     8 \

@@ -67,7 +67,7 @@ docker run --name pgosm -d \
     -p 5433:5432 -d rustprooflabs/pgosm-flex
 ```
 
-Run the processing for the Washington D.C.  The `run_pgosm_flex.sh` script
+Run the processing for the Washington D.C.  The `docker/pgosm_flex.py` script
 requires four (4) parameters:
 
 * Region (`north-america/us`)
@@ -80,7 +80,7 @@ requires four (4) parameters:
 docker exec -it \
     -e POSTGRES_PASSWORD=mysecretpassword \
     -e POSTGRES_USER=postgres \
-    pgosm bash docker/run_pgosm_flex.sh \
+    pgosm python3 docker/pgosm_flex.py \
     north-america/us \
     district-of-columbia \
     8 \
