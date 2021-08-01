@@ -1,8 +1,13 @@
 """Used by PgOSM-Flex Docker image to get osm2pgsql command to run from
 the osm2pgsql-tuner API.
 """
+import logging
 import os
 import requests
+
+
+LOGGER = logging.getLogger('pgosm-flex')
+
 
 def osm2pgsql_recommendation(region, ram, layerset, pbf_filename,
                              out_path):
@@ -52,9 +57,9 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb,
     api_endpoint += f'&pgosm_layer_set={pgosm_layer_set}'
 
     headers = {"User-Agent": 'PgOSM-Flex-Docker'}
-    print(f'osm2pgsql-tuner URL w/ parameters: {api_endpoint}')
+    LOGGER.info(f'osm2pgsql-tuner URL w/ parameters: {api_endpoint}')
     result = requests.get(api_endpoint, headers=headers)
-    print(f'Status code: {result.status_code}')
+    LOGGER.debug(f'API status code: {result.status_code}')
 
     rec = result.json()['osm2pgsql']
 

@@ -16,6 +16,7 @@ import click
 import time
 
 import osm2pgsql_recommendation as rec
+import db
 
 
 BASE_PATH_DEFAULT = '/app'
@@ -69,7 +70,7 @@ def run_pgosm_flex(layerset, ram, region, subregion, pgosm_date,
                                               paths=paths)
     wait_for_postgres()
 
-    prepare_pgosm_db()
+    db.prepare_pgosm_db()
     run_osm2pgsql(osm2pgsql_command=osm2pgsql_command)
     run_post_processing()
 
@@ -118,6 +119,7 @@ def get_log_path(region, subregion, paths):
     else:
         filename = f'{region_clean}-{subregion}.log'
 
+    # Users will see this when they run, can copy/paste tail command.
     print(f'Log filename: {filename}')
     print('If running in Docker following procedures the file can be monitored')
     print(f'  tail -f ~/pgosm-data/{filename}')
@@ -130,6 +132,8 @@ def get_log_path(region, subregion, paths):
 def get_paths(base_path):
     """Returns dictionary of various paths used.
 
+    Creates `out_path` used for logs and data if necessary.
+
     Returns
     -------------------
     paths : dict
@@ -141,6 +145,8 @@ def get_paths(base_path):
              'db_path': db_path,
              'out_path': out_path,
              'flex_path': flex_path}
+
+    Path(out_path).mkdir(parents=True, exist_ok=True)
     return paths
 
 def get_region_filename(region, subregion):
@@ -243,8 +249,6 @@ def prepare_data(region, subregion, pgosm_date, paths):
     pbf_filename = get_region_filename(region, subregion)
 
     pbf_file = os.path.join(out_path, pbf_filename)
-    # create oputput folder if not already there
-    Path(out_path).mkdir(parents=True, exist_ok=True)
     pbf_file_with_date = pbf_file.replace('latest', pgosm_date)
 
     md5_file = f'{pbf_file}.md5'
@@ -370,21 +374,6 @@ def get_osm2pgsql_command(region, subregion, ram, layerset, pbf_file, paths):
                                            pbf_filename=pbf_file,
                                            out_path=paths['out_path'])
     return rec_cmd
-
-
-def prepare_pgosm_db():
-    drop_pgosm_db()
-    create_pgosm_db()
-    logging.getLogger('pgosm-flex').warning('Run sqitch deployment')
-    logging.getLogger('pgosm-flex').warning('Load QGIS styles')
-
-
-def drop_pgosm_db():
-    # Drop if exists
-    logging.getLogger('pgosm-flex').warning('Need to drop/create db')
-
-def create_pgosm_db():
-    logging.getLogger('pgosm-flex').warning('Install PostGIS, Create osm schema')
 
 
 def run_osm2pgsql(osm2pgsql_command):
