@@ -47,21 +47,16 @@ def get_today():
               required=False,
               default=BASE_PATH_DEFAULT,
               help='Used when testing locally and not within Docker')
+@click.option('--debug', is_flag=True)
 def run_pgosm_flex(layerset, ram, region, subregion, pgosm_date,
-                   basepath):
+                   basepath, debug):
     """Main logic to run PgOSM Flex within Docker.
     """
     paths = get_paths(base_path=basepath)
     log_file = get_log_path(region, subregion, paths)
-    print(f'Logging output to {log_file}')
 
-    logging.basicConfig(filename=log_file,
-                        level=logging.DEBUG,
-                        format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
-    logging.getLogger('urllib3').setLevel(logging.INFO)
-
-    logging.info('PgOSM Flex starting...')
-
+    setup_logger(log_file, debug)
+    logging.getLogger('pgosm-flex').info('PgOSM Flex starting...')
     pbf_file = prepare_data(region=region,
                             subregion=subregion,
                             pgosm_date=pgosm_date,
@@ -81,6 +76,41 @@ def run_pgosm_flex(layerset, ram, region, subregion, pgosm_date,
     run_pg_dump()
 
 
+def setup_logger(log_file, debug):
+    """Prepares logging.
+
+    Parameters
+    ------------------------------
+    log_file : str
+        Path to log file
+
+    debug : bool
+        Enables debug mode when True.  INFO when False.
+    """
+    if debug:
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.INFO
+
+    log_format = '%(asctime)s:%(levelname)s:%(name)s:%(module)s:%(message)s'
+    logging.basicConfig(filename=log_file,
+                        level=log_level,
+                        filemode='w',
+                        format=log_format)
+
+    # Reduce verbosity of urllib3 logging
+    logging.getLogger('urllib3').setLevel(logging.INFO)
+
+    logger = logging.getLogger('pgosm-flex')
+    logger.setLevel(log_level)
+    handler = logging.FileHandler(filename=log_file)
+    handler.setLevel(log_level)
+    formatter = logging.Formatter(log_format)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.debug('Logger configured')
+
+
 def get_log_path(region, subregion, paths):
     region_clean = region.replace('/', '-')
     if subregion == None:
@@ -88,7 +118,12 @@ def get_log_path(region, subregion, paths):
     else:
         filename = f'{region_clean}-{subregion}.log'
 
+    print(f'Log filename: {filename}')
+    print('If running in Docker following procedures the file can be monitored')
+    print(f'  tail -f ~/pgosm-data/{filename}')
     log_file = os.path.join(paths['out_path'], filename)
+
+    print(f'If testing locally:\n   tail -f {log_file}')
     return log_file
 
 
@@ -157,7 +192,8 @@ def wait_for_postgres():
     Required b/c Postgres process in Docker gets restarted shortly
     after starting.
     """
-    logging.info('Checking for Postgres service to be available')
+    logger = logging.getLogger('pgosm-flex')
+    logger.info('Checking for Postgres service to be available')
 
     required_checks = 2
     found = 0
@@ -167,25 +203,25 @@ def wait_for_postgres():
     while found < required_checks:
         if i > max_loops:
             err = 'Postgres still has not started. Exiting.'
-            logging.error(err)
+            logger.error(err)
             sys.exit(err)
 
         time.sleep(5)
 
         if _check_pg_up():
             found += 1
-            logging.info(f'Postgres up {found} times')
+            logger.info(f'Postgres up {found} times')
 
         if i % 5 == 0:
-            logging.info('Waiting...')
+            logger.info('Waiting...')
 
         if i > 100:
             err = 'Postgres still not available. Exiting.'
-            logging.error(err)
+            logger.error(err)
             sys.exit(err)
         i += 1
 
-    logging.info('Database passed two checks - should be ready')
+    logger.info('Database passed two checks - should be ready')
 
 
 def _check_pg_up():
@@ -197,7 +233,7 @@ def _check_pg_up():
     code = output.returncode
     if code == 3:
         err = 'Postgres check is misconfigured. Exiting.'
-        logging.error(err)
+        logging.getLogger('pgosm-flex').error(err)
         sys.exit(err)
     return code == 0
 
@@ -215,10 +251,10 @@ def prepare_data(region, subregion, pgosm_date, paths):
     md5_file_with_date = f'{pbf_file_with_date}.md5'
 
     if pbf_download_needed(pbf_file_with_date, md5_file_with_date):
-        logging.info('Downloading PBF and MD5 files...')
+        logging.getLogger('pgosm-flex').info('Downloading PBF and MD5 files...')
         download_data(region, subregion, pbf_file, md5_file)
     else:
-        logging.warning('MISSING - Need to copy archived files to -latest filenames!')
+        logging.getLogger('pgosm-flex').warning('MISSING - Need to copy archived files to -latest filenames!')
 
     verify_checksum(md5_file, paths)
 
@@ -234,13 +270,14 @@ def pbf_download_needed(pbf_file_with_date, md5_file_with_date):
     --------------------------
     download_needed : bool
     """
+    logger = logging.getLogger('pgosm-flex')
     # If the PBF file exists, check for the MD5 file too.
     if os.path.exists(pbf_file_with_date):
-        logging.info(f'PBF File exists {pbf_file_with_date}')
+        logger.info(f'PBF File exists {pbf_file_with_date}')
 
 
         if os.path.exists(md5_file_with_date):
-            logging.info('PBF & MD5 files exist.  Download not needed')
+            logger.info('PBF & MD5 files exist.  Download not needed')
             download_needed = False
         else:
             if pgosm_date == get_today():
@@ -248,17 +285,17 @@ def pbf_download_needed(pbf_file_with_date, md5_file_with_date):
                 download_needed = True
             else:
                 err = 'Cannot validate historic PBF file. Exiting'
-                logging.error(err)
+                logger.error(err)
                 sys.exit(err)
     else:
-        logging.info('PBF file not found locally. Download required')
+        logger.info('PBF file not found locally. Download required')
         download_needed = True
 
     return download_needed
 
 def download_data(region, subregion, pbf_file, md5_file):
-    # Download if Not
-    logging.info(f'Downloading PBF data to {pbf_file}')
+    logger = logging.getLogger('pgosm-flex')
+    logger.info(f'Downloading PBF data to {pbf_file}')
     pbf_url = get_pbf_url(region, subregion)
 
     result = subprocess.run(
@@ -270,7 +307,7 @@ def download_data(region, subregion, pbf_file, md5_file):
         check=True
     )
 
-    logging.info(f'Downloading MD5 checksum to {md5_file}')
+    logger.info(f'Downloading MD5 checksum to {md5_file}')
     result_md5 = subprocess.run(
         ['/usr/bin/wget', f'{pbf_url}.md5',
          "-O", md5_file , "--quiet"
@@ -338,30 +375,30 @@ def get_osm2pgsql_command(region, subregion, ram, layerset, pbf_file, paths):
 def prepare_pgosm_db():
     drop_pgosm_db()
     create_pgosm_db()
-    logging.warning('Run sqitch deployment')
-    logging.warning('Load QGIS styles')
+    logging.getLogger('pgosm-flex').warning('Run sqitch deployment')
+    logging.getLogger('pgosm-flex').warning('Load QGIS styles')
 
 
 def drop_pgosm_db():
     # Drop if exists
-    logging.warning('Need to drop/create db')
+    logging.getLogger('pgosm-flex').warning('Need to drop/create db')
 
 def create_pgosm_db():
-    logging.warning('Install PostGIS, Create osm schema')
+    logging.getLogger('pgosm-flex').warning('Install PostGIS, Create osm schema')
 
 
 def run_osm2pgsql(osm2pgsql_command):
-    logging.warning(f'Need to run {osm2pgsql_command}')
+    logging.getLogger('pgosm-flex').warning(f'Need to run {osm2pgsql_command}')
 
 
 def run_post_processing():
-    logging.warning('Need to run post-processing SQL')
+    logging.getLogger('pgosm-flex').warning('Need to run post-processing SQL')
 
 
 def run_pg_dump():
-    logging.warning('FIXME: run pg_dump')
+    logging.getLogger('pgosm-flex').warning('FIXME: run pg_dump')
 
 
 if __name__ == "__main__":
-    logging.info('Running PgOSM Flex!')
+    logging.getLogger('pgosm-flex').info('Running PgOSM Flex!')
     run_pgosm_flex()
