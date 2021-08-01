@@ -66,12 +66,11 @@ def run_pgosm_flex(layerset, ram, region, subregion, pgosm_date,
                                               subregion=subregion,
                                               ram=ram,
                                               layerset=layerset,
-                                              pbf_file=pbf_file,
                                               paths=paths)
     wait_for_postgres()
 
     db.prepare_pgosm_db()
-    run_osm2pgsql(osm2pgsql_command=osm2pgsql_command)
+    run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, paths=paths)
     run_post_processing()
 
     run_pg_dump()
@@ -245,6 +244,23 @@ def _check_pg_up():
 
 
 def prepare_data(region, subregion, pgosm_date, paths):
+    """Ensures the PBF file is available.
+
+    Checks if it already exists locally, download if needed,
+    and verify MD5 checksum.
+
+    Parameters
+    ----------------------
+    region : str
+    subregion : str
+    pgosm_date : str
+    paths : dict
+
+    Returns
+    ----------------------
+    pbf_file : str
+        Full path to PBF file
+    """
     out_path = paths['out_path']
     pbf_filename = get_region_filename(region, subregion)
 
@@ -346,7 +362,7 @@ def archive_data(pbf_file, md5_file,
         shutil.copy2(md5_file, md5_file_with_date)
 
 
-def get_osm2pgsql_command(region, subregion, ram, layerset, pbf_file, paths):
+def get_osm2pgsql_command(region, subregion, ram, layerset, paths):
     """Returns recommended osm2pgsql command.
 
     Parameters
@@ -355,7 +371,6 @@ def get_osm2pgsql_command(region, subregion, ram, layerset, pbf_file, paths):
     subregion : str
     ram : int
     layerset : str
-    pbf_file : str
     paths : dict
 
     Returns
@@ -368,24 +383,39 @@ def get_osm2pgsql_command(region, subregion, ram, layerset, pbf_file, paths):
     else:
         region = subregion
 
+    pbf_filename = get_region_filename(region, subregion)
     rec_cmd = rec.osm2pgsql_recommendation(region=region,
                                            ram=ram,
                                            layerset=layerset,
-                                           pbf_filename=pbf_file,
+                                           pbf_filename=pbf_filename,
                                            out_path=paths['out_path'])
     return rec_cmd
 
 
-def run_osm2pgsql(osm2pgsql_command):
-    logging.getLogger('pgosm-flex').warning(f'Need to run {osm2pgsql_command}')
+def run_osm2pgsql(osm2pgsql_command, paths):
+    """Runs the provided osm2pgsql command.
+
+    Parameters
+    ----------------------
+    osm2pgsql_command : str
+    paths : dict
+    """
+    logger = logging.getLogger('pgosm-flex')
+    logger.info(f'Running {osm2pgsql_command}')
+    output = subprocess.run(osm2pgsql_command.split(),
+                            text=True,
+                            capture_output=True,
+                            cwd=paths['flex_path'],
+                            check=True)
+    logger.info(f'osm2pgsql output: \n {output.stderr}\nEND osm2pgsql output')
 
 
 def run_post_processing():
-    logging.getLogger('pgosm-flex').warning('Need to run post-processing SQL')
+    logging.getLogger('pgosm-flex').warning('MISSING - run post-processing SQL')
 
 
 def run_pg_dump():
-    logging.getLogger('pgosm-flex').warning('FIXME: run pg_dump')
+    logging.getLogger('pgosm-flex').warning('MISSING - run pg_dump')
 
 
 if __name__ == "__main__":
