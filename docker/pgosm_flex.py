@@ -121,7 +121,7 @@ def get_log_path(region, subregion, paths):
     # Users will see this when they run, can copy/paste tail command.
     print(f'Log filename: {filename}')
     print('If running in Docker following procedures the file can be monitored')
-    print(f'  tail -f ~/pgosm-data/{filename}')
+    print(f'  tail -f pgosm-data/{filename}')
     log_file = os.path.join(paths['out_path'], filename)
 
     print(f'If testing locally:\n   tail -f {log_file}')
