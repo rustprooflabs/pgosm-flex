@@ -2,6 +2,7 @@
 """
 import logging
 import os
+import subprocess
 
 import psycopg2
 
@@ -115,4 +116,44 @@ def get_db_conn(db_name):
         LOGGER.error(err_msg)
         return False
     return conn
+
+
+def pgosm_after_import(layerset, paths):
+    """Runs post-processing SQL via psql.
+
+    Parameters
+    ---------------------
+    layerset : str
+
+    paths : dict
+    """
+    LOGGER.info('Running post-processing...')
+    conn_string = connection_string(db_name='pgosm')
+    cmds = ['psql', '-d', conn_string, '-f', f'{layerset}.sql']
+    output = subprocess.run(cmds,
+                            text=True,
+                            capture_output=True,
+                            cwd=paths['flex_path'],
+                            check=True)
+    LOGGER.info(f'Post-processing output: \n {output.stderr}')
+
+
+def pgosm_nested_admin_polygons(paths):
+    """Runs stored procedure to calculate nested admin polygons via psql.
+
+    Parameters
+    ----------------------
+    paths : dict
+    """
+    sql_raw = 'CALL osm.build_nested_admin_polygons();'
+
+    conn_string = connection_string(db_name='pgosm')
+    cmds = ['psql', '-d', conn_string, '-c', sql_raw]
+    LOGGER.info('Building nested polygons... (this can take a while)')
+    output = subprocess.run(cmds,
+                            text=True,
+                            capture_output=True,
+                            cwd=paths['flex_path'],
+                            check=True)
+    LOGGER.info(f'Nested polygon output: \n {output.stderr}')
 
