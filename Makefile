@@ -21,6 +21,11 @@ build-run-docker:
 		-p 5433:5432 \
 		-d \
 		rustprooflabs/pgosm-flex
+	# copy the test data pretending it's latest to avoid downloading each time
+	docker cp tests/data/district-of-columbia-2021-01-13.osm.pbf \
+		pgosm:/app/output/district-of-columbia-latest.osm.pbf
+	docker cp tests/data/district-of-columbia-2021-01-13.osm.pbf.md5 \
+		pgosm:/app/output/district-of-columbia-latest.osm.pbf.md5
 
 	docker exec -it \
 		-e POSTGRES_PASSWORD=mysecretpassword \
