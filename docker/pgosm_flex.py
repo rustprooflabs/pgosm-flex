@@ -48,9 +48,14 @@ def get_today():
               required=False,
               default=BASE_PATH_DEFAULT,
               help='Used when testing locally and not within Docker')
+@click.option('--skip-nested',
+              default=False,
+              envvar="PGOSM_SKIP_NESTED_POLYGON",
+              is_flag=True,
+              help='When True, skips calculating nested admin polygons. Can be time consuming on large regions.')
 @click.option('--debug', is_flag=True)
 def run_pgosm_flex(layerset, ram, region, subregion, pgosm_date,
-                   basepath, debug):
+                   basepath, debug, skip_nested):
     """Main logic to run PgOSM Flex within Docker.
     """
     paths = get_paths(base_path=basepath)
@@ -71,7 +76,8 @@ def run_pgosm_flex(layerset, ram, region, subregion, pgosm_date,
 
     db.prepare_pgosm_db()
     run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, paths=paths)
-    run_post_processing()
+    run_post_processing(layerset=layerset, paths=paths,
+                        skip_nested=skip_nested)
 
     run_pg_dump()
 
@@ -410,8 +416,26 @@ def run_osm2pgsql(osm2pgsql_command, paths):
     logger.info(f'osm2pgsql output: \n {output.stderr}\nEND osm2pgsql output')
 
 
-def run_post_processing():
-    logging.getLogger('pgosm-flex').warning('MISSING - run post-processing SQL')
+def run_post_processing(layerset, paths, skip_nested):
+    """Runs steps following osm2pgsql import.
+
+    Post-processing SQL scripts and (optionally) calculate nested admin polgyons
+
+    Parameters
+    ----------------------
+    layerset : str
+
+    paths : dict
+
+    skip_nested : bool
+    """
+    db.pgosm_after_import(layerset, paths)
+    logger = logging.getLogger('pgosm-flex')
+    if skip_nested:
+        logger.info('Skipping calculating nested polygons')
+    else:
+        logger.info('Calculating nested polygons')
+        db.pgosm_nested_admin_polygons(paths)
 
 
 def run_pg_dump():
