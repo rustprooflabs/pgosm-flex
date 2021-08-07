@@ -240,7 +240,7 @@ def _check_pg_up():
 
     https://www.postgresql.org/docs/current/app-pg-isready.html
     """
-    output = subprocess.run(['pg_isready'], text=True, capture_output=True)
+    output = subprocess.run(['pg_isready', '-U', 'root'], text=True, capture_output=True)
     code = output.returncode
     if code == 3:
         err = 'Postgres check is misconfigured. Exiting.'
