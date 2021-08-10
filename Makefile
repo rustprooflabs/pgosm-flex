@@ -2,10 +2,14 @@ CURRENT_UID := $(shell id -u)
 CURRENT_GID := $(shell id -g)
 TODAY := $(shell date +'%Y-%m-%d')
 
+.PHONY: all
+all: docker-clean build-run-docker
+
 .PHONY: docker-clean
 docker-clean:
 	@docker stop pgosm > /dev/null 2>&1 && echo "pgosm container removed"|| echo "pgosm container not present, nothing to remove"
 	rm -rvf pgosm-data|| echo "folder pgosm-data did not exist"
+
 
 .PHONY: build-run-docker
 build-run-docker:
