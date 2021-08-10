@@ -20,7 +20,7 @@ your the host machine's timezone, important when for archiving PBF & MD5 files b
 
 
 ```bash
-docker run --name pgosm -d \
+docker run --name pgosm -d --rm \
     -v ~/pgosm-data:/app/output \
     -v /etc/localtime:/etc/localtime:ro \
     -e POSTGRES_PASSWORD=mysecretpassword \
@@ -90,7 +90,7 @@ to skip this process.
 To force the processing to remove existing files and re-download the latest PBF and MD5 files from Geofabrik, set the `PGOSM_ALWAYS_DOWNLOAD` env var when running the Docker container.
 
 ```bash
-docker run --name pgosm -d \
+docker run --name pgosm -d --rm \
     -v ~/pgosm-data:/app/output \
     -e POSTGRES_PASSWORD=mysecretpassword \
     -e PGOSM_ALWAYS_DOWNLOAD=1 \
@@ -105,7 +105,7 @@ to customize Postgres' configuration at run-time in Docker.
 
 
 ```bash
-docker run --name pgosm -d \
+docker run --name pgosm -d --rm \
     -v ~/pgosm-data:/app/output \
     -v /etc/localtime:/etc/localtime:ro \
     -e POSTGRES_PASSWORD=mysecretpassword \

@@ -27,16 +27,13 @@ build-run-docker:
 		pgosm:/app/output/district-of-columbia-$(TODAY).osm.pbf
 	docker cp tests/data/district-of-columbia-2021-01-13.osm.pbf.md5 \
 		pgosm:/app/output/district-of-columbia-$(TODAY).osm.pbf.md5
-	# TODO this double copy should not be needed, once the python script
-	# moves the files
-	docker cp tests/data/district-of-columbia-2021-01-13.osm.pbf \
-		pgosm:/app/output/district-of-columbia-latest.osm.pbf
-	docker cp tests/data/district-of-columbia-2021-01-13.osm.pbf.md5 \
-		pgosm:/app/output/district-of-columbia-latest.osm.pbf.md5
 
 	# allow files created in later step to be created
 	docker exec -it pgosm \
 		chown $(CURRENT_UID):$(CURRENT_GID) /app/output/
+	# Needed for unit-tests
+	docker exec -it pgosm \
+		chown $(CURRENT_UID):$(CURRENT_GID) /app/docker/
 
 	docker exec -it \
 		-e POSTGRES_PASSWORD=mysecretpassword \
@@ -47,3 +44,12 @@ build-run-docker:
 		--ram=8 \
 		--region=north-america/us \
 		--subregion=district-of-columbia
+
+
+.PHONY: unit-tests
+unit-tests:
+	docker exec -it \
+		-e POSTGRES_PASSWORD=mysecretpassword \
+		-e POSTGRES_USER=postgres \
+		-u $(CURRENT_UID):$(CURRENT_GID) \
+		pgosm /bin/bash -c "cd docker && coverage run -m unittest tests/*.py"

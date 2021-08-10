@@ -79,7 +79,8 @@ def run_pgosm_flex(layerset, ram, region, subregion, pgosm_date,
     run_post_processing(layerset=layerset, paths=paths,
                         skip_nested=skip_nested)
 
-    run_pg_dump()
+    export_filename = get_export_filename(region, subregion)
+    db.run_pg_dump(export_filename, out_path=paths['out_path'])
 
 
 def setup_logger(log_file, debug):
@@ -139,6 +140,10 @@ def get_paths(base_path):
 
     Creates `out_path` used for logs and data if necessary.
 
+    Parameters
+    -------------------
+    base_path : str
+
     Returns
     -------------------
     paths : dict
@@ -164,15 +169,37 @@ def get_region_filename(region, subregion):
 
     Returns
     ----------------------
-    region_filename : str
+    filename : str
     """
     base_name = '{}-latest.osm.pbf'
     if subregion == None:
-        region_filename = base_name.format(region)
+        filename = base_name.format(region)
     else:
-        region_filename = base_name.format(subregion)
+        filename = base_name.format(subregion)
 
-    return region_filename
+    return filename
+
+
+def get_export_filename(region, subregion):
+    """Returns the .sql filename to use from pg_dump.
+
+    Parameters
+    ----------------------
+    region : str
+    subregion : str
+
+    Returns
+    ----------------------
+    filename : str
+    """
+    region = region.replace('/', '-')
+    subregion = subregion.replace('/', '-')
+    if subregion == None:
+        filename = f'pgosm-flex-{region}.sql'
+    else:
+        filename = f'pgosm-flex-{region}-{subregion}.sql'
+
+    return filename
 
 
 def get_pbf_url(region, subregion):
@@ -265,19 +292,24 @@ def prepare_data(region, subregion, pgosm_date, paths):
     if pbf_download_needed(pbf_file_with_date, md5_file_with_date):
         logging.getLogger('pgosm-flex').info('Downloading PBF and MD5 files...')
         download_data(region, subregion, pbf_file, md5_file)
+        archive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date)
     else:
-        logging.getLogger('pgosm-flex').warning('MISSING - Need to copy archived files to -latest filenames!')
+        logging.getLogger('pgosm-flex').info('Copying Archived files')
+        unarchive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date)
 
     verify_checksum(md5_file, paths)
-
-    archive_data(pbf_file, md5_file,
-                 pbf_file_with_date, md5_file_with_date)
 
     return pbf_file
 
 
 def pbf_download_needed(pbf_file_with_date, md5_file_with_date):
-    """
+    """Decides if the PBF/MD5 files need to be downloaded.
+
+    Parameters
+    -------------------------------
+    pbf_file_with_date : str
+    md5_file_with_date : str
+
     Returns
     --------------------------
     download_needed : bool
@@ -287,7 +319,6 @@ def pbf_download_needed(pbf_file_with_date, md5_file_with_date):
     if os.path.exists(pbf_file_with_date):
         logger.info(f'PBF File exists {pbf_file_with_date}')
 
-
         if os.path.exists(md5_file_with_date):
             logger.info('PBF & MD5 files exist.  Download not needed')
             download_needed = False
@@ -296,14 +327,15 @@ def pbf_download_needed(pbf_file_with_date, md5_file_with_date):
                 print('PBF for today available but not MD5... download needed')
                 download_needed = True
             else:
-                err = 'Cannot validate historic PBF file. Exiting'
+                err = 'Missing MD5 file. Cannot validate.'
                 logger.error(err)
-                sys.exit(err)
+                raise FileNotFoundError(err)
     else:
         logger.info('PBF file not found locally. Download required')
         download_needed = True
 
     return download_needed
+
 
 def download_data(region, subregion, pbf_file, md5_file):
     logger = logging.getLogger('pgosm-flex')
@@ -341,8 +373,19 @@ def verify_checksum(md5_file, paths):
     return cmd
 
 
-def archive_data(pbf_file, md5_file,
-                 pbf_file_with_date, md5_file_with_date):
+def archive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date):
+    """Copies `pbf_file` and `md5_file` to `pbf_file_with_date` and
+    `md5_file_with_date`.
+
+    If either file exists, does nothing.
+
+    Parameters
+    --------------------------------
+    pbf_file : str
+    md5_file : str
+    pbf_file_with_date : str
+    md5_file_with_date : str
+    """
     if os.path.exists(pbf_file_with_date):
         pass # Do nothing
     else:
@@ -352,6 +395,34 @@ def archive_data(pbf_file, md5_file,
         pass # Do nothing
     else:
         shutil.copy2(md5_file, md5_file_with_date)
+
+
+def unarchive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date):
+    """Copies `pbf_file_with_date` and `md5_file_with_date`
+    to `pbf_file` and `md5_file`.
+
+    Always copies, will overwrite a -latest file if it is in the way.
+
+    Parameters
+    --------------------------------
+    pbf_file : str
+    md5_file : str
+    pbf_file_with_date : str
+    md5_file_with_date : str
+    """
+    logger = logging.getLogger('pgosm-flex')
+    if os.path.exists(pbf_file):
+        logger.debug(f'{pbf_file} exists. Overwriting.')
+
+    logger.info(f'Copying {pbf_file_with_date} to {pbf_file}')
+    shutil.copy2(pbf_file_with_date, pbf_file)
+
+    if os.path.exists(md5_file):
+        logger.debug(f'{md5_file} exists. Overwriting.')
+
+    logger.info(f'Copying {md5_file_with_date} to {md5_file}')
+    shutil.copy2(md5_file_with_date, md5_file)
+
 
 
 def get_osm2pgsql_command(region, subregion, ram, layerset, paths):
@@ -423,9 +494,6 @@ def run_post_processing(layerset, paths, skip_nested):
         logger.info('Calculating nested polygons')
         db.pgosm_nested_admin_polygons(paths)
 
-
-def run_pg_dump():
-    logging.getLogger('pgosm-flex').warning('MISSING - run pg_dump')
 
 
 if __name__ == "__main__":

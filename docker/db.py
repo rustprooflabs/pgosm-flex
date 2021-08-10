@@ -113,7 +113,7 @@ def connection_string(db_name):
     try:
         pg_pass = os.environ['POSTGRES_PASSWORD']
     except KeyError:
-        LOGGER.debug('POSTGRES_PASSWORD not configured. Might work if peer or ~/.pgpass is used.')
+        LOGGER.debug('POSTGRES_PASSWORD not configured. Should work if ~/.pgpass is configured.')
         pg_pass = None
 
     if pg_pass is None:
@@ -165,6 +165,7 @@ def pgosm_nested_admin_polygons(paths):
     ----------------------
     paths : dict
     """
+    LOGGER.warning('MISSING - Make nested admin polygons optional!')
     sql_raw = 'CALL osm.build_nested_admin_polygons();'
 
     conn_string = connection_string(db_name='pgosm')
@@ -176,4 +177,21 @@ def pgosm_nested_admin_polygons(paths):
                             cwd=paths['flex_path'],
                             check=True)
     LOGGER.info(f'Nested polygon output: \n {output.stderr}')
+
+
+def run_pg_dump(export_filename, out_path):
+    export_path = os.path.join(out_path, export_filename)
+    logger = logging.getLogger('pgosm-flex')
+    db_name = 'pgosm'
+    data_schema_name = 'osm'
+    conn_string = connection_string(db_name=db_name)
+    logger.info('Running pg_dump')
+    cmds = ['pg_dump', '-d', conn_string,
+            f'--schema={data_schema_name}',
+            '-f', export_path]
+    output = subprocess.run(cmds,
+                            text=True,
+                            capture_output=True,
+                            check=False)
+    LOGGER.info(f'pg_dump output: \n {output.stderr}')
 

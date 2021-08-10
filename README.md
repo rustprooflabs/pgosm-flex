@@ -60,7 +60,7 @@ Start the `pgosm` Docker container. At this point, PostgreSQL / PostGIS
 is available on port `5433`.
 
 ```bash
-docker run --name pgosm -d \
+docker run --name pgosm -d --rm \
     -v ~/pgosm-data:/app/output \
     -v /etc/localtime:/etc/localtime:ro \
     -e POSTGRES_PASSWORD=mysecretpassword \
