@@ -1,0 +1,4 @@
+click>=8.0.1
+coverage>=5.5
+psycopg2>=2.8.6
+requests>=2.26.0

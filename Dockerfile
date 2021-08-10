@@ -17,15 +17,12 @@ RUN curl -o /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py \
     && python3 /tmp/get-pip.py \
     && rm /tmp/get-pip.py
 
-RUN pip install requests click coverage psycopg2
-
-
 WORKDIR /tmp
 RUN git clone git://github.com/openstreetmap/osm2pgsql.git \
     && mkdir osm2pgsql/build \
     && cd osm2pgsql/build \
     && cmake .. \
-    && make \
+    && make -j$(nproc) \
     && make install \
     && apt remove -y \
         make cmake g++ \
@@ -39,3 +36,5 @@ RUN git clone git://github.com/openstreetmap/osm2pgsql.git \
 
 WORKDIR /app
 COPY . ./
+
+RUN pip install -r requirements.txt
