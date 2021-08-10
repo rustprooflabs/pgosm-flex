@@ -9,6 +9,26 @@ import psycopg2
 LOGGER = logging.getLogger('pgosm-flex')
 
 
+def pg_isready():
+    """Checks pg_isready for Postgres to be available.
+
+    https://www.postgresql.org/docs/current/app-pg-isready.html
+
+    Returns
+    -------------------
+    pg_up : bool
+    """
+    output = subprocess.run(['pg_isready', '-U', 'root'],
+                            text=True,
+                            capture_output=True)
+    code = output.returncode
+    if code == 3:
+        err = 'Postgres check is misconfigured. Exiting.'
+        logging.getLogger('pgosm-flex').error(err)
+        sys.exit(err)
+    return code == 0
+
+
 def prepare_pgosm_db():
     """Runs through series of steps to prepare database for PgOSM
     """

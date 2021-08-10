@@ -219,7 +219,7 @@ def wait_for_postgres():
 
         time.sleep(5)
 
-        if _check_pg_up():
+        if db.pg_isready():
             found += 1
             logger.info(f'Postgres up {found} times')
 
@@ -233,20 +233,6 @@ def wait_for_postgres():
         i += 1
 
     logger.info('Database passed two checks - should be ready')
-
-
-def _check_pg_up():
-    """Checks pg_isready for Postgres to be available.
-
-    https://www.postgresql.org/docs/current/app-pg-isready.html
-    """
-    output = subprocess.run(['pg_isready', '-U', 'root'], text=True, capture_output=True)
-    code = output.returncode
-    if code == 3:
-        err = 'Postgres check is misconfigured. Exiting.'
-        logging.getLogger('pgosm-flex').error(err)
-        sys.exit(err)
-    return code == 0
 
 
 def prepare_data(region, subregion, pgosm_date, paths):
