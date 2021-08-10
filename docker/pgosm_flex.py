@@ -127,7 +127,7 @@ def get_log_path(region, subregion, paths):
     # Users will see this when they run, can copy/paste tail command.
     print(f'Log filename: {filename}')
     print('If running in Docker following procedures the file can be monitored')
-    print(f'  tail -f ~/pgosm-data/{filename}')
+    print(f'  tail -f pgosm-data/{filename}')
     log_file = os.path.join(paths['out_path'], filename)
 
     print(f'If testing locally:\n   tail -f {log_file}')
@@ -240,7 +240,7 @@ def _check_pg_up():
 
     https://www.postgresql.org/docs/current/app-pg-isready.html
     """
-    output = subprocess.run(['pg_isready'], text=True, capture_output=True)
+    output = subprocess.run(['pg_isready', '-U', 'root'], text=True, capture_output=True)
     code = output.returncode
     if code == 3:
         err = 'Postgres check is misconfigured. Exiting.'
