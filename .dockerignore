@@ -1,1 +1,6 @@
 tests/
+**/.coverage
+*.md
+.github
+.gitignore
+Makefile

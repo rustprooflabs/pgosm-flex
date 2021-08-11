@@ -1,18 +1,27 @@
+## ----------------------------------------------------------------------
+## This Makefile builds and tests the PgOSM Flex Docker image.
+##
+## For full build/test use:
+##    make
+##
+## To cleanup after you are done:
+##    make docker-clean
+## ----------------------------------------------------------------------
 CURRENT_UID := $(shell id -u)
 CURRENT_GID := $(shell id -g)
 TODAY := $(shell date +'%Y-%m-%d')
 
 .PHONY: all
-all: docker-clean build-run-docker
+all: docker-clean build-run-docker unit-tests
 
 .PHONY: docker-clean
-docker-clean:
+docker-clean: ## Stops pgosm Docker container and removes local pgosm-data directory
 	@docker stop pgosm > /dev/null 2>&1 && echo "pgosm container removed"|| echo "pgosm container not present, nothing to remove"
 	rm -rvf pgosm-data|| echo "folder pgosm-data did not exist"
 
 
 .PHONY: build-run-docker
-build-run-docker:
+build-run-docker: ## Builds and runs PgOSM Flex with D.C. test file
 	docker build -t rustprooflabs/pgosm-flex .
 	docker run --name pgosm \
 		--rm \
@@ -41,15 +50,35 @@ build-run-docker:
 		-u $(CURRENT_UID):$(CURRENT_GID) \
 		pgosm python3 docker/pgosm_flex.py  \
 		--layerset=run-all \
-		--ram=8 \
+		--ram=1 \
 		--region=north-america/us \
 		--subregion=district-of-columbia
 
 
 .PHONY: unit-tests
-unit-tests:
+unit-tests: ## Runs Python unit tests and data import tests
+	# Unit tests covering Python runtime
 	docker exec -it \
 		-e POSTGRES_PASSWORD=mysecretpassword \
 		-e POSTGRES_USER=postgres \
 		-u $(CURRENT_UID):$(CURRENT_GID) \
 		pgosm /bin/bash -c "cd docker && coverage run -m unittest tests/*.py"
+
+	# Data import tests
+	docker cp tests \
+		pgosm:/app/tests
+	docker exec -it pgosm \
+		chown $(CURRENT_UID):$(CURRENT_GID) /app/tests/
+
+	# Detailed results from tests currently get buried in the Docker container
+	#   Error such as: FAILED TEST: sql/amenity_point_osm_type_count.sql - See tmp/amenity_point_osm_type_count.diff
+	#   Use command (changing file at end): docker exec -it     -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_USER=postgres     pgosm /bin/cat /app/tests/tmp/amenity_point_osm_type_count.diff
+	docker exec -it \
+		-e POSTGRES_PASSWORD=mysecretpassword \
+		-e POSTGRES_USER=postgres \
+		-u $(CURRENT_UID):$(CURRENT_GID) \
+		pgosm /bin/bash -c "cd tests && ./run-output-tests.sh"
+
+
+help: ## Show this help
+	@egrep -h '\s##\s' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m  %-30s\033[0m %s\n", $$1, $$2}'
