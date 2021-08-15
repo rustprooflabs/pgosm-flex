@@ -50,58 +50,74 @@ docker exec -it \
 
 ## Customize PgOSM-Flex
 
-The following command sets the four (4) main env vars used to customize PgOSM-Flex.
+See full set of options via `--help`.
 
-* `PGOSM_SRID` - Set custom SRID, must be in `public.spatial_ref_sys`.  Default `3857`
-* `PGOSM_DATA_SCHEMA_NAME` - Final schema name for the OpenStreetMap data. Default `osm`
-* `PGOSM_DATA_SCHEMA_ONLY` - When `false` (default) the QGIS styles and `pgosm` schema are exported along with the `PGOSM_DATA_SCHEMA_NAME` schema
-* `PGOSM_DATE` - Used to document data loaded to DB in `osm.pgosm_flex.pgosm_date`, and for archiving PBF/MD5 files.  Defaults to today.
-* `PGOSM_LANGUAGE` - Used to prefer specific language when it exists.
+```bash
+docker exec -it pgosm python3 docker/pgosm_flex.py --help
+```
 
+```bash
+Usage: pgosm_flex.py [OPTIONS]
+
+  Logic to run PgOSM Flex within Docker.
+
+Options:
+  --layerset TEXT    Layer set from PgOSM Flex to load. e.g. run-all
+                     [default: (run-all);required]
+  --ram INTEGER      Amount of RAM in GB available on the server running this
+                     process.  [default: 8;required]
+  --region TEXT      Region name matching the filename for data sourced from
+                     Geofabrik. e.g. north-america/us  [default: (north-
+                     america/us);required]
+  --subregion TEXT   Sub-region name matching the filename for data sourced
+                     from Geofabrik. e.g. district-of-columbia  [default:
+                     (district-of-columbia)]
+  --srid INTEGER     SRID for data in PostGIS.
+  --pgosm-date TEXT  Date of the data in YYYY-MM-DD format. Set to historic
+                     date to load locally archived PBF/MD5 file, will fail if
+                     both files do not exist.
+  --skip-nested      When True, skips calculating nested admin polygons. Can
+                     be time consuming on large regions.
+  --data-only        When True, skips running Sqitch and importing QGIS
+                     Styles.
+  --debug            Enables additional log output
+  --basepath TEXT    Debugging option. Used when testing locally and not
+                     within Docker
+  --help             Show this message and exit.
+```
+
+An example of running with all current options.
 
 ```bash
 docker exec -it \
-    -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_USER=postgres \
-    -e PGOSM_SRID=4326 \
-    -e PGOSM_DATA_SCHEMA_ONLY=true \
-    -e PGOSM_DATA_SCHEMA_NAME=osm_dc \
-    -e PGOSM_DATE='2021-03-11' \
-    -e PGOSM_LANGUAGE=en \
+    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD  -e POSTGRES_USER=$POSTGRES_USER \
     pgosm python3 docker/pgosm_flex.py \
-    north-america/us \
-    district-of-columbia \
-    8 \
-    run-all
+    --layerset=run-all \
+    --ram=8 \
+    --region=north-america/us \
+    --subregion=district-of-columbia \
+    --schema-name=osm_dc \
+    --pgosm-date="2021-03-11" \
+    --language="en" \
+    --srid="4326" \
+    --data-only \
+    --skip-nested \
+    --debug
 ```
+
 
 ## Skip nested polygon calculation
 
+Use `--skip-nested` to bypass the calculation of nested admin polygons.
+
 The default is to run the nested polygon calculation. This can take considerable time on larger regions or may
-be otherwise unwanted.  Define the env var `PGOSM_SKIP_NESTED_POLYGON` with the `docker exec` command
-to skip this process.
+be otherwise unwanted.
 
-```bash
- -e PGOSM_SKIP_NESTED_POLYGON=anything
-```
-
-
-## Always download
-
-To force the processing to remove existing files and re-download the latest PBF and MD5 files from Geofabrik, set the `PGOSM_ALWAYS_DOWNLOAD` env var when running the Docker container.
-
-```bash
-docker run --name pgosm -d --rm \
-    -v ~/pgosm-data:/app/output \
-    -e POSTGRES_PASSWORD=mysecretpassword \
-    -e PGOSM_ALWAYS_DOWNLOAD=1 \
-    -p 5433:5432 -d rustprooflabs/pgosm
-```
 
 ## Configure Postgres in Docker
 
 Add customizations with the `-c` switch, e.g. `-c shared_buffers=1GB`,
 to customize Postgres' configuration at run-time in Docker.
-
 
 
 ```bash

@@ -56,6 +56,13 @@ the osm2pgsql command ran.
 mkdir ~/pgosm-data
 ```
 
+Set environment variables for the temporary Postgres connection in Docker.
+
+```bash
+export POSTGRES_USER=postgres
+export POSTGRES_PASSWORD=mysecretpassword
+```
+
 Start the `pgosm` Docker container. At this point, PostgreSQL / PostGIS
 is available on port `5433`.
 
@@ -63,29 +70,33 @@ is available on port `5433`.
 docker run --name pgosm -d --rm \
     -v ~/pgosm-data:/app/output \
     -v /etc/localtime:/etc/localtime:ro \
-    -e POSTGRES_PASSWORD=mysecretpassword \
+    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
     -p 5433:5432 -d rustprooflabs/pgosm-flex
 ```
 
 Run the processing for the Washington D.C.  The `docker/pgosm_flex.py` script
-requires four (4) parameters:
+requires three (3) parameters, typical use will use four (4) to include
+the `--subregion`.
 
-* Region (`north-america/us`)
-* Sub-region (`district-of-columbia`)
-* Total RAM for osm2pgsql, Postgres and OS (`8`)
+
 * PgOSM-Flex layer set (`run-all`)
+* Total RAM for osm2pgsql, Postgres and OS (`8`)
+* Region (`north-america/us`)
+* Sub-region (`district-of-columbia`) (Optional)
+
 
 
 ```bash
 docker exec -it \
-    -e POSTGRES_PASSWORD=mysecretpassword \
-    -e POSTGRES_USER=postgres \
+    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+    -e POSTGRES_USER=$POSTGRES_USER \
     pgosm python3 docker/pgosm_flex.py \
-    north-america/us \
-    district-of-columbia \
-    8 \
-    run-all
+    --layerset=run-all \
+    --ram=8 \
+    --region=north-america/us \
+    --subregion=district-of-columbia
 ```
+
 
 The initial output with the `docker exec` command points to the log file
 (linked in the `docker run` command above), monitor this file to track
@@ -138,7 +149,7 @@ ls -alh ~/pgosm-data/
 -rw-r--r--  1 root        root          70 May 18 17:24 district-of-columbia-2021-05-18.osm.pbf.md5
 -rw-r--r--  1 root        root        799K May 18 17:25 district-of-columbia.log
 -rw-r--r--  1 root        root         117 May 18 17:24 osm2pgsql-district-of-columbia.sh
--rw-r--r--  1 root        root        154M May 18 17:25 pgosm-flex-district-of-columbia-run-all.sql
+-rw-r--r--  1 root        root        154M May 18 17:25 pgosm-flex-north-america-us-district-of-columbia-run-all.sql
 ```
 
 The designed intent is to load the OpenStreetMap data processed by this
@@ -150,7 +161,7 @@ Postgres/PostGIS database using `psql`.
 
 ```bash
 psql -d $YOUR_DB_STRING \
-    -f ~/pgosm-data/pgosm-flex-district-of-columbia-run-all.sql
+    -f ~/pgosm-data/pgosm-flex-north-america-us-district-of-columbia-run-all.sql
 ```
 
 
@@ -204,50 +215,6 @@ layer set and enables joining any OSM data in another layer (e.g. `osm.road_line
 to find any additional tags.
 
 
-## Customize PgOSM
-
-Track additional details in the `osm.pgosm_meta` table (see more below)
-and customize behavior with the use of environment variables.
-
-* `OSM_DATE`
-* `PGOSM_SRID`
-* `PGOSM_REGION`
-* `PGOSM_LANGUAGE`
-
-
-### Custom SRID
-
-To use `SRID 4326` instead of the default `SRID 3857`, set the `PGOSM_SRID`
-environment variable before running osm2pgsql.
-
-```bash
-export PGOSM_SRID=4326
-```
-
-Changes to the SRID are reflected in output printed.
-
-```bash
-2021-01-08 15:01:15  osm2pgsql version 1.4.0 (1.4.0-72-gc3eb0fb6)
-2021-01-08 15:01:15  Database version: 13.1 (Ubuntu 13.1-1.pgdg20.10+1)
-2021-01-08 15:01:15  Node-cache: cache=800MB, maxblocks=12800*65536, allocation method=11
-Custom SRID: 4326
-...
-```
-
-### Preferred Language
-
-The `name` column throughout PgOSM-Flex defaults to using the highest priority
-name tag according to the [OSM Wiki](https://wiki.openstreetmap.org/wiki/Names). Setting `PGOSM_LANGUAGE` allows giving preference to name tags with the
-given language.
-The value of `PGOSM_LANGUAGE` should match the codes used by OSM:
-
-> where code is a lowercase language's ISO 639-1 alpha2 code, or a lowercase ISO 639-2 code if an ISO 639-1 code doesn't exist." -- [Multilingual names on OSM Wiki](https://wiki.openstreetmap.org/wiki/Multilingual_names)
-
-
-```bash
-export PGOSM_LANGUAGE=kn
-```
-
 
 
 
@@ -259,69 +226,7 @@ styles using the `public.layer_styles` table created by QGIS.
 See [the QGIS Style README.md](https://github.com/rustprooflabs/pgosm-flex/blob/main/db/qgis-style/README.md)
 for more information.
 
-
-## Points of Interest (POIs)
-
-
-Loads an range of tags into a materialized view (`osm.poi_all`) for easy searching POIs.
-Line and polygon data is forced to point geometry using
-`ST_Centroid()`.  This layer duplicates a bunch of other more specific layers
-(shop, amenity, etc.) to provide a single place for simplified POI searches.
-
-Special layer included by layer sets `run-all` and `run-no-tags`.
-See `style/poi.lua` for logic on how to include POIs.
-The topic of POIs is subject and likely is not inclusive of everything that probably should be considered
-a POI. If there are POIs missing
-from this table please submit a [new issue](https://github.com/rustprooflabs/pgosm-flex/issues/new)
-with sufficient details about what is missing.
-Pull requests also welcome! [See CONTRIBUTING.md](CONTRIBUTING.md).
-
-
-Counts of POIs by `osm_type`.
-
-```sql
-SELECT osm_type, COUNT(*)
-    FROM osm.vpoi_all
-    GROUP BY osm_type
-    ORDER BY COUNT(*) DESC;
-```
-
-Results from Washington D.C. subregion (March 2020).
-
-```
-┌──────────┬───────┐
-│ osm_type │ count │
-╞══════════╪═══════╡
-│ amenity  │ 12663 │
-│ leisure  │  2701 │
-│ building │  2045 │
-│ shop     │  1739 │
-│ tourism  │   729 │
-│ man_made │   570 │
-│ landuse  │    32 │
-│ natural  │    19 │
-└──────────┴───────┘
-```
-
-Includes Points (`N`), Lines (`L`) and Polygons (`W`).
-
-
-```sql
-SELECT geom_type, COUNT(*) 
-    FROM osm.vpoi_all
-    GROUP BY geom_type
-    ORDER BY COUNT(*) DESC;
-```
-
-```
-┌───────────┬───────┐
-│ geom_type │ count │
-╞═══════════╪═══════╡
-│ W         │ 10740 │
-│ N         │  9556 │
-│ L         │   202 │
-└───────────┴───────┘
-```
+Loaded by Docker process by default.  Is excluded when `--data-only` used.
 
 
 
@@ -386,6 +291,70 @@ SELECT *
 
 For example queries with data loaded by PgOSM-Flex see
 [QUERY.md](QUERY.md).
+
+
+## Points of Interest (POIs)
+
+
+Loads an range of tags into a materialized view (`osm.poi_all`) for easy searching POIs.
+Line and polygon data is forced to point geometry using
+`ST_Centroid()`.  This layer duplicates a bunch of other more specific layers
+(shop, amenity, etc.) to provide a single place for simplified POI searches.
+
+Special layer included by layer sets `run-all` and `run-no-tags`.
+See `style/poi.lua` for logic on how to include POIs.
+The topic of POIs is subject and likely is not inclusive of everything that probably should be considered
+a POI. If there are POIs missing
+from this table please submit a [new issue](https://github.com/rustprooflabs/pgosm-flex/issues/new)
+with sufficient details about what is missing.
+Pull requests also welcome! [See CONTRIBUTING.md](CONTRIBUTING.md).
+
+
+Counts of POIs by `osm_type`.
+
+```sql
+SELECT osm_type, COUNT(*)
+    FROM osm.vpoi_all
+    GROUP BY osm_type
+    ORDER BY COUNT(*) DESC;
+```
+
+Results from Washington D.C. subregion (March 2020).
+
+```
+┌──────────┬───────┐
+│ osm_type │ count │
+╞══════════╪═══════╡
+│ amenity  │ 12663 │
+│ leisure  │  2701 │
+│ building │  2045 │
+│ shop     │  1739 │
+│ tourism  │   729 │
+│ man_made │   570 │
+│ landuse  │    32 │
+│ natural  │    19 │
+└──────────┴───────┘
+```
+
+Includes Points (`N`), Lines (`L`) and Polygons (`W`).
+
+
+```sql
+SELECT geom_type, COUNT(*) 
+    FROM osm.vpoi_all
+    GROUP BY geom_type
+    ORDER BY COUNT(*) DESC;
+```
+
+```
+┌───────────┬───────┐
+│ geom_type │ count │
+╞═══════════╪═══════╡
+│ W         │ 10740 │
+│ N         │  9556 │
+│ L         │   202 │
+└───────────┴───────┘
+```
 
 
 

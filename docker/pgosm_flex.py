@@ -23,6 +23,7 @@ BASE_PATH_DEFAULT = '/app'
 """Default path for pgosm-flex project for Docker.
 """
 
+DEFAULT_SRID = '3857'
 
 def get_today():
     today = datetime.datetime.today().strftime('%Y-%m-%d')
@@ -30,40 +31,62 @@ def get_today():
 
 @click.command()
 @click.option('--layerset', required=True,
+              default='run-all',
+              show_default='run-all',
               prompt='PgOSM Flex Layer Set',
               help='Layer set from PgOSM Flex to load. e.g. run-all')
 @click.option('--ram', required=True,
               prompt='Server RAM (GB)',
+              default=4,
+              show_default=4,
               help='Amount of RAM in GB available on the server running this process.')
 @click.option('--region', required=True,
               prompt="Region name",
+              show_default="north-america/us",
+              default="north-america/us",
               help='Region name matching the filename for data sourced from Geofabrik. e.g. north-america/us')
 @click.option('--subregion', required=False,
-              default=None,
+              default="district-of-columbia",
+              prompt="Subregion (set to 'none' to skip)",
+              show_default="district-of-columbia",
               help='Sub-region name matching the filename for data sourced from Geofabrik. e.g. district-of-columbia')
+@click.option('--srid', required=False, default=DEFAULT_SRID,
+              envvar="PGOSM_SRID",
+              help="SRID for data in PostGIS.")
 @click.option('--pgosm-date', required=False,
               default=get_today(),
               envvar="PGOSM_DATE",
-              help="Date of the data in YYYY-MM-DD format.")
-@click.option('--basepath',
-              required=False,
-              default=BASE_PATH_DEFAULT,
-              help='Used when testing locally and not within Docker')
+              help="Date of the data in YYYY-MM-DD format. Set to historic date to load locally archived PBF/MD5 file, will fail if both files do not exist.")
+@click.option('--language', default=None,
+              envvar="PGOSM_LANGUAGE",
+              help="Set default language in loaded OpenStreetMap data when available.  e.g. 'en' or 'kn'.")
+@click.option('--schema-name', required=False,
+              default='osm',
+              help="Coming soon")
 @click.option('--skip-nested',
               default=False,
               envvar="PGOSM_SKIP_NESTED_POLYGON",
               is_flag=True,
               help='When True, skips calculating nested admin polygons. Can be time consuming on large regions.')
-@click.option('--debug', is_flag=True)
 @click.option('--data-only',
               default=False,
               envvar="PGOSM_DATA_SCHEMA_ONLY",
               is_flag=True,
               help="When True, skips running Sqitch and importing QGIS Styles.")
-def run_pgosm_flex(layerset, ram, region, subregion, pgosm_date,
-                   basepath, skip_nested, debug, data_only):
-    """Main logic to run PgOSM Flex within Docker.
+@click.option('--debug', is_flag=True,
+              help='Enables additional log output')
+@click.option('--basepath',
+              required=False,
+              default=BASE_PATH_DEFAULT,
+              help='Debugging option. Used when testing locally and not within Docker')
+def run_pgosm_flex(layerset, ram, region, subregion, srid, pgosm_date, language,
+                   schema_name, skip_nested, data_only, debug, basepath):
+    """Logic to run PgOSM Flex within Docker.
     """
+    # Required for optional user prompt
+    if subregion == 'none':
+        subregion = None
+
     paths = get_paths(base_path=basepath)
     log_file = get_log_path(region, subregion, paths)
 
@@ -82,15 +105,47 @@ def run_pgosm_flex(layerset, ram, region, subregion, pgosm_date,
     wait_for_postgres()
 
     db.prepare_pgosm_db(data_only=data_only, paths=paths)
+
+    set_env_vars(region, subregion, srid, language)
+
     run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, paths=paths)
     run_post_processing(layerset=layerset, paths=paths,
                         skip_nested=skip_nested)
 
     export_filename = get_export_filename(region, subregion, layerset)
+
+    if schema_name != 'osm':
+        db.rename_schema(schema_name)
+
     db.run_pg_dump(export_filename,
                    out_path=paths['out_path'],
-                   data_only=data_only)
+                   data_only=data_only,
+                   schema_name=schema_name)
     logger.info('PgOSM Flex complete!')
+
+
+def set_env_vars(region, subregion, srid, language):
+    """Sets environment variables needed by PgOSM Flex
+
+    Parameters
+    ------------------------
+    region : str
+    subregion : str
+    srid : str
+    language : str
+    """
+    if subregion == None:
+        pgosm_region = f'{region}-{layerset}'
+    else:
+        pgosm_region = f'{region}-{subregion}'
+
+    os.environ['PGOSM_REGION'] = pgosm_region
+
+    if srid != DEFAULT_SRID:
+        os.environ['PGOSM_SRID'] = str(srid)
+    if language is not None:
+        os.environ['PGOSM_LANGUAGE'] = str(language)
+
 
 
 def setup_logger(log_file, debug):
@@ -136,12 +191,12 @@ def get_log_path(region, subregion, paths):
         filename = f'{region_clean}-{subregion}.log'
 
     # Users will see this when they run, can copy/paste tail command.
+    # Path matches path if following project's main README.md
     print(f'Log filename: {filename}')
     print('If running in Docker following procedures the file can be monitored')
-    print(f'  tail -f pgosm-data/{filename}')
-    log_file = os.path.join(paths['out_path'], filename)
+    print(f'  tail -f ~/pgosm-data/{filename}')
 
-    print(f'If testing locally:\n   tail -f {log_file}')
+    log_file = os.path.join(paths['out_path'], filename)
     return log_file
 
 
@@ -481,6 +536,10 @@ def run_osm2pgsql(osm2pgsql_command, paths):
                             capture_output=True,
                             cwd=paths['flex_path'],
                             check=True)
+    # output from PgOSM Flex lua goes to stdout
+    logger.info(f'PgOSM Flex output: \n {output.stdout}\nEND PgOSM Flex output')
+
+    # osm2pgsql output goes to stderr
     logger.info(f'osm2pgsql output: \n {output.stderr}\nEND osm2pgsql output')
 
 

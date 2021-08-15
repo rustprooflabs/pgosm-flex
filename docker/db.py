@@ -302,7 +302,16 @@ def pgosm_nested_admin_polygons(paths):
     LOGGER.info(f'Nested polygon output: \n {output.stderr}')
 
 
-def run_pg_dump(export_filename, out_path, data_only):
+def rename_schema(schema_name):
+    LOGGER.info(f'Renaming schema from osm to {schema_name}')
+    sql_raw = f'ALTER SCHEMA osm RENAME TO {schema_name} ;'
+
+    with get_db_conn(db_name='pgosm') as conn:
+        cur = conn.cursor()
+        cur.execute(sql_raw)
+
+
+def run_pg_dump(export_filename, out_path, data_only, schema_name):
     """Runs pg_dump to save processed data to load into other PostGIS DBs.
 
     Parameters
@@ -310,22 +319,22 @@ def run_pg_dump(export_filename, out_path, data_only):
     export_filename : str
     out_path : str
     data_only : bool
+    schema_name : str
     """
     export_path = os.path.join(out_path, export_filename)
     logger = logging.getLogger('pgosm-flex')
     db_name = 'pgosm'
-    data_schema_name = 'osm'
     conn_string = connection_string(db_name=db_name)
 
     if data_only:
-        logger.info(f'Running pg_dump (only {data_schema_name} schema)')
+        logger.info(f'Running pg_dump (only {schema_name} schema)')
         cmds = ['pg_dump', '-d', conn_string,
-                f'--schema={data_schema_name}',
+                f'--schema={schema_name}',
                 '-f', export_path]
     else:
-        logger.info(f'Running pg_dump ({data_schema_name} schema plus extras)')
+        logger.info(f'Running pg_dump ({schema_name} schema plus extras)')
         cmds = ['pg_dump', '-d', conn_string,
-                f'--schema={data_schema_name}',
+                f'--schema={schema_name}',
                 '--schema=pgosm',
                 '--schema=public',
                 '-f', export_path]
