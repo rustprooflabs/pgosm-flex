@@ -112,8 +112,12 @@ def run_sqitch_prep(paths):
                             capture_output=True,
                             cwd=paths['db_path'],
                             check=False)
-
-    LOGGER.debug(f'Output from Sqitch: {output.stdout}')
+    if output.returncode > 0:
+        LOGGER.error('Loading Sqitch schema failed. pgosm schema will not be included in output.')
+        LOGGER.error(output.stderr)
+        return False
+    else:
+        LOGGER.debug(f'Output from Sqitch: {output.stdout}')
 
     LOGGER.debug('Loading US Roads helper data')
     output = subprocess.run(cmds_roads,
@@ -121,9 +125,15 @@ def run_sqitch_prep(paths):
                             capture_output=True,
                             cwd=paths['db_path'],
                             check=False)
-    code = output.returncode
-    LOGGER.debug(f'Output from loading roads: {output.stdout}')
+    if output.returncode > 0:
+        LOGGER.error('Loading roads helper data failed. Check output')
+        LOGGER.error(output.stderr)
+        return False
+    else:
+        LOGGER.debug(f'Output from loading roads: {output.stdout}')
+
     LOGGER.info('Sqitch deployment complete')
+    return True
 
 
 def load_qgis_styles(paths):
@@ -244,7 +254,7 @@ def get_db_conn(db_name):
         conn = psycopg2.connect(conn_string)
         LOGGER.debug('Connection to Postgres established')
     except psycopg2.OperationalError as err:
-        err_msg = 'Database connection error.  Error: {}'.format(err)
+        err_msg = 'Database connection error. Error: {}'.format(err)
         LOGGER.error(err_msg)
         return False
     return conn
@@ -291,19 +301,37 @@ def pgosm_nested_admin_polygons(paths):
     LOGGER.info(f'Nested polygon output: \n {output.stderr}')
 
 
-def run_pg_dump(export_filename, out_path):
+def run_pg_dump(export_filename, out_path, data_only):
+    """Runs pg_dump to save processed data to load into other PostGIS DBs.
+
+    Parameters
+    ---------------------------
+    export_filename : str
+    out_path : str
+    data_only : bool
+    """
     export_path = os.path.join(out_path, export_filename)
     logger = logging.getLogger('pgosm-flex')
     db_name = 'pgosm'
     data_schema_name = 'osm'
     conn_string = connection_string(db_name=db_name)
-    logger.info('Running pg_dump')
-    cmds = ['pg_dump', '-d', conn_string,
-            f'--schema={data_schema_name}',
-            '-f', export_path]
+
+    if data_only:
+        logger.info(f'Running pg_dump (only {data_schema_name} schema)')
+        cmds = ['pg_dump', '-d', conn_string,
+                f'--schema={data_schema_name}',
+                '-f', export_path]
+    else:
+        logger.info(f'Running pg_dump ({data_schema_name} schema plus extras)')
+        cmds = ['pg_dump', '-d', conn_string,
+                f'--schema={data_schema_name}',
+                '--schema=pgosm',
+                '--schema=public',
+                '-f', export_path]
+
     output = subprocess.run(cmds,
                             text=True,
                             capture_output=True,
                             check=False)
+    LOGGER.info(f'pg_dump complete, saved to {export_path}')
     LOGGER.debug(f'pg_dump output: \n {output.stderr}')
-

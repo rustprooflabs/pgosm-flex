@@ -86,8 +86,10 @@ def run_pgosm_flex(layerset, ram, region, subregion, pgosm_date,
     run_post_processing(layerset=layerset, paths=paths,
                         skip_nested=skip_nested)
 
-    export_filename = get_export_filename(region, subregion)
-    db.run_pg_dump(export_filename, out_path=paths['out_path'])
+    export_filename = get_export_filename(region, subregion, layerset)
+    db.run_pg_dump(export_filename,
+                   out_path=paths['out_path'],
+                   data_only=data_only)
     logger.info('PgOSM Flex complete!')
 
 
@@ -188,13 +190,14 @@ def get_region_filename(region, subregion):
     return filename
 
 
-def get_export_filename(region, subregion):
+def get_export_filename(region, subregion, layerset):
     """Returns the .sql filename to use from pg_dump.
 
     Parameters
     ----------------------
     region : str
     subregion : str
+    layerset : str
 
     Returns
     ----------------------
@@ -203,9 +206,9 @@ def get_export_filename(region, subregion):
     region = region.replace('/', '-')
     subregion = subregion.replace('/', '-')
     if subregion == None:
-        filename = f'pgosm-flex-{region}.sql'
+        filename = f'pgosm-flex-{region}-{layerset}.sql'
     else:
-        filename = f'pgosm-flex-{region}-{subregion}.sql'
+        filename = f'pgosm-flex-{region}-{subregion}-{layerset}.sql'
 
     return filename
 
