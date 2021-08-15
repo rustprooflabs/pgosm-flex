@@ -137,7 +137,7 @@ to customize Postgres' configuration at run-time in Docker.
 docker run --name pgosm -d --rm \
     -v ~/pgosm-data:/app/output \
     -v /etc/localtime:/etc/localtime:ro \
-    -e POSTGRES_PASSWORD=mysecretpassword \
+    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
     -p 5433:5432 -d rustprooflabs/pgosm-flex \
     -c shared_buffers=1GB \
     -c maintenance_work_mem=1GB \
