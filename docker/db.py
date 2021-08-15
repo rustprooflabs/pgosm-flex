@@ -289,7 +289,6 @@ def pgosm_nested_admin_polygons(paths):
     ----------------------
     paths : dict
     """
-    LOGGER.warning('MISSING - Make nested admin polygons optional!')
     sql_raw = 'CALL osm.build_nested_admin_polygons();'
 
     conn_string = connection_string(db_name='pgosm')
