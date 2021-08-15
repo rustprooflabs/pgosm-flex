@@ -29,15 +29,18 @@ def pg_isready():
     return code == 0
 
 
-def prepare_pgosm_db():
+def prepare_pgosm_db(data_only, paths):
     """Runs through series of steps to prepare database for PgOSM
     """
     pg_version_check()
     drop_pgosm_db()
     create_pgosm_db()
-    LOGGER.warning('MISSING - Run sqitch deployment')
-    LOGGER.warning('MISSING - Load QGIS styles')
-
+    if not data_only:
+        LOGGER.info('Loading extras via Sqitch.')
+        run_sqitch_prep(paths)
+        load_qgis_styles(paths)
+    else:
+        LOGGER.info('Data only mode enabled, no Sqitch or QGIS styles.')
 
 
 def pg_version_check():
@@ -90,6 +93,86 @@ def create_pgosm_db():
         LOGGER.debug('Created osm schema')
 
 
+def run_sqitch_prep(paths):
+    """Runs Sqitch to create DB structure and populate helper data.
+
+    Parameters
+    -------------------------
+    paths : dict
+    """
+    LOGGER.info('Deploy schema via Sqitch')
+
+    conn_string = connection_string(db_name='pgosm')
+    conn_string_sqitch = sqitch_db_string(db_name='pgosm')
+
+    cmds_sqitch = ['sqitch', 'deploy', conn_string_sqitch]
+    cmds_roads = ['psql', '-d', conn_string, '-f', 'data/roads-us.sql']
+    output = subprocess.run(cmds_sqitch,
+                            text=True,
+                            capture_output=True,
+                            cwd=paths['db_path'],
+                            check=False)
+
+    LOGGER.debug(f'Output from Sqitch: {output.stdout}')
+
+    LOGGER.debug('Loading US Roads helper data')
+    output = subprocess.run(cmds_roads,
+                            text=True,
+                            capture_output=True,
+                            cwd=paths['db_path'],
+                            check=False)
+    code = output.returncode
+    LOGGER.debug(f'Output from loading roads: {output.stdout}')
+    LOGGER.info('Sqitch deployment complete')
+
+
+def load_qgis_styles(paths):
+    """Loads QGIS style data for easy formatting of most common layers.
+
+    Parameters
+    -------------------------
+    paths : dict
+    """
+    LOGGER.info('Load QGIS styles...')
+    # These two paths can easily be ran via psycopg2
+    create_path = os.path.join(paths['db_path'],
+                               'qgis-style',
+                               'create_layer_styles.sql')
+    load_path = os.path.join(paths['db_path'],
+                               'qgis-style',
+                               '_load_layer_styles.sql')
+
+    with open(create_path, 'r') as f:
+        create_sql = f.read()
+
+    with open(load_path, 'r') as f:
+        load_sql = f.read()
+
+    with get_db_conn(db_name='pgosm') as conn:
+        cur = conn.cursor()
+        cur.execute(create_sql)
+    LOGGER.debug('QGIS Style table created')
+
+    # Loading layer_styles data is done from files created by pg_dump, using
+    # psql to reload is easiest
+    conn_string = connection_string(db_name='pgosm')
+    cmds_populate = ['psql', '-d', conn_string,
+                     '-f', 'qgis-style/layer_styles.sql']
+
+    output = subprocess.run(cmds_populate,
+                            text=True,
+                            capture_output=True,
+                            cwd=paths['db_path'],
+                            check=False)
+
+    LOGGER.debug(f'Output from loading QGIS style data: {output.stdout}')
+
+    with get_db_conn(db_name='pgosm') as conn:
+        cur = conn.cursor()
+        cur.execute(load_sql)
+    LOGGER.info('QGIS Style table populated')
+
+
 def connection_string(db_name):
     """Returns connection string to pgosm database.
 
@@ -104,6 +187,39 @@ def connection_string(db_name):
     conn_string : str
     """
     app_str = '?application_name=pgosm-flex'
+
+    pg_details = get_pg_user_pass()
+    pg_user = pg_details['pg_user']
+    pg_pass = pg_details['pg_pass']
+
+    if pg_pass is None:
+        conn_string = f'postgresql://{pg_user}@localhost/{db_name}{app_str}'
+    else:
+        conn_string = f'postgresql://{pg_user}:{pg_pass}@localhost/{db_name}{app_str}'
+
+    return conn_string
+
+
+def sqitch_db_string(db_name):
+    pg_details = get_pg_user_pass()
+    pg_user = pg_details['pg_user']
+    pg_pass = pg_details['pg_pass']
+
+    if pg_pass is None:
+        conn_string = f'db:pg://{pg_user}@localhost/{db_name}'
+    else:
+        conn_string = f'db:pg://{pg_user}:{pg_pass}@localhost/{db_name}'
+
+    return conn_string
+
+
+def get_pg_user_pass():
+    """Retrieves username/password from environment variables if they exist.
+
+    Returns
+    --------------------------
+    pg_details : dict
+    """
     try:
         pg_user = os.environ['POSTGRES_USER']
     except KeyError:
@@ -116,12 +232,8 @@ def connection_string(db_name):
         LOGGER.debug('POSTGRES_PASSWORD not configured. Should work if ~/.pgpass is configured.')
         pg_pass = None
 
-    if pg_pass is None:
-        conn_string = f'postgresql://{pg_user}@localhost/{db_name}{app_str}'
-    else:
-        conn_string = f'postgresql://{pg_user}:{pg_pass}@localhost/{db_name}{app_str}'
-
-    return conn_string
+    pg_details = {'pg_user': pg_user, 'pg_pass': pg_pass}
+    return pg_details
 
 
 def get_db_conn(db_name):
@@ -193,5 +305,5 @@ def run_pg_dump(export_filename, out_path):
                             text=True,
                             capture_output=True,
                             check=False)
-    LOGGER.info(f'pg_dump output: \n {output.stderr}')
+    LOGGER.debug(f'pg_dump output: \n {output.stderr}')
 

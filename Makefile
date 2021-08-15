@@ -52,7 +52,8 @@ build-run-docker: ## Builds and runs PgOSM Flex with D.C. test file
 		--layerset=run-all \
 		--ram=1 \
 		--region=north-america/us \
-		--subregion=district-of-columbia
+		--subregion=district-of-columbia \
+		--debug
 
 
 .PHONY: unit-tests

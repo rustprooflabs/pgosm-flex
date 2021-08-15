@@ -23,6 +23,7 @@ BASE_PATH_DEFAULT = '/app'
 """Default path for pgosm-flex project for Docker.
 """
 
+
 def get_today():
     today = datetime.datetime.today().strftime('%Y-%m-%d')
     return today
@@ -54,15 +55,21 @@ def get_today():
               is_flag=True,
               help='When True, skips calculating nested admin polygons. Can be time consuming on large regions.')
 @click.option('--debug', is_flag=True)
+@click.option('--data-only',
+              default=False,
+              envvar="PGOSM_DATA_SCHEMA_ONLY",
+              is_flag=True,
+              help="When True, skips running Sqitch and importing QGIS Styles.")
 def run_pgosm_flex(layerset, ram, region, subregion, pgosm_date,
-                   basepath, debug, skip_nested):
+                   basepath, skip_nested, debug, data_only):
     """Main logic to run PgOSM Flex within Docker.
     """
     paths = get_paths(base_path=basepath)
     log_file = get_log_path(region, subregion, paths)
 
     setup_logger(log_file, debug)
-    logging.getLogger('pgosm-flex').info('PgOSM Flex starting...')
+    logger = logging.getLogger('pgosm-flex')
+    logger.info('PgOSM Flex starting...')
     pbf_file = prepare_data(region=region,
                             subregion=subregion,
                             pgosm_date=pgosm_date,
@@ -74,13 +81,14 @@ def run_pgosm_flex(layerset, ram, region, subregion, pgosm_date,
                                               paths=paths)
     wait_for_postgres()
 
-    db.prepare_pgosm_db()
+    db.prepare_pgosm_db(data_only=data_only, paths=paths)
     run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, paths=paths)
     run_post_processing(layerset=layerset, paths=paths,
                         skip_nested=skip_nested)
 
     export_filename = get_export_filename(region, subregion)
     db.run_pg_dump(export_filename, out_path=paths['out_path'])
+    logger.info('PgOSM Flex complete!')
 
 
 def setup_logger(log_file, debug):

@@ -4,3 +4,5 @@ tests/
 .github
 .gitignore
 Makefile
+.dockerignore
+Dockerfile
