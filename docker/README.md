@@ -63,5 +63,5 @@ coverage run -m unittest tests/*.py
 
 
 ```bash
-coverage report -m webapp/*.py
+coverage report -m ./*.py
 ```

@@ -238,6 +238,8 @@ def get_pg_user_pass():
 
     try:
         pg_pass = os.environ['POSTGRES_PASSWORD']
+        if pg_pass == '':
+            pg_pass = None
     except KeyError:
         LOGGER.debug('POSTGRES_PASSWORD not configured. Should work if ~/.pgpass is configured.')
         pg_pass = None
