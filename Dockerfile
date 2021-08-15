@@ -33,6 +33,7 @@ RUN git clone git://github.com/openstreetmap/osm2pgsql.git \
     && apt autoremove -y \
     && cd /tmp && rm -r /tmp/osm2pgsql
 
+COPY ./sqitch.conf /etc/sqitch/sqitch.conf
 
 WORKDIR /app
 COPY . ./
