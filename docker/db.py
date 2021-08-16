@@ -2,6 +2,7 @@
 """
 import logging
 import os
+import sys
 import subprocess
 
 import psycopg2
@@ -191,7 +192,7 @@ def connection_string(db_name):
 
     * POSTGRES_PASSWORD
     * POSTGRES_USER
-    
+
     Returns
     --------------------------
     conn_string : str
@@ -211,6 +212,16 @@ def connection_string(db_name):
 
 
 def sqitch_db_string(db_name):
+    """Returns DB string used for Sqitch.
+
+    Parameters
+    -----------------------
+    db_name : str
+
+    Returns
+    -----------------------
+    conn_string : str
+    """
     pg_details = get_pg_user_pass()
     pg_user = pg_details['pg_user']
     pg_pass = pg_details['pg_pass']
@@ -303,6 +314,12 @@ def pgosm_nested_admin_polygons(paths):
 
 
 def rename_schema(schema_name):
+    """Renames default schema name "osm" to `schema_name`
+
+    Returns
+    ----------------------------
+    schema_name : str
+    """
     LOGGER.info(f'Renaming schema from osm to {schema_name}')
     sql_raw = f'ALTER SCHEMA osm RENAME TO {schema_name} ;'
 

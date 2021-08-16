@@ -10,25 +10,24 @@ import db
 LOGGER = logging.getLogger('pgosm-flex')
 
 
-def osm2pgsql_recommendation(region, ram, layerset, pbf_filename,
-                             out_path):
-    """Writes osm2pgsql recommendation to disk.
+def osm2pgsql_recommendation(ram, layerset, pbf_filename, out_path):
+    """Returns recommended osm2pgsql command.
 
-    Recommendation from https://osm2pgsql-tuner.com
+    Recommendation from API at https://osm2pgsql-tuner.com
 
     Parameters
     ----------------------
-    region : str
-        Region name matching the filename for data sourced from Geofabrik.
-        e.g. district-of-columbia
-
     ram : float
         Total system RAM available in GB
 
-    layerset : str
-        Layer set from PgOSM Flex.  e.g. run-all, run-no-tags
+    pbf_filename : str
+
+    out_path : str
+
+    Returns
+    ----------------------
+    osm2pgsql_cmd : str
     """
-    region_name = region
     system_ram_gb = ram
     pgosm_layer_set = layerset
 

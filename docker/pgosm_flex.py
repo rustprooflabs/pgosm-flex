@@ -11,9 +11,9 @@ from pathlib import Path
 import shutil
 import sys
 import subprocess
+import time
 
 import click
-import time
 
 import osm2pgsql_recommendation as rec
 import db
@@ -26,6 +26,12 @@ BASE_PATH_DEFAULT = '/app'
 DEFAULT_SRID = '3857'
 
 def get_today():
+    """Returns yyyy-mm-dd formatted string for today.
+
+    Retunrs
+    -------------------------
+    today : str
+    """
     today = datetime.datetime.today().strftime('%Y-%m-%d')
     return today
 
@@ -93,10 +99,10 @@ def run_pgosm_flex(layerset, ram, region, subregion, srid, pgosm_date, language,
     setup_logger(log_file, debug)
     logger = logging.getLogger('pgosm-flex')
     logger.info('PgOSM Flex starting...')
-    pbf_file = prepare_data(region=region,
-                            subregion=subregion,
-                            pgosm_date=pgosm_date,
-                            paths=paths)
+    prepare_data(region=region,
+                 subregion=subregion,
+                 pgosm_date=pgosm_date,
+                 paths=paths)
     osm2pgsql_command = get_osm2pgsql_command(region=region,
                                               subregion=subregion,
                                               ram=ram,
@@ -134,8 +140,8 @@ def set_env_vars(region, subregion, srid, language):
     srid : str
     language : str
     """
-    if subregion == None:
-        pgosm_region = f'{region}-{layerset}'
+    if subregion is None:
+        pgosm_region = f'{region}'
     else:
         pgosm_region = f'{region}-{subregion}'
 
@@ -184,8 +190,20 @@ def setup_logger(log_file, debug):
 
 
 def get_log_path(region, subregion, paths):
+    """Returns path to log_file for given region/subregion.
+
+    Parameters
+    ---------------------
+    region : str
+    subregion : str
+    paths : dict
+
+    Returns
+    ---------------------
+    log_file : str
+    """
     region_clean = region.replace('/', '-')
-    if subregion == None:
+    if subregion is None:
         filename = f'{region_clean}.log'
     else:
         filename = f'{region_clean}-{subregion}.log'
@@ -237,7 +255,7 @@ def get_region_filename(region, subregion):
     filename : str
     """
     base_name = '{}-latest.osm.pbf'
-    if subregion == None:
+    if subregion is None:
         filename = base_name.format(region)
     else:
         filename = base_name.format(subregion)
@@ -260,7 +278,7 @@ def get_export_filename(region, subregion, layerset):
     """
     region = region.replace('/', '-')
     subregion = subregion.replace('/', '-')
-    if subregion == None:
+    if subregion is None:
         filename = f'pgosm-flex-{region}-{layerset}.sql'
     else:
         filename = f'pgosm-flex-{region}-{subregion}-{layerset}.sql'
@@ -282,7 +300,7 @@ def get_pbf_url(region, subregion):
     """
     base_url = 'https://download.geofabrik.de'
 
-    if subregion == None:
+    if subregion is None:
         pbf_url = f'{base_url}/{region}-latest.osm.pbf'
     else:
         pbf_url = f'{base_url}/{region}/{subregion}-latest.osm.pbf'
@@ -355,7 +373,7 @@ def prepare_data(region, subregion, pgosm_date, paths):
     md5_file = f'{pbf_file}.md5'
     md5_file_with_date = f'{pbf_file_with_date}.md5'
 
-    if pbf_download_needed(pbf_file_with_date, md5_file_with_date):
+    if pbf_download_needed(pbf_file_with_date, md5_file_with_date, pgosm_date):
         logging.getLogger('pgosm-flex').info('Downloading PBF and MD5 files...')
         download_data(region, subregion, pbf_file, md5_file)
         archive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date)
@@ -368,7 +386,7 @@ def prepare_data(region, subregion, pgosm_date, paths):
     return pbf_file
 
 
-def pbf_download_needed(pbf_file_with_date, md5_file_with_date):
+def pbf_download_needed(pbf_file_with_date, md5_file_with_date, pgosm_date):
     """Decides if the PBF/MD5 files need to be downloaded.
 
     Parameters
@@ -404,11 +422,20 @@ def pbf_download_needed(pbf_file_with_date, md5_file_with_date):
 
 
 def download_data(region, subregion, pbf_file, md5_file):
+    """Downloads PBF and MD5 file using wget.
+
+    Parameters
+    ---------------------
+    region : str
+    subregion : str
+    pbf_file : str
+    md5_file : str
+    """
     logger = logging.getLogger('pgosm-flex')
     logger.info(f'Downloading PBF data to {pbf_file}')
     pbf_url = get_pbf_url(region, subregion)
 
-    result = subprocess.run(
+    subprocess.run(
         ['/usr/bin/wget', pbf_url,
          "-O", pbf_file , "--quiet"
         ],
@@ -418,7 +445,7 @@ def download_data(region, subregion, pbf_file, md5_file):
     )
 
     logger.info(f'Downloading MD5 checksum to {md5_file}')
-    result_md5 = subprocess.run(
+    subprocess.run(
         ['/usr/bin/wget', f'{pbf_url}.md5',
          "-O", md5_file , "--quiet"
         ],
@@ -430,13 +457,18 @@ def download_data(region, subregion, pbf_file, md5_file):
 
 def verify_checksum(md5_file, paths):
     """If verfication fails, raises `CalledProcessError`
+
+    Parameters
+    ---------------------
+    md5_file : str
+    paths : dict
     """
-    cmd = subprocess.run(['md5sum', '-c', md5_file],
-                          capture_output=True,
-                          text=True,
-                          check=True,
-                          cwd=paths['out_path'])
-    return cmd
+    subprocess.run(['md5sum', '-c', md5_file],
+                   capture_output=True,
+                   text=True,
+                   check=True,
+                   cwd=paths['out_path'])
+
 
 
 def archive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date):
@@ -507,14 +539,13 @@ def get_osm2pgsql_command(region, subregion, ram, layerset, paths):
     rec_cmd : str
         osm2pgsql command recommended by the API
     """
-    if subregion == None:
+    if subregion is None:
         region = region
     else:
         region = subregion
 
     pbf_filename = get_region_filename(region, subregion)
-    rec_cmd = rec.osm2pgsql_recommendation(region=region,
-                                           ram=ram,
+    rec_cmd = rec.osm2pgsql_recommendation(ram=ram,
                                            layerset=layerset,
                                            pbf_filename=pbf_filename,
                                            out_path=paths['out_path'])

@@ -65,3 +65,10 @@ coverage run -m unittest tests/*.py
 ```bash
 coverage report -m ./*.py
 ```
+
+### Pylint
+
+
+```bash
+pylint --rcfile=./.pylintrc ./*.py
+```
