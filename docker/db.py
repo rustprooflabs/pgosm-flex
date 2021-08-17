@@ -6,6 +6,8 @@ import sys
 import subprocess
 
 import psycopg2
+import sh
+
 
 LOGGER = logging.getLogger('pgosm-flex')
 
@@ -362,3 +364,17 @@ def run_pg_dump(export_filename, out_path, data_only, schema_name):
                             check=False)
     LOGGER.info(f'pg_dump complete, saved to {export_path}')
     LOGGER.debug(f'pg_dump output: \n {output.stderr}')
+    fix_pg_dump_create_public(export_path)
+
+
+def fix_pg_dump_create_public(export_path):
+    """Using pg_dump with `--schema=public` results in
+    a .sql script containing `CREATE SCHEMA public;`, nearly always breaks
+    in target DB.  Replaces with `CREATE SCHEMA IF NOT EXISTS public;`
+    """
+    result = sh.sed('-i',
+           's/CREATE SCHEMA public;/CREATE SCHEMA IF NOT EXISTS public;/',
+           export_path)
+    LOGGER.debug('Completed replacement to not fail when public schema exists')
+    LOGGER.debug(result)
+

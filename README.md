@@ -38,9 +38,8 @@ The easiest option to use PgOSM-Flex is with the
 The image has all the pre-reqs installed, handles downloading an OSM subregion
 from Geofabrik, and saves an output `.sql` file with the processed data
 ready to load into your database(s).
-
-The script in the Docker image uses `PGOSM_DATE` to enable the Docker process
-to archive source PBF files and easily reload them at a later date.
+The PBF/MD5 source files are archived by date with the ability to
+easily reload them at a later date.
 
 
 ### Basic Docker usage
@@ -97,16 +96,34 @@ docker exec -it \
     --subregion=district-of-columbia
 ```
 
-
 The initial output with the `docker exec` command points to the log file
 (linked in the `docker run` command above), monitor this file to track
 progress of the import.
-
 
 ```bash
 Monitor /app/output/district-of-columbia.log for progress...
 If paths setup as outlined in README.md, use:
     tail -f ~/pgosm-data/district-of-columbia.log
+```
+
+The above command takes roughly 1 minute to run if the PBF for today
+has already been downloaded.
+If the PBF is not downloaded it will depend on how long
+it takes to download the 17 MB PBF file + ~ 1 minute processing.
+
+The output `.sql` file is saved under
+`~/pgosm_data/pgosm-flex-north-america-us-district-of-columbia-run-all.sql`.
+This `.sql` file can be loaded into a PostGIS enabled database
+using:
+
+```bash
+psql -d postgres -c "CREATE DATABASE myosm;"
+psql -d myosm -c "CREATE EXTENSION postgis;"
+```
+
+```bash
+psql -d myosm \
+    -f ~/pgosm-data/pgosm-flex-north-america-us-district-of-columbia-run-all.sql
 ```
 
 
