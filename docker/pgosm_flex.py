@@ -539,11 +539,6 @@ def get_osm2pgsql_command(region, subregion, ram, layerset, paths):
     rec_cmd : str
         osm2pgsql command recommended by the API
     """
-    if subregion is None:
-        region = region
-    else:
-        region = subregion
-
     pbf_filename = get_region_filename(region, subregion)
     rec_cmd = rec.osm2pgsql_recommendation(ram=ram,
                                            layerset=layerset,

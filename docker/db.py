@@ -23,7 +23,8 @@ def pg_isready():
     """
     output = subprocess.run(['pg_isready', '-U', 'root'],
                             text=True,
-                            capture_output=True)
+                            capture_output=True,
+                            check=False)
     code = output.returncode
     if code == 3:
         err = 'Postgres check is misconfigured. Exiting.'
@@ -119,10 +120,9 @@ def run_sqitch_prep(paths):
         LOGGER.error('Loading Sqitch schema failed. pgosm schema will not be included in output.')
         LOGGER.error(output.stderr)
         return False
-    else:
-        LOGGER.debug(f'Output from Sqitch: {output.stdout}')
 
-    LOGGER.debug('Loading US Roads helper data')
+    LOGGER.debug(f'Output from Sqitch: {output.stdout}')
+    LOGGER.info('Loading US Roads helper data')
     output = subprocess.run(cmds_roads,
                             text=True,
                             capture_output=True,
@@ -132,9 +132,8 @@ def run_sqitch_prep(paths):
         LOGGER.error('Loading roads helper data failed. Check output')
         LOGGER.error(output.stderr)
         return False
-    else:
-        LOGGER.debug(f'Output from loading roads: {output.stdout}')
 
+    LOGGER.debug(f'Output from loading roads: {output.stdout}')
     LOGGER.info('Sqitch deployment complete')
     return True
 
@@ -155,11 +154,11 @@ def load_qgis_styles(paths):
                                'qgis-style',
                                '_load_layer_styles.sql')
 
-    with open(create_path, 'r') as f:
-        create_sql = f.read()
+    with open(create_path, 'r') as file_in:
+        create_sql = file_in.read()
 
-    with open(load_path, 'r') as f:
-        load_sql = f.read()
+    with open(load_path, 'r') as file_in:
+        load_sql = file_in.read()
 
     with get_db_conn(db_name='pgosm') as conn:
         cur = conn.cursor()
@@ -377,4 +376,3 @@ def fix_pg_dump_create_public(export_path):
            export_path)
     LOGGER.debug('Completed replacement to not fail when public schema exists')
     LOGGER.debug(result)
-
