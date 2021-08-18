@@ -1,43 +1,39 @@
 """Used by PgOSM-Flex Docker image to get osm2pgsql command to run from
 the osm2pgsql-tuner API.
-
-Usage:
-    python3 osm2pgsql_recommendation.py colorado 8
 """
+import logging
 import os
-import sys
 import requests
-import click
+
+import db
+
+LOGGER = logging.getLogger('pgosm-flex')
 
 
-@click.command()
-@click.option('--region', required=True,
-              prompt="Region name",
-              help='Region name matching the filename for data sourced from Geofabrik. e.g. district-of-columbia')
-@click.option('--ram', required=True,
-              prompt="System RAM (GB)",
-              help='Total system RAM available in GB')
-@click.option('--output', required=True,
-              prompt="Ouptut path",
-              help='Output path')
-@click.option('--layerset', default='run-all',
-              prompt="PgOSM Flex layer set",
-              help='Layer set from PgOSM Flex.  e.g. run-all, run-no-tags')
-def osm2pgsql_recommendation(region, ram, output, layerset):
-    """Writes osm2pgsql recommendation to disk.
+def osm2pgsql_recommendation(ram, layerset, pbf_filename, out_path):
+    """Returns recommended osm2pgsql command.
 
-    Recommendation from osm2pgsql-tuner.com.
+    Recommendation from API at https://osm2pgsql-tuner.com
+
+    Parameters
+    ----------------------
+    ram : float
+        Total system RAM available in GB
+
+    pbf_filename : str
+
+    out_path : str
+
+    Returns
+    ----------------------
+    osm2pgsql_cmd : str
     """
-    region_name = region
     system_ram_gb = ram
-    output_path = output
     pgosm_layer_set = layerset
 
-    pbf_filename = f'{region_name}-latest'
-    pbf_file = f'{pbf_filename}.osm.pbf'
-    print(pbf_file)
-
+    pbf_file = os.path.join(out_path, pbf_filename)
     osm_pbf_gb = os.path.getsize(pbf_file) / 1024 / 1024 / 1024
+    LOGGER.info(f'PBF size (GB): {osm_pbf_gb}')
 
     # PgOSM-Flex currently does not support/test append mode.
     append = False
@@ -47,41 +43,50 @@ def osm2pgsql_recommendation(region, ram, output, layerset):
                                            append,
                                            pbf_filename,
                                            pgosm_layer_set,
-                                           output_path)
+                                           out_path)
 
-    script_filename = f'osm2pgsql-{region_name}.sh'
-    osm2pgsql_script_path = os.path.join(output_path, script_filename)
-
-    with open(osm2pgsql_script_path,'w') as out_script:
-        out_script.write(osm2pgsql_cmd)
-        out_script.write('\n')
-
+    return osm2pgsql_cmd
 
 def get_recommended_script(system_ram_gb, osm_pbf_gb,
                            append, pbf_filename,
                            pgosm_layer_set,
                            output_path):
+    """Builds API call and cleans up returned command for use here.
+
+    Parameters
+    -------------------------------
+    system_ram_gb : float
+    osm_pbf_gb : float
+    append : bool
+    pbf_filename : str
+    pgosm_layer_set : str
+    output_path : str
+
+    Returns
+    -------------------------------
+    osm2pgsql_cmd : str
+    """
+    filename_no_ext = pbf_filename.replace('.osm.pbf', '')
     api_endpoint = 'https://osm2pgsql-tuner.com/api/v1'
     api_endpoint += f'?system_ram_gb={system_ram_gb}'
     api_endpoint += f'&osm_pbf_gb={osm_pbf_gb}'
     api_endpoint += f'&append={append}'
-    api_endpoint += f'&pbf_filename={pbf_filename}'
+    api_endpoint += f'&pbf_filename={filename_no_ext}'
     api_endpoint += f'&pgosm_layer_set={pgosm_layer_set}'
 
     headers = {"User-Agent": 'PgOSM-Flex-Docker'}
-    print(f'osm2pgsql-tuner URL w/ parameters: {api_endpoint}')
+    LOGGER.info(f'osm2pgsql-tuner URL w/ parameters: {api_endpoint}')
     result = requests.get(api_endpoint, headers=headers)
-    print(f'Status code: {result.status_code}')
+    LOGGER.debug(f'API status code: {result.status_code}')
 
     rec = result.json()['osm2pgsql']
 
     osm2pgsql_cmd = rec['cmd']
-    osm2pgsql_cmd = osm2pgsql_cmd.replace('~/pgosm-data/', output_path)
+    # Replace generic path from API with specific path
+    osm2pgsql_cmd = osm2pgsql_cmd.replace('~/pgosm-data', output_path)
+
+    # Replace generic connection string with specific conn string
+    conn_string = db.connection_string(db_name='pgosm')
     osm2pgsql_cmd = osm2pgsql_cmd.replace('-d $PGOSM_CONN',
-                                          '-U postgres -d pgosm')
+                                          f'-d {conn_string}')
     return osm2pgsql_cmd
-
-
-if __name__ == '__main__':
-    osm2pgsql_recommendation()
-

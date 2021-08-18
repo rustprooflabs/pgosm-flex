@@ -7,10 +7,16 @@ if [ ! -d tmp ]; then
   mkdir -p tmp;
 fi
 
-if [ -z $PGOSM_CONN ]; then
-  PGOSM_CONN=pgosm
+if [ -z $POSTGRES_USER ]; then
+  POSTGRES_USER=postgres
+fi
+
+APP_STR="?application_name=pgosm-flex-tests"
+
+if [ -z $POSTGRES_PASSWORD ]; then
+  PGOSM_CONN="postgresql://${POSTGRES_USER}@localhost/pgosm${APP_STR}"
 else
-  PGOSM_CONN=$PGOSM_CONN
+  PGOSM_CONN="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost/pgosm${APP_STR}"
 fi
 
 failed=false

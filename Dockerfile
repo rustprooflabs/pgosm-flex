@@ -9,7 +9,7 @@ RUN apt-get update \
         libboost-dev libboost-system-dev \
         libboost-filesystem-dev libexpat1-dev zlib1g-dev \
         libbz2-dev libpq-dev libproj-dev lua5.2 liblua5.2-dev \
-        python3 python3-distutils \
+        python3 python3-distutils python3-psycopg2 \
         curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -17,15 +17,12 @@ RUN curl -o /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py \
     && python3 /tmp/get-pip.py \
     && rm /tmp/get-pip.py
 
-RUN pip install requests click
-
-
 WORKDIR /tmp
 RUN git clone git://github.com/openstreetmap/osm2pgsql.git \
     && mkdir osm2pgsql/build \
     && cd osm2pgsql/build \
     && cmake .. \
-    && make \
+    && make -j$(nproc) \
     && make install \
     && apt remove -y \
         make cmake g++ \
@@ -36,6 +33,9 @@ RUN git clone git://github.com/openstreetmap/osm2pgsql.git \
     && apt autoremove -y \
     && cd /tmp && rm -r /tmp/osm2pgsql
 
+COPY ./sqitch.conf /etc/sqitch/sqitch.conf
 
 WORKDIR /app
 COPY . ./
+
+RUN pip install -r requirements.txt

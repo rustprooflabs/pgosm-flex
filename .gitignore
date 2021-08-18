@@ -1,1 +1,4 @@
 tests/tmp/*
+output/
+**/.coverage
+**/__pycache__

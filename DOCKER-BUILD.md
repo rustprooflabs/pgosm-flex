@@ -17,13 +17,13 @@ docker build -t rustprooflabs/pgosm-flex .
 
 Tag with version.
 
-```
+```bash
 docker build -t rustprooflabs/pgosm-flex:0.1.2 .
 ```
 
 Push to Docker Hub.
 
-```
+```bash
 docker push rustprooflabs/pgosm-flex:0.1.2
 docker push rustprooflabs/pgosm-flex:latest
 ```

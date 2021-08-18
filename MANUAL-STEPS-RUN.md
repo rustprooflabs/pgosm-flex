@@ -3,7 +3,7 @@
 These instructions show how to manually run the PgOSM-Flex process.
 This is the best option for scaling to larger regions (North America, Europe, etc.)
 due to the need to customize a number of configurations.  Review the
-`docker/run_pgosm_flex.sh` for a starting point to automating the process.
+`python3 docker/pgosm_flex.py` for a starting point to automating the process.
 
 This basic working example uses Washington D.C. for a small, fast test of the
 process.
@@ -253,3 +253,47 @@ psql -d pgosm -f data/roads-us.sql
 
 Currently only U.S. region drafted, more regions with local `maxspeed` are welcome via PR!
 
+
+## Customize PgOSM Flex
+
+Track additional details in the `osm.pgosm_meta` table (see more below)
+and customize behavior with the use of environment variables.
+
+* `OSM_DATE`
+* `PGOSM_SRID`
+* `PGOSM_REGION`
+* `PGOSM_LANGUAGE`
+
+
+### Custom SRID
+
+To use `SRID 4326` instead of the default `SRID 3857`, set the `PGOSM_SRID`
+environment variable before running osm2pgsql.
+
+```bash
+export PGOSM_SRID=4326
+```
+
+Changes to the SRID are reflected in output printed.
+
+```bash
+2021-01-08 15:01:15  osm2pgsql version 1.4.0 (1.4.0-72-gc3eb0fb6)
+2021-01-08 15:01:15  Database version: 13.1 (Ubuntu 13.1-1.pgdg20.10+1)
+2021-01-08 15:01:15  Node-cache: cache=800MB, maxblocks=12800*65536, allocation method=11
+Custom SRID: 4326
+...
+```
+
+### Preferred Language
+
+The `name` column throughout PgOSM-Flex defaults to using the highest priority
+name tag according to the [OSM Wiki](https://wiki.openstreetmap.org/wiki/Names). Setting `PGOSM_LANGUAGE` allows giving preference to name tags with the
+given language.
+The value of `PGOSM_LANGUAGE` should match the codes used by OSM:
+
+> where code is a lowercase language's ISO 639-1 alpha2 code, or a lowercase ISO 639-2 code if an ISO 639-1 code doesn't exist." -- [Multilingual names on OSM Wiki](https://wiki.openstreetmap.org/wiki/Multilingual_names)
+
+
+```bash
+export PGOSM_LANGUAGE=kn
+```
