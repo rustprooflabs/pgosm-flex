@@ -13,7 +13,8 @@ tables.pgosm_flex_meta = osm2pgsql.define_table({
         { column = 'pgosm_flex_version',  type = 'text', not_null = true },
         { column = 'srid',                type = 'text', not_null = true },
         { column = 'project_url',         type = 'text', not_null = true },
-        { column = 'osm2pgsql_version',   type = 'text', not_null = true}
+        { column = 'osm2pgsql_version',   type = 'text', not_null = true},
+        { column = 'language',            type = 'text', not_null = false}
     }
 })
 
@@ -62,6 +63,7 @@ function pgosm_meta_load_row(object)
         osm_date = pgosm_date,
         default_date = default_date,
         region = pgosm_region,
+        language = pgosm_language
     })
 
     meta_added = true
