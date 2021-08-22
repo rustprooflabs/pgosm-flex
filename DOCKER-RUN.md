@@ -92,6 +92,8 @@ Options:
                       be time consuming on large regions.
   --data-only         When True, skips running Sqitch and importing QGIS
                       Styles.
+  --skip-dump         Skips the final pg_dump at the end. Useful for local
+                      testing when not loading into more permanent instance.
   --debug             Enables additional log output
   --basepath TEXT     Debugging option. Used when testing locally and not
                       within Docker
@@ -114,6 +116,7 @@ docker exec -it \
     --language="en" \
     --srid="4326" \
     --data-only \
+    --skip-dump \
     --skip-nested \
     --debug
 ```

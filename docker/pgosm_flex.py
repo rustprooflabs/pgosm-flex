@@ -79,6 +79,8 @@ def get_today():
               envvar="PGOSM_DATA_SCHEMA_ONLY",
               is_flag=True,
               help="When True, skips running Sqitch and importing QGIS Styles.")
+@click.option('--skip-dump', default=False, is_flag=True,
+              help='Skips the final pg_dump at the end. Useful for local testing when not loading into more permanent instance.')
 @click.option('--debug', is_flag=True,
               help='Enables additional log output')
 @click.option('--basepath',
@@ -86,7 +88,8 @@ def get_today():
               default=BASE_PATH_DEFAULT,
               help='Debugging option. Used when testing locally and not within Docker')
 def run_pgosm_flex(layerset, ram, region, subregion, srid, pgosm_date, language,
-                   schema_name, skip_nested, data_only, debug, basepath):
+                   schema_name, skip_nested, data_only, skip_dump,
+                   debug, basepath):
     """Logic to run PgOSM Flex within Docker.
     """
     # Required for optional user prompt
@@ -123,10 +126,13 @@ def run_pgosm_flex(layerset, ram, region, subregion, srid, pgosm_date, language,
     if schema_name != 'osm':
         db.rename_schema(schema_name)
 
-    db.run_pg_dump(export_filename,
-                   out_path=paths['out_path'],
-                   data_only=data_only,
-                   schema_name=schema_name)
+    if skip_dump:
+        logger.info('Skipping pg_dump')
+    else:
+        db.run_pg_dump(export_filename,
+                       out_path=paths['out_path'],
+                       data_only=data_only,
+                       schema_name=schema_name)
     logger.info('PgOSM Flex complete!')
 
 
