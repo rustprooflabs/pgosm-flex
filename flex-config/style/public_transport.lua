@@ -88,7 +88,7 @@ local function get_osm_type_subtype(object)
     elseif object.tags.bus then
         osm_type_table['osm_type'] = 'bus'
         osm_type_table['osm_subtype'] = object.tags.bus
-    elseif railway then
+    elseif object.tags.railway then
         osm_type_table['osm_type'] = 'railway'
         osm_type_table['osm_subtype'] = object.tags.railway
     elseif object.tags.lightrail then
@@ -97,8 +97,14 @@ local function get_osm_type_subtype(object)
     elseif object.tags.train then
         osm_type_table['osm_type'] = 'train'
         osm_type_table['osm_subtype'] = object.tags.train
+    elseif object.tags.aerialway then
+        osm_type_table['osm_type'] = 'aerialway'
+        osm_type_table['osm_subtype'] = object.tags.aerialway
     else
         osm_type_table['osm_type'] = object.tags.public_transport
+        if osm_type_table['osm_type'] == nil then
+            osm_type_table['osm_type'] = 'unknown'
+        end
         osm_type_table['osm_subtype'] = nil
     end
 
@@ -107,7 +113,10 @@ end
 
 
 local public_transport_first_level_keys = {
-    'public_transport'
+    'public_transport',
+    'bus',
+    'aerialway',
+    'railway'
 }
 
 
@@ -123,6 +132,10 @@ local function public_transport_process_node(object)
     local osm_types = get_osm_type_subtype(object)
 
     local public_transport = object.tags.public_transport
+    if public_transport == nil then
+        public_transport = 'other'
+    end
+
     local name = get_name(object.tags)
     local ref = get_ref(object.tags)
     local wheelchair = object.tags.wheelchair
@@ -169,6 +182,10 @@ local function public_transport_process_way(object)
     local osm_types = get_osm_type_subtype(object)
 
     local public_transport = object.tags.public_transport
+    if public_transport == nil then
+        public_transport = 'other'
+    end
+
     local name = get_name(object.tags)
     local ref = get_ref(object.tags)
     local wheelchair = object.tags.wheelchair
@@ -238,6 +255,10 @@ function public_transport_process_relation(object)
     local osm_types = get_osm_type_subtype(object)
 
     local public_transport = object.tags.public_transport
+    if public_transport == nil then
+        public_transport = 'other'
+    end
+
     local name = get_name(object.tags)
     local ref = get_ref(object.tags)
     local wheelchair = object.tags.wheelchair

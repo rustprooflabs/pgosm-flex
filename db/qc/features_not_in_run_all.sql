@@ -113,6 +113,12 @@ DELETE FROM osm_missing m
             WHERE m.osm_id = i.osm_id AND m.geom_type = 'N'
 );
 
+DELETE FROM osm_missing m
+    WHERE EXISTS (
+        SELECT 1
+            FROM osm.public_transport_point i
+            WHERE m.osm_id = i.osm_id AND m.geom_type = 'N'
+);
 
 
 --------------------------------------------
@@ -277,6 +283,20 @@ DELETE FROM osm_missing m
 );
 
 
+
+DELETE FROM osm_missing m
+    WHERE EXISTS (
+        SELECT 1
+            FROM osm.public_transport_line i
+            WHERE m.osm_id = i.osm_id AND m.geom_type = 'W'
+);
+
+DELETE FROM osm_missing m
+    WHERE EXISTS (
+        SELECT 1
+            FROM osm.public_transport_polygon i
+            WHERE m.osm_id = i.osm_id AND m.geom_type = 'W'
+);
 
 
 -- Query to look at keys
