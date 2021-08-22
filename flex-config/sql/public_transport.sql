@@ -38,9 +38,9 @@ COMMENT ON COLUMN osm.public_transport_point.osm_subtype IS 'Value describing os
 COMMENT ON COLUMN osm.public_transport_line.osm_subtype IS 'Value describing osm_type key, e.g. osm_type = "highway", osm_subtype = "bus_stop".';
 COMMENT ON COLUMN osm.public_transport_polygon.osm_subtype IS 'Value describing osm_type key, e.g. osm_type = "highway", osm_subtype = "bus_stop".';
 
-COMMENT ON COLUMN osm.public_transport_point.public_transport IS 'Value from public_transport key.';
-COMMENT ON COLUMN osm.public_transport_line.public_transport IS 'Value from public_transport key.';
-COMMENT ON COLUMN osm.public_transport_polygon.public_transport IS 'Value from public_transport key.';
+COMMENT ON COLUMN osm.public_transport_point.public_transport IS 'Value from public_transport key, or "other" for additional 1st level keys defined in public_transport.lua';
+COMMENT ON COLUMN osm.public_transport_line.public_transport IS 'Value from public_transport key, or "other" for additional 1st level keys defined in public_transport.lua';
+COMMENT ON COLUMN osm.public_transport_polygon.public_transport IS 'Value from public_transport key, or "other" for additional 1st level keys defined in public_transport.lua';
 
 COMMENT ON COLUMN osm.public_transport_point.wheelchair IS 'Indicates if feature is wheelchair accessible. Expected values:  yes, no, limited.  Per https://wiki.openstreetmap.org/wiki/Key:wheelchair';
 COMMENT ON COLUMN osm.public_transport_line.wheelchair IS 'Indicates if feature is wheelchair accessible. Expected values:  yes, no, limited.  Per https://wiki.openstreetmap.org/wiki/Key:wheelchair';
@@ -49,3 +49,20 @@ COMMENT ON COLUMN osm.public_transport_polygon.wheelchair IS 'Indicates if featu
 COMMENT ON COLUMN osm.public_transport_point.ref IS 'Reference number or code. Best ref option determined by helpers.get_ref(). https://wiki.openstreetmap.org/wiki/Key:ref';
 COMMENT ON COLUMN osm.public_transport_line.ref IS 'Reference number or code. Best ref option determined by helpers.get_ref(). https://wiki.openstreetmap.org/wiki/Key:ref';
 COMMENT ON COLUMN osm.public_transport_polygon.ref IS 'Reference number or code. Best ref option determined by helpers.get_ref(). https://wiki.openstreetmap.org/wiki/Key:ref';
+
+COMMENT ON COLUMN osm.public_transport_point.layer IS 'Vertical ordering layer (Z) to handle crossing/overlapping features. "All ways without an explicit value are assumed to have layer 0." - per Wiki - https://wiki.openstreetmap.org/wiki/Key:layer';
+COMMENT ON COLUMN osm.public_transport_line.layer IS 'Vertical ordering layer (Z) to handle crossing/overlapping features. "All ways without an explicit value are assumed to have layer 0." - per Wiki - https://wiki.openstreetmap.org/wiki/Key:layer';
+COMMENT ON COLUMN osm.public_transport_polygon.layer IS 'Vertical ordering layer (Z) to handle crossing/overlapping features. "All ways without an explicit value are assumed to have layer 0." - per Wiki - https://wiki.openstreetmap.org/wiki/Key:layer';
+
+COMMENT ON COLUMN osm.public_transport_point.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
+COMMENT ON COLUMN osm.public_transport_line.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
+COMMENT ON COLUMN osm.public_transport_polygon.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
+
+COMMENT ON COLUMN osm.public_transport_point.operator IS 'Entity in charge of operations. https://wiki.openstreetmap.org/wiki/Key:operator';
+COMMENT ON COLUMN osm.public_transport_line.operator IS 'Entity in charge of operations. https://wiki.openstreetmap.org/wiki/Key:operator';
+COMMENT ON COLUMN osm.public_transport_polygon.operator IS 'Entity in charge of operations. https://wiki.openstreetmap.org/wiki/Key:operator';
+
+COMMENT ON COLUMN osm.public_transport_point.network IS 'Route, system or operator. Usage of network key is widely varied. See https://wiki.openstreetmap.org/wiki/Key:network';
+COMMENT ON COLUMN osm.public_transport_line.network IS 'Route, system or operator. Usage of network key is widely varied. See https://wiki.openstreetmap.org/wiki/Key:network';
+COMMENT ON COLUMN osm.public_transport_polygon.network IS 'Route, system or operator. Usage of network key is widely varied. See https://wiki.openstreetmap.org/wiki/Key:network';
+

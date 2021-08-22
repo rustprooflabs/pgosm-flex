@@ -82,10 +82,7 @@ tables.public_transport_polygon = osm2pgsql.define_table({
 local function get_osm_type_subtype(object)
     local osm_type_table = {}
 
-    if object.tags.highway then
-        osm_type_table['osm_type'] = 'highway'
-        osm_type_table['osm_subtype'] = object.tags.highway
-    elseif object.tags.bus then
+    if object.tags.bus then
         osm_type_table['osm_type'] = 'bus'
         osm_type_table['osm_subtype'] = object.tags.bus
     elseif object.tags.railway then
@@ -100,6 +97,9 @@ local function get_osm_type_subtype(object)
     elseif object.tags.aerialway then
         osm_type_table['osm_type'] = 'aerialway'
         osm_type_table['osm_subtype'] = object.tags.aerialway
+    elseif object.tags.highway then
+        osm_type_table['osm_type'] = 'highway'
+        osm_type_table['osm_subtype'] = object.tags.highway
     else
         osm_type_table['osm_type'] = object.tags.public_transport
         if osm_type_table['osm_type'] == nil then

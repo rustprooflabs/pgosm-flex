@@ -1,5 +1,5 @@
-highway|elevator|1
 railway|platform|34
+railway|subway_entrance|1
 service_center||1
 station||1
 stop_area||1
