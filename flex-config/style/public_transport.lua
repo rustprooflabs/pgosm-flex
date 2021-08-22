@@ -114,9 +114,9 @@ end
 
 local public_transport_first_level_keys = {
     'public_transport',
-    'bus',
     'aerialway',
     'railway'
+    -- NOTE: Bus is not included, duplicates data in `road*` layers
 }
 
 

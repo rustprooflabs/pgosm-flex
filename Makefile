@@ -71,9 +71,8 @@ unit-tests: ## Runs Python unit tests and data import tests
 	docker exec -it pgosm \
 		chown $(CURRENT_UID):$(CURRENT_GID) /app/tests/
 
-	# Detailed results from tests currently get buried in the Docker container
-	#   Error such as: FAILED TEST: sql/amenity_point_osm_type_count.sql - See tmp/amenity_point_osm_type_count.diff
-	#   Use command (changing file at end): docker exec -it     -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_USER=postgres     pgosm /bin/cat /app/tests/tmp/amenity_point_osm_type_count.diff
+	# Errors when running under docker are saved in
+	#  /app/tests/tmp/<test_with_error>.diff
 	docker exec -it \
 		-e POSTGRES_PASSWORD=mysecretpassword \
 		-e POSTGRES_USER=postgres \

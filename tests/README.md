@@ -8,18 +8,19 @@ Under development - See #112.
 cd tests/
 ```
 
-
-## Test for import failures
-
-Test for specific regions that have had failures due to unusual
-tags and/or bugs in PgOSM-Flex.
-
-
-Run extra region load tests.
+Setup env var for connection string, defaults to `postgres` if not set.
 
 ```bash
-./run-extra-loads.sh
+export POSTGRES_USER=your_db_user
 ```
+
+If you are not setup to use `~/.pgpass` for authentication set
+the password env var too.
+
+```bash
+export POSTGRES_PASSWORD=mysecretpassword
+```
+
 
 ## Output Tests
 
@@ -36,6 +37,22 @@ Run output tests (need D.C. region loaded first).
 
 > PBF sourced [from Geofabrik's download service](https://download.geofabrik.de/) on January 13, 2021.
 
+
+## Test for import failures
+
+Test for specific regions that have had failures due to unusual
+tags and/or bugs in PgOSM-Flex.
+
+
+Run extra region load tests.
+
+
+
+```bash
+export PGOSM_CONN=pgosm_tests
+export PGOSM_CONN_PG=postgres
+./run-extra-loads.sh
+```
 
 
 ### Creating Tests
