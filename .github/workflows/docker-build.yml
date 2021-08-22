@@ -8,19 +8,16 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_TOKEN }}
-      - name: Build and Push to Docker Hub
+      - name: Build image for local GH use
         id: docker_build_push
         uses: docker/build-push-action@v2
         with:
-          push: true
+          context: .
+          load: true
+          push: false
           tags: rustprooflabs/pgosm-flex:ghdev
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
-
+      - name: Inspect image
+        run: |
+          docker image inspect rustprooflabs/pgosm-flex:ghdev
