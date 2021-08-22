@@ -3,7 +3,7 @@ on:
   push:
 jobs:
   push_to_registry:
-    name: Push PgOSM-Flex image to Docker Hub
+    name: Build and inspect PgOSM Flex image
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -16,8 +16,6 @@ jobs:
           load: true
           push: false
           tags: rustprooflabs/pgosm-flex:ghdev
-      - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
       - name: Inspect image
         run: |
           docker image inspect rustprooflabs/pgosm-flex:ghdev
