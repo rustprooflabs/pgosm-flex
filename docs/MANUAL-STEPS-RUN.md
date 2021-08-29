@@ -8,7 +8,6 @@ due to the need to customize a number of configurations.  Review the
 This basic working example uses Washington D.C. for a small, fast test of the
 process.
 
-> Loading the full data set with `run-all` as shown here results in a lot of data.  See [the instructions in LOAD-DATA.md](LOAD-DATA.md) for more ways to use and customize PgOSM-Flex.
 
 ## Ubuntu Pre-reqs
 
@@ -150,7 +149,6 @@ SELECT osm_date, region FROM osm.pgosm_flex;
 
 The `run-all.lua` script provides the most complete set of OpenStreetMap
 data.  The list of main tables in PgOSM-Flex will continue to grow and evolve.
-See [LOAD-DATA.md](LOAD-DATA.md) for more about loading data.
 
 
 
