@@ -45,7 +45,7 @@ easily reload them at a later date.
 ### Basic Docker usage
 
 This section outlines the basic operations for using Docker to run PgOSM-Flex.
-See [the full Docker instructions in DOCKER-RUN.md](DOCKER-RUN.md).
+See [the full Docker instructions in docs/DOCKER-RUN.md](docs/DOCKER-RUN.md).
 
 Create directory for the `.osm.pbf` file, output `.sql` file, log output, and
 the osm2pgsql command ran.
@@ -188,14 +188,14 @@ to the date (`-2021-05-18`).  This enables loading the file downloaded today
 again in the future, either with the same version of PgOSM Flex or the latest version. The `docker exec` command uses the `PGOSM_DATE` environment variable
 to load these historic files.
 
-See [more in DOCKER-RUN.md](DOCKER-RUN.md).
+See [more in docs/DOCKER-RUN.md](docs/DOCKER-RUN.md).
 
 
 ----
 
 ## On-server import
 
-See [MANUAL-STEPS-RUN.md](MANUAL-STEPS-RUN.md) for prereqs and steps for
+See [docs/MANUAL-STEPS-RUN.md](docs/MANUAL-STEPS-RUN.md) for prereqs and steps for
 running without Docker.
 
 ----
@@ -307,7 +307,7 @@ SELECT *
 ## Query examples
 
 For example queries with data loaded by PgOSM-Flex see
-[QUERY.md](QUERY.md).
+[docs/QUERY.md](docs/QUERY.md).
 
 
 ## Points of Interest (POIs)
