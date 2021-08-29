@@ -282,9 +282,17 @@ function parse_admin_level(input)
 end
 
 function routable_foot(tags)
-    if (tags.highway == 'footway'
+    if (tags.access == 'no'
+            or tags.access == 'private'
+            or tags.foot == 'no'
+            or tags.foot == 'private')
+            then
+        return false
+    elseif (tags.highway == 'footway'
             or tags.footway
             or tags.foot == 'yes'
+            or tags.foot == 'permissive'
+            or tags.foot == 'designated'
             or tags.highway == 'pedestrian'
             or tags.highway == 'crossing'
             or tags.highway == 'platform'
@@ -309,7 +317,14 @@ end
 
 -- https://wiki.openstreetmap.org/wiki/Bicycle
 function routable_cycle(tags)
-    if (tags.cycleway
+    if (tags.access == 'no'
+            or tags.access == 'private'
+            or tags.bicycle == 'no'
+            or tags.bicycle == 'private'
+            )
+            then
+        return false
+    elseif (tags.cycleway
             or tags.bicycle == 'yes'
             or tags.bicycle == 'designated'
             or tags.bicycle == 'permissive'
@@ -333,7 +348,11 @@ function routable_cycle(tags)
 end
 
 function routable_motor(tags)
-    if (tags.highway == 'motorway'
+    if (tags.access == 'no'
+            or tags.access == 'private')
+            then
+        return false
+    elseif (tags.highway == 'motorway'
             or tags.highway == 'motorway_link'
             or tags.highway == 'trunk'
             or tags.highway == 'trunk_link'
@@ -348,7 +367,9 @@ function routable_motor(tags)
             or tags.highway == 'unclassified'
             or tags.highway == 'living_street'
             or tags.highway == 'rest_area'
-            or tags.highway == 'raceway')
+            or tags.highway == 'raceway'
+            or tags.motor_vehicle == 'yes'
+            or tags.motor_vehicle == 'permissive')
             then
         return true
     end

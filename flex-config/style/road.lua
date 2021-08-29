@@ -15,6 +15,7 @@ tables.road_point = osm2pgsql.define_table({
         { column = 'layer',   type = 'int', not_null = true },
         { column = 'tunnel',     type = 'text' },
         { column = 'bridge',     type = 'text' },
+        { column = 'access',     type = 'text' },
         { column = 'geom',     type = 'point', projection = srid }
     }
 })
@@ -38,6 +39,7 @@ tables.road_line = osm2pgsql.define_table({
         { column = 'route_foot',     type = 'boolean' },
         { column = 'route_cycle',     type = 'boolean' },
         { column = 'route_motor',     type = 'boolean' },
+        { column = 'access',     type = 'text' },
         { column = 'geom',     type = 'linestring', projection = srid }
     }
 })
@@ -59,6 +61,7 @@ tables.road_polygon = osm2pgsql.define_table({
         { column = 'route_foot',     type = 'boolean' },
         { column = 'route_cycle',     type = 'boolean' },
         { column = 'route_motor',     type = 'boolean' },
+        { column = 'access',     type = 'text' },
         { column = 'geom',     type = 'multipolygon', projection = srid }
     }
 })
@@ -80,6 +83,7 @@ function road_process_node(object)
     local layer = parse_layer_value(object.tags.layer)
     local tunnel = object:grab_tag('tunnel')
     local bridge = object:grab_tag('bridge')
+    local access = object:grab_tag('access')
 
     tables.road_point:add_row({
         name = name,
@@ -90,6 +94,7 @@ function road_process_node(object)
         layer = layer,
         tunnel = tunnel,
         bridge = bridge,
+        access = access,
         geom = { create = 'point' }
     })
 
@@ -115,6 +120,7 @@ function road_process_way(object)
     local layer = parse_layer_value(object.tags.layer)
     local tunnel = object:grab_tag('tunnel')
     local bridge = object:grab_tag('bridge')
+    local access = object:grab_tag('access')
 
     if object.tags.area == 'yes'
         or object.tags.indoor == 'room'
@@ -131,6 +137,7 @@ function road_process_way(object)
             route_foot = route_foot,
             route_cycle = route_cycle,
             route_motor = route_motor,
+            access = access,
             geom = { create = 'area' }
         })
     else
@@ -147,6 +154,7 @@ function road_process_way(object)
             route_foot = route_foot,
             route_cycle = route_cycle,
             route_motor = route_motor,
+            access = access,
             geom = { create = 'line' }
         })
     end
