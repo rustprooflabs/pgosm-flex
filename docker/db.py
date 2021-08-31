@@ -11,8 +11,6 @@ import sh
 
 LOGGER = logging.getLogger('pgosm-flex')
 
-READ_COMMITTED_ISOLATION_LEVEL = 1 #psycopg3
-
 
 def pg_isready():
     """Checks pg_isready for Postgres to be available.
@@ -69,8 +67,7 @@ def drop_pgosm_db():
     sql_raw = 'DROP DATABASE IF EXISTS pgosm;'
     conn = get_db_conn(db_name='postgres')
 
-    LOGGER.debug('Setting Pg conn to READ COMMITTED isolation level and enabling autocommit')
-    conn.isolation_level = READ_COMMITTED_ISOLATION_LEVEL
+    LOGGER.debug('Setting Pg conn to enable autocommit - required for drop/create DB')
     conn.autocommit = True
     conn.execute(sql_raw)
     conn.close()
@@ -83,8 +80,7 @@ def create_pgosm_db():
     sql_raw = 'CREATE DATABASE pgosm;'
     conn = get_db_conn(db_name='postgres')
 
-    LOGGER.debug('Setting Pg conn to READ COMMITTED isolation level and enabling autocommit')
-    conn.isolation_level = READ_COMMITTED_ISOLATION_LEVEL
+    LOGGER.debug('Setting Pg conn to enable autocommit - required for drop/create DB')
     conn.autocommit = True
     conn.execute(sql_raw)
     conn.close()
