@@ -5,7 +5,7 @@ import os
 import sys
 import subprocess
 
-import psycopg2
+import psycopg
 import sh
 
 
@@ -35,6 +35,11 @@ def pg_isready():
 
 def prepare_pgosm_db(data_only, paths):
     """Runs through series of steps to prepare database for PgOSM
+
+    Parameters
+    --------------------------
+    data_only : bool
+    paths : dict
     """
     pg_version_check()
     drop_pgosm_db()
@@ -65,12 +70,12 @@ def pg_version_check():
 def drop_pgosm_db():
     """Drops the pgosm database if it exists."""
     sql_raw = 'DROP DATABASE IF EXISTS pgosm;'
-
     conn = get_db_conn(db_name='postgres')
-    cur = conn.cursor()
-    # Required to drop DB
-    conn.set_isolation_level(0)
-    cur.execute(sql_raw)
+
+    LOGGER.debug('Setting Pg conn to enable autocommit - required for drop/create DB')
+    conn.autocommit = True
+    conn.execute(sql_raw)
+    conn.close()
     LOGGER.info('Removed pgosm database')
 
 
@@ -78,12 +83,12 @@ def create_pgosm_db():
     """Creates the pgosm database and prepares with PostGIS and osm schema
     """
     sql_raw = 'CREATE DATABASE pgosm;'
-
     conn = get_db_conn(db_name='postgres')
-    cur = conn.cursor()
-    # Required to drop DB
-    conn.set_isolation_level(0)
-    cur.execute(sql_raw)
+
+    LOGGER.debug('Setting Pg conn to enable autocommit - required for drop/create DB')
+    conn.autocommit = True
+    conn.execute(sql_raw)
+    conn.close()
     LOGGER.info('Created pgosm database')
 
     sql_create_postgis = "CREATE EXTENSION postgis;"
@@ -103,6 +108,10 @@ def run_sqitch_prep(paths):
     Parameters
     -------------------------
     paths : dict
+
+    Returns
+    -------------------------
+    success : bool
     """
     LOGGER.info('Deploy schema via Sqitch')
 
@@ -146,7 +155,7 @@ def load_qgis_styles(paths):
     paths : dict
     """
     LOGGER.info('Load QGIS styles...')
-    # These two paths can easily be ran via psycopg2
+    # These two paths can easily be ran via psycopg
     create_path = os.path.join(paths['db_path'],
                                'qgis-style',
                                'create_layer_styles.sql')
@@ -193,6 +202,10 @@ def connection_string(db_name):
 
     * POSTGRES_PASSWORD
     * POSTGRES_USER
+
+    Parameters
+    --------------------------
+    db_name : str
 
     Returns
     --------------------------
@@ -262,15 +275,24 @@ def get_pg_user_pass():
 
 def get_db_conn(db_name):
     """Establishes psycopg database connection.
+
+    Parameters
+    -----------------------
+    db_name : str
+
+    Returns
+    -----------------------
+    conn : psycopg.Connection
     """
     conn_string = connection_string(db_name)
     try:
-        conn = psycopg2.connect(conn_string)
+        conn = psycopg.connect(conn_string)
         LOGGER.debug('Connection to Postgres established')
-    except psycopg2.OperationalError as err:
+    except psycopg.OperationalError as err:
         err_msg = 'Database connection error. Error: {}'.format(err)
         LOGGER.error(err_msg)
         return False
+
     return conn
 
 
