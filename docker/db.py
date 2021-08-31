@@ -35,6 +35,11 @@ def pg_isready():
 
 def prepare_pgosm_db(data_only, paths):
     """Runs through series of steps to prepare database for PgOSM
+
+    Parameters
+    --------------------------
+    data_only : bool
+    paths : dict
     """
     pg_version_check()
     drop_pgosm_db()
@@ -103,6 +108,10 @@ def run_sqitch_prep(paths):
     Parameters
     -------------------------
     paths : dict
+
+    Returns
+    -------------------------
+    success : bool
     """
     LOGGER.info('Deploy schema via Sqitch')
 
@@ -194,6 +203,10 @@ def connection_string(db_name):
     * POSTGRES_PASSWORD
     * POSTGRES_USER
 
+    Parameters
+    --------------------------
+    db_name : str
+
     Returns
     --------------------------
     conn_string : str
@@ -262,6 +275,14 @@ def get_pg_user_pass():
 
 def get_db_conn(db_name):
     """Establishes psycopg database connection.
+
+    Parameters
+    -----------------------
+    db_name : str
+
+    Returns
+    -----------------------
+    conn : psycopg.Connection
     """
     conn_string = connection_string(db_name)
     try:
