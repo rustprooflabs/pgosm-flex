@@ -69,7 +69,6 @@ def drop_pgosm_db():
     sql_raw = 'DROP DATABASE IF EXISTS pgosm;'
     conn = get_db_conn(db_name='postgres')
 
-    # Required to drop DB
     LOGGER.debug('Setting Pg conn to READ COMMITTED isolation level and enabling autocommit')
     conn.isolation_level = READ_COMMITTED_ISOLATION_LEVEL
     conn.autocommit = True
@@ -84,7 +83,6 @@ def create_pgosm_db():
     sql_raw = 'CREATE DATABASE pgosm;'
     conn = get_db_conn(db_name='postgres')
 
-    # Required to drop DB
     LOGGER.debug('Setting Pg conn to READ COMMITTED isolation level and enabling autocommit')
     conn.isolation_level = READ_COMMITTED_ISOLATION_LEVEL
     conn.autocommit = True
