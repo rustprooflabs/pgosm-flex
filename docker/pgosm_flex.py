@@ -417,10 +417,15 @@ def pbf_download_needed(pbf_file_with_date, md5_file_with_date, pgosm_date):
                 print('PBF for today available but not MD5... download needed')
                 download_needed = True
             else:
-                err = 'Missing MD5 file. Cannot validate.'
+                err = f'Missing MD5 file for {pgosm_date}. Cannot validate.'
                 logger.error(err)
                 raise FileNotFoundError(err)
     else:
+        if not pgosm_date == get_today():
+            err = f'Missing PBF file for {pgosm_date}. Cannot proceed.'
+            logger.error(err)
+            raise FileNotFoundError(err)
+
         logger.info('PBF file not found locally. Download required')
         download_needed = True
 
