@@ -5,11 +5,13 @@ import os
 import sys
 import subprocess
 
-import psycopg2
+import psycopg
 import sh
 
 
 LOGGER = logging.getLogger('pgosm-flex')
+
+READ_COMMITTED_ISOLATION_LEVEL = 1 #psycopg3
 
 
 def pg_isready():
@@ -65,12 +67,14 @@ def pg_version_check():
 def drop_pgosm_db():
     """Drops the pgosm database if it exists."""
     sql_raw = 'DROP DATABASE IF EXISTS pgosm;'
-
     conn = get_db_conn(db_name='postgres')
-    cur = conn.cursor()
+
     # Required to drop DB
-    conn.set_isolation_level(0)
-    cur.execute(sql_raw)
+    LOGGER.debug('Setting Pg conn to READ COMMITTED isolation level and enabling autocommit')
+    conn.isolation_level = READ_COMMITTED_ISOLATION_LEVEL
+    conn.autocommit = True
+    conn.execute(sql_raw)
+    conn.close()
     LOGGER.info('Removed pgosm database')
 
 
@@ -78,12 +82,14 @@ def create_pgosm_db():
     """Creates the pgosm database and prepares with PostGIS and osm schema
     """
     sql_raw = 'CREATE DATABASE pgosm;'
-
     conn = get_db_conn(db_name='postgres')
-    cur = conn.cursor()
+
     # Required to drop DB
-    conn.set_isolation_level(0)
-    cur.execute(sql_raw)
+    LOGGER.debug('Setting Pg conn to READ COMMITTED isolation level and enabling autocommit')
+    conn.isolation_level = READ_COMMITTED_ISOLATION_LEVEL
+    conn.autocommit = True
+    conn.execute(sql_raw)
+    conn.close()
     LOGGER.info('Created pgosm database')
 
     sql_create_postgis = "CREATE EXTENSION postgis;"
@@ -146,7 +152,7 @@ def load_qgis_styles(paths):
     paths : dict
     """
     LOGGER.info('Load QGIS styles...')
-    # These two paths can easily be ran via psycopg2
+    # These two paths can easily be ran via psycopg
     create_path = os.path.join(paths['db_path'],
                                'qgis-style',
                                'create_layer_styles.sql')
@@ -265,12 +271,13 @@ def get_db_conn(db_name):
     """
     conn_string = connection_string(db_name)
     try:
-        conn = psycopg2.connect(conn_string)
+        conn = psycopg.connect(conn_string)
         LOGGER.debug('Connection to Postgres established')
-    except psycopg2.OperationalError as err:
+    except psycopg.OperationalError as err:
         err_msg = 'Database connection error. Error: {}'.format(err)
         LOGGER.error(err_msg)
         return False
+
     return conn
 
 

@@ -1,5 +1,6 @@
 click>=8.0.1
 coverage>=5.5
-psycopg2>=2.8.6
+psycopg>=3.0b1
+psycopg-binary>=3.0b1
 requests>=2.26.0
 sh>=1.14.2

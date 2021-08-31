@@ -38,4 +38,5 @@ COPY ./sqitch.conf /etc/sqitch/sqitch.conf
 WORKDIR /app
 COPY . ./
 
-RUN pip install -r requirements.txt
+# --pre added to switch to psycopg3 during beta, remove after inital official release
+RUN pip install --pre -r requirements.txt
