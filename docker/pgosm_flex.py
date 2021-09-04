@@ -123,7 +123,10 @@ def run_pgosm_flex(layerset, ram, region, subregion, srid, pgosm_date, language,
 
     remove_latest_files(region, subregion, paths)
 
-    export_filename = get_export_filename(region, subregion, layerset)
+    export_filename = get_export_filename(region,
+                                          subregion,
+                                          layerset,
+                                          pgosm_date)
 
     if schema_name != 'osm':
         db.rename_schema(schema_name)
@@ -271,7 +274,7 @@ def get_region_filename(region, subregion):
     return filename
 
 
-def get_export_filename(region, subregion, layerset):
+def get_export_filename(region, subregion, layerset, pgosm_date):
     """Returns the .sql filename to use from pg_dump.
 
     Parameters
@@ -279,6 +282,7 @@ def get_export_filename(region, subregion, layerset):
     region : str
     subregion : str
     layerset : str
+    pgosm_date : str
 
     Returns
     ----------------------
@@ -287,9 +291,9 @@ def get_export_filename(region, subregion, layerset):
     region = region.replace('/', '-')
     subregion = subregion.replace('/', '-')
     if subregion is None:
-        filename = f'pgosm-flex-{region}-{layerset}.sql'
+        filename = f'pgosm-flex-{region}-{layerset}-{pgosm_date}.sql'
     else:
-        filename = f'pgosm-flex-{region}-{subregion}-{layerset}.sql'
+        filename = f'pgosm-flex-{region}-{subregion}-{layerset}-{pgosm_date}.sql'
 
     return filename
 
