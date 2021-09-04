@@ -121,6 +121,8 @@ def run_pgosm_flex(layerset, ram, region, subregion, srid, pgosm_date, language,
     run_post_processing(layerset=layerset, paths=paths,
                         skip_nested=skip_nested)
 
+    remove_latest_files(region, subregion, paths)
+
     export_filename = get_export_filename(region, subregion, layerset)
 
     if schema_name != 'osm':
@@ -532,6 +534,26 @@ def unarchive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date):
     logger.info(f'Copying {md5_file_with_date} to {md5_file}')
     shutil.copy2(md5_file_with_date, md5_file)
 
+
+def remove_latest_files(region, subregion, paths):
+    """Removes the PBF and MD5 file with -latest in the name.
+
+    Files are archived via prepare_data() before processing starts
+
+    Parameters
+    -------------------------
+    region : str
+    subregion : str
+    paths : dict
+    """
+    pbf_filename = get_region_filename(region, subregion)
+
+    pbf_file = os.path.join(paths['out_path'], pbf_filename)
+    md5_file = f'{pbf_file}.md5'
+    logging.info(f'Done with {pbf_file}, removing.')
+    os.remove(pbf_file)
+    logging.info(f'Done with {md5_file}, removing.')
+    os.remove(md5_file)
 
 
 def get_osm2pgsql_command(region, subregion, ram, layerset, paths):
