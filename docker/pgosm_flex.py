@@ -115,7 +115,7 @@ def run_pgosm_flex(layerset, ram, region, subregion, srid, pgosm_date, language,
 
     db.prepare_pgosm_db(data_only=data_only, paths=paths)
 
-    set_env_vars(region, subregion, srid, language)
+    set_env_vars(region, subregion, srid, language, pgosm_date)
 
     run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, paths=paths)
     run_post_processing(layerset=layerset, paths=paths,
@@ -141,7 +141,7 @@ def run_pgosm_flex(layerset, ram, region, subregion, srid, pgosm_date, language,
     logger.info('PgOSM Flex complete!')
 
 
-def set_env_vars(region, subregion, srid, language):
+def set_env_vars(region, subregion, srid, language, pgosm_date):
     """Sets environment variables needed by PgOSM Flex
 
     Parameters
@@ -150,6 +150,7 @@ def set_env_vars(region, subregion, srid, language):
     subregion : str
     srid : str
     language : str
+    pgosm_date : str
     """
     if subregion is None:
         pgosm_region = f'{region}'
@@ -162,6 +163,8 @@ def set_env_vars(region, subregion, srid, language):
         os.environ['PGOSM_SRID'] = str(srid)
     if language is not None:
         os.environ['PGOSM_LANGUAGE'] = str(language)
+
+    os.environ['PGOSM_DATE'] = pgosm_date
 
 
 
