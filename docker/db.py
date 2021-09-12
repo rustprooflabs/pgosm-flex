@@ -193,6 +193,12 @@ def load_qgis_styles(paths):
         cur.execute(load_sql)
     LOGGER.info('QGIS Style table populated')
 
+    with get_db_conn(db_name='pgosm') as conn:
+        sql_clean = 'DELETE FROM public.layer_styles_staging;'
+        cur = conn.cursor()
+        cur.execute(sql_clean)
+        LOGGER.debug('QGIS Style staging table cleaned')
+
 
 def connection_string(db_name):
     """Returns connection string to pgosm database.
