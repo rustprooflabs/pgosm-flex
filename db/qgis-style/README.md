@@ -105,7 +105,7 @@ UPDATE public.layer_styles_staging
 ```
 
 
-```
+```bash
 pg_dump --no-owner --no-privileges --data-only --table=public.layer_styles_staging \
     -d pgosm \
     -f layer_styles.sql

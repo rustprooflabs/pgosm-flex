@@ -22,8 +22,8 @@ COMMENT ON COLUMN osm.road_point.name IS 'Best name option determined by helpers
 COMMENT ON COLUMN osm.road_line.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 COMMENT ON COLUMN osm.road_point.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.road_line.geom IS 'Geometry loaded by osm2pgsql.';
-COMMENT ON COLUMN osm.road_point.oneway IS 'Indicates if travel is one-way only.';
-COMMENT ON COLUMN osm.road_line.oneway IS 'Indicates if travel is one-way only.';
+COMMENT ON COLUMN osm.road_point.oneway IS 'Used for calculating costs for routing with one-way controls.  0 indicates 2-way traffic is allowed (or assumed).  1 indicates travel is allowed forward only, -1 indicates travel is allowed reverse only. Values reversible and alternating result in NULL.  See https://wiki.openstreetmap.org/wiki/Key:oneway';
+COMMENT ON COLUMN osm.road_line.oneway IS 'Used for calculating costs for routing with one-way controls.  0 indicates 2-way traffic is allowed (or assumed).  1 indicates travel is allowed forward only, -1 indicates travel is allowed reverse only. Values reversible and alternating result in NULL.  See https://wiki.openstreetmap.org/wiki/Key:oneway';
 
 COMMENT ON COLUMN osm.road_point.ref IS 'Reference number or code. Best ref option determined by helpers.get_ref(). https://wiki.openstreetmap.org/wiki/Key:ref';
 COMMENT ON COLUMN osm.road_line.ref IS 'Reference number or code. Best ref option determined by helpers.get_ref(). https://wiki.openstreetmap.org/wiki/Key:ref';
