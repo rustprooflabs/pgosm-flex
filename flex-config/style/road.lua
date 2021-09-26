@@ -79,11 +79,14 @@ function road_process_node(object)
 
     -- in km/hr
     local maxspeed = parse_speed(object.tags.maxspeed)
-    local oneway = object:grab_tag('oneway') or 0
+
+    -- results in nil for reversible and alternating
+    local oneway = object.tags.oneway or 0
+
     local layer = parse_layer_value(object.tags.layer)
-    local tunnel = object:grab_tag('tunnel')
-    local bridge = object:grab_tag('bridge')
-    local access = object:grab_tag('access')
+    local tunnel = object.tags.tunnel
+    local bridge = object.tags.bridge
+    local access = object.tags.access
 
     tables.road_point:add_row({
         name = name,
@@ -115,12 +118,15 @@ function road_process_way(object)
 
     -- in km/hr
     local maxspeed = parse_speed(object.tags.maxspeed)
-    local oneway = object:grab_tag('oneway') or 0
+
+    -- results in nil for reversible and alternating
+    local oneway = object.tags.oneway or 0
+
     local major = major_road(osm_type)
     local layer = parse_layer_value(object.tags.layer)
-    local tunnel = object:grab_tag('tunnel')
-    local bridge = object:grab_tag('bridge')
-    local access = object:grab_tag('access')
+    local tunnel = object.tags.tunnel
+    local bridge = object.tags.bridge
+    local access = object.tags.access
 
     if object.tags.area == 'yes'
         or object.tags.indoor == 'room'
