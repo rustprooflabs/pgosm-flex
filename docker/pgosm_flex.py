@@ -152,16 +152,22 @@ def set_env_vars(region, subregion, srid, language, pgosm_date):
     language : str
     pgosm_date : str
     """
+    logger = logging.getLogger('pgosm-flex')
+    logger.info('PgOSM Flex starting...')
+
     if subregion is None:
         pgosm_region = f'{region}'
     else:
         pgosm_region = f'{region}-{subregion}'
 
+    logger.info(f'PGOSM_REGION: {pgosm_region}')
     os.environ['PGOSM_REGION'] = pgosm_region
 
     if srid != DEFAULT_SRID:
+        logger.info(f'SRID set: {srid}')
         os.environ['PGOSM_SRID'] = str(srid)
     if language is not None:
+        logger.info(f'Language set: {language}')
         os.environ['PGOSM_LANGUAGE'] = str(language)
 
     os.environ['PGOSM_DATE'] = pgosm_date
