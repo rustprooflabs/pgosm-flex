@@ -25,6 +25,7 @@ BASE_PATH_DEFAULT = '/app'
 
 DEFAULT_SRID = '3857'
 
+
 def get_today():
     """Returns yyyy-mm-dd formatted string for today.
 
@@ -40,12 +41,12 @@ def get_today():
               default='run-all',
               show_default='run-all',
               prompt='PgOSM Flex Layer Set',
-              help='Layer set from PgOSM Flex to load. e.g. run-all')
+              help=f'Layer set from PgOSM Flex to load.')
 @click.option('--ram', required=True,
               prompt='Server RAM (GB)',
               default=4,
               show_default=4,
-              help='Amount of RAM in GB available on the server running this process.')
+              help='Amount of RAM in GB available on the server running this process. Used to determine appropriate osm2pgsql command via osm2pgsql-tuner.com API.')
 @click.option('--region', required=True,
               prompt="Region name",
               show_default="north-america/us",
@@ -58,27 +59,27 @@ def get_today():
               help='Sub-region name matching the filename for data sourced from Geofabrik. e.g. district-of-columbia')
 @click.option('--srid', required=False, default=DEFAULT_SRID,
               envvar="PGOSM_SRID",
-              help="SRID for data in PostGIS.")
+              help="SRID for data in PostGIS.  Defaults to 3857")
 @click.option('--pgosm-date', required=False,
               default=get_today(),
               envvar="PGOSM_DATE",
-              help="Date of the data in YYYY-MM-DD format. Set to historic date to load locally archived PBF/MD5 file, will fail if both files do not exist.")
+              help="Date of the data in YYYY-MM-DD format. If today (default), automatically downloads when files not found locally. Set to historic date to load locally archived PBF/MD5 file, will fail if both files do not exist.")
 @click.option('--language', default=None,
               envvar="PGOSM_LANGUAGE",
               help="Set default language in loaded OpenStreetMap data when available.  e.g. 'en' or 'kn'.")
 @click.option('--schema-name', required=False,
               default='osm',
-              help="Coming soon")
+              help="Change the final schema name, defaults to 'osm'.")
 @click.option('--skip-nested',
               default=False,
               envvar="PGOSM_SKIP_NESTED_POLYGON",
               is_flag=True,
-              help='When True, skips calculating nested admin polygons. Can be time consuming on large regions.')
+              help=f'When set, skips calculating nested admin polygons. Can be time consuming on large regions.')
 @click.option('--data-only',
               default=False,
               envvar="PGOSM_DATA_SCHEMA_ONLY",
               is_flag=True,
-              help="When True, skips running Sqitch and importing QGIS Styles.")
+              help="When set, skips running Sqitch and importing QGIS Styles.")
 @click.option('--skip-dump', default=False, is_flag=True,
               help='Skips the final pg_dump at the end. Useful for local testing when not loading into more permanent instance.')
 @click.option('--debug', is_flag=True,
