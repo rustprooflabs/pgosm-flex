@@ -6,3 +6,4 @@ tests/
 Makefile
 .dockerignore
 Dockerfile
+pgosm-data/

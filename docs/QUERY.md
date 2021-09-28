@@ -46,18 +46,26 @@ count|
 
 ## Nested admin polygons
 
-This is defined in `flex-config/place.sql` but not ran.  Can run quickly on
-small areas (Colorado), takes significantly longer on larger areas (North America).
+Nested admin polygons are stored in the table `osm.place_polygon_nested`.
+The `osm.build_nested_admin_polygons()` to populate the table is defined in `flex-config/place.sql`,
+the Docker process automatically runs it.
+Can run quickly on small areas (Colorado), takes significantly longer on larger
+areas (North America).
+
+
+The Python script in the Docker image has a `--skip-nested` option to skip
+running the function to populate the table.  It can always be populated
+at a later time manually using the function.
 
 ```sql
 CALL osm.build_nested_admin_polygons();
 ```
 
-The above can take a long time.  Monitor progress with this query.
+When this process is running for a while it can be monitored with this query.
 
 ```sql
 SELECT COUNT(*) AS row_count,
-        COUNT(*) FILTER (WHERE nest_level IS NOT NULL) AS nesting_set
+        COUNT(*) FILTER (WHERE nest_level IS NOT NULL) AS rows_processed
     FROM osm.place_polygon_nested
 ;
 ```
