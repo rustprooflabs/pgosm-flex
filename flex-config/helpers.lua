@@ -349,7 +349,9 @@ end
 
 function routable_motor(tags)
     if (tags.access == 'no'
-            or tags.access == 'private')
+            or tags.access == 'private'
+            or tags.motor_vehicle == 'no'
+            or tags.motor_vehicle == 'private')
             then
         return false
     elseif (tags.highway == 'motorway'
