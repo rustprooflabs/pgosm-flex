@@ -1,8 +1,10 @@
 # Contributing
 
-We encourage pull requests from everyone.
+We encourage pull requests (PRs) from everyone.
 
-Fork the project into your own repo, create a topic branch there and then make one or more pull requests back to the main repository. Your pull requests can then be reviewed and discussed.
+Fork the project into your own repo, create a topic branch there and then make one or more pull requests back to the main repository. Your PR can then be reviewed and discussed.
+
+Helpful: Run `make` in the project root directory and ensure tests pass. If tests are not passing and you need help resolving, please mention this in your PR.
 
 
 ## Adding new feature layers
@@ -14,3 +16,5 @@ Checklist for adding new feature layers:
 * Update `flex-config/run-no-tags.lua`
 * Update `flex-config/run-no-tags.sql`
 * Update `db/qc/features_not_in_run_all.sql`
+* Add relevent `tests/sql/<feature_queries>.sql`
+* Add relevent `tests/expected/<feature_queries>.out`
