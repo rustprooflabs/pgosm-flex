@@ -1,4 +1,4 @@
-FROM postgis/postgis:13-3.1
+FROM postgis/postgis:14-3.1
 
 LABEL maintainer="PgOSM-Flex - https://github.com/rustprooflabs/pgosm-flex"
 
@@ -26,8 +26,7 @@ RUN git clone git://github.com/openstreetmap/osm2pgsql.git \
     && make install \
     && apt remove -y \
         make cmake g++ \
-        libboost-dev libboost-system-dev \
-        libboost-filesystem-dev libexpat1-dev zlib1g-dev \
+        libexpat1-dev zlib1g-dev \
         libbz2-dev libpq-dev libproj-dev \
         curl \
     && apt autoremove -y \
