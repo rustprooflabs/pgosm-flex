@@ -21,7 +21,16 @@ sudo apt install -y \
         git make cmake g++ \
         libboost-dev libboost-system-dev \
         libboost-filesystem-dev libexpat1-dev zlib1g-dev \
-        libbz2-dev libpq-dev libproj-dev lua5.2 liblua5.2-dev
+        libbz2-dev libpq-dev libproj-dev lua5.2 liblua5.2-dev \
+        luarocks
+```
+
+I had to use the `PGSQL_INCIR` on Ubuntu 20.04 to get it to find the libpq headers.
+
+
+```bash
+sudo luarocks install inifile
+sudo luarocks install luasql-postgres PGSQL_INCDIR=/usr/include/postgresql/
 ```
 
 Install osm2pgsql from source.
