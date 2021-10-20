@@ -73,7 +73,7 @@ wget https://download.geofabrik.de/north-america/us/district-of-columbia-latest.
 Verify integrity of the downloaded PBF file using `md5sum -c`.
 
 ```bash
-md5sum -c district-of-columbia-latest.osm.pbf
+md5sum -c district-of-columbia-latest.osm.pbf.md5
 district-of-columbia-latest.osm.pbf: OK
 ```
 
@@ -168,6 +168,8 @@ osm2pgsql --slim --drop \
     --output=flex --style=./run-all.lua \
     -d $PGOSM_CONN \
     ~/pgosm-data/district-of-columbia-latest.osm.pbf
+
+lua ./run-sql.lua
 ```
 
 ## Run post-processing SQL
