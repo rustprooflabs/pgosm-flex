@@ -11,8 +11,18 @@ else
     error('ENV VAR PGOSM_CONN must be set.')
 end
 
+local pgosm_config_env = os.getenv("PGOSM_CONFIG")
+local pgosm_config = nil
 
-conf = inifile.parse('default.ini')
+if pgosm_config_env then
+    pgosm_config = pgosm_config_env
+else
+    pgosm_config = 'default'
+end
+
+local layerset_path = 'layerset/' .. pgosm_config .. '.ini'
+print('Loading config: ' .. layerset_path)
+conf = inifile.parse(layerset_path)
 
 
 local function post_processing(layerset)

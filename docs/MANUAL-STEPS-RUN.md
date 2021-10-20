@@ -168,8 +168,6 @@ osm2pgsql --slim --drop \
     --output=flex --style=./run-all.lua \
     -d $PGOSM_CONN \
     ~/pgosm-data/district-of-columbia-latest.osm.pbf
-
-lua ./run-sql.lua
 ```
 
 ## Run post-processing SQL
@@ -179,10 +177,19 @@ primary keys, indexes, comments, views and more.
 
 
 ```bash
-psql -d $PGOSM_CONN -f ./run-all.sql
+lua ./run-sql.lua
 ```
 
 > Note: The `run-all` scripts exclude `unitable` and `road_major`.
+
+## Config Layerset
+
+Define `PGOSM_CONFIG` to override the use of `layerset/default.ini`.
+
+```bash
+export PGOSM_CONFIG=road-place
+```
+
 
 
 ## Generated nested place polygons
