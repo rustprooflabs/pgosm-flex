@@ -49,7 +49,7 @@ build-run-docker: ## Builds and runs PgOSM Flex with D.C. test file
 		-e POSTGRES_USER=postgres \
 		-u $(CURRENT_UID):$(CURRENT_GID) \
 		pgosm python3 docker/pgosm_flex.py  \
-		--layerset=run \
+		--layerset=default \
 		--ram=1 \
 		--region=north-america/us \
 		--subregion=district-of-columbia \
