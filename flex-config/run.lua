@@ -1,16 +1,16 @@
 local inifile = require('inifile')
 
 
-local pgosm_config_env = os.getenv("PGOSM_CONFIG")
-local pgosm_config = nil
+local pgosm_layerset_env = os.getenv("PGOSM_LAYERSET")
+local pgosm_layerset = nil
 
-if pgosm_config_env then
-    pgosm_config = pgosm_config_env
+if pgosm_layerset_env then
+    pgosm_layerset = pgosm_layerset_env
 else
-    pgosm_config = 'default'
+    pgosm_layerset = 'default'
 end
 
-local layerset_path = 'layerset/' .. pgosm_config .. '.ini'
+local layerset_path = 'layerset/' .. pgosm_layerset .. '.ini'
 print('Loading config: ' .. layerset_path)
 conf = inifile.parse(layerset_path)
 

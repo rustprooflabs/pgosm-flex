@@ -38,8 +38,8 @@ def get_today():
 
 @click.command()
 @click.option('--layerset', required=True,
-              default='run-all',
-              show_default='run-all',
+              default='default',
+              show_default='default',
               prompt='PgOSM Flex Layer Set',
               help=f'Layer set from PgOSM Flex to load.')
 @click.option('--ram', required=True,
@@ -107,20 +107,19 @@ def run_pgosm_flex(layerset, ram, region, subregion, srid, pgosm_date, language,
                  subregion=subregion,
                  pgosm_date=pgosm_date,
                  paths=paths)
+
+    set_env_vars(region, subregion, srid, language, pgosm_date, layerset)
+
     osm2pgsql_command = get_osm2pgsql_command(region=region,
                                               subregion=subregion,
                                               ram=ram,
-                                              layerset=layerset,
                                               paths=paths)
     wait_for_postgres()
 
     db.prepare_pgosm_db(data_only=data_only, paths=paths)
 
-    set_env_vars(region, subregion, srid, language, pgosm_date)
-
     run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, paths=paths)
-    run_post_processing(layerset=layerset, paths=paths,
-                        skip_nested=skip_nested)
+    run_post_processing(paths=paths, skip_nested=skip_nested)
 
     remove_latest_files(region, subregion, paths)
 
@@ -142,7 +141,7 @@ def run_pgosm_flex(layerset, ram, region, subregion, srid, pgosm_date, language,
     logger.info('PgOSM Flex complete!')
 
 
-def set_env_vars(region, subregion, srid, language, pgosm_date):
+def set_env_vars(region, subregion, srid, language, pgosm_date, layerset):
     """Sets environment variables needed by PgOSM Flex
 
     Parameters
@@ -152,6 +151,7 @@ def set_env_vars(region, subregion, srid, language, pgosm_date):
     srid : str
     language : str
     pgosm_date : str
+    layerset : str
     """
     logger = logging.getLogger('pgosm-flex')
     logger.info('PgOSM Flex starting...')
@@ -173,6 +173,7 @@ def set_env_vars(region, subregion, srid, language, pgosm_date):
 
     os.environ['PGOSM_DATE'] = pgosm_date
 
+    os.environ['PGOSM_LAYERSET'] = layerset
 
 
 def setup_logger(log_file, debug):
@@ -570,7 +571,7 @@ def remove_latest_files(region, subregion, paths):
     os.remove(md5_file)
 
 
-def get_osm2pgsql_command(region, subregion, ram, layerset, paths):
+def get_osm2pgsql_command(region, subregion, ram, paths):
     """Returns recommended osm2pgsql command.
 
     Parameters
@@ -578,7 +579,6 @@ def get_osm2pgsql_command(region, subregion, ram, layerset, paths):
     region : str
     subregion : str
     ram : int
-    layerset : str
     paths : dict
 
     Returns
@@ -588,7 +588,6 @@ def get_osm2pgsql_command(region, subregion, ram, layerset, paths):
     """
     pbf_filename = get_region_filename(region, subregion)
     rec_cmd = rec.osm2pgsql_recommendation(ram=ram,
-                                           layerset=layerset,
                                            pbf_filename=pbf_filename,
                                            out_path=paths['out_path'])
     return rec_cmd
@@ -616,20 +615,18 @@ def run_osm2pgsql(osm2pgsql_command, paths):
     logger.info(f'osm2pgsql output: \n {output.stderr}\nEND osm2pgsql output')
 
 
-def run_post_processing(layerset, paths, skip_nested):
+def run_post_processing(paths, skip_nested):
     """Runs steps following osm2pgsql import.
 
     Post-processing SQL scripts and (optionally) calculate nested admin polgyons
 
     Parameters
     ----------------------
-    layerset : str
-
     paths : dict
 
     skip_nested : bool
     """
-    db.pgosm_after_import(layerset, paths)
+    db.pgosm_after_import(paths)
     logger = logging.getLogger('pgosm-flex')
     if skip_nested:
         logger.info('Skipping calculating nested polygons')

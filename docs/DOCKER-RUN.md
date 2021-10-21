@@ -44,14 +44,14 @@ region
 The command  `python3 docker/pgosm_flex.py` runs the full process. The
 script uses a region (`north-america/us`) and sub-region (`district-of-columbia`)
 that must match values in URLs from the Geofabrik download server.
-The 3rd parameter tells the script the server has 8 GB RAM available for osm2pgsql, Postgres, and the OS.  The PgOSM-Flex layer set is defined (`run-all`).
+The 3rd parameter tells the script the server has 8 GB RAM available for osm2pgsql, Postgres, and the OS.  The PgOSM-Flex layer set is defined (`default`).
 
 
 ```bash
 docker exec -it \
     -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -e POSTGRES_USER=$POSTGRES_USER \
     pgosm python3 docker/pgosm_flex.py \
-    --layerset=run-all --ram=8 \
+    --layerset=default --ram=8 \
     --region=north-america/us \
     --subregion=district-of-columbia
 ```
@@ -107,7 +107,7 @@ used during development.
 docker exec -it \
     -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD  -e POSTGRES_USER=$POSTGRES_USER \
     pgosm python3 docker/pgosm_flex.py \
-    --layerset=run-all \
+    --layerset=everything \
     --ram=8 \
     --region=north-america/us \
     --subregion=district-of-columbia \

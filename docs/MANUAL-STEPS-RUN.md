@@ -164,8 +164,7 @@ data.  The list of main tables in PgOSM-Flex will continue to grow and evolve.
 ```bash
 cd pgosm-flex/flex-config
 
-osm2pgsql --slim --drop \
-    --output=flex --style=./run-all.lua \
+osm2pgsql --output=flex --style=./run.lua \
     -d $PGOSM_CONN \
     ~/pgosm-data/district-of-columbia-latest.osm.pbf
 ```
@@ -184,10 +183,10 @@ lua ./run-sql.lua
 
 ## Config Layerset
 
-Define `PGOSM_CONFIG` to override the use of `layerset/default.ini`.
+Define `PGOSM_LAYERSET` to override the use of `layerset/default.ini`.
 
 ```bash
-export PGOSM_CONFIG=road-place
+export PGOSM_LAYERSET=everything
 ```
 
 
