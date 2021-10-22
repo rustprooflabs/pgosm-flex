@@ -25,7 +25,7 @@ sudo apt install -y \
         luarocks
 ```
 
-I had to use the `PGSQL_INCIR` on Ubuntu 20.04 to get it to find the libpq headers.
+I had to use the `PGSQL_INCDIR` on Ubuntu 20.04 to get it to find the libpq headers.
 
 
 ```bash
