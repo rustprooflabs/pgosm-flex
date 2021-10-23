@@ -189,6 +189,14 @@ Define `PGOSM_LAYERSET` to override the use of `layerset/default.ini`.
 export PGOSM_LAYERSET=everything
 ```
 
+To define a path to custom layersets outside the standard path
+set the `PGOSM_LAYERSET_PATH` env var.
+
+NOTE: Include the trailing slash!
+
+```bash
+export PGOSM_LAYERSET_PATH=/custom-layerset/
+```
 
 
 ## Generated nested place polygons

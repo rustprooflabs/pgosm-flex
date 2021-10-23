@@ -36,6 +36,15 @@ docker run --name pgosm -d --rm \
     -p 5433:5432 -d rustprooflabs/pgosm-flex
 ```
 
+Ensure the docker container is running.
+
+```bash
+docker ps -a | grep pgosm
+```
+
+> The most common reason the Docker container fails to run is not setting the `$POSTGRES_PASSWORD` env var.
+
+
 ## Run PgOSM-Flex
 
 The following `docker exec` command runs PgOSM Flex to load the District of Columbia
@@ -51,7 +60,8 @@ The 3rd parameter tells the script the server has 8 GB RAM available for osm2pgs
 docker exec -it \
     -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -e POSTGRES_USER=$POSTGRES_USER \
     pgosm python3 docker/pgosm_flex.py \
-    --layerset=default --ram=8 \
+    --layerset=default \
+    --ram=8 \
     --region=north-america/us \
     --subregion=district-of-columbia
 ```
@@ -107,7 +117,8 @@ used during development.
 docker exec -it \
     -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD  -e POSTGRES_USER=$POSTGRES_USER \
     pgosm python3 docker/pgosm_flex.py \
-    --layerset=everything \
+    --layerset=poi \
+    --layerset-path=/custom-layerset/ \
     --ram=8 \
     --region=north-america/us \
     --subregion=district-of-columbia \
@@ -119,6 +130,54 @@ docker exec -it \
     --skip-dump \
     --skip-nested \
     --debug
+```
+
+## Use custom layersets
+
+Setup example layerset that only imports the `poi` layer.
+
+```bash
+mkdir ~/custom-layerset
+nano ~/custom-layerset/poi.ini
+```
+
+Put in the contents.
+
+```ini
+[layerset]
+poi=true
+```
+
+
+To use the `--layerset-path` option for custom layerset
+definitions, link the directory containing custom styles
+to the Docker container in the `docker run` command.
+The custom styles will be available inside the container under
+`/custom-layerset`.
+
+
+```bash
+docker run --name pgosm -d --rm \
+    -v ~/pgosm-data:/app/output \
+    -v /etc/localtime:/etc/localtime:ro \
+    -v ~/custom-layerset:/custom-layerset \
+    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+    -p 5433:5432 -d rustprooflabs/pgosm-flex
+```
+
+Define the layerset name (`--layerset=poi`) and path
+(`--layerset-path`) to the `docker exec`.
+
+
+```bash
+docker exec -it \
+    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -e POSTGRES_USER=$POSTGRES_USER \
+    pgosm python3 docker/pgosm_flex.py \
+    --layerset=poi \
+    --layerset-path=/custom-layerset/ \
+    --ram=8 \
+    --region=north-america/us \
+    --subregion=district-of-columbia
 ```
 
 

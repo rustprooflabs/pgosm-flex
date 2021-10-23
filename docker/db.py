@@ -342,10 +342,18 @@ def pgosm_nested_admin_polygons(paths):
     LOGGER.info('Building nested polygons... (this can take a while)')
     output = subprocess.run(cmds,
                             text=True,
-                            capture_output=True,
                             cwd=paths['flex_path'],
-                            check=True)
-    LOGGER.info(f'Nested polygon output: \n {output.stderr}')
+                            check=False,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+    LOGGER.info(f'Nested polygon output: \n {output.stdout}')
+
+
+    if output.returncode != 0:
+        err_msg = f'Failed to build nested polygons. Return code: {output.returncode}'
+        LOGGER.error(err_msg)
+        sys.exit(f'{err_msg} - Check the log output for details.')
+
 
 
 def rename_schema(schema_name):

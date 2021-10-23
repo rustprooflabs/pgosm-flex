@@ -1,4 +1,6 @@
-local inifile = require('inifile')
+-- Loads the `conf` var from layerset INI file
+require "layerset"
+
 local driver = require('luasql.postgres')
 local env = driver.postgres()
 
@@ -11,18 +13,6 @@ else
     error('ENV VAR PGOSM_CONN must be set.')
 end
 
-local pgosm_config_env = os.getenv("PGOSM_CONFIG")
-local pgosm_config = nil
-
-if pgosm_config_env then
-    pgosm_config = pgosm_config_env
-else
-    pgosm_config = 'default'
-end
-
-local layerset_path = 'layerset/' .. pgosm_config .. '.ini'
-print('Loading config: ' .. layerset_path)
-conf = inifile.parse(layerset_path)
 
 
 local function post_processing(layerset)
@@ -34,7 +24,6 @@ local function post_processing(layerset)
     local result = con:execute(sql_raw)
     --print(result) -- Returns 0.0 on success?  nil on error?
 end
-
 
 
 -- Establish connection to Postgres
