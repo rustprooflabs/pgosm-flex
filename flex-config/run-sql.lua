@@ -13,6 +13,11 @@ else
     error('ENV VAR PGOSM_CONN must be set.')
 end
 
+layers = {'amenity', 'building', 'indoor', 'infrastructure', 'landuse'
+          , 'leisure'
+          , 'natural', 'place', 'poi', 'public_transport'
+          , 'road', 'road_major', 'shop', 'tags'
+          , 'traffic', 'unitable', 'water'}
 
 
 local function post_processing(layerset)
@@ -42,72 +47,10 @@ end
 
 post_processing('pgosm-meta')
 
-if conf['layerset']['amenity'] then
-    post_processing('amenity')
-end
-
-if conf['layerset']['building'] then
-    post_processing('building')
-end
-
-if conf['layerset']['indoor'] then
-    post_processing('indoor')
-end
-
-if conf['layerset']['infrastructure'] then
-    post_processing('infrastructure')
-end
-
-if conf['layerset']['landuse'] then
-    post_processing('landuse')
-end
-
-if conf['layerset']['leisure'] then
-    post_processing('leisure')
-end
-
-if conf['layerset']['natural'] then
-    post_processing('natural')
-end
-
-if conf['layerset']['place'] then
-    post_processing('place')
-end
-
-if conf['layerset']['poi'] then
-    post_processing('poi')
-end
-
-if conf['layerset']['public_transport'] then
-    post_processing('public_transport')
-end
-
-if conf['layerset']['road'] then
-    post_processing('road')
-end
-
-if conf['layerset']['road_major'] then
-    post_processing('road_major')
-end
-
-if conf['layerset']['shop'] then
-    post_processing('shop')
-end
-
-if conf['layerset']['tags'] then
-    post_processing('tags')
-end
-
-if conf['layerset']['traffic'] then
-    post_processing('traffic')
-end
-
-if conf['layerset']['unitable'] then
-    post_processing('unitable')
-end
-
-if conf['layerset']['water'] then
-    post_processing('water')
+for ix, layer in ipairs(layers) do
+    if conf['layerset'][layer] then
+        post_processing(layer)
+    end
 end
 
 
