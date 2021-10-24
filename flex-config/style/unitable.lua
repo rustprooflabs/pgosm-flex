@@ -36,26 +36,31 @@ function clean_tags(tags)
     return next(tags) == nil
 end
 
-function process(object, geometry_type)
+
+
+function unitable_process_node(object)
     if clean_tags(object.tags) then
         return
     end
     dtable:add_row({
         tags = object.tags,
-        geom = { create = geometry_type }
+        geom = { create = 'point' }
     })
 end
 
-function osm2pgsql.process_node(object)
-    process(object, 'point')
-end
 
-function osm2pgsql.process_way(object)
-    process(object, 'line')
+function unitable_process_way(object)
+    if clean_tags(object.tags) then
+        return
+    end
+    dtable:add_row({
+        tags = object.tags,
+        geom = { create = 'line' }
+    })
 end
 
 -- Main relation types from https://wiki.openstreetmap.org/wiki/Types_of_relation
-function osm2pgsql.process_relation(object)
+function unitable_process_relation(object)
     if clean_tags(object.tags) then
         return
     end
@@ -87,3 +92,46 @@ function osm2pgsql.process_relation(object)
 
 end
 
+
+
+if osm2pgsql.process_node == nil then
+    -- Change function name here
+    osm2pgsql.process_node = unitable_process_node
+else
+    local nested = osm2pgsql.process_node
+    osm2pgsql.process_node = function(object)
+        local object_copy = deep_copy(object)
+        nested(object)
+        -- Change function name here
+        unitable_process_node(object_copy)
+    end
+end
+
+
+
+if osm2pgsql.process_way == nil then
+    -- Change function name here
+    osm2pgsql.process_way = unitable_process_way
+else
+    local nested = osm2pgsql.process_way
+    osm2pgsql.process_way = function(object)
+        local object_copy = deep_copy(object)
+        nested(object)
+        -- Change function name here
+        unitable_process_way(object_copy)
+    end
+end
+
+
+if osm2pgsql.process_relation == nil then
+    -- Change function name here
+    osm2pgsql.process_relation = unitable_process_relation
+else
+    local nested = osm2pgsql.process_relation
+    osm2pgsql.process_relation = function(object)
+        local object_copy = deep_copy(object)
+        nested(object)
+        -- Change function name here
+        unitable_process_relation(object_copy)
+    end
+end

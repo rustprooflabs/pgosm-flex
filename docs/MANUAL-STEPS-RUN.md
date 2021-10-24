@@ -183,10 +183,10 @@ lua ./run-sql.lua
 
 ## Config Layerset
 
-Define `PGOSM_LAYERSET` to override the use of `layerset/everything.ini`.
+Define `PGOSM_LAYERSET` to override the use of `layerset/default.ini`.
 
 ```bash
-export PGOSM_LAYERSET=basic
+export PGOSM_LAYERSET=everything
 ```
 
 To define a path to custom layersets outside the standard path
@@ -213,22 +213,6 @@ psql -d $PGOSM_CONN -c "CALL osm.build_nested_admin_polygons();"
 
 # More options
 
-
-## Load main tables, No Tags
-
-As seen above, the `run_all.lua` style includes the tags table and then includes
-`run-no-tags` to load the rest of the data.  If you want the main data
-**without the full tags** table, use the `run-no-tags.lua` and `.sql` scripts instead.
-
-
-```bash
-osm2pgsql --slim --drop \
-    --output=flex --style=./run-no-tags.lua \
-    -d $PGOSM_CONN \
-    ~/tmp/district-of-columbia-latest.osm.pbf
-
-psql -d $PGOSM_CONN -f ./run-no-tags.sql
-```
 
 
 ## Load individual layers

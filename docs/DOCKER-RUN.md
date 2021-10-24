@@ -60,7 +60,7 @@ The 3rd parameter tells the script the server has 8 GB RAM available for osm2pgs
 docker exec -it \
     -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -e POSTGRES_USER=$POSTGRES_USER \
     pgosm python3 docker/pgosm_flex.py \
-    --layerset=everything \
+    --layerset=default \
     --ram=8 \
     --region=north-america/us \
     --subregion=district-of-columbia
@@ -82,7 +82,7 @@ Usage: pgosm_flex.py [OPTIONS]
 
 Options:
   --layerset TEXT       Layer set from PgOSM Flex to load.  [default:
-                        (everything); required]
+                        (default); required]
   --layerset-path TEXT  Custom path to load layerset INI from. Custom paths
                         should be mounted to Docker via docker run -v ...
   --ram INTEGER         Amount of RAM in GB available on the server running
