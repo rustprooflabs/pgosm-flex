@@ -11,7 +11,7 @@ local ext = '.ini'
 if pgosm_layerset_env then
     pgosm_layerset = pgosm_layerset_env
 else
-    pgosm_layerset = 'default'
+    pgosm_layerset = 'everything'
 end
 
 if pgosm_layerset_path_env then

@@ -183,10 +183,10 @@ lua ./run-sql.lua
 
 ## Config Layerset
 
-Define `PGOSM_LAYERSET` to override the use of `layerset/default.ini`.
+Define `PGOSM_LAYERSET` to override the use of `layerset/everything.ini`.
 
 ```bash
-export PGOSM_LAYERSET=everything
+export PGOSM_LAYERSET=basic
 ```
 
 To define a path to custom layersets outside the standard path

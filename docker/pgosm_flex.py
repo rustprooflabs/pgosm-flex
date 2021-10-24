@@ -39,9 +39,8 @@ def get_today():
 
 @click.command()
 @click.option('--layerset', required=True,
-              default='default',
-              show_default='default',
-              prompt='PgOSM Flex Layer Set',
+              default='everything',
+              show_default='everything',
               help=f'Layer set from PgOSM Flex to load.')
 @click.option('--layerset-path', required=False,
               help=f'Custom path to load layerset INI from. Custom paths should be mounted to Docker via docker run -v ...')
