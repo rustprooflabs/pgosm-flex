@@ -11,7 +11,8 @@ import db
 LOGGER = logging.getLogger('pgosm-flex')
 
 
-def osm2pgsql_recommendation(ram, pbf_filename, out_path):
+def osm2pgsql_recommendation(
+    ram, pbf_filename, out_path, conn_str=None):
     """Returns recommended osm2pgsql command.
 
     Recommendation from API at https://osm2pgsql-tuner.com
@@ -20,10 +21,9 @@ def osm2pgsql_recommendation(ram, pbf_filename, out_path):
     ----------------------
     ram : float
         Total system RAM available in GB
-
     pbf_filename : str
-
     out_path : str
+    conn_str : str, optional
 
     Returns
     ----------------------
@@ -41,18 +41,16 @@ def osm2pgsql_recommendation(ram, pbf_filename, out_path):
 
     # PgOSM-Flex currently does not support/test append mode.
     append = False
-    osm2pgsql_cmd = get_recommended_script(system_ram_gb,
+    return get_recommended_script(system_ram_gb,
                                            osm_pbf_gb,
                                            append,
                                            pbf_file,
                                            pgosm_layer_set,
-                                           out_path)
-    return osm2pgsql_cmd
+                                           conn_str=conn_str)
 
 def get_recommended_script(system_ram_gb, osm_pbf_gb,
                            append, pbf_filename,
-                           pgosm_layer_set,
-                           output_path):
+                           pgosm_layer_set, conn_str=None):
     """Builds API call and cleans up returned command for use here.
 
     Parameters
@@ -62,8 +60,7 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb,
     append : bool
     pbf_filename : str
     pgosm_layer_set : str
-    output_path : str
-
+    conn_str : str, optional
     Returns
     -------------------------------
     osm2pgsql_cmd : str
@@ -87,7 +84,8 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb,
     # Replace generic path from API with specific path
     osm2pgsql_cmd = re.sub(r'~/pgosm-data[^ ]+', pbf_filename, osm2pgsql_cmd)
     # Replace generic connection string with specific conn string
-    conn_string = db.connection_string(db_name='pgosm')
+    if conn_str is None:
+        conn_string = db.connection_string(db_name='pgosm')
     osm2pgsql_cmd = osm2pgsql_cmd.replace('-d $PGOSM_CONN',
                                           f'-d {conn_string}')
     return osm2pgsql_cmd

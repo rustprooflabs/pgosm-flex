@@ -12,7 +12,7 @@ import sh
 LOGGER = logging.getLogger('pgosm-flex')
 
 
-def pg_isready():
+def pg_isready(conn_str=None):
     """Checks pg_isready for Postgres to be available.
 
     https://www.postgresql.org/docs/current/app-pg-isready.html
@@ -21,7 +21,12 @@ def pg_isready():
     -------------------
     pg_up : bool
     """
-    output = subprocess.run(['pg_isready', '-U', 'root'],
+    if conn_str is None:
+        cmd = ['pg_isready', '-U', 'root']
+    else:
+        cmd = ['pg_isready', '-d', conn_str]
+
+    output = subprocess.run(cmd,
                             text=True,
                             capture_output=True,
                             check=False)
@@ -33,31 +38,32 @@ def pg_isready():
     return code == 0
 
 
-def prepare_pgosm_db(data_only, paths):
+def prepare_pgosm_db(data_only, paths, conn_str=None):
     """Runs through series of steps to prepare database for PgOSM
 
     Parameters
     --------------------------
     data_only : bool
     paths : dict
+    conn_str : str, optional
     """
-    pg_version_check()
-    drop_pgosm_db()
-    create_pgosm_db()
+    pg_version_check(conn_str)
+    drop_pgosm_db(conn_str)
+    create_pgosm_db(conn_str)
     if not data_only:
         LOGGER.info('Loading extras via Sqitch.')
-        run_sqitch_prep(paths)
-        load_qgis_styles(paths)
+        run_sqitch_prep(paths, conn_str)
+        load_qgis_styles(paths, conn_str)
     else:
         LOGGER.info('Data only mode enabled, no Sqitch or QGIS styles.')
 
 
-def pg_version_check():
+def pg_version_check(conn_str=None):
     """Checks Postgres version and sends to logs.
     """
     sql_raw = 'SHOW server_version;'
 
-    with get_db_conn(db_name='postgres') as conn:
+    with get_db_conn(db_name='postgres', conn_str=conn_str) as conn:
         cur = conn.cursor()
         cur.execute(sql_raw)
         results = cur.fetchone()
@@ -67,10 +73,10 @@ def pg_version_check():
 
 
 
-def drop_pgosm_db():
+def drop_pgosm_db(conn_str=None):
     """Drops the pgosm database if it exists."""
     sql_raw = 'DROP DATABASE IF EXISTS pgosm;'
-    conn = get_db_conn(db_name='postgres')
+    conn = get_db_conn(db_name='postgres', conn_str=conn_str)
 
     LOGGER.debug('Setting Pg conn to enable autocommit - required for drop/create DB')
     conn.autocommit = True
@@ -79,11 +85,11 @@ def drop_pgosm_db():
     LOGGER.info('Removed pgosm database')
 
 
-def create_pgosm_db():
+def create_pgosm_db(conn_str=None):
     """Creates the pgosm database and prepares with PostGIS and osm schema
     """
     sql_raw = 'CREATE DATABASE pgosm;'
-    conn = get_db_conn(db_name='postgres')
+    conn = get_db_conn(db_name='postgres', conn_str=conn_str)
 
     LOGGER.debug('Setting Pg conn to enable autocommit - required for drop/create DB')
     conn.autocommit = True
@@ -94,7 +100,7 @@ def create_pgosm_db():
     sql_create_postgis = "CREATE EXTENSION postgis;"
     sql_create_schema = "CREATE SCHEMA osm;"
 
-    with get_db_conn(db_name='pgosm') as conn:
+    with get_db_conn(db_name='pgosm', conn_str=conn_str) as conn:
         cur = conn.cursor()
         cur.execute(sql_create_postgis)
         LOGGER.debug('Installed PostGIS extension')
@@ -102,7 +108,7 @@ def create_pgosm_db():
         LOGGER.debug('Created osm schema')
 
 
-def run_sqitch_prep(paths):
+def run_sqitch_prep(paths, conn_str=None):
     """Runs Sqitch to create DB structure and populate helper data.
 
     Parameters
@@ -147,7 +153,7 @@ def run_sqitch_prep(paths):
     return True
 
 
-def load_qgis_styles(paths):
+def load_qgis_styles(paths, conn_str=None):
     """Loads QGIS style data for easy formatting of most common layers.
 
     Parameters
@@ -169,7 +175,7 @@ def load_qgis_styles(paths):
     with open(load_path, 'r') as file_in:
         load_sql = file_in.read()
 
-    with get_db_conn(db_name='pgosm') as conn:
+    with get_db_conn(db_name='pgosm', conn_str=conn_str) as conn:
         cur = conn.cursor()
         cur.execute(create_sql)
     LOGGER.debug('QGIS Style table created')
@@ -188,12 +194,12 @@ def load_qgis_styles(paths):
 
     LOGGER.debug(f'Output from loading QGIS style data: {output.stdout}')
 
-    with get_db_conn(db_name='pgosm') as conn:
+    with get_db_conn(db_name='pgosm', conn_str=conn_str) as conn:
         cur = conn.cursor()
         cur.execute(load_sql)
     LOGGER.info('QGIS Style table populated')
 
-    with get_db_conn(db_name='pgosm') as conn:
+    with get_db_conn(db_name='pgosm', conn_str=conn_str) as conn:
         sql_clean = 'DELETE FROM public.layer_styles_staging;'
         cur = conn.cursor()
         cur.execute(sql_clean)
@@ -279,20 +285,24 @@ def get_pg_user_pass():
     return pg_details
 
 
-def get_db_conn(db_name):
+def get_db_conn(db_name=None, conn_str=None):
     """Establishes psycopg database connection.
 
     Parameters
     -----------------------
     db_name : str
+    conn_str : str, optional
 
     Returns
     -----------------------
     conn : psycopg.Connection
     """
-    conn_string = connection_string(db_name)
     try:
-        conn = psycopg.connect(conn_string)
+        conn = psycopg.connect(
+            conn_str
+            if conn_str is not None
+            else connection_string(db_name)
+        )
         LOGGER.debug('Connection to Postgres established')
     except psycopg.OperationalError as err:
         err_msg = 'Database connection error. Error: {}'.format(err)
@@ -352,17 +362,18 @@ def pgosm_nested_admin_polygons(paths):
 
 
 
-def rename_schema(schema_name):
+def rename_schema(schema_name, conn_str=None):
     """Renames default schema name "osm" to `schema_name`
 
     Returns
     ----------------------------
     schema_name : str
+    conn_str : str, optional
     """
     LOGGER.info(f'Renaming schema from osm to {schema_name}')
     sql_raw = f'ALTER SCHEMA osm RENAME TO {schema_name} ;'
 
-    with get_db_conn(db_name='pgosm') as conn:
+    with get_db_conn(db_name='pgosm', conn_str=conn_str) as conn:
         cur = conn.cursor()
         cur.execute(sql_raw)
 

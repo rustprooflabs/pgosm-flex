@@ -92,9 +92,14 @@ def get_today():
               required=False,
               default=None,
               help='Path of the input PBF file')
+@click.option('--conn-str',
+              required=False,
+              default=None,
+              help='External database connection string. If missing use incorporated one')
+
 def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
                     pgosm_date, language, schema_name, skip_nested, data_only,
-                    skip_dump, debug, basepath, input_file):
+                    skip_dump, debug, basepath, input_file, conn_str):
     """Logic to run PgOSM Flex within Docker.
     """
     if region is None and input_file is None:
@@ -130,11 +135,12 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
     else:
         osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
                                            pbf_filename=input_file,
-                                           out_path=paths['out_path'])
+                                           out_path=paths['out_path'],
+                                           conn_str=conn_str)
 
-    wait_for_postgres()
+    wait_for_postgres(conn_str=conn_str)
 
-    db.prepare_pgosm_db(data_only=data_only, paths=paths)
+    db.prepare_pgosm_db(data_only=data_only, paths=paths, conn_str=conn_str)
 
     run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, paths=paths)
 
@@ -368,7 +374,7 @@ def get_pbf_url(region, subregion):
     return pbf_url
 
 
-def wait_for_postgres():
+def wait_for_postgres(conn_str=None):
     """Ensures Postgres service is reliably ready for use.
 
     Required b/c Postgres process in Docker gets restarted shortly
@@ -390,7 +396,7 @@ def wait_for_postgres():
 
         time.sleep(5)
 
-        if db.pg_isready():
+        if db.pg_isready(conn_str=conn_str):
             found += 1
             logger.info(f'Postgres up {found} times')
 
@@ -608,7 +614,8 @@ def remove_latest_files(region, subregion, paths):
     os.remove(md5_file)
 
 
-def get_osm2pgsql_command(region, subregion, ram, paths):
+def get_osm2pgsql_command(
+    region, subregion, ram, paths, conn_str=None):
     """Returns recommended osm2pgsql command.
 
     Parameters
@@ -617,6 +624,7 @@ def get_osm2pgsql_command(region, subregion, ram, paths):
     subregion : str
     ram : int
     paths : dict
+    conn_str : str, optional
 
     Returns
     ----------------------
@@ -626,7 +634,8 @@ def get_osm2pgsql_command(region, subregion, ram, paths):
     pbf_filename = get_region_filename(region, subregion)
     rec_cmd = rec.osm2pgsql_recommendation(ram=ram,
                                            pbf_filename=pbf_filename,
-                                           out_path=paths['out_path'])
+                                           out_path=paths['out_path'],
+                                           conn_str=conn_str)
     return rec_cmd
 
 
