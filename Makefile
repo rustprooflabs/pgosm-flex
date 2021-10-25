@@ -26,6 +26,8 @@ docker-clean: ## Stops pgosm Docker container and removes local pgosm-data direc
 	rm -rvf pgosm-data|| echo "folder pgosm-data did not exist"
 	# rare race condition: the stoppe dcontainer may be "Removal In Progress"
 	while docker container inspect pgosm >/dev/null 2>&1; do sleep 1; done
+	@docker stop anotherdb > /dev/null 2>&1 && echo "anotherdb container removed"|| echo "anotherdb container not present, nothing to remove"
+
 
 .PHONY: build
 build: ## Builds PgOSM Flex
