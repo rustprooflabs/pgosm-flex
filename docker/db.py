@@ -102,10 +102,15 @@ def create_pgosm_db(conn_str=None):
 
     with get_db_conn(db_name='pgosm', conn_str=conn_str) as conn:
         cur = conn.cursor()
-        cur.execute(sql_create_postgis)
-        LOGGER.debug('Installed PostGIS extension')
         cur.execute(sql_create_schema)
         LOGGER.debug('Created osm schema')
+    with get_db_conn(db_name='pgosm', conn_str=conn_str) as conn:
+        cur = conn.cursor()
+        try:
+            cur.execute(sql_create_postgis)
+            LOGGER.debug('Installed PostGIS extension')
+        except psycopg.errors.DuplicateObject:
+            LOGGER.info('PostGIS already installed, continuing...')
 
 
 def run_sqitch_prep(paths, conn_str=None):
@@ -312,7 +317,7 @@ def get_db_conn(db_name=None, conn_str=None):
     return conn
 
 
-def pgosm_after_import(paths):
+def pgosm_after_import(paths, conn_str=None):
     """Runs post-processing SQL via Lua script.
 
     Layerset logic is established via environment variable, must happen
@@ -321,30 +326,34 @@ def pgosm_after_import(paths):
     Parameters
     ---------------------
     paths : dict
+    conn_str : str, optional
+
     """
     LOGGER.info('Running post-processing...')
 
     cmds = ['lua', 'run-sql.lua']
 
-    output = subprocess.run(cmds,
+    if conn_str is None:
+        conn_str = connection_string(db_name='pgosm')
+    output = subprocess.check_output(cmds,
                             text=True,
-                            capture_output=True,
-                            cwd=paths['flex_path'],
-                            check=True)
-    LOGGER.info(f'Post-processing output: \n {output.stderr}')
+                            cwd=paths['flex_path'])
+    LOGGER.info(f'Post-processing output: \n {output}')
 
 
-def pgosm_nested_admin_polygons(paths):
+def pgosm_nested_admin_polygons(paths, conn_str=None):
     """Runs stored procedure to calculate nested admin polygons via psql.
 
     Parameters
     ----------------------
     paths : dict
+    conn_str : str, optional
+
     """
     sql_raw = 'CALL osm.build_nested_admin_polygons();'
-
-    conn_string = connection_string(db_name='pgosm')
-    cmds = ['psql', '-d', conn_string, '-c', sql_raw]
+    if conn_str is None:
+        conn_str = connection_string(db_name='pgosm')
+    cmds = ['psql', '-d', conn_str, '-c', sql_raw]
     LOGGER.info('Building nested polygons... (this can take a while)')
     output = subprocess.run(cmds,
                             text=True,
@@ -378,7 +387,7 @@ def rename_schema(schema_name, conn_str=None):
         cur.execute(sql_raw)
 
 
-def run_pg_dump(export_filename, out_path, data_only, schema_name):
+def run_pg_dump(export_filename, out_path, data_only, schema_name, conn_str=None):
     """Runs pg_dump to save processed data to load into other PostGIS DBs.
 
     Parameters
@@ -387,23 +396,25 @@ def run_pg_dump(export_filename, out_path, data_only, schema_name):
     out_path : str
     data_only : bool
     schema_name : str
+    conn_str : str, optional
+
     """
     if not os.path.isabs(export_filename):
         export_path = os.path.join(out_path, export_filename)
     else:
         export_path = export_filename
     logger = logging.getLogger('pgosm-flex')
-    db_name = 'pgosm'
-    conn_string = connection_string(db_name=db_name)
+    if conn_str is None:
+        conn_str = connection_string(db_name='pgosm')
 
     if data_only:
         logger.info(f'Running pg_dump (only {schema_name} schema)')
-        cmds = ['pg_dump', '-d', conn_string,
+        cmds = ['pg_dump', '-d', conn_str,
                 f'--schema={schema_name}',
                 '-f', export_path]
     else:
         logger.info(f'Running pg_dump ({schema_name} schema plus extras)')
-        cmds = ['pg_dump', '-d', conn_string,
+        cmds = ['pg_dump', '-d', conn_str,
                 f'--schema={schema_name}',
                 '--schema=pgosm',
                 '--schema=public',

@@ -85,7 +85,7 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb,
     osm2pgsql_cmd = re.sub(r'~/pgosm-data[^ ]+', pbf_filename, osm2pgsql_cmd)
     # Replace generic connection string with specific conn string
     if conn_str is None:
-        conn_string = db.connection_string(db_name='pgosm')
+        conn_str = db.connection_string(db_name='pgosm')
     osm2pgsql_cmd = osm2pgsql_cmd.replace('-d $PGOSM_CONN',
-                                          f'-d {conn_string}')
+                                          f'-d {conn_str}')
     return osm2pgsql_cmd

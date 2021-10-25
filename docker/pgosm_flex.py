@@ -121,13 +121,13 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
     logger = logging.getLogger('pgosm-flex')
     logger.info('PgOSM Flex starting...')
 
+    set_env_vars(region, subregion, srid, language, pgosm_date,
+                layerset, layerset_path, conn_str=conn_str)
     if input_file is None:
         prepare_data(region=region,
                     subregion=subregion,
                     pgosm_date=pgosm_date,
                     paths=paths)
-        set_env_vars(region, subregion, srid, language, pgosm_date,
-                    layerset, layerset_path)
         osm2pgsql_command = get_osm2pgsql_command(region=region,
                                                 subregion=subregion,
                                                 ram=ram,
@@ -148,7 +148,8 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
         # Auto-set skip_nested when place layer not imported
         skip_nested = check_layerset_places(layerset_path, layerset, paths)
 
-    run_post_processing(paths=paths, skip_nested=skip_nested)
+    run_post_processing(paths=paths,
+                        skip_nested=skip_nested, conn_str=conn_str)
 
     if input_file is None:
         remove_latest_files(region, subregion, paths)
@@ -158,7 +159,7 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
                                             layerset,
                                             pgosm_date)
     else:
-        export_filename = input_file[:-3] + '.sql'
+        export_filename = os.path.basename(input_file)[:-4] + '.sql'
 
     if schema_name != 'osm':
         db.rename_schema(schema_name)
@@ -169,13 +170,15 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
         db.run_pg_dump(export_filename,
                        out_path=paths['out_path'],
                        data_only=data_only,
-                       schema_name=schema_name)
+                       schema_name=schema_name,
+                       conn_str=conn_str
+                       )
     logger.info('PgOSM Flex complete!')
 
 
 
 def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
-                 layerset_path):
+                 layerset_path, conn_str=None):
     """Sets environment variables needed by PgOSM Flex
 
     Parameters
@@ -188,6 +191,7 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
     layerset : str
     layerset_path : str
         str when set, or None
+    conn_str : str, optional
     """
     logger = logging.getLogger('pgosm-flex')
     logger.info('PgOSM Flex starting...')
@@ -215,8 +219,11 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
 
     os.environ['PGOSM_LAYERSET'] = layerset
 
-    os.environ['PGOSM_CONN'] = db.connection_string(db_name='pgosm')
-
+    os.environ['PGOSM_CONN'] = (
+        db.connection_string(db_name='pgosm')
+        if conn_str is None
+        else conn_str
+    )
 
 
 def setup_logger(log_file, debug):
@@ -694,7 +701,8 @@ def check_layerset_places(layerset_path, layerset, paths):
     return True
 
 
-def run_post_processing(paths, skip_nested):
+
+def run_post_processing(paths, skip_nested, conn_str=None):
     """Runs steps following osm2pgsql import.
 
     Post-processing SQL scripts and (optionally) calculate nested admin polgyons
@@ -704,14 +712,16 @@ def run_post_processing(paths, skip_nested):
     paths : dict
 
     skip_nested : bool
+    conn_str : str, optional
     """
-    db.pgosm_after_import(paths)
+
+    db.pgosm_after_import(paths, conn_str=conn_str)
     logger = logging.getLogger('pgosm-flex')
     if skip_nested:
         logger.info('Skipping calculating nested polygons')
     else:
         logger.info('Calculating nested polygons')
-        db.pgosm_nested_admin_polygons(paths)
+        db.pgosm_nested_admin_polygons(paths, conn_str=conn_str)
 
 
 

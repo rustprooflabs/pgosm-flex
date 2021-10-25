@@ -67,7 +67,7 @@ run-docker: ## Runs PgOSM Flex with D.C. test file
 
 .PHONY: run-with-external-db
 run-with-external-db: ## Runs PgOSM Flex using a specific PBF file and connection string
-
+	docker run --name anotherdb --rm -e POSTGRES_PASSWORD=anotherpassword -d postgis/postgis
 
 	docker run --name pgosm \
 		--rm \
@@ -75,6 +75,7 @@ run-with-external-db: ## Runs PgOSM Flex using a specific PBF file and connectio
 		-v /etc/localtime:/etc/localtime:ro \
 		-e POSTGRES_PASSWORD=mysecretpassword \
 		-p 5433:5432 \
+		--link anotherdb \
 		-d \
 		rustprooflabs/pgosm-flex
 	# copy the test data with a meaningless name
@@ -89,6 +90,7 @@ run-with-external-db: ## Runs PgOSM Flex using a specific PBF file and connectio
 		chown $(CURRENT_UID):$(CURRENT_GID) /app/docker/
 
 	# process it, this time without providing the region but directly the filename
+	# also use the separate DB instead of the incorporated one
 	docker exec -it \
 		-e POSTGRES_PASSWORD=mysecretpassword \
 		-e POSTGRES_USER=postgres \
@@ -97,6 +99,7 @@ run-with-external-db: ## Runs PgOSM Flex using a specific PBF file and connectio
 		--layerset=run-all \
 		--ram=1 \
 		--input-file=/app/output/some_arbitrary_name.osm.pbf \
+		--conn-str=postgres://postgres:anotherpassword@anotherdb \
 		--debug
 
 .PHONY: unit-tests
