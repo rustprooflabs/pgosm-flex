@@ -4,6 +4,7 @@ the osm2pgsql-tuner API.
 import logging
 import os
 import requests
+import re
 
 import db
 
@@ -31,21 +32,21 @@ def osm2pgsql_recommendation(ram, pbf_filename, out_path):
     system_ram_gb = ram
     # The layerset is now set via env var.  This is used to set filename for osm2pgsql command
     pgosm_layer_set = 'run'
-
-    pbf_file = os.path.join(out_path, pbf_filename)
+    if not os.path.isabs(pbf_filename):
+        pbf_file = os.path.join(out_path, pbf_filename)
+    else:
+        pbf_file = pbf_filename
     osm_pbf_gb = os.path.getsize(pbf_file) / 1024 / 1024 / 1024
     LOGGER.info(f'PBF size (GB): {osm_pbf_gb}')
 
     # PgOSM-Flex currently does not support/test append mode.
     append = False
-
     osm2pgsql_cmd = get_recommended_script(system_ram_gb,
                                            osm_pbf_gb,
                                            append,
-                                           pbf_filename,
+                                           pbf_file,
                                            pgosm_layer_set,
                                            out_path)
-
     return osm2pgsql_cmd
 
 def get_recommended_script(system_ram_gb, osm_pbf_gb,
@@ -84,8 +85,7 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb,
 
     osm2pgsql_cmd = rec['cmd']
     # Replace generic path from API with specific path
-    osm2pgsql_cmd = osm2pgsql_cmd.replace('~/pgosm-data', output_path)
-
+    osm2pgsql_cmd = re.sub(r'~/pgosm-data[^ ]+', pbf_filename, osm2pgsql_cmd)
     # Replace generic connection string with specific conn string
     conn_string = db.connection_string(db_name='pgosm')
     osm2pgsql_cmd = osm2pgsql_cmd.replace('-d $PGOSM_CONN',

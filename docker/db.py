@@ -377,7 +377,10 @@ def run_pg_dump(export_filename, out_path, data_only, schema_name):
     data_only : bool
     schema_name : str
     """
-    export_path = os.path.join(out_path, export_filename)
+    if not os.path.isabs(export_filename):
+        export_path = os.path.join(out_path, export_filename)
+    else:
+        export_path = export_filename
     logger = logging.getLogger('pgosm-flex')
     db_name = 'pgosm'
     conn_string = connection_string(db_name=db_name)

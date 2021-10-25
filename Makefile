@@ -36,6 +36,9 @@ build-run-docker: ## Builds and runs PgOSM Flex with D.C. test file
 		pgosm:/app/output/district-of-columbia-$(TODAY).osm.pbf
 	docker cp tests/data/district-of-columbia-2021-01-13.osm.pbf.md5 \
 		pgosm:/app/output/district-of-columbia-$(TODAY).osm.pbf.md5
+	# copy the test data with a meaningless name
+	docker cp tests/data/district-of-columbia-2021-01-13.osm.pbf \
+		pgosm:/app/output/some_arbitrary_name.osm.pbf
 
 	# allow files created in later step to be created
 	docker exec -it pgosm \
@@ -54,7 +57,16 @@ build-run-docker: ## Builds and runs PgOSM Flex with D.C. test file
 		--region=north-america/us \
 		--subregion=district-of-columbia \
 		--debug
-
+	# process it, this time without providing the region but directly the filename
+	docker exec -it \
+		-e POSTGRES_PASSWORD=mysecretpassword \
+		-e POSTGRES_USER=postgres \
+		-u $(CURRENT_UID):$(CURRENT_GID) \
+		pgosm python3 docker/pgosm_flex.py  \
+		--layerset=run-all \
+		--ram=1 \
+		--input-file=/app/output/some_arbitrary_name.osm.pbf \
+		--debug
 
 .PHONY: unit-tests
 unit-tests: ## Runs Python unit tests and data import tests

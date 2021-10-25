@@ -49,14 +49,12 @@ def get_today():
               default=4,
               show_default=4,
               help='Amount of RAM in GB available on the server running this process. Used to determine appropriate osm2pgsql command via osm2pgsql-tuner.com API.')
-@click.option('--region', required=True,
-              prompt="Region name",
+@click.option('--region', required=False,
               show_default="north-america/us",
               default="north-america/us",
               help='Region name matching the filename for data sourced from Geofabrik. e.g. north-america/us')
 @click.option('--subregion', required=False,
               default="district-of-columbia",
-              prompt="Subregion (set to 'none' to skip)",
               show_default="district-of-columbia",
               help='Sub-region name matching the filename for data sourced from Geofabrik. e.g. district-of-columbia')
 @click.option('--srid', required=False, default=DEFAULT_SRID,
@@ -90,34 +88,50 @@ def get_today():
               required=False,
               default=BASE_PATH_DEFAULT,
               help='Debugging option. Used when testing locally and not within Docker')
-def run_pgosm_flex(layerset, layerset_path, ram, region, subregion,
-                   srid, pgosm_date, language,
-                   schema_name, skip_nested, data_only, skip_dump,
-                   debug, basepath):
+@click.option('--input-file',
+              required=False,
+              default=None,
+              help='Path of the input PBF file')
+def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
+                    pgosm_date, language, schema_name, skip_nested, data_only,
+                    skip_dump, debug, basepath, input_file):
     """Logic to run PgOSM Flex within Docker.
     """
-    # Required for optional user prompt
-    if subregion == 'none':
-        subregion = None
-
+    if region is None and input_file is None:
+        raise ValueError("either region or input_file must be provided")
     paths = get_paths(base_path=basepath)
-    log_file = get_log_path(region, subregion, paths)
+    if input_file is not None:
+        log_file = os.path.join(
+            paths['out_path'],
+            os.path.basename(input_file) + '.log',
+        )
+    else:
+        # Required for optional user prompt
+        if subregion == 'none':
+            subregion = None
+
+        log_file = get_log_path(region, subregion, paths)
 
     setup_logger(log_file, debug)
     logger = logging.getLogger('pgosm-flex')
     logger.info('PgOSM Flex starting...')
-    prepare_data(region=region,
-                 subregion=subregion,
-                 pgosm_date=pgosm_date,
-                 paths=paths)
 
-    set_env_vars(region, subregion, srid, language, pgosm_date,
-                 layerset, layerset_path)
+    if input_file is None:
+        prepare_data(region=region,
+                    subregion=subregion,
+                    pgosm_date=pgosm_date,
+                    paths=paths)
+        set_env_vars(region, subregion, srid, language, pgosm_date,
+                    layerset, layerset_path)
+        osm2pgsql_command = get_osm2pgsql_command(region=region,
+                                                subregion=subregion,
+                                                ram=ram,
+                                                paths=paths)
+    else:
+        osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
+                                           pbf_filename=input_file,
+                                           out_path=paths['out_path'])
 
-    osm2pgsql_command = get_osm2pgsql_command(region=region,
-                                              subregion=subregion,
-                                              ram=ram,
-                                              paths=paths)
     wait_for_postgres()
 
     db.prepare_pgosm_db(data_only=data_only, paths=paths)
@@ -130,12 +144,15 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion,
 
     run_post_processing(paths=paths, skip_nested=skip_nested)
 
-    remove_latest_files(region, subregion, paths)
+    if input_file is None:
+        remove_latest_files(region, subregion, paths)
 
-    export_filename = get_export_filename(region,
-                                          subregion,
-                                          layerset,
-                                          pgosm_date)
+        export_filename = get_export_filename(region,
+                                            subregion,
+                                            layerset,
+                                            pgosm_date)
+    else:
+        export_filename = input_file[:-3] + '.sql'
 
     if schema_name != 'osm':
         db.rename_schema(schema_name)
@@ -623,24 +640,12 @@ def run_osm2pgsql(osm2pgsql_command, paths):
     """
     logger = logging.getLogger('pgosm-flex')
     logger.info(f'Running {osm2pgsql_command}')
-
-    output = subprocess.run(osm2pgsql_command.split(),
-                            text=True,
-                            cwd=paths['flex_path'],
-                            check=False,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
-
-    logger.info(f'osm2pgsql output: \n {output.stdout}\nEND PgOSM Flex output')
-
-    if output.returncode != 0:
-        err_msg = f'Failed to run osm2pgsql. Return code: {output.returncode}'
-        logger.error(err_msg)
-        sys.exit(f'{err_msg} - Check the log output for details.')
-
-    logger.info('osm2pgsql completed.')
+    output = subprocess.check_output(osm2pgsql_command.split(),
+                        text=True,
+                        cwd=paths['flex_path'],
+                        )
     # output from PgOSM Flex lua goes to stdout
-
+    logger.info(f'PgOSM Flex output: \n {output}\nEND PgOSM Flex output')
 
 def check_layerset_places(layerset_path, layerset, paths):
     """If `place` layer is not included `skip_nested` should be true.
