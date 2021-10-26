@@ -21,8 +21,8 @@ layers = {'amenity', 'building', 'indoor', 'infrastructure', 'landuse'
 
 
 local function post_processing(layerset)
-	print(string.format('Post-processing %s', layerset))
-	local filename = string.format('sql/%s.sql', layerset)
+    print(string.format('Post-processing %s', layerset))
+    local filename = string.format('sql/%s.sql', layerset)
     local sql_file = io.open(filename, 'r')
     sql_raw = sql_file:read( '*all' )
     sql_file:close()

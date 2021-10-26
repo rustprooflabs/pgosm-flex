@@ -316,15 +316,11 @@ def pgosm_after_import(paths):
 
     cmds = ['lua', 'run-sql.lua']
 
-    inner_env = os.environ.copy()
-    inner_env['PGOSM_CONN'] = connection_string(db_name='pgosm')
-
     output = subprocess.run(cmds,
                             text=True,
                             capture_output=True,
                             cwd=paths['flex_path'],
-                            check=True,
-                            env=inner_env)
+                            check=True)
     LOGGER.info(f'Post-processing output: \n {output.stderr}')
 
 

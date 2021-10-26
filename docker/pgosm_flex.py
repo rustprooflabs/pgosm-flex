@@ -192,6 +192,9 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
 
     os.environ['PGOSM_LAYERSET'] = layerset
 
+    os.environ['PGOSM_CONN'] = db.connection_string(db_name='pgosm')
+
+
 
 def setup_logger(log_file, debug):
     """Prepares logging.
@@ -620,6 +623,7 @@ def run_osm2pgsql(osm2pgsql_command, paths):
     """
     logger = logging.getLogger('pgosm-flex')
     logger.info(f'Running {osm2pgsql_command}')
+
     output = subprocess.run(osm2pgsql_command.split(),
                             text=True,
                             cwd=paths['flex_path'],
