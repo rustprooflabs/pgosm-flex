@@ -10,12 +10,17 @@ RUN apt-get update \
         libboost-filesystem-dev libexpat1-dev zlib1g-dev \
         libbz2-dev libpq-dev libproj-dev lua5.2 liblua5.2-dev \
         python3 python3-distutils python3-psycopg2 \
-        curl \
+        postgresql-server-dev-14 \
+        curl luarocks \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -o /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py \
     && python3 /tmp/get-pip.py \
     && rm /tmp/get-pip.py
+
+RUN luarocks install inifile
+RUN luarocks install luasql-postgres PGSQL_INCDIR=/usr/include/postgresql/
+
 
 WORKDIR /tmp
 RUN git clone git://github.com/openstreetmap/osm2pgsql.git \
@@ -27,15 +32,15 @@ RUN git clone git://github.com/openstreetmap/osm2pgsql.git \
     && apt remove -y \
         make cmake g++ \
         libexpat1-dev zlib1g-dev \
-        libbz2-dev libpq-dev libproj-dev \
+        libbz2-dev libproj-dev \
         curl \
     && apt autoremove -y \
     && cd /tmp && rm -r /tmp/osm2pgsql
+
 
 COPY ./sqitch.conf /etc/sqitch/sqitch.conf
 
 WORKDIR /app
 COPY . ./
 
-# --pre added to switch to psycopg3 during beta, remove after inital official release
-RUN pip install --pre -r requirements.txt
+RUN pip install -r requirements.txt

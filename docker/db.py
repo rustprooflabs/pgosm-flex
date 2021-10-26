@@ -302,23 +302,29 @@ def get_db_conn(db_name):
     return conn
 
 
-def pgosm_after_import(layerset, paths):
-    """Runs post-processing SQL via psql.
+def pgosm_after_import(paths):
+    """Runs post-processing SQL via Lua script.
+
+    Layerset logic is established via environment variable, must happen
+    before this step.
 
     Parameters
     ---------------------
-    layerset : str
-
     paths : dict
     """
     LOGGER.info('Running post-processing...')
-    conn_string = connection_string(db_name='pgosm')
-    cmds = ['psql', '-d', conn_string, '-f', f'{layerset}.sql']
+
+    cmds = ['lua', 'run-sql.lua']
+
+    inner_env = os.environ.copy()
+    inner_env['PGOSM_CONN'] = connection_string(db_name='pgosm')
+
     output = subprocess.run(cmds,
                             text=True,
                             capture_output=True,
                             cwd=paths['flex_path'],
-                            check=True)
+                            check=True,
+                            env=inner_env)
     LOGGER.info(f'Post-processing output: \n {output.stderr}')
 
 
@@ -336,10 +342,18 @@ def pgosm_nested_admin_polygons(paths):
     LOGGER.info('Building nested polygons... (this can take a while)')
     output = subprocess.run(cmds,
                             text=True,
-                            capture_output=True,
                             cwd=paths['flex_path'],
-                            check=True)
-    LOGGER.info(f'Nested polygon output: \n {output.stderr}')
+                            check=False,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+    LOGGER.info(f'Nested polygon output: \n {output.stdout}')
+
+
+    if output.returncode != 0:
+        err_msg = f'Failed to build nested polygons. Return code: {output.returncode}'
+        LOGGER.error(err_msg)
+        sys.exit(f'{err_msg} - Check the log output for details.')
+
 
 
 def rename_schema(schema_name):

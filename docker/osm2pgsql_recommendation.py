@@ -10,7 +10,7 @@ import db
 LOGGER = logging.getLogger('pgosm-flex')
 
 
-def osm2pgsql_recommendation(ram, layerset, pbf_filename, out_path):
+def osm2pgsql_recommendation(ram, pbf_filename, out_path):
     """Returns recommended osm2pgsql command.
 
     Recommendation from API at https://osm2pgsql-tuner.com
@@ -29,7 +29,8 @@ def osm2pgsql_recommendation(ram, layerset, pbf_filename, out_path):
     osm2pgsql_cmd : str
     """
     system_ram_gb = ram
-    pgosm_layer_set = layerset
+    # The layerset is now set via env var.  This is used to set filename for osm2pgsql command
+    pgosm_layer_set = 'run'
 
     pbf_file = os.path.join(out_path, pbf_filename)
     osm_pbf_gb = os.path.getsize(pbf_file) / 1024 / 1024 / 1024

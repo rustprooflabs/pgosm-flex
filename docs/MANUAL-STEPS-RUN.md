@@ -21,7 +21,16 @@ sudo apt install -y \
         git make cmake g++ \
         libboost-dev libboost-system-dev \
         libboost-filesystem-dev libexpat1-dev zlib1g-dev \
-        libbz2-dev libpq-dev libproj-dev lua5.2 liblua5.2-dev
+        libbz2-dev libpq-dev libproj-dev lua5.2 liblua5.2-dev \
+        luarocks
+```
+
+I had to use the `PGSQL_INCDIR` on Ubuntu 20.04 to get it to find the libpq headers.
+
+
+```bash
+sudo luarocks install inifile
+sudo luarocks install luasql-postgres PGSQL_INCDIR=/usr/include/postgresql/
 ```
 
 Install osm2pgsql from source.
@@ -64,7 +73,7 @@ wget https://download.geofabrik.de/north-america/us/district-of-columbia-latest.
 Verify integrity of the downloaded PBF file using `md5sum -c`.
 
 ```bash
-md5sum -c district-of-columbia-latest.osm.pbf
+md5sum -c district-of-columbia-latest.osm.pbf.md5
 district-of-columbia-latest.osm.pbf: OK
 ```
 
@@ -155,8 +164,7 @@ data.  The list of main tables in PgOSM-Flex will continue to grow and evolve.
 ```bash
 cd pgosm-flex/flex-config
 
-osm2pgsql --slim --drop \
-    --output=flex --style=./run-all.lua \
+osm2pgsql --output=flex --style=./run.lua \
     -d $PGOSM_CONN \
     ~/pgosm-data/district-of-columbia-latest.osm.pbf
 ```
@@ -168,10 +176,30 @@ primary keys, indexes, comments, views and more.
 
 
 ```bash
-psql -d $PGOSM_CONN -f ./run-all.sql
+lua ./run-sql.lua
 ```
 
 > Note: The `run-all` scripts exclude `unitable` and `road_major`.
+
+## Config Layerset
+
+Define `PGOSM_LAYERSET` to override the use of `layerset/default.ini`.
+
+```bash
+export PGOSM_LAYERSET=everything
+```
+
+To define a path to custom layersets outside the standard path
+set the `PGOSM_LAYERSET_PATH` env var.
+
+NOTE: Include the trailing slash!
+
+```bash
+export PGOSM_LAYERSET_PATH=/custom-layerset/
+```
+
+Read more about [LAYERSETS.md](LAYERSETS.md).
+
 
 
 ## Generated nested place polygons
@@ -188,22 +216,6 @@ psql -d $PGOSM_CONN -c "CALL osm.build_nested_admin_polygons();"
 
 # More options
 
-
-## Load main tables, No Tags
-
-As seen above, the `run_all.lua` style includes the tags table and then includes
-`run-no-tags` to load the rest of the data.  If you want the main data
-**without the full tags** table, use the `run-no-tags.lua` and `.sql` scripts instead.
-
-
-```bash
-osm2pgsql --slim --drop \
-    --output=flex --style=./run-no-tags.lua \
-    -d $PGOSM_CONN \
-    ~/tmp/district-of-columbia-latest.osm.pbf
-
-psql -d $PGOSM_CONN -f ./run-no-tags.sql
-```
 
 
 ## Load individual layers
