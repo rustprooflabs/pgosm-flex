@@ -413,9 +413,12 @@ Current `JSONB` columns:
 
 ## Additional resources
 
+See the listing of known
+[projects using PgOSM Flex](docs/PROJECTS.MD).
+
+
 Blog posts covering various details and background information.
 
 * [Better OpenStreetMap places in PostGIS](https://blog.rustprooflabs.com/2021/01/pgosm-flex-improved-openstreetmap-places-postgis)
 * [Improved OpenStreetMap data structure in PostGIS](https://blog.rustprooflabs.com/2021/01/postgis-openstreetmap-flex-structure) 
 * [Hands on with osm2pgsql's new Flex output](https://blog.rustprooflabs.com/2020/12/osm2gpsql-flex-output-to-postgis).
-
