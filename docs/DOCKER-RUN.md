@@ -140,20 +140,7 @@ docker exec -it \
 
 ## Use custom layersets
 
-Setup example layerset that only imports the `poi` layer.
-
-```bash
-mkdir ~/custom-layerset
-nano ~/custom-layerset/poi.ini
-```
-
-Put in the contents.
-
-```ini
-[layerset]
-poi=true
-```
-
+See [LAYERSETS.md](LAYERSETS.md).
 
 To use the `--layerset-path` option for custom layerset
 definitions, link the directory containing custom styles

@@ -198,6 +198,9 @@ NOTE: Include the trailing slash!
 export PGOSM_LAYERSET_PATH=/custom-layerset/
 ```
 
+Read more about [LAYERSETS.md](LAYERSETS.md).
+
+
 
 ## Generated nested place polygons
 
