@@ -38,7 +38,7 @@ if pgosm_language_env then
     pgosm_language = pgosm_language_env
     print('INFO - Language Code set to ' .. pgosm_language)
 else
-    pgosm_language = nil
+    pgosm_language = ''
     print('INFO - Default language not set. Using OSM Wiki priority for name. Set PGOSM_LANGUAGE to customize.')
 end
 
