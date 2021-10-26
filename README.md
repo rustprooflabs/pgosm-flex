@@ -414,7 +414,7 @@ Current `JSONB` columns:
 ## Additional resources
 
 See the listing of known
-[projects using PgOSM Flex](docs/PROJECTS.MD).
+[projects using PgOSM Flex](docs/PROJECTS.md).
 
 
 Blog posts covering various details and background information.
