@@ -98,7 +98,7 @@ run-with-external-db: ## Runs PgOSM Flex using a specific PBF file and connectio
 		-e POSTGRES_USER=postgres \
 		-u $(CURRENT_UID):$(CURRENT_GID) \
 		pgosm python3 docker/pgosm_flex.py  \
-		--layerset=run-all \
+		--layerset=everything \
 		--ram=1 \
 		--input-file=/app/output/some_arbitrary_name.osm.pbf \
 		--conn-str=postgres://postgres:anotherpassword@anotherdb \
