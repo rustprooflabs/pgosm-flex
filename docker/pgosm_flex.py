@@ -621,8 +621,7 @@ def remove_latest_files(region, subregion, paths):
     os.remove(md5_file)
 
 
-def get_osm2pgsql_command(
-    region, subregion, ram, paths, conn_str=None):
+def get_osm2pgsql_command(region, subregion, ram, paths, conn_str=None):
     """Returns recommended osm2pgsql command.
 
     Parameters
