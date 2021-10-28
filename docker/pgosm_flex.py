@@ -159,7 +159,7 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
                                             layerset,
                                             pgosm_date)
     else:
-        export_filename = os.path.basename(input_file)[:-4] + '.sql'
+        export_filename = os.path.splitext(input_file)[0] + '.sql'
 
     if schema_name != 'osm':
         db.rename_schema(schema_name)
