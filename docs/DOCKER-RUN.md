@@ -58,12 +58,12 @@ The 3rd parameter tells the script the server has 8 GB RAM available for osm2pgs
 
 ```bash
 docker exec -it \
-    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -e POSTGRES_USER=$POSTGRES_USER \
     pgosm python3 docker/pgosm_flex.py \
     --layerset=default \
     --ram=8 \
     --region=north-america/us \
-    --subregion=district-of-columbia
+    --subregion=district-of-columbia \
+    &> ~/pgosm-data/pgosm-flex.log
 ```
 
 
@@ -121,7 +121,6 @@ used during development.
 
 ```bash
 docker exec -it \
-    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD  -e POSTGRES_USER=$POSTGRES_USER \
     pgosm python3 docker/pgosm_flex.py \
     --layerset=poi \
     --layerset-path=/custom-layerset/ \
@@ -164,7 +163,6 @@ Define the layerset name (`--layerset=poi`) and path
 
 ```bash
 docker exec -it \
-    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD -e POSTGRES_USER=$POSTGRES_USER \
     pgosm python3 docker/pgosm_flex.py \
     --layerset=poi \
     --layerset-path=/custom-layerset/ \
