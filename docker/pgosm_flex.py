@@ -101,9 +101,8 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion,
         subregion = None
 
     paths = get_paths(base_path=basepath)
-    log_file = get_log_path(region, subregion, paths)
 
-    setup_logger(log_file, debug)
+    setup_logger(debug)
     logger = logging.getLogger('pgosm-flex')
     logger.info('PgOSM Flex starting...')
     prepare_data(region=region,
@@ -196,14 +195,11 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
 
 
 
-def setup_logger(log_file, debug):
+def setup_logger(debug):
     """Prepares logging.
 
     Parameters
     ------------------------------
-    log_file : str
-        Path to log file
-
     debug : bool
         Enables debug mode when True.  INFO when False.
     """
@@ -213,7 +209,7 @@ def setup_logger(log_file, debug):
         log_level = logging.INFO
 
     log_format = '%(asctime)s:%(levelname)s:%(name)s:%(module)s:%(message)s'
-    logging.basicConfig(filename=log_file,
+    logging.basicConfig(stream=sys.stdout,
                         level=log_level,
                         filemode='w',
                         format=log_format)
@@ -222,42 +218,8 @@ def setup_logger(log_file, debug):
     logging.getLogger('urllib3').setLevel(logging.INFO)
 
     logger = logging.getLogger('pgosm-flex')
-    logger.setLevel(log_level)
-    handler = logging.FileHandler(filename=log_file)
-    handler.setLevel(log_level)
-    formatter = logging.Formatter(log_format)
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
     logger.debug('Logger configured')
 
-
-def get_log_path(region, subregion, paths):
-    """Returns path to log_file for given region/subregion.
-
-    Parameters
-    ---------------------
-    region : str
-    subregion : str
-    paths : dict
-
-    Returns
-    ---------------------
-    log_file : str
-    """
-    region_clean = region.replace('/', '-')
-    if subregion is None:
-        filename = f'{region_clean}.log'
-    else:
-        filename = f'{region_clean}-{subregion}.log'
-
-    # Users will see this when they run, can copy/paste tail command.
-    # Path matches path if following project's main README.md
-    print(f'Log filename: {filename}')
-    print('If running in Docker following procedures the file can be monitored')
-    print(f'  tail -f ~/pgosm-data/{filename}')
-
-    log_file = os.path.join(paths['out_path'], filename)
-    return log_file
 
 
 def get_paths(base_path):
@@ -622,7 +584,7 @@ def run_osm2pgsql(osm2pgsql_command, paths):
     paths : dict
     """
     logger = logging.getLogger('pgosm-flex')
-    logger.info(f'Running {osm2pgsql_command}')
+    logger.info(f'Running osm2pgsql')
 
     output = subprocess.run(osm2pgsql_command.split(),
                             text=True,

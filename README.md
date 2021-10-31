@@ -56,6 +56,8 @@ mkdir ~/pgosm-data
 ```
 
 Set environment variables for the temporary Postgres connection in Docker.
+These are required for the Docker container to run.
+
 
 ```bash
 export POSTGRES_USER=postgres
@@ -74,11 +76,10 @@ docker run --name pgosm -d --rm \
 ```
 
 Run the processing for the Washington D.C.  The `docker/pgosm_flex.py` script
-requires three (3) parameters, typical use will use four (4) to include
+requires two (2) parameters, typical use will use three (3) to include
 the `--subregion`.
 
 
-* PgOSM-Flex layer set (`run-all`)
 * Total RAM for osm2pgsql, Postgres and OS (`8`)
 * Region (`north-america/us`)
 * Sub-region (`district-of-columbia`) (Optional)
@@ -87,10 +88,7 @@ the `--subregion`.
 
 ```bash
 docker exec -it \
-    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
-    -e POSTGRES_USER=$POSTGRES_USER \
     pgosm python3 docker/pgosm_flex.py \
-    --layerset=run-all \
     --ram=8 \
     --region=north-america/us \
     --subregion=district-of-columbia
