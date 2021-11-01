@@ -4,6 +4,7 @@
 Designed to be ran in Docker image:
     https://hub.docker.com/r/rustprooflabs/pgosm-flex
 """
+import configparser
 import datetime
 import logging
 import os
@@ -38,10 +39,11 @@ def get_today():
 
 @click.command()
 @click.option('--layerset', required=True,
-              default='run-all',
-              show_default='run-all',
-              prompt='PgOSM Flex Layer Set',
+              default='default',
+              show_default='default',
               help=f'Layer set from PgOSM Flex to load.')
+@click.option('--layerset-path', required=False,
+              help=f'Custom path to load layerset INI from. Custom paths should be mounted to Docker via docker run -v ...')
 @click.option('--ram', required=True,
               prompt='Server RAM (GB)',
               default=4,
@@ -88,7 +90,8 @@ def get_today():
               required=False,
               default=BASE_PATH_DEFAULT,
               help='Debugging option. Used when testing locally and not within Docker')
-def run_pgosm_flex(layerset, ram, region, subregion, srid, pgosm_date, language,
+def run_pgosm_flex(layerset, layerset_path, ram, region, subregion,
+                   srid, pgosm_date, language,
                    schema_name, skip_nested, data_only, skip_dump,
                    debug, basepath):
     """Logic to run PgOSM Flex within Docker.
@@ -98,29 +101,33 @@ def run_pgosm_flex(layerset, ram, region, subregion, srid, pgosm_date, language,
         subregion = None
 
     paths = get_paths(base_path=basepath)
-    log_file = get_log_path(region, subregion, paths)
 
-    setup_logger(log_file, debug)
+    setup_logger(debug)
     logger = logging.getLogger('pgosm-flex')
     logger.info('PgOSM Flex starting...')
     prepare_data(region=region,
                  subregion=subregion,
                  pgosm_date=pgosm_date,
                  paths=paths)
+
+    set_env_vars(region, subregion, srid, language, pgosm_date,
+                 layerset, layerset_path)
+
     osm2pgsql_command = get_osm2pgsql_command(region=region,
                                               subregion=subregion,
                                               ram=ram,
-                                              layerset=layerset,
                                               paths=paths)
     wait_for_postgres()
 
     db.prepare_pgosm_db(data_only=data_only, paths=paths)
 
-    set_env_vars(region, subregion, srid, language, pgosm_date)
-
     run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, paths=paths)
-    run_post_processing(layerset=layerset, paths=paths,
-                        skip_nested=skip_nested)
+
+    if not skip_nested:
+        # Auto-set skip_nested when place layer not imported
+        skip_nested = check_layerset_places(layerset_path, layerset, paths)
+
+    run_post_processing(paths=paths, skip_nested=skip_nested)
 
     remove_latest_files(region, subregion, paths)
 
@@ -142,7 +149,9 @@ def run_pgosm_flex(layerset, ram, region, subregion, srid, pgosm_date, language,
     logger.info('PgOSM Flex complete!')
 
 
-def set_env_vars(region, subregion, srid, language, pgosm_date):
+
+def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
+                 layerset_path):
     """Sets environment variables needed by PgOSM Flex
 
     Parameters
@@ -152,6 +161,9 @@ def set_env_vars(region, subregion, srid, language, pgosm_date):
     srid : str
     language : str
     pgosm_date : str
+    layerset : str
+    layerset_path : str
+        str when set, or None
     """
     logger = logging.getLogger('pgosm-flex')
     logger.info('PgOSM Flex starting...')
@@ -171,18 +183,23 @@ def set_env_vars(region, subregion, srid, language, pgosm_date):
         logger.info(f'Language set: {language}')
         os.environ['PGOSM_LANGUAGE'] = str(language)
 
+    if layerset_path is not None:
+        logger.info(f'Custom layerset path set: {layerset_path}')
+        os.environ['PGOSM_LAYERSET_PATH'] = str(layerset_path)
+
     os.environ['PGOSM_DATE'] = pgosm_date
 
+    os.environ['PGOSM_LAYERSET'] = layerset
+
+    os.environ['PGOSM_CONN'] = db.connection_string(db_name='pgosm')
 
 
-def setup_logger(log_file, debug):
+
+def setup_logger(debug):
     """Prepares logging.
 
     Parameters
     ------------------------------
-    log_file : str
-        Path to log file
-
     debug : bool
         Enables debug mode when True.  INFO when False.
     """
@@ -192,7 +209,7 @@ def setup_logger(log_file, debug):
         log_level = logging.INFO
 
     log_format = '%(asctime)s:%(levelname)s:%(name)s:%(module)s:%(message)s'
-    logging.basicConfig(filename=log_file,
+    logging.basicConfig(stream=sys.stdout,
                         level=log_level,
                         filemode='w',
                         format=log_format)
@@ -201,42 +218,8 @@ def setup_logger(log_file, debug):
     logging.getLogger('urllib3').setLevel(logging.INFO)
 
     logger = logging.getLogger('pgosm-flex')
-    logger.setLevel(log_level)
-    handler = logging.FileHandler(filename=log_file)
-    handler.setLevel(log_level)
-    formatter = logging.Formatter(log_format)
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
     logger.debug('Logger configured')
 
-
-def get_log_path(region, subregion, paths):
-    """Returns path to log_file for given region/subregion.
-
-    Parameters
-    ---------------------
-    region : str
-    subregion : str
-    paths : dict
-
-    Returns
-    ---------------------
-    log_file : str
-    """
-    region_clean = region.replace('/', '-')
-    if subregion is None:
-        filename = f'{region_clean}.log'
-    else:
-        filename = f'{region_clean}-{subregion}.log'
-
-    # Users will see this when they run, can copy/paste tail command.
-    # Path matches path if following project's main README.md
-    print(f'Log filename: {filename}')
-    print('If running in Docker following procedures the file can be monitored')
-    print(f'  tail -f ~/pgosm-data/{filename}')
-
-    log_file = os.path.join(paths['out_path'], filename)
-    return log_file
 
 
 def get_paths(base_path):
@@ -570,7 +553,7 @@ def remove_latest_files(region, subregion, paths):
     os.remove(md5_file)
 
 
-def get_osm2pgsql_command(region, subregion, ram, layerset, paths):
+def get_osm2pgsql_command(region, subregion, ram, paths):
     """Returns recommended osm2pgsql command.
 
     Parameters
@@ -578,7 +561,6 @@ def get_osm2pgsql_command(region, subregion, ram, layerset, paths):
     region : str
     subregion : str
     ram : int
-    layerset : str
     paths : dict
 
     Returns
@@ -588,7 +570,6 @@ def get_osm2pgsql_command(region, subregion, ram, layerset, paths):
     """
     pbf_filename = get_region_filename(region, subregion)
     rec_cmd = rec.osm2pgsql_recommendation(ram=ram,
-                                           layerset=layerset,
                                            pbf_filename=pbf_filename,
                                            out_path=paths['out_path'])
     return rec_cmd
@@ -603,33 +584,76 @@ def run_osm2pgsql(osm2pgsql_command, paths):
     paths : dict
     """
     logger = logging.getLogger('pgosm-flex')
-    logger.info(f'Running {osm2pgsql_command}')
+    logger.info(f'Running osm2pgsql')
+
     output = subprocess.run(osm2pgsql_command.split(),
                             text=True,
-                            capture_output=True,
                             cwd=paths['flex_path'],
-                            check=True)
+                            check=False,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+
+    logger.info(f'osm2pgsql output: \n {output.stdout}\nEND PgOSM Flex output')
+
+    if output.returncode != 0:
+        err_msg = f'Failed to run osm2pgsql. Return code: {output.returncode}'
+        logger.error(err_msg)
+        sys.exit(f'{err_msg} - Check the log output for details.')
+
+    logger.info('osm2pgsql completed.')
     # output from PgOSM Flex lua goes to stdout
-    logger.info(f'PgOSM Flex output: \n {output.stdout}\nEND PgOSM Flex output')
-
-    # osm2pgsql output goes to stderr
-    logger.info(f'osm2pgsql output: \n {output.stderr}\nEND osm2pgsql output')
 
 
-def run_post_processing(layerset, paths, skip_nested):
+def check_layerset_places(layerset_path, layerset, paths):
+    """If `place` layer is not included `skip_nested` should be true.
+
+    Parameters
+    ------------------------
+    layerset_path : str
+    layerset : str
+    paths : dict
+
+    Returns
+    ------------------------
+    skip_nested : boolean
+    """
+    logger = logging.getLogger('pgosm-flex')
+
+    if layerset_path is None:
+        layerset_path = os.path.join(paths['flex_path'], 'layerset')
+        logger.info(f'Using default layerset path {layerset_path}')
+
+    ini_file = os.path.join(layerset_path, f'{layerset}.ini')
+    config = configparser.ConfigParser()
+    config.read(ini_file)
+    try:
+        place = config['layerset']['place']
+    except KeyError:
+        # No place key, skip_nested should be true
+        logger.debug('Place layer not defined, setting skip_nested')
+        return True
+
+    # If Place is true
+    if place:
+        logger.debug('Place layer is defined as true. Not setting skip_nested')
+        return False
+
+    logger.debug('Place set to false, setting skip_nested')
+    return True
+
+
+def run_post_processing(paths, skip_nested):
     """Runs steps following osm2pgsql import.
 
     Post-processing SQL scripts and (optionally) calculate nested admin polgyons
 
     Parameters
     ----------------------
-    layerset : str
-
     paths : dict
 
     skip_nested : bool
     """
-    db.pgosm_after_import(layerset, paths)
+    db.pgosm_after_import(paths)
     logger = logging.getLogger('pgosm-flex')
     if skip_nested:
         logger.info('Skipping calculating nested polygons')
