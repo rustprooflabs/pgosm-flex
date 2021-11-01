@@ -202,33 +202,9 @@ running without Docker.
 
 ## Layer Sets
 
-Layer sets are defined under the directory [pgosm-flex/flex-config/](https://github.com/rustprooflabs/pgosm-flex/tree/main/flex-config), the current `run-*` options are:
 
-* `run-all`
-* `run-no-tags`
-* `run-road-place`
-* `run-unitable`
-
-Each of these layer sets includes the core layer defintions
-(see `style/*.lua`)
-and post-processing SQL (see `sql/*.sql`).
-The `.lua` scripts work with osm2pgsql's Flex output.
-PgOSM-Flex is using these styles with a mix-and-match approach.
-This is best illustrated by looking within the main `run-all.lua` script.
-As the following shows, it does not define any actual styles, only includes
-a single style, and runs another layer set (`run-no-tags`).
-
-
-```lua
-require "style.tags"
-require "run-no-tags"
-```
-
-The `style.tags` script creates a table `osm.tags` that contains all OSM key/value
-pairs, but with no geometry.  This is the largest table loaded by the `run-all`
-layer set and enables joining any OSM data in another layer (e.g. `osm.road_line`)
-to find any additional tags.
-
+PgOSM Flex includes a few layersets and makes it easy to customize your own.
+See [docs/LAYERSETS.md](docs/LAYERSETS.md) for details.
 
 
 
