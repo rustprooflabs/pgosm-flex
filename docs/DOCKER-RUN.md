@@ -139,7 +139,7 @@ docker exec -it \
 
 ## Use custom layersets
 
-See [LAYERSETS.md](LAYERSETS.md).
+See [LAYERSETS.md](LAYERSETS.md) for details about creating custom layersets.
 
 To use the `--layerset-path` option for custom layerset
 definitions, link the directory containing custom styles
@@ -175,9 +175,14 @@ docker exec -it \
 ## Skip nested polygon calculation
 
 Use `--skip-nested` to bypass the calculation of nested admin polygons.
-
-The default is to run the nested polygon calculation. This can take considerable time on larger regions or may
+The nested polygon process can take considerable time on larger regions or may
 be otherwise unwanted.
+
+## Skip data export
+
+By default the `.sql` file is created with `pg_dump` for easy loading into one or
+more Postgres databases.  If this file is not needed use `--skip-dump`. This saves
+time and reduces disk space consumed by the process.
 
 
 ## Configure Postgres in Docker
