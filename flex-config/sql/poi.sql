@@ -66,6 +66,7 @@ COMMENT ON COLUMN osm.poi_point.address IS 'Address combined from address parts 
 COMMENT ON COLUMN osm.poi_line.address IS 'Address combined from address parts in helpers.get_address().';
 COMMENT ON COLUMN osm.poi_polygon.address IS 'Address combined from address parts in helpers.get_address().';
 
+COMMENT ON COLUMN osm.poi_polygon.member_ids IS 'Member IDs making up the full relation.  NULL if not a relation.';
 
 CREATE MATERIALIZED VIEW osm.vpoi_all AS
 SELECT osm_id, 'N' AS geom_type, osm_type, osm_subtype, name, address, operator, geom

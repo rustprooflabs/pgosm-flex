@@ -139,7 +139,7 @@ docker exec -it \
 
 ## Use custom layersets
 
-See [LAYERSETS.md](LAYERSETS.md).
+See [LAYERSETS.md](LAYERSETS.md) for details about creating custom layersets.
 
 To use the `--layerset-path` option for custom layerset
 definitions, link the directory containing custom styles
@@ -175,15 +175,26 @@ docker exec -it \
 ## Skip nested polygon calculation
 
 Use `--skip-nested` to bypass the calculation of nested admin polygons.
-
-The default is to run the nested polygon calculation. This can take considerable time on larger regions or may
+The nested polygon process can take considerable time on larger regions or may
 be otherwise unwanted.
+
+## Skip data export
+
+By default the `.sql` file is created with `pg_dump` for easy loading into one or
+more Postgres databases.  If this file is not needed use `--skip-dump`. This saves
+time and reduces disk space consumed by the process.
 
 
 ## Configure Postgres in Docker
 
 Add customizations with the `-c` switch, e.g. `-c shared_buffers=1GB`,
 to customize Postgres' configuration at run-time in Docker.
+See the [osm2pgsql documentation](https://osm2pgsql.org/doc/manual.html#preparing-the-database)
+for recommendations on a server with 64 GB of RAM.
+
+This `docker run` command has been tested with 16GB RAM and 4 CPU (8 threads) with the Colorado
+subregion.  Configuring Postgres in-Docker runs 7-14% faster than the default
+Postgres in-Docker configuration.
 
 
 ```bash
@@ -192,13 +203,25 @@ docker run --name pgosm -d --rm \
     -v /etc/localtime:/etc/localtime:ro \
     -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
     -p 5433:5432 -d rustprooflabs/pgosm-flex \
-    -c shared_buffers=1GB \
-    -c maintenance_work_mem=1GB \
+    -c shared_buffers=512MB \
+    -c work_mem=50MB \
+    -c maintenance_work_mem=4GB \
     -c checkpoint_timeout=300min \
     -c max_wal_senders=0 -c wal_level=minimal \
+    -c max_wal_size=10GB \
     -c checkpoint_completion_target=0.9 \
     -c random_page_cost=1.0
 ```
 
 
+The `docker exec` command used for the timings.
 
+```bash
+time docker exec -it \
+    pgosm python3 docker/pgosm_flex.py \
+    --ram=8 \
+    --region=north-america/us \
+    --subregion=colorado \
+    --layerset=basic \
+    --pgosm-date=2021-10-08
+```
