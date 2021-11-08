@@ -3,7 +3,7 @@ the osm2pgsql-tuner API.
 """
 import logging
 import os
-import requests
+import osm2pgsql_tuner as tuner
 
 import db
 
@@ -67,22 +67,20 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb,
     -------------------------------
     osm2pgsql_cmd : str
     """
+    LOGGER.debug(f'Generating recommended osm2pgsql command')
+
+    rec = tuner.recommendation(system_ram_gb=system_ram_gb,
+                               osm_pbf_gb=osm_pbf_gb,
+                               append=append,
+                               ssd=True,
+                               pgosm_layer_set=pgosm_layer_set)
+
+    # FIXME: Currently requires .osm.pbf input. Will block full functionality of #192
     filename_no_ext = pbf_filename.replace('.osm.pbf', '')
-    api_endpoint = 'https://osm2pgsql-tuner.com/api/v1'
-    api_endpoint += f'?system_ram_gb={system_ram_gb}'
-    api_endpoint += f'&osm_pbf_gb={osm_pbf_gb}'
-    api_endpoint += f'&append={append}'
-    api_endpoint += f'&pbf_filename={filename_no_ext}'
-    api_endpoint += f'&pgosm_layer_set={pgosm_layer_set}'
+    osm2pgsql_cmd = rec.get_osm2pgsql_command(out_format='api',
+                                             pbf_filename=filename_no_ext)
+    LOGGER.info(f'Generic command to run: {osm2pgsql_cmd}')
 
-    headers = {"User-Agent": 'PgOSM-Flex-Docker'}
-    LOGGER.info(f'osm2pgsql-tuner URL w/ parameters: {api_endpoint}')
-    result = requests.get(api_endpoint, headers=headers)
-    LOGGER.debug(f'API status code: {result.status_code}')
-
-    rec = result.json()['osm2pgsql']
-
-    osm2pgsql_cmd = rec['cmd']
     # Replace generic path from API with specific path
     osm2pgsql_cmd = osm2pgsql_cmd.replace('~/pgosm-data', output_path)
 
