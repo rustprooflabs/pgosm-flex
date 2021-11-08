@@ -3,5 +3,4 @@ coverage>=5.5
 osm2pgsql-tuner==0.0.2.1
 psycopg>=3.0.1
 psycopg-binary>=3.0.1
-requests>=2.26.0
 sh>=1.14.2
