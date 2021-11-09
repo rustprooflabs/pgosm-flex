@@ -57,8 +57,7 @@ build-run-docker: ## Builds and runs PgOSM Flex with D.C. test file
 		--layerset=default \
 		--ram=1 \
 		--region=north-america/us \
-		--subregion=district-of-columbia \
-		--debug
+		--subregion=district-of-columbia
 
 	# process it, this time without providing the region but directly the filename
 	docker exec -it \
@@ -68,8 +67,8 @@ build-run-docker: ## Builds and runs PgOSM Flex with D.C. test file
 		pgosm python3 docker/pgosm_flex.py  \
 		--layerset=default \
 		--ram=1 \
-		--input-file=/app/output/$(INPUT_FILE_NAME) \
-		--debug
+		--input-file=/app/output/$(INPUT_FILE_NAME)
+
 
 .PHONY: unit-tests
 unit-tests: ## Runs Python unit tests and data import tests

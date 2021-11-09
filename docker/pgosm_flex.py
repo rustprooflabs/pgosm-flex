@@ -52,7 +52,7 @@ def get_today():
 @click.option('--region', required=False,
               show_default="north-america/us",
               default="north-america/us",
-              help='Region name matching the filename for data sourced from Geofabrik. e.g. north-america/us')
+              help='Region name matching the filename for data sourced from Geofabrik. e.g. north-america/us. Optional when --input-file is specified, otherwise required.')
 @click.option('--subregion', required=False,
               default="district-of-columbia",
               show_default="district-of-columbia",
@@ -99,7 +99,12 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
     """
     if region is None and input_file is None:
         raise ValueError("either region or input_file must be provided")
+
+    if region is None and input_file:
+        region = input_file
+
     paths = get_paths(base_path=basepath)
+
 
     setup_logger(debug)
     logger = logging.getLogger('pgosm-flex')
@@ -138,12 +143,11 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
     if input_file is None:
         remove_latest_files(region, subregion, paths)
 
-        export_filename = get_export_filename(region,
-                                            subregion,
-                                            layerset,
-                                            pgosm_date)
-    else:
-        export_filename = input_file[:-3] + '.sql'
+    export_filename = get_export_filename(region,
+                                        subregion,
+                                        layerset,
+                                        pgosm_date,
+                                        input_file)
 
     if schema_name != 'osm':
         db.rename_schema(schema_name)
@@ -276,8 +280,8 @@ def get_region_filename(region, subregion):
     return filename
 
 
-def get_export_filename(region, subregion, layerset, pgosm_date):
-    """Returns the .sql filename to use from pg_dump.
+def get_export_filename(region, subregion, layerset, pgosm_date, input_file):
+    """Returns the .sql filename to use for pg_dump.
 
     Parameters
     ----------------------
@@ -285,6 +289,7 @@ def get_export_filename(region, subregion, layerset, pgosm_date):
     subregion : str
     layerset : str
     pgosm_date : str
+    input_file : str
 
     Returns
     ----------------------
@@ -292,10 +297,15 @@ def get_export_filename(region, subregion, layerset, pgosm_date):
     """
     region = region.replace('/', '-')
     subregion = subregion.replace('/', '-')
-    if subregion is None:
-        filename = f'pgosm-flex-{region}-{layerset}-{pgosm_date}.sql'
+
+    if input_file:
+        # Assumes .osm.pbf
+        base_name = input_file[:-8]
+        filename = f'{base_name}-{layerset}.sql'
+    elif subregion is None:
+        filename = f'{region}-{layerset}-{pgosm_date}.sql'
     else:
-        filename = f'pgosm-flex-{region}-{subregion}-{layerset}-{pgosm_date}.sql'
+        filename = f'{region}-{subregion}-{layerset}-{pgosm_date}.sql'
 
     return filename
 
