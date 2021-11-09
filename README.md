@@ -1,13 +1,13 @@
 # PgOSM Flex
 
-The goal of PgOSM Flex is to provide high quality OpenStreetMap datasets in PostGIS
-using the
+PgOSM Flex provides high quality OpenStreetMap datasets in PostGIS using the
 [osm2pgsql Flex output](https://osm2pgsql.org/doc/manual.html#the-flex-output).
 This project provides a curated set of Lua and SQL scripts to clean and organize
 the most commonly used OpenStreetMap data, such as roads, buildings, and points of interest (POIs).
 
-The approach to processing is to do as much processing in the `<name>.lua` script
-with post-processing steps creating indexes, constraints and comments in a companion `<name>.sql` script.
+The easiest way to use PgOSM Flex is via [the Docker image](docs/DOCKER-RUN.md).
+For ultimate control and customization,
+there are [instructions for installing and running manually](docs/MANUAL-STEPS-RUN.md).
 
 
 ## Project decisions
@@ -15,11 +15,15 @@ with post-processing steps creating indexes, constraints and comments in a compa
 A few decisions made in this project:
 
 * ID column is `osm_id`
-* Geometry stored in SRID 3857
+* Geometry stored in SRID 3857 (customizable)
 * Geometry column named `geom`
 * Default to same units as OpenStreetMap (e.g. km/hr, meters)
 * Data not deemed worthy of a dedicated column goes in side table `osm.tags`. Raw key/value data stored in `JSONB` column
 * Points, Lines, and Polygons are not mixed in a single table
+
+This project's approach is to do as much processing in the Lua styles
+passed along to osm2pgsql, with post-processing steps creating indexes, constraints and comments.
+
 
 
 ## Versions Supported
@@ -33,9 +37,11 @@ Minimum versions supported:
 
 ## PgOSM via Docker
 
-The easiest option to use PgOSM-Flex is with the
-[Docker image](https://hub.docker.com/r/rustprooflabs/pgosm-flex).
-The image has all the pre-reqs installed, handles downloading an OSM subregion
+The easiest way to use PgOSM-Flex is with the
+[Docker image](https://hub.docker.com/r/rustprooflabs/pgosm-flex) hosted on
+Docker Hub.
+The image has all the pre-requisite software installed,
+handles downloading an OSM region (or subregion)
 from Geofabrik, and saves an output `.sql` file with the processed data
 ready to load into your database(s).
 The PBF/MD5 source files are archived by date with the ability to
@@ -56,6 +62,8 @@ mkdir ~/pgosm-data
 ```
 
 Set environment variables for the temporary Postgres connection in Docker.
+These are required for the Docker container to run.
+
 
 ```bash
 export POSTGRES_USER=postgres
@@ -73,12 +81,10 @@ docker run --name pgosm -d --rm \
     -p 5433:5432 -d rustprooflabs/pgosm-flex
 ```
 
-Run the processing for the Washington D.C.  The `docker/pgosm_flex.py` script
-requires three (3) parameters, typical use will use four (4) to include
-the `--subregion`.
+Use `docker exec` to run the processing for the Washington D.C subregion.
+This example uses three (3) parameters to specify the totaol system RAM (8 GB)
+along with a region/subregion.
 
-
-* PgOSM-Flex layer set (`run-all`)
 * Total RAM for osm2pgsql, Postgres and OS (`8`)
 * Region (`north-america/us`)
 * Sub-region (`district-of-columbia`) (Optional)
@@ -87,54 +93,57 @@ the `--subregion`.
 
 ```bash
 docker exec -it \
-    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
-    -e POSTGRES_USER=$POSTGRES_USER \
     pgosm python3 docker/pgosm_flex.py \
-    --layerset=run-all \
     --ram=8 \
     --region=north-america/us \
     --subregion=district-of-columbia
 ```
 
-The initial output with the `docker exec` command points to the log file
-(linked in the `docker run` command above), monitor this file to track
-progress of the import.
-
-```bash
-Monitor /app/output/district-of-columbia.log for progress...
-If paths setup as outlined in README.md, use:
-    tail -f ~/pgosm-data/district-of-columbia.log
-```
 
 The above command takes roughly 1 minute to run if the PBF for today
 has already been downloaded.
 If the PBF is not downloaded it will depend on how long
 it takes to download the 17 MB PBF file + ~ 1 minute processing.
 
-The output `.sql` file is saved under
-`~/pgosm_data/pgosm-flex-north-america-us-district-of-columbia-run-all.sql`.
-This `.sql` file can be loaded into a PostGIS enabled database
-using:
+
+### After processing
+
+
+The `~/pgosm-data` directory has three (3) files from a single run.
+The PBF file and its MD5 checksum have been renamed with the date in the filename.
+This enables loading the file downloaded today 
+again in the future, either with the same version of PgOSM Flex or the latest version. The `docker exec` command uses the `PGOSM_DATE` environment variable
+to load these historic files.
+
+
+The output `.sql` is also saved in the `~/pgosm-data` directory.
+
+
+```bash
+ls -alh ~/pgosm-data/
+
+-rw-r--r--  1 root        root         17M Nov  2 19:57 district-of-columbia-2021-11-03.osm.pbf
+-rw-r--r--  1 root        root          70 Nov  2 19:59 district-of-columbia-2021-11-03.osm.pbf.md5
+-rw-r--r--  1 root        root        156M Nov  3 19:10 pgosm-flex-north-america-us-district-of-columbia-default-2021-11-03.sql
+
+```
+
+
+This `.sql` file can be loaded into a PostGIS enabled database. The following example
+creates an empty `myosm` database to load the processed OpenStreetMap data into.
+
 
 ```bash
 psql -d postgres -c "CREATE DATABASE myosm;"
 psql -d myosm -c "CREATE EXTENSION postgis;"
-```
 
-```bash
 psql -d myosm \
-    -f ~/pgosm-data/pgosm-flex-north-america-us-district-of-columbia-run-all.sql
+    -f ~/pgosm-data/pgosm-flex-north-america-us-district-of-columbia-default-2021-11-03.sql
 ```
 
 
-### After processing
-
-After the `docker exec` command completes, the processed OpenStreetMap
-data is available in the Docker container on port `5433` and has automatically
-been exported to `~/pgosm-data/pgosm-flex-district-of-columbia-run-all.sql`.
-
-
-Connect and query directly in the Docker container.
+The processed OpenStreetMap data is also available in the Docker container on port `5433`.
+You can connect and query directly in the Docker container.
 
 ```bash
 psql -h localhost -p 5433 -d pgosm -U postgres -c "SELECT COUNT(*) FROM osm.road_line;"
@@ -142,61 +151,25 @@ psql -h localhost -p 5433 -d pgosm -U postgres -c "SELECT COUNT(*) FROM osm.road
 ┌───────┐
 │ count │
 ╞═══════╡
-│ 38480 │
+│ 39865 │
 └───────┘
 ```
 
-Or load the processed data (now in `.sql` format) to the Postgres/PostGIS instance of your choice.
-
-```bash
-psql -d $YOUR_DB_STRING \
-    -f ~/pgosm-data/pgosm-flex-district-of-columbia-run-all.sql
-```
 
 
 
-The `~/pgosm-data` directory has four (4) files, the PBF and its MD5 chcksum,
-the processing log, and the processed output file (`.sql`).
-
-
-```bash
-ls -alh ~/pgosm-data/
-
--rw-r--r--  1 root        root         17M May 18 17:24 district-of-columbia-2021-05-18.osm.pbf
--rw-r--r--  1 root        root          70 May 18 17:24 district-of-columbia-2021-05-18.osm.pbf.md5
--rw-r--r--  1 root        root        799K May 18 17:25 district-of-columbia.log
--rw-r--r--  1 root        root         117 May 18 17:24 osm2pgsql-district-of-columbia.sh
--rw-r--r--  1 root        root        154M May 18 17:25 pgosm-flex-north-america-us-district-of-columbia-run-all.sql
-```
-
-The designed intent is to load the OpenStreetMap data processed by this
-Docker image into your PostGIS database(s).
-The process runs `pg_dump` on the resulting
-data to create the `.sql` output file.  This can be easily loaded into any
-Postgres/PostGIS database using `psql`.
-
-
-```bash
-psql -d $YOUR_DB_STRING \
-    -f ~/pgosm-data/pgosm-flex-north-america-us-district-of-columbia-run-all.sql
-```
-
-
-The source file (`.osm.pbf`)
-and its MD5 verificiation file (`osm.pbf.md5`) get renamed from `-latest`
-to the date (`-2021-05-18`).  This enables loading the file downloaded today 
-again in the future, either with the same version of PgOSM Flex or the latest version. The `docker exec` command uses the `PGOSM_DATE` environment variable
-to load these historic files.
-
-See [more in docs/DOCKER-RUN.md](docs/DOCKER-RUN.md).
+See [more in docs/DOCKER-RUN.md](docs/DOCKER-RUN.md) about other ways to customize
+how PgOSM Flex runs.
 
 
 ----
 
 ## On-server import
 
-See [docs/MANUAL-STEPS-RUN.md](docs/MANUAL-STEPS-RUN.md) for prereqs and steps for
-running without Docker.
+Don't want to use the Docker process?
+See [docs/MANUAL-STEPS-RUN.md](docs/MANUAL-STEPS-RUN.md) for prereqs and steps
+for running without Docker.
+
 
 ----
 
@@ -204,34 +177,9 @@ running without Docker.
 
 ## Layer Sets
 
-Layer sets are defined under the directory [pgosm-flex/flex-config/](https://github.com/rustprooflabs/pgosm-flex/tree/main/flex-config), the current `run-*` options are:
 
-* `run-all`
-* `run-no-tags`
-* `run-road-place`
-* `run-unitable`
-
-Each of these layer sets includes the core layer defintions
-(see `style/*.lua`)
-and post-processing SQL (see `sql/*.sql`).
-The `.lua` scripts work with osm2pgsql's Flex output.
-PgOSM-Flex is using these styles with a mix-and-match approach.
-This is best illustrated by looking within the main `run-all.lua` script.
-As the following shows, it does not define any actual styles, only includes
-a single style, and runs another layer set (`run-no-tags`).
-
-
-```lua
-require "style.tags"
-require "run-no-tags"
-```
-
-The `style.tags` script creates a table `osm.tags` that contains all OSM key/value
-pairs, but with no geometry.  This is the largest table loaded by the `run-all`
-layer set and enables joining any OSM data in another layer (e.g. `osm.road_line`)
-to find any additional tags.
-
-
+PgOSM Flex includes a few layersets and makes it easy to customize your own.
+See [docs/LAYERSETS.md](docs/LAYERSETS.md) for details.
 
 
 
@@ -378,20 +326,25 @@ SELECT geom_type, COUNT(*)
 ## One table to rule them all
 
 From the perspective of database design, the `osm.unitable` option is the **worst**!
-
-> This style included in PgOSM-Flex is intended to be used for troublshooting and quality control.  It is not intended to be used for real production workloads! This table is helpful for exploring the full data set when you don't really know what you are looking for, but you know **where** you are looking.
-
-Load the `unitable.lua` script to make the full OpenStreetMap data set available in
-one table. This violates all sorts of best practices established in this project
+This violates all sorts of best practices established in this project
 by shoving all features into a single unstructured table.
+
+> This style included in PgOSM-Flex is intended to be used for troubleshooting and quality control.  It is not intended to be used for real production workloads! This table is helpful for exploring the full data set when you don't really know what you are looking for, but you know **where** you are looking.
+
+Unitable is loaded with the `everything` layerset.  Feel free to create your own
+customized layerset if needed.
+
 
 
 ```bash
-osm2pgsql --slim --drop \
-    --output=flex --style=./unitable.lua \
-    -d pgosm \
-    ~/tmp/district-of-columbia-latest.osm.pbf
+docker exec -it \
+    pgosm python3 docker/pgosm_flex.py \
+    --ram=8 \
+    --region=north-america/us \
+    --subregion=district-of-columbia \
+    --layerset=everything
 ```
+
 
 > The `unitable.lua` script include in in this project was [adapted from the unitable example from osm2pgsql](https://github.com/openstreetmap/osm2pgsql/blob/master/flex-config/unitable.lua). This version uses JSONB instead of HSTORE and takes advantage of `helpers.lua` to easily customize SRID.
 
@@ -410,11 +363,13 @@ Current `JSONB` columns:
 * `osm.vplace_polygon.member_ids`
 * `osm.poi_polygon.member_ids`
 
+## Projects using PgOSM Flex
+
+
+See the listing of known [projects using PgOSM Flex](docs/PROJECTS.md).
+
 
 ## Additional resources
-
-See the listing of known
-[projects using PgOSM Flex](docs/PROJECTS.md).
 
 
 Blog posts covering various details and background information.
