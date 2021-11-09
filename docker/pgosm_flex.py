@@ -91,7 +91,7 @@ def get_today():
 @click.option('--input-file',
               required=False,
               default=None,
-              help='Path of the input PBF file')
+              help='Set explicit filepath to input osm.pbf file. Overrides default file handling, archiving, and MD5 checksum.')
 def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
                     pgosm_date, language, schema_name, skip_nested, data_only,
                     skip_dump, debug, basepath, input_file):
@@ -105,13 +105,15 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
     logger = logging.getLogger('pgosm-flex')
     logger.info('PgOSM Flex starting...')
 
+    set_env_vars(region, subregion, srid, language, pgosm_date,
+                 layerset, layerset_path)
+
     if input_file is None:
         prepare_data(region=region,
                     subregion=subregion,
                     pgosm_date=pgosm_date,
                     paths=paths)
-        set_env_vars(region, subregion, srid, language, pgosm_date,
-                    layerset, layerset_path)
+
         osm2pgsql_command = get_osm2pgsql_command(region=region,
                                                 subregion=subregion,
                                                 ram=ram,
@@ -609,8 +611,6 @@ def run_osm2pgsql(osm2pgsql_command, paths):
 
     logger.info('osm2pgsql completed.')
 
-    # output from PgOSM Flex lua goes to stdout
-    logger.info(f'PgOSM Flex output: \n {output}\nEND PgOSM Flex output')
 
 def check_layerset_places(layerset_path, layerset, paths):
     """If `place` layer is not included `skip_nested` should be true.

@@ -4,7 +4,6 @@ the osm2pgsql-tuner API.
 import logging
 import os
 import osm2pgsql_tuner as tuner
-import re
 
 import db
 
@@ -61,12 +60,19 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb,
     osm_pbf_gb : float
     append : bool
     pbf_filename : str
+        Can be filename or absolute path.
     pgosm_layer_set : str
     output_path : str
 
     Returns
     -------------------------------
     osm2pgsql_cmd : str
+        The osm2pgsql command to run, customized for this run of pgosm flex.
+
+        Warning: Do not print this string, it includes password in the
+        connection string. Might not matter too much with in-docker use and
+        throwaway containers/passwords, but intend to support external Postgres
+        connections.
     """
     LOGGER.debug(f'Generating recommended osm2pgsql command')
 
@@ -77,15 +83,20 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb,
                                pgosm_layer_set=pgosm_layer_set)
 
     # FIXME: Currently requires .osm.pbf input. Will block full functionality of #192
-    filename_no_ext = pbf_filename.replace('.osm.pbf', '')
+    # Uses basename to work with absolute paths
+    filename_no_ext = os.path.basename(pbf_filename).replace('.osm.pbf', '')
+    LOGGER.info(f'Filename for osm2pgsql command: {filename_no_ext}')
+
     osm2pgsql_cmd = rec.get_osm2pgsql_command(out_format='api',
-                                             pbf_filename=filename_no_ext)
+                                              pbf_filename=filename_no_ext)
+
+    osm2pgsql_cmd = osm2pgsql_cmd.replace('~/pgosm-data', output_path)
+
     LOGGER.info(f'Generic command to run: {osm2pgsql_cmd}')
 
-    # Replace generic path from API with specific path
-    osm2pgsql_cmd = re.sub(r'~/pgosm-data[^ ]+', pbf_filename, osm2pgsql_cmd)
     # Replace generic connection string with specific conn string
     conn_string = db.connection_string(db_name='pgosm')
     osm2pgsql_cmd = osm2pgsql_cmd.replace('-d $PGOSM_CONN',
                                           f'-d {conn_string}')
+    # Warning: Do not print() this string any more! Includes password
     return osm2pgsql_cmd
