@@ -54,7 +54,6 @@ def get_today():
               default="north-america/us",
               help='Region name matching the filename for data sourced from Geofabrik. e.g. north-america/us. Optional when --input-file is specified, otherwise required.')
 @click.option('--subregion', required=False,
-              default="district-of-columbia",
               show_default="district-of-columbia",
               help='Sub-region name matching the filename for data sourced from Geofabrik. e.g. district-of-columbia')
 @click.option('--srid', required=False, default=DEFAULT_SRID,
@@ -295,8 +294,10 @@ def get_export_filename(region, subregion, layerset, pgosm_date, input_file):
     ----------------------
     filename : str
     """
+    # region is always set internally, even with --input-file and no --region
     region = region.replace('/', '-')
-    subregion = subregion.replace('/', '-')
+    if subregion:
+        subregion = subregion.replace('/', '-')
 
     if input_file:
         # Assumes .osm.pbf
