@@ -175,11 +175,11 @@ def validate_region_inputs(region, subregion, input_file):
         raise ValueError('Either --region or --input-file must be provided')
 
     if region is None and subregion is not None:
-        raise ValueError('Using --subregion requires value for --region')
+        raise ValueError('Cannot use --subregion without --region')
 
     if region is not None:
         if '/' in region and subregion is None:
-            raise ValueError('Region provided appears to include subregion. The portion after the FINAL "/" in the Geofabrik URL should be the --subregion.')
+            raise ValueError('Region provided appears to include subregion. The portion after the final "/" in the Geofabrik URL should be the --subregion.')
 
 
 def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
