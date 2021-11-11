@@ -48,22 +48,21 @@ docker ps -a | grep pgosm
 ## Run PgOSM-Flex
 
 The following `docker exec` command runs PgOSM Flex to load the District of Columbia
-region
-
+region.
 The command  `python3 docker/pgosm_flex.py` runs the full process. The
-script uses a region (`north-america/us`) and sub-region (`district-of-columbia`)
-that must match values in URLs from the Geofabrik download server.
-The 3rd parameter tells the script the server has 8 GB RAM available for osm2pgsql, Postgres, and the OS.  The PgOSM-Flex layer set is defined (`default`).
-
+script uses a region (`--region=north-america/us`) and
+sub-region (`--subregion=district-of-columbia`).
+The region/subregion values must the URL pattern used by the Geofabrik download server,
+see the [Regions and Subregions](#regions-and-subregions) section.
+The `--ram=8` parameter defines the total system RAM available and is used by
+internal logic to determine the best osm2pgsql options to use.
 
 ```bash
 docker exec -it \
     pgosm python3 docker/pgosm_flex.py \
-    --layerset=default \
     --ram=8 \
     --region=north-america/us \
-    --subregion=district-of-columbia \
-    &> ~/pgosm-data/pgosm-flex.log
+    --subregion=district-of-columbia
 ```
 
 
@@ -71,10 +70,9 @@ docker exec -it \
 
 The `--region` and `--subregion` definitions must match
 the Geofabrik URL scheme.  This can be a bit confusing
-as larger subregions can contain additional, smaller subregions
-which are reflected in these values.
+as larger subregions can contain smaller subregions.
 
-The example above for the `district-of-columbia` subregion defines
+The example above to process the `district-of-columbia` subregion defines
 `--region=north-america/us`.  You cannot, unfortunately, drop off
 the `--subregion` to load the U.S. subregion. Attempting this results
 in a `ValueError`.
