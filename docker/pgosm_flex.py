@@ -95,18 +95,16 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
                     skip_dump, debug, basepath, input_file):
     """Logic to run PgOSM Flex within Docker.
     """
+    paths = get_paths(base_path=basepath)
+    setup_logger(debug)
+    logger = logging.getLogger('pgosm-flex')
+    logger.info('PgOSM Flex starting...')
+
     validate_region_inputs(region, subregion, input_file)
 
     # Ensure always a region name
     if region is None and input_file:
         region = input_file
-
-    paths = get_paths(base_path=basepath)
-
-
-    setup_logger(debug)
-    logger = logging.getLogger('pgosm-flex')
-    logger.info('PgOSM Flex starting...')
 
     set_env_vars(region, subregion, srid, language, pgosm_date,
                  layerset, layerset_path)
@@ -184,7 +182,9 @@ def validate_region_inputs(region, subregion, input_file):
 
 def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
                  layerset_path):
-    """Sets environment variables needed by PgOSM Flex
+    """Sets environment variables needed by PgOSM Flex.
+
+    See /docs/MANUAL-STEPS-RUN.md for usage examples of environment variables.
 
     Parameters
     ------------------------
@@ -198,7 +198,9 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
         str when set, or None
     """
     logger = logging.getLogger('pgosm-flex')
-    logger.info('PgOSM Flex starting...')
+    logger.debug('Ensuring env vars are not set from prior run')
+    unset_env_vars()
+    logger.debug('Setting environment variables')
 
     if subregion is None:
         pgosm_region = f'{region}'
@@ -225,6 +227,17 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
 
     os.environ['PGOSM_CONN'] = db.connection_string(db_name='pgosm')
 
+
+def unset_env_vars():
+    """Unsets environment variables used by PgOSM Flex.
+    """
+    os.environ.pop('PGOSM_REGION', None)
+    os.environ.pop('PGOSM_SRID', None)
+    os.environ.pop('PGOSM_LANGUAGE', None)
+    os.environ.pop('PGOSM_LAYERSET_PATH', None)
+    os.environ.pop('PGOSM_DATE', None)
+    os.environ.pop('PGOSM_LAYERSET', None)
+    os.environ.pop('PGOSM_CONN', None)
 
 
 def setup_logger(debug):
