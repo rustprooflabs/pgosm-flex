@@ -71,7 +71,7 @@ docker exec -it \
 ```
 
 For the best in-Docker performance you will need to
-[tune the internal Postgres config](configure-postgres-in-docker) appropriately
+[tune the internal Postgres config](#configure-postgres-in-docker) appropriately
 for your hardware.
 See the [osm2pgsql documentation](https://osm2pgsql.org/doc/manual.html#tuning-the-postgresql-server) for more on tuning Postgres for this
 process.
