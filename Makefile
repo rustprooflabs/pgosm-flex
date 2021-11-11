@@ -10,6 +10,7 @@
 CURRENT_UID := $(shell id -u)
 CURRENT_GID := $(shell id -g)
 TODAY := $(shell date +'%Y-%m-%d')
+INPUT_FILE_NAME='custom_source_file.osm.pbf'
 
 .PHONY: all
 all: docker-clean build-run-docker unit-tests
@@ -36,6 +37,9 @@ build-run-docker: ## Builds and runs PgOSM Flex with D.C. test file
 		pgosm:/app/output/district-of-columbia-$(TODAY).osm.pbf
 	docker cp tests/data/district-of-columbia-2021-01-13.osm.pbf.md5 \
 		pgosm:/app/output/district-of-columbia-$(TODAY).osm.pbf.md5
+	# copy with arbitrary file name to test --input-file
+	docker cp tests/data/district-of-columbia-2021-01-13.osm.pbf \
+		pgosm:/app/output/$(INPUT_FILE_NAME)
 
 	# allow files created in later step to be created
 	docker exec -it pgosm \
@@ -44,6 +48,7 @@ build-run-docker: ## Builds and runs PgOSM Flex with D.C. test file
 	docker exec -it pgosm \
 		chown $(CURRENT_UID):$(CURRENT_GID) /app/docker/
 
+	# run typical processing using built-in file handling
 	docker exec -it \
 		-e POSTGRES_PASSWORD=mysecretpassword \
 		-e POSTGRES_USER=postgres \
@@ -52,8 +57,17 @@ build-run-docker: ## Builds and runs PgOSM Flex with D.C. test file
 		--layerset=default \
 		--ram=1 \
 		--region=north-america/us \
-		--subregion=district-of-columbia \
-		--debug
+		--subregion=district-of-columbia
+
+	# process it, this time without providing the region but directly the filename
+	docker exec -it \
+		-e POSTGRES_PASSWORD=mysecretpassword \
+		-e POSTGRES_USER=postgres \
+		-u $(CURRENT_UID):$(CURRENT_GID) \
+		pgosm python3 docker/pgosm_flex.py  \
+		--layerset=default \
+		--ram=1 \
+		--input-file=/app/output/$(INPUT_FILE_NAME)
 
 
 .PHONY: unit-tests

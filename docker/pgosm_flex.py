@@ -49,14 +49,12 @@ def get_today():
               default=4,
               show_default=4,
               help='Amount of RAM in GB available on the server running this process. Used to determine appropriate osm2pgsql command via osm2pgsql-tuner.com API.')
-@click.option('--region', required=True,
-              prompt="Region name",
+@click.option('--region', required=False,
               show_default="north-america/us",
               default="north-america/us",
-              help='Region name matching the filename for data sourced from Geofabrik. e.g. north-america/us')
+              help='Region name matching the filename for data sourced from Geofabrik. e.g. north-america/us. Optional when --input-file is specified, otherwise required.')
 @click.option('--subregion', required=False,
               default="district-of-columbia",
-              prompt="Subregion (set to 'none' to skip)",
               show_default="district-of-columbia",
               help='Sub-region name matching the filename for data sourced from Geofabrik. e.g. district-of-columbia')
 @click.option('--srid', required=False, default=DEFAULT_SRID,
@@ -90,33 +88,46 @@ def get_today():
               required=False,
               default=BASE_PATH_DEFAULT,
               help='Debugging option. Used when testing locally and not within Docker')
-def run_pgosm_flex(layerset, layerset_path, ram, region, subregion,
-                   srid, pgosm_date, language,
-                   schema_name, skip_nested, data_only, skip_dump,
-                   debug, basepath):
+@click.option('--input-file',
+              required=False,
+              default=None,
+              help='Set explicit filepath to input osm.pbf file. Overrides default file handling, archiving, and MD5 checksum.')
+def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
+                    pgosm_date, language, schema_name, skip_nested, data_only,
+                    skip_dump, debug, basepath, input_file):
     """Logic to run PgOSM Flex within Docker.
     """
-    # Required for optional user prompt
-    if subregion == 'none':
-        subregion = None
+    if region is None and input_file is None:
+        raise ValueError("either region or input_file must be provided")
+
+    if region is None and input_file:
+        region = input_file
 
     paths = get_paths(base_path=basepath)
+
 
     setup_logger(debug)
     logger = logging.getLogger('pgosm-flex')
     logger.info('PgOSM Flex starting...')
-    prepare_data(region=region,
-                 subregion=subregion,
-                 pgosm_date=pgosm_date,
-                 paths=paths)
 
     set_env_vars(region, subregion, srid, language, pgosm_date,
                  layerset, layerset_path)
 
-    osm2pgsql_command = get_osm2pgsql_command(region=region,
-                                              subregion=subregion,
-                                              ram=ram,
-                                              paths=paths)
+    if input_file is None:
+        prepare_data(region=region,
+                    subregion=subregion,
+                    pgosm_date=pgosm_date,
+                    paths=paths)
+
+        osm2pgsql_command = get_osm2pgsql_command(region=region,
+                                                subregion=subregion,
+                                                ram=ram,
+                                                paths=paths)
+    else:
+        osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
+                                           pbf_filename=input_file,
+                                           out_path=paths['out_path'])
+
     wait_for_postgres()
 
     db.prepare_pgosm_db(data_only=data_only, paths=paths)
@@ -129,12 +140,14 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion,
 
     run_post_processing(paths=paths, skip_nested=skip_nested)
 
-    remove_latest_files(region, subregion, paths)
+    if input_file is None:
+        remove_latest_files(region, subregion, paths)
 
     export_filename = get_export_filename(region,
-                                          subregion,
-                                          layerset,
-                                          pgosm_date)
+                                        subregion,
+                                        layerset,
+                                        pgosm_date,
+                                        input_file)
 
     if schema_name != 'osm':
         db.rename_schema(schema_name)
@@ -267,8 +280,8 @@ def get_region_filename(region, subregion):
     return filename
 
 
-def get_export_filename(region, subregion, layerset, pgosm_date):
-    """Returns the .sql filename to use from pg_dump.
+def get_export_filename(region, subregion, layerset, pgosm_date, input_file):
+    """Returns the .sql filename to use for pg_dump.
 
     Parameters
     ----------------------
@@ -276,6 +289,7 @@ def get_export_filename(region, subregion, layerset, pgosm_date):
     subregion : str
     layerset : str
     pgosm_date : str
+    input_file : str
 
     Returns
     ----------------------
@@ -283,10 +297,15 @@ def get_export_filename(region, subregion, layerset, pgosm_date):
     """
     region = region.replace('/', '-')
     subregion = subregion.replace('/', '-')
-    if subregion is None:
-        filename = f'pgosm-flex-{region}-{layerset}-{pgosm_date}.sql'
+
+    if input_file:
+        # Assumes .osm.pbf
+        base_name = input_file[:-8]
+        filename = f'{base_name}-{layerset}.sql'
+    elif subregion is None:
+        filename = f'{region}-{layerset}-{pgosm_date}.sql'
     else:
-        filename = f'pgosm-flex-{region}-{subregion}-{layerset}-{pgosm_date}.sql'
+        filename = f'{region}-{subregion}-{layerset}-{pgosm_date}.sql'
 
     return filename
 
@@ -601,7 +620,6 @@ def run_osm2pgsql(osm2pgsql_command, paths):
         sys.exit(f'{err_msg} - Check the log output for details.')
 
     logger.info('osm2pgsql completed.')
-    # output from PgOSM Flex lua goes to stdout
 
 
 def check_layerset_places(layerset_path, layerset, paths):
