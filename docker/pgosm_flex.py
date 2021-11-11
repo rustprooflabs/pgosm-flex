@@ -51,7 +51,6 @@ def get_today():
               help='Amount of RAM in GB available on the server running this process. Used to determine appropriate osm2pgsql command via osm2pgsql-tuner.com API.')
 @click.option('--region', required=False,
               show_default="north-america/us",
-              default="north-america/us",
               help='Region name matching the filename for data sourced from Geofabrik. e.g. north-america/us. Optional when --input-file is specified, otherwise required.')
 @click.option('--subregion', required=False,
               show_default="district-of-columbia",
@@ -96,11 +95,7 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
                     skip_dump, debug, basepath, input_file):
     """Logic to run PgOSM Flex within Docker.
     """
-    if region is None and input_file is None:
-        raise ValueError('Either --region or --input-file must be provided')
-
-    if '/' in region and subregion is None:
-        raise ValueError('Region provided appears to include subregion. The portion after the FINAL "/" in the Geofabrik URL should be the --subregion.')
+    validate_region_inputs(region, subregion, input_file)
 
     # Ensure always a region name
     if region is None and input_file:
@@ -164,6 +159,27 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
                        schema_name=schema_name)
     logger.info('PgOSM Flex complete!')
 
+
+def validate_region_inputs(region, subregion, input_file):
+    """Ensures the combination of region, subregion and input_file is valid.
+
+    No return, raises error when invalid.
+
+    Parameters
+    -----------------------
+    region : str
+    subregion : str
+    input_file : str
+    """
+    if region is None and input_file is None:
+        raise ValueError('Either --region or --input-file must be provided')
+
+    if region is None and subregion is not None:
+        raise ValueError('Using --subregion requires value for --region')
+
+    if region is not None:
+        if '/' in region and subregion is None:
+            raise ValueError('Region provided appears to include subregion. The portion after the FINAL "/" in the Geofabrik URL should be the --subregion.')
 
 
 def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
