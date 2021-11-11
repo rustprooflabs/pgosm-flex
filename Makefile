@@ -1,8 +1,11 @@
 ## ----------------------------------------------------------------------
 ## This Makefile builds and tests the PgOSM Flex Docker image.
 ##
-## For full build/test use:
+## For full build/test use (runs multiple import formats):
 ##    make
+##
+## To run region/subregion test + unit tests:
+##    make docker-exec-default unit-tests
 ##
 ## To cleanup after you are done:
 ##    make docker-clean

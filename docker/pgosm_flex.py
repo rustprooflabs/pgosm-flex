@@ -294,6 +294,7 @@ def get_export_filename(region, subregion, layerset, pgosm_date, input_file):
     ----------------------
     filename : str
     """
+    # region is always set internally, even with --input-file and no --region
     region = region.replace('/', '-')
     if subregion:
         subregion = subregion.replace('/', '-')
