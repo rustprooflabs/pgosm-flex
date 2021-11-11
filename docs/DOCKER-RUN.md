@@ -67,6 +67,29 @@ docker exec -it \
 ```
 
 
+## Regions and Subregions
+
+The `--region` and `--subregion` definitions must match
+the Geofabrik URL scheme.  This can be a bit confusing
+as larger subregions can contain additional, smaller subregions
+which are reflected in these values.
+
+The example above for the `district-of-columbia` subregion defines
+`--region=north-america/us`.  You cannot, unfortunately, drop off
+the `--subregion` to load the U.S. subregion. Attempting this results
+in a `ValueError`.
+
+To load the U.S. subregion, the `us` portion drops out of `--region`
+and moves to `--subregion`.
+
+```bash
+docker exec -it pgosm python3 docker/pgosm_flex.py \
+    --ram=8 \
+    --region=north-america \
+    --subregion=us
+```
+
+
 ## Customize PgOSM-Flex
 
 See full set of options via `--help`.

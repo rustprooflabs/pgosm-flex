@@ -97,8 +97,12 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
     """Logic to run PgOSM Flex within Docker.
     """
     if region is None and input_file is None:
-        raise ValueError("either region or input_file must be provided")
+        raise ValueError('Either --region or --input-file must be provided')
 
+    if '/' in region and subregion is None:
+        raise ValueError('Region provided appears to include subregion. The portion after the FINAL "/" in the Geofabrik URL should be the --subregion.')
+
+    # Ensure always a region name
     if region is None and input_file:
         region = input_file
 
