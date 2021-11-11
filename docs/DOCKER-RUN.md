@@ -54,8 +54,13 @@ script uses a region (`--region=north-america/us`) and
 sub-region (`--subregion=district-of-columbia`).
 The region/subregion values must the URL pattern used by the Geofabrik download server,
 see the [Regions and Subregions](#regions-and-subregions) section.
+
 The `--ram=8` parameter defines the total system RAM available and is used by
 internal logic to determine the best osm2pgsql options to use.
+When running on hardware dedicated to this process it is safe to define the total
+system RAM.  If the process is on a computer with other responsibilities, such
+as your laptop, feel free to lower this value.
+
 
 ```bash
 docker exec -it \
@@ -64,6 +69,12 @@ docker exec -it \
     --region=north-america/us \
     --subregion=district-of-columbia
 ```
+
+For the best in-Docker performance you will need to
+[tune the internal Postgres config](configure-postgres-in-docker) appropriately
+for your hardware.
+See the [osm2pgsql documentation](https://osm2pgsql.org/doc/manual.html#tuning-the-postgresql-server) for more on tuning Postgres for this
+process.
 
 
 ## Regions and Subregions
