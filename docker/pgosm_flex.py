@@ -295,7 +295,8 @@ def get_export_filename(region, subregion, layerset, pgosm_date, input_file):
     filename : str
     """
     region = region.replace('/', '-')
-    subregion = subregion.replace('/', '-')
+    if subregion:
+        subregion = subregion.replace('/', '-')
 
     if input_file:
         # Assumes .osm.pbf
