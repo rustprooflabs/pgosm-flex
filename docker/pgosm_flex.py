@@ -38,62 +38,59 @@ def get_today():
     return today
 
 @click.command()
-@click.option('--layerset', required=True,
-              default='default',
-              show_default='default',
-              help=f'Layer set from PgOSM Flex to load.')
-@click.option('--layerset-path', required=False,
-              help=f'Custom path to load layerset INI from. Custom paths should be mounted to Docker via docker run -v ...')
+# Required and most common options first
 @click.option('--ram', required=True,
-              prompt='Server RAM (GB)',
-              default=4,
-              show_default=4,
-              help='Amount of RAM in GB available on the server running this process. Used to determine appropriate osm2pgsql command via osm2pgsql-tuner.com API.')
+              type=float,
+              help='Amount of RAM in GB available on the machine running this process. Used to determine appropriate osm2pgsql command via osm2pgsql-tuner recommendation engine.')
 @click.option('--region', required=False,
-              show_default="north-america/us",
               help='Region name matching the filename for data sourced from Geofabrik. e.g. north-america/us. Optional when --input-file is specified, otherwise required.')
 @click.option('--subregion', required=False,
-              show_default="district-of-columbia",
               help='Sub-region name matching the filename for data sourced from Geofabrik. e.g. district-of-columbia')
-@click.option('--srid', required=False, default=DEFAULT_SRID,
-              envvar="PGOSM_SRID",
-              help="SRID for data in PostGIS.  Defaults to 3857")
-@click.option('--pgosm-date', required=False,
-              default=get_today(),
-              envvar="PGOSM_DATE",
-              help="Date of the data in YYYY-MM-DD format. If today (default), automatically downloads when files not found locally. Set to historic date to load locally archived PBF/MD5 file, will fail if both files do not exist.")
-@click.option('--language', default=None,
-              envvar="PGOSM_LANGUAGE",
-              help="Set default language in loaded OpenStreetMap data when available.  e.g. 'en' or 'kn'.")
-@click.option('--schema-name', required=False,
-              default='osm',
-              help="Change the final schema name, defaults to 'osm'.")
-@click.option('--skip-nested',
-              default=False,
-              envvar="PGOSM_SKIP_NESTED_POLYGON",
-              is_flag=True,
-              help=f'When set, skips calculating nested admin polygons. Can be time consuming on large regions.')
+# Remainder of options in alphabetical order
+@click.option('--basepath',
+              required=False,
+              default=BASE_PATH_DEFAULT,
+              help='Debugging option. Used when testing locally and not within Docker')
 @click.option('--data-only',
               default=False,
               envvar="PGOSM_DATA_SCHEMA_ONLY",
               is_flag=True,
               help="When set, skips running Sqitch and importing QGIS Styles.")
-@click.option('--skip-dump', default=False, is_flag=True,
-              help='Skips the final pg_dump at the end. Useful for local testing when not loading into more permanent instance.')
 @click.option('--debug', is_flag=True,
               help='Enables additional log output')
-@click.option('--basepath',
-              required=False,
-              default=BASE_PATH_DEFAULT,
-              help='Debugging option. Used when testing locally and not within Docker')
 @click.option('--input-file',
               required=False,
               default=None,
               help='Set explicit filepath to input osm.pbf file. Overrides default file handling, archiving, and MD5 checksum.')
+@click.option('--layerset', required=True,
+              default='default',
+              help=f'Layerset to load. Defines name of included layerset unless --layerset-path is defined.')
+@click.option('--layerset-path', required=False,
+              help=f'Custom path to load layerset INI from. Custom paths should be mounted to Docker via docker run -v ...')
+@click.option('--language', default=None,
+              envvar="PGOSM_LANGUAGE",
+              help="Set default language in loaded OpenStreetMap data when available.  e.g. 'en' or 'kn'.")
+@click.option('--pgosm-date', required=False,
+              default=get_today(),
+              envvar="PGOSM_DATE",
+              help="Date of the data in YYYY-MM-DD format. If today (default), automatically downloads when files not found locally. Set to historic date to load locally archived PBF/MD5 file, will fail if both files do not exist.")
+@click.option('--schema-name', required=False,
+              default='osm',
+              help="Change the final schema name, defaults to 'osm'.")
+@click.option('--skip-dump', default=False, is_flag=True,
+              help='Skips the final pg_dump at the end. Useful for local testing when not loading into more permanent instance.')
+@click.option('--skip-nested',
+              default=False,
+              envvar="PGOSM_SKIP_NESTED_POLYGON",
+              is_flag=True,
+              help=f'When set, skips calculating nested admin polygons. Can be time consuming on large regions.')
+@click.option('--srid', required=False, default=DEFAULT_SRID,
+              envvar="PGOSM_SRID",
+              help="SRID for data loaded by osm2pgsql to PostGIS. Defaults to 3857")
 def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
                     pgosm_date, language, schema_name, skip_nested, data_only,
                     skip_dump, debug, basepath, input_file):
-    """Logic to run PgOSM Flex within Docker.
+    """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
     """
     paths = get_paths(base_path=basepath)
     setup_logger(debug)
