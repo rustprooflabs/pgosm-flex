@@ -64,9 +64,9 @@ def get_today():
               help='Set explicit filepath to input osm.pbf file. Overrides default file handling, archiving, and MD5 checksum.')
 @click.option('--layerset', required=True,
               default='default',
-              help=f'Layerset to load. Defines name of included layerset unless --layerset-path is defined.')
+              help='Layerset to load. Defines name of included layerset unless --layerset-path is defined.')
 @click.option('--layerset-path', required=False,
-              help=f'Custom path to load layerset INI from. Custom paths should be mounted to Docker via docker run -v ...')
+              help='Custom path to load layerset INI from. Custom paths should be mounted to Docker via docker run -v ...')
 @click.option('--language', default=None,
               envvar="PGOSM_LANGUAGE",
               help="Set default language in loaded OpenStreetMap data when available.  e.g. 'en' or 'kn'.")
@@ -83,7 +83,7 @@ def get_today():
               default=False,
               envvar="PGOSM_SKIP_NESTED_POLYGON",
               is_flag=True,
-              help=f'When set, skips calculating nested admin polygons. Can be time consuming on large regions.')
+              help='When set, skips calculating nested admin polygons. Can be time consuming on large regions.')
 @click.option('--srid', required=False, default=DEFAULT_SRID,
               envvar="PGOSM_SRID",
               help="SRID for data loaded by osm2pgsql to PostGIS. Defaults to 3857")
@@ -174,7 +174,10 @@ def validate_region_inputs(region, subregion, input_file):
 
     if region is not None:
         if '/' in region and subregion is None:
-            raise ValueError('Region provided appears to include subregion. The portion after the final "/" in the Geofabrik URL should be the --subregion.')
+            err_msg = 'Region provided appears to include subregion. '
+            err_msg += 'The portion after the final "/" in the Geofabrik URL '
+            err_msg += 'should be the --subregion.'
+            raise ValueError(err_msg)
 
 
 def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
@@ -287,6 +290,7 @@ def get_paths(base_path):
 
     Path(out_path).mkdir(parents=True, exist_ok=True)
     return paths
+
 
 def get_region_filename(region, subregion):
     """Returns the filename needed to download/manage PBF files.
@@ -634,7 +638,7 @@ def run_osm2pgsql(osm2pgsql_command, paths):
     paths : dict
     """
     logger = logging.getLogger('pgosm-flex')
-    logger.info(f'Running osm2pgsql')
+    logger.info('Running osm2pgsql')
 
     output = subprocess.run(osm2pgsql_command.split(),
                             text=True,

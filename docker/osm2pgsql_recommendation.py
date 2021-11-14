@@ -74,7 +74,7 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb,
         throwaway containers/passwords, but intend to support external Postgres
         connections.
     """
-    LOGGER.debug(f'Generating recommended osm2pgsql command')
+    LOGGER.debug('Generating recommended osm2pgsql command')
 
     rec = tuner.recommendation(system_ram_gb=system_ram_gb,
                                osm_pbf_gb=osm_pbf_gb,
