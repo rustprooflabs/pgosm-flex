@@ -112,10 +112,10 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
                     pgosm_date=pgosm_date,
                     paths=paths)
 
-        osm2pgsql_command = get_osm2pgsql_command(region=region,
-                                                subregion=subregion,
-                                                ram=ram,
-                                                paths=paths)
+        pbf_filename = get_region_filename(region, subregion)
+        osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
+                                           pbf_filename=pbf_filename,
+                                           out_path=paths['out_path'])
     else:
         osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
                                            pbf_filename=input_file,
@@ -605,28 +605,6 @@ def remove_latest_files(region, subregion, paths):
     os.remove(pbf_file)
     logging.info(f'Done with {md5_file}, removing.')
     os.remove(md5_file)
-
-
-def get_osm2pgsql_command(region, subregion, ram, paths):
-    """Returns recommended osm2pgsql command.
-
-    Parameters
-    ----------------------
-    region : str
-    subregion : str
-    ram : int
-    paths : dict
-
-    Returns
-    ----------------------
-    rec_cmd : str
-        osm2pgsql command recommended by the API
-    """
-    pbf_filename = get_region_filename(region, subregion)
-    rec_cmd = rec.osm2pgsql_recommendation(ram=ram,
-                                           pbf_filename=pbf_filename,
-                                           out_path=paths['out_path'])
-    return rec_cmd
 
 
 def run_osm2pgsql(osm2pgsql_command, paths):
