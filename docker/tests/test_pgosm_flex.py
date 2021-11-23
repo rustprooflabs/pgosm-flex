@@ -7,32 +7,34 @@ SUBREGION_DC = 'district-of-columbia'
 
 class PgOSMFlexTests(unittest.TestCase):
 
-    def test_get_region_filename_returns_subregion_when_exists(self):
-        region = REGION_US
-        subregion = SUBREGION_DC
-        result = pgosm_flex.get_region_filename(region, subregion)
-        expected = f'{SUBREGION_DC}-latest.osm.pbf'
-        self.assertEqual(expected, result)
+    def test_get_paths_returns_dict(self):
+        base_path = pgosm_flex.BASE_PATH_DEFAULT
+        expected = dict
+        actual = pgosm_flex.get_paths(base_path=base_path)
+        self.assertEqual(expected, type(actual))
 
-    def test_get_region_filename_returns_region_when_subregion_None(self):
-        region = REGION_US
+
+    def test_validate_region_inputs_raises_ValueError_no_region_or_input(self):
+        region = None
         subregion = None
-        result = pgosm_flex.get_region_filename(region, subregion)
-        expected = f'{REGION_US}-latest.osm.pbf'
-        self.assertEqual(expected, result)
+        input_file = None
+
+        with self.assertRaises(ValueError):
+            pgosm_flex.validate_region_inputs(region, subregion, input_file)
 
 
-    def test_get_pbf_url_returns_proper_with_region_and_subregion(self):
-        region = REGION_US
-        subregion = SUBREGION_DC
-        result = pgosm_flex.get_pbf_url(region, subregion)
-        expected = f'https://download.geofabrik.de/{region}/{subregion}-latest.osm.pbf'
-        self.assertEqual(expected, result)
+    def test_validate_region_inputs_raises_ValueError_subregion_wout_region(self):
+        region = None
+        subregion = 'subregion-value'
+        input_file = 'some-value'
 
-    def test_get_pbf_url_returns_proper_with_region_and_subregion(self):
-        region = REGION_US
+        with self.assertRaises(ValueError):
+            pgosm_flex.validate_region_inputs(region, subregion, input_file)
+
+    def test_validate_region_inputs_raises_ValueError_region_should_have_subregion(self):
+        region = 'north-america/us'
         subregion = None
-        result = pgosm_flex.get_pbf_url(region, subregion)
-        expected = f'https://download.geofabrik.de/{region}-latest.osm.pbf'
-        self.assertEqual(expected, result)
+        input_file = None
 
+        with self.assertRaises(ValueError):
+            pgosm_flex.validate_region_inputs(region, subregion, input_file)
