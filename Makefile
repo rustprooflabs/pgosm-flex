@@ -133,7 +133,7 @@ unit-tests: ## Runs Python unit tests and data import tests
 		-e POSTGRES_PASSWORD=mysecretpassword \
 		-e POSTGRES_USER=postgres \
 		-u $(CURRENT_UID):$(CURRENT_GID) \
-		pgosm /bin/bash -c "cd docker && coverage run -m unittest tests/*.py"
+		pgosm /bin/bash -c "cd docker && coverage run -m unittest tests/*.py && coverage report -m ./*.py"
 
 	# Data import tests
 	docker cp tests \

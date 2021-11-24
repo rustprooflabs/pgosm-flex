@@ -5,11 +5,9 @@ Designed to be ran in Docker image:
     https://hub.docker.com/r/rustprooflabs/pgosm-flex
 """
 import configparser
-import datetime
 import logging
 import os
 from pathlib import Path
-import shutil
 import sys
 import subprocess
 import time
@@ -17,7 +15,7 @@ import time
 import click
 
 import osm2pgsql_recommendation as rec
-import db
+import db, geofabrik, helpers
 
 
 BASE_PATH_DEFAULT = '/app'
@@ -26,16 +24,6 @@ BASE_PATH_DEFAULT = '/app'
 
 DEFAULT_SRID = '3857'
 
-
-def get_today():
-    """Returns yyyy-mm-dd formatted string for today.
-
-    Retunrs
-    -------------------------
-    today : str
-    """
-    today = datetime.datetime.today().strftime('%Y-%m-%d')
-    return today
 
 @click.command()
 # Required and most common options first
@@ -71,7 +59,7 @@ def get_today():
               envvar="PGOSM_LANGUAGE",
               help="Set default language in loaded OpenStreetMap data when available.  e.g. 'en' or 'kn'.")
 @click.option('--pgosm-date', required=False,
-              default=get_today(),
+              default=helpers.get_today(),
               envvar="PGOSM_DATE",
               help="Date of the data in YYYY-MM-DD format. If today (default), automatically downloads when files not found locally. Set to historic date to load locally archived PBF/MD5 file, will fail if both files do not exist.")
 @click.option('--schema-name', required=False,
@@ -107,15 +95,15 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
                  layerset, layerset_path)
 
     if input_file is None:
-        prepare_data(region=region,
-                    subregion=subregion,
-                    pgosm_date=pgosm_date,
-                    paths=paths)
+        geofabrik.prepare_data(region=region,
+                               subregion=subregion,
+                               pgosm_date=pgosm_date,
+                               paths=paths)
 
-        osm2pgsql_command = get_osm2pgsql_command(region=region,
-                                                subregion=subregion,
-                                                ram=ram,
-                                                paths=paths)
+        pbf_filename = geofabrik.get_region_filename(region, subregion)
+        osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
+                                           pbf_filename=pbf_filename,
+                                           out_path=paths['out_path'])
     else:
         osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
                                            pbf_filename=input_file,
@@ -134,13 +122,13 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
     run_post_processing(paths=paths, skip_nested=skip_nested)
 
     if input_file is None:
-        remove_latest_files(region, subregion, paths)
+        geofabrik.remove_latest_files(region, subregion, paths)
 
     export_filename = get_export_filename(region,
-                                        subregion,
-                                        layerset,
-                                        pgosm_date,
-                                        input_file)
+                                          subregion,
+                                          layerset,
+                                          pgosm_date,
+                                          input_file)
 
     if schema_name != 'osm':
         db.rename_schema(schema_name)
@@ -270,7 +258,7 @@ def setup_logger(debug):
 def get_paths(base_path):
     """Returns dictionary of various paths used.
 
-    Creates `out_path` used for logs and data if necessary.
+    Ensures `out_path` exists.
 
     Parameters
     -------------------
@@ -291,26 +279,6 @@ def get_paths(base_path):
     Path(out_path).mkdir(parents=True, exist_ok=True)
     return paths
 
-
-def get_region_filename(region, subregion):
-    """Returns the filename needed to download/manage PBF files.
-
-    Parameters
-    ----------------------
-    region : str
-    subregion : str
-
-    Returns
-    ----------------------
-    filename : str
-    """
-    base_name = '{}-latest.osm.pbf'
-    if subregion is None:
-        filename = base_name.format(region)
-    else:
-        filename = base_name.format(subregion)
-
-    return filename
 
 
 def get_export_filename(region, subregion, layerset, pgosm_date, input_file):
@@ -343,28 +311,6 @@ def get_export_filename(region, subregion, layerset, pgosm_date, input_file):
         filename = f'{region}-{subregion}-{layerset}-{pgosm_date}.sql'
 
     return filename
-
-
-def get_pbf_url(region, subregion):
-    """Returns the URL to the PBF for the region / subregion.
-
-    Parameters
-    ----------------------
-    region : str
-    subregion : str
-
-    Returns
-    ----------------------
-    pbf_url : str
-    """
-    base_url = 'https://download.geofabrik.de'
-
-    if subregion is None:
-        pbf_url = f'{base_url}/{region}-latest.osm.pbf'
-    else:
-        pbf_url = f'{base_url}/{region}/{subregion}-latest.osm.pbf'
-
-    return pbf_url
 
 
 def wait_for_postgres():
@@ -405,228 +351,7 @@ def wait_for_postgres():
     logger.info('Database passed two checks - should be ready')
 
 
-def prepare_data(region, subregion, pgosm_date, paths):
-    """Ensures the PBF file is available.
 
-    Checks if it already exists locally, download if needed,
-    and verify MD5 checksum.
-
-    Parameters
-    ----------------------
-    region : str
-    subregion : str
-    pgosm_date : str
-    paths : dict
-
-    Returns
-    ----------------------
-    pbf_file : str
-        Full path to PBF file
-    """
-    out_path = paths['out_path']
-    pbf_filename = get_region_filename(region, subregion)
-
-    pbf_file = os.path.join(out_path, pbf_filename)
-    pbf_file_with_date = pbf_file.replace('latest', pgosm_date)
-
-    md5_file = f'{pbf_file}.md5'
-    md5_file_with_date = f'{pbf_file_with_date}.md5'
-
-    if pbf_download_needed(pbf_file_with_date, md5_file_with_date, pgosm_date):
-        logging.getLogger('pgosm-flex').info('Downloading PBF and MD5 files...')
-        download_data(region, subregion, pbf_file, md5_file)
-        archive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date)
-    else:
-        logging.getLogger('pgosm-flex').info('Copying Archived files')
-        unarchive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date)
-
-    verify_checksum(md5_file, paths)
-
-    return pbf_file
-
-
-def pbf_download_needed(pbf_file_with_date, md5_file_with_date, pgosm_date):
-    """Decides if the PBF/MD5 files need to be downloaded.
-
-    Parameters
-    -------------------------------
-    pbf_file_with_date : str
-    md5_file_with_date : str
-
-    Returns
-    --------------------------
-    download_needed : bool
-    """
-    logger = logging.getLogger('pgosm-flex')
-    # If the PBF file exists, check for the MD5 file too.
-    if os.path.exists(pbf_file_with_date):
-        logger.info(f'PBF File exists {pbf_file_with_date}')
-
-        if os.path.exists(md5_file_with_date):
-            logger.info('PBF & MD5 files exist.  Download not needed')
-            download_needed = False
-        else:
-            if pgosm_date == get_today():
-                print('PBF for today available but not MD5... download needed')
-                download_needed = True
-            else:
-                err = f'Missing MD5 file for {pgosm_date}. Cannot validate.'
-                logger.error(err)
-                raise FileNotFoundError(err)
-    else:
-        if not pgosm_date == get_today():
-            err = f'Missing PBF file for {pgosm_date}. Cannot proceed.'
-            logger.error(err)
-            raise FileNotFoundError(err)
-
-        logger.info('PBF file not found locally. Download required')
-        download_needed = True
-
-    return download_needed
-
-
-def download_data(region, subregion, pbf_file, md5_file):
-    """Downloads PBF and MD5 file using wget.
-
-    Parameters
-    ---------------------
-    region : str
-    subregion : str
-    pbf_file : str
-    md5_file : str
-    """
-    logger = logging.getLogger('pgosm-flex')
-    logger.info(f'Downloading PBF data to {pbf_file}')
-    pbf_url = get_pbf_url(region, subregion)
-
-    subprocess.run(
-        ['/usr/bin/wget', pbf_url,
-         "-O", pbf_file , "--quiet"
-        ],
-        capture_output=True,
-        text=True,
-        check=True
-    )
-
-    logger.info(f'Downloading MD5 checksum to {md5_file}')
-    subprocess.run(
-        ['/usr/bin/wget', f'{pbf_url}.md5',
-         "-O", md5_file , "--quiet"
-        ],
-        capture_output=True,
-        text=True,
-        check=True
-    )
-
-
-def verify_checksum(md5_file, paths):
-    """If verfication fails, raises `CalledProcessError`
-
-    Parameters
-    ---------------------
-    md5_file : str
-    paths : dict
-    """
-    subprocess.run(['md5sum', '-c', md5_file],
-                   capture_output=True,
-                   text=True,
-                   check=True,
-                   cwd=paths['out_path'])
-
-
-
-def archive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date):
-    """Copies `pbf_file` and `md5_file` to `pbf_file_with_date` and
-    `md5_file_with_date`.
-
-    If either file exists, does nothing.
-
-    Parameters
-    --------------------------------
-    pbf_file : str
-    md5_file : str
-    pbf_file_with_date : str
-    md5_file_with_date : str
-    """
-    if os.path.exists(pbf_file_with_date):
-        pass # Do nothing
-    else:
-        shutil.copy2(pbf_file, pbf_file_with_date)
-
-    if os.path.exists(md5_file_with_date):
-        pass # Do nothing
-    else:
-        shutil.copy2(md5_file, md5_file_with_date)
-
-
-def unarchive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date):
-    """Copies `pbf_file_with_date` and `md5_file_with_date`
-    to `pbf_file` and `md5_file`.
-
-    Always copies, will overwrite a -latest file if it is in the way.
-
-    Parameters
-    --------------------------------
-    pbf_file : str
-    md5_file : str
-    pbf_file_with_date : str
-    md5_file_with_date : str
-    """
-    logger = logging.getLogger('pgosm-flex')
-    if os.path.exists(pbf_file):
-        logger.debug(f'{pbf_file} exists. Overwriting.')
-
-    logger.info(f'Copying {pbf_file_with_date} to {pbf_file}')
-    shutil.copy2(pbf_file_with_date, pbf_file)
-
-    if os.path.exists(md5_file):
-        logger.debug(f'{md5_file} exists. Overwriting.')
-
-    logger.info(f'Copying {md5_file_with_date} to {md5_file}')
-    shutil.copy2(md5_file_with_date, md5_file)
-
-
-def remove_latest_files(region, subregion, paths):
-    """Removes the PBF and MD5 file with -latest in the name.
-
-    Files are archived via prepare_data() before processing starts
-
-    Parameters
-    -------------------------
-    region : str
-    subregion : str
-    paths : dict
-    """
-    pbf_filename = get_region_filename(region, subregion)
-
-    pbf_file = os.path.join(paths['out_path'], pbf_filename)
-    md5_file = f'{pbf_file}.md5'
-    logging.info(f'Done with {pbf_file}, removing.')
-    os.remove(pbf_file)
-    logging.info(f'Done with {md5_file}, removing.')
-    os.remove(md5_file)
-
-
-def get_osm2pgsql_command(region, subregion, ram, paths):
-    """Returns recommended osm2pgsql command.
-
-    Parameters
-    ----------------------
-    region : str
-    subregion : str
-    ram : int
-    paths : dict
-
-    Returns
-    ----------------------
-    rec_cmd : str
-        osm2pgsql command recommended by the API
-    """
-    pbf_filename = get_region_filename(region, subregion)
-    rec_cmd = rec.osm2pgsql_recommendation(ram=ram,
-                                           pbf_filename=pbf_filename,
-                                           out_path=paths['out_path'])
-    return rec_cmd
 
 
 def run_osm2pgsql(osm2pgsql_command, paths):
