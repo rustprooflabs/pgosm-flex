@@ -79,6 +79,45 @@ def get_pg_user_pass():
     return pg_details
 
 
+def wait_for_postgres():
+    """Ensures Postgres service is reliably ready for use.
+
+    Required b/c Postgres process in Docker gets restarted shortly
+    after starting.
+    """
+    logger = logging.getLogger('pgosm-flex')
+    logger.info('Checking for Postgres service to be available')
+
+    required_checks = 2
+    found = 0
+    i = 0
+    max_loops = 30
+    sleep_s = 3
+
+    while found < required_checks:
+        if i > max_loops:
+            err = 'Postgres still has not started. Exiting.'
+            logger.error(err)
+            sys.exit(err)
+
+        time.sleep(sleep_s)
+
+        if pg_isready():
+            found += 1
+            logger.info(f'Postgres up {found} times')
+
+        if i % 5 == 0:
+            logger.info('Waiting for Postgres connection...')
+
+        if i > 100:
+            err = 'Postgres still not available. Exiting.'
+            logger.error(err)
+            sys.exit(err)
+        i += 1
+
+    logger.info('Database passed two checks - should be ready')
+
+
 def pg_isready():
     """Checks for Postgres to be available.
 
@@ -91,9 +130,9 @@ def pg_isready():
     try:
         result = pg_version_check()
     except:
-        err_msg = f'Error checking version, ensure Postgres is configured'
+        err_msg = f'Error checking version. Ensure Postgres connection details are correct.'
         logging.getLogger('pgosm-flex').error(err_msg)
-        sys.exit()
+        return False
 
     if result is None:
         return False
