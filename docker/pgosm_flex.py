@@ -10,7 +10,6 @@ import os
 from pathlib import Path
 import sys
 import subprocess
-import time
 
 import click
 

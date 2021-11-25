@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 import subprocess
+import time
 
 import psycopg
 import sh
@@ -98,7 +99,7 @@ def wait_for_postgres():
         if i > max_loops:
             err = 'Postgres still has not started. Exiting.'
             logger.error(err)
-            sys.exit(err)
+            sys.exit()
 
         time.sleep(sleep_s)
 
@@ -109,10 +110,6 @@ def wait_for_postgres():
         if i % 5 == 0:
             logger.info('Waiting for Postgres connection...')
 
-        if i > 100:
-            err = 'Postgres still not available. Exiting.'
-            logger.error(err)
-            sys.exit(err)
         i += 1
 
     logger.info('Database passed two checks - should be ready')
