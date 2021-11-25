@@ -10,7 +10,6 @@ import os
 from pathlib import Path
 import sys
 import subprocess
-import time
 
 import click
 
@@ -109,7 +108,7 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
                                            pbf_filename=input_file,
                                            out_path=paths['out_path'])
 
-    wait_for_postgres()
+    db.wait_for_postgres()
 
     db.prepare_pgosm_db(data_only=data_only, paths=paths)
 
@@ -311,47 +310,6 @@ def get_export_filename(region, subregion, layerset, pgosm_date, input_file):
         filename = f'{region}-{subregion}-{layerset}-{pgosm_date}.sql'
 
     return filename
-
-
-def wait_for_postgres():
-    """Ensures Postgres service is reliably ready for use.
-
-    Required b/c Postgres process in Docker gets restarted shortly
-    after starting.
-    """
-    logger = logging.getLogger('pgosm-flex')
-    logger.info('Checking for Postgres service to be available')
-
-    required_checks = 2
-    found = 0
-    i = 0
-    max_loops = 30
-
-    while found < required_checks:
-        if i > max_loops:
-            err = 'Postgres still has not started. Exiting.'
-            logger.error(err)
-            sys.exit(err)
-
-        time.sleep(5)
-
-        if db.pg_isready():
-            found += 1
-            logger.info(f'Postgres up {found} times')
-
-        if i % 5 == 0:
-            logger.info('Waiting...')
-
-        if i > 100:
-            err = 'Postgres still not available. Exiting.'
-            logger.error(err)
-            sys.exit(err)
-        i += 1
-
-    logger.info('Database passed two checks - should be ready')
-
-
-
 
 
 def run_osm2pgsql(osm2pgsql_command, paths):

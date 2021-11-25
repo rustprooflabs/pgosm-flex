@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 import subprocess
+import time
 
 import psycopg
 import sh
@@ -12,25 +13,127 @@ import sh
 LOGGER = logging.getLogger('pgosm-flex')
 
 
-def pg_isready():
-    """Checks pg_isready for Postgres to be available.
+def connection_string(db_name):
+    """Returns connection string to `db_name`.
 
-    https://www.postgresql.org/docs/current/app-pg-isready.html
+    Env vars for user/password defined by Postgres docker image.
+    https://hub.docker.com/_/postgres/
+
+    * POSTGRES_PASSWORD
+    * POSTGRES_USER
+    * POSTGRES_HOST
+
+    Parameters
+    --------------------------
+    db_name : str
+
+    Returns
+    --------------------------
+    conn_string : str
+    """
+    app_str = '?application_name=pgosm-flex'
+
+    pg_details = get_pg_user_pass()
+    pg_user = pg_details['pg_user']
+    pg_pass = pg_details['pg_pass']
+    pg_host = pg_details['pg_host']
+
+    if pg_pass is None:
+        conn_string = f'postgresql://{pg_user}@{pg_host}/{db_name}{app_str}'
+    else:
+        conn_string = f'postgresql://{pg_user}:{pg_pass}@{pg_host}/{db_name}{app_str}'
+
+    return conn_string
+
+
+def get_pg_user_pass():
+    """Retrieves username/password from environment variables if they exist.
+
+    Returns
+    --------------------------
+    pg_details : dict
+    """
+    try:
+        pg_user = os.environ['POSTGRES_USER']
+    except KeyError:
+        LOGGER.debug('POSTGRES_USER not configured. Defaulting to postgres')
+        pg_user = 'postgres'
+
+    try:
+        pg_pass = os.environ['POSTGRES_PASSWORD']
+        if pg_pass == '':
+            pg_pass = None
+    except KeyError:
+        LOGGER.debug('POSTGRES_PASSWORD not configured. Should work if ~/.pgpass is configured.')
+        pg_pass = None
+
+    try:
+        pg_host = os.environ['POSTGRES_HOST']
+    except KeyError:
+        pg_host = 'localhost'
+        LOGGER.debug(f'POSTGRES_HOST not configured. Defaulting to {pg_host}')
+
+    pg_details = {'pg_user': pg_user,
+                  'pg_pass': pg_pass,
+                  'pg_host': pg_host}
+
+    return pg_details
+
+
+def wait_for_postgres():
+    """Ensures Postgres service is reliably ready for use.
+
+    Required b/c Postgres process in Docker gets restarted shortly
+    after starting.
+    """
+    logger = logging.getLogger('pgosm-flex')
+    logger.info('Checking for Postgres service to be available')
+
+    required_checks = 2
+    found = 0
+    i = 0
+    max_loops = 30
+    sleep_s = 3
+
+    while found < required_checks:
+        if i > max_loops:
+            err = 'Postgres still has not started. Exiting.'
+            logger.error(err)
+            sys.exit()
+
+        time.sleep(sleep_s)
+
+        if pg_isready():
+            found += 1
+            logger.info(f'Postgres up {found} times')
+
+        if i % 5 == 0:
+            logger.info('Waiting for Postgres connection...')
+
+        i += 1
+
+    logger.info('Database passed two checks - should be ready')
+
+
+def pg_isready():
+    """Checks for Postgres to be available.
+
+    Uses pg_version_check() for simple approach.
 
     Returns
     -------------------
     pg_up : bool
     """
-    output = subprocess.run(['pg_isready', '-U', 'root'],
-                            text=True,
-                            capture_output=True,
-                            check=False)
-    code = output.returncode
-    if code == 3:
-        err = 'Postgres check is misconfigured. Exiting.'
-        logging.getLogger('pgosm-flex').error(err)
-        sys.exit(err)
-    return code == 0
+    try:
+        result = pg_version_check()
+    except:
+        err_msg = f'Error checking version. Ensure Postgres connection details are correct.'
+        logging.getLogger('pgosm-flex').error(err_msg)
+        return False
+
+    if result is None:
+        return False
+    return True
 
 
 def prepare_pgosm_db(data_only, paths):
@@ -41,7 +144,6 @@ def prepare_pgosm_db(data_only, paths):
     data_only : bool
     paths : dict
     """
-    pg_version_check()
     drop_pgosm_db()
     create_pgosm_db()
     if not data_only:
@@ -53,7 +155,13 @@ def prepare_pgosm_db(data_only, paths):
 
 
 def pg_version_check():
-    """Checks Postgres version and sends to logs.
+    """Checks Postgres version.
+
+    Sends to logs and returns value.
+
+    Results
+    --------------------
+    pg_version : str
     """
     sql_raw = 'SHOW server_version;'
 
@@ -64,6 +172,7 @@ def pg_version_check():
 
     pg_version = results[0]
     LOGGER.info(f'Postgres version {pg_version}')
+    return pg_version
 
 
 
@@ -200,36 +309,6 @@ def load_qgis_styles(paths):
         LOGGER.debug('QGIS Style staging table cleaned')
 
 
-def connection_string(db_name):
-    """Returns connection string to pgosm database.
-
-    Env vars for user/password defined by Postgres docker image.
-    https://hub.docker.com/_/postgres/
-
-    * POSTGRES_PASSWORD
-    * POSTGRES_USER
-
-    Parameters
-    --------------------------
-    db_name : str
-
-    Returns
-    --------------------------
-    conn_string : str
-    """
-    app_str = '?application_name=pgosm-flex'
-
-    pg_details = get_pg_user_pass()
-    pg_user = pg_details['pg_user']
-    pg_pass = pg_details['pg_pass']
-
-    if pg_pass is None:
-        conn_string = f'postgresql://{pg_user}@localhost/{db_name}{app_str}'
-    else:
-        conn_string = f'postgresql://{pg_user}:{pg_pass}@localhost/{db_name}{app_str}'
-
-    return conn_string
-
 
 def sqitch_db_string(db_name):
     """Returns DB string used for Sqitch.
@@ -245,38 +324,15 @@ def sqitch_db_string(db_name):
     pg_details = get_pg_user_pass()
     pg_user = pg_details['pg_user']
     pg_pass = pg_details['pg_pass']
+    pg_host = pg_details['pg_host']
 
     if pg_pass is None:
-        conn_string = f'db:pg://{pg_user}@localhost/{db_name}'
+        conn_string = f'db:pg://{pg_user}@{pg_host}/{db_name}'
     else:
-        conn_string = f'db:pg://{pg_user}:{pg_pass}@localhost/{db_name}'
+        conn_string = f'db:pg://{pg_user}:{pg_pass}@{pg_host}/{db_name}'
 
     return conn_string
 
-
-def get_pg_user_pass():
-    """Retrieves username/password from environment variables if they exist.
-
-    Returns
-    --------------------------
-    pg_details : dict
-    """
-    try:
-        pg_user = os.environ['POSTGRES_USER']
-    except KeyError:
-        LOGGER.debug('POSTGRES_USER not configured. Defaulting to postgres')
-        pg_user = 'postgres'
-
-    try:
-        pg_pass = os.environ['POSTGRES_PASSWORD']
-        if pg_pass == '':
-            pg_pass = None
-    except KeyError:
-        LOGGER.debug('POSTGRES_PASSWORD not configured. Should work if ~/.pgpass is configured.')
-        pg_pass = None
-
-    pg_details = {'pg_user': pg_user, 'pg_pass': pg_pass}
-    return pg_details
 
 
 def get_db_conn(db_name):
