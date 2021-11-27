@@ -136,20 +136,20 @@ def pg_isready():
     return True
 
 
-def prepare_pgosm_db(data_only, paths):
+def prepare_pgosm_db(data_only, db_path):
     """Runs through series of steps to prepare database for PgOSM
 
     Parameters
     --------------------------
     data_only : bool
-    paths : dict
+    db_path : str
     """
     drop_pgosm_db()
     create_pgosm_db()
     if not data_only:
         LOGGER.info('Loading extras via Sqitch.')
-        run_sqitch_prep(paths)
-        load_qgis_styles(paths)
+        run_sqitch_prep(db_path)
+        load_qgis_styles(db_path)
     else:
         LOGGER.info('Data only mode enabled, no Sqitch or QGIS styles.')
 
@@ -211,12 +211,12 @@ def create_pgosm_db():
         LOGGER.debug('Created osm schema')
 
 
-def run_sqitch_prep(paths):
+def run_sqitch_prep(db_path):
     """Runs Sqitch to create DB structure and populate helper data.
 
     Parameters
     -------------------------
-    paths : dict
+    db_path : str
 
     Returns
     -------------------------
@@ -232,7 +232,7 @@ def run_sqitch_prep(paths):
     output = subprocess.run(cmds_sqitch,
                             text=True,
                             capture_output=True,
-                            cwd=paths['db_path'],
+                            cwd=db_path,
                             check=False)
     if output.returncode > 0:
         LOGGER.error('Loading Sqitch schema failed. pgosm schema will not be included in output.')
@@ -244,7 +244,7 @@ def run_sqitch_prep(paths):
     output = subprocess.run(cmds_roads,
                             text=True,
                             capture_output=True,
-                            cwd=paths['db_path'],
+                            cwd=db_path,
                             check=False)
     if output.returncode > 0:
         LOGGER.error('Loading roads helper data failed. Check output')
@@ -256,21 +256,21 @@ def run_sqitch_prep(paths):
     return True
 
 
-def load_qgis_styles(paths):
+def load_qgis_styles(db_path):
     """Loads QGIS style data for easy formatting of most common layers.
 
     Parameters
     -------------------------
-    paths : dict
+    db_path : str
     """
     LOGGER.info('Load QGIS styles...')
     # These two paths can easily be ran via psycopg
-    create_path = os.path.join(paths['db_path'],
+    create_path = os.path.join(db_path,
                                'qgis-style',
                                'create_layer_styles.sql')
-    load_path = os.path.join(paths['db_path'],
-                               'qgis-style',
-                               '_load_layer_styles.sql')
+    load_path = os.path.join(db_path,
+                             'qgis-style',
+                             '_load_layer_styles.sql')
 
     with open(create_path, 'r') as file_in:
         create_sql = file_in.read()
@@ -292,7 +292,7 @@ def load_qgis_styles(paths):
     output = subprocess.run(cmds_populate,
                             text=True,
                             capture_output=True,
-                            cwd=paths['db_path'],
+                            cwd=db_path,
                             check=False)
 
     LOGGER.debug(f'Output from loading QGIS style data: {output.stdout}')

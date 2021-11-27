@@ -97,7 +97,7 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
         geofabrik.prepare_data(region=region,
                                subregion=subregion,
                                pgosm_date=pgosm_date,
-                               paths=paths)
+                               out_path=paths['out_path'])
 
         pbf_filename = geofabrik.get_region_filename(region, subregion)
         osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
@@ -110,7 +110,7 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
 
     db.wait_for_postgres()
 
-    db.prepare_pgosm_db(data_only=data_only, paths=paths)
+    db.prepare_pgosm_db(data_only=data_only, db_path=paths['db_path'])
 
     run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, paths=paths)
 
