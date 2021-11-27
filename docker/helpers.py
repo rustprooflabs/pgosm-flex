@@ -1,7 +1,9 @@
 """Generic functions used in multiple modules.
 """
 import datetime
+import logging
 import subprocess
+import sys
 
 
 def get_today():
@@ -15,16 +17,28 @@ def get_today():
     return today
 
 
-def verify_checksum(md5_file, out_path):
-    """If verfication fails, raises `CalledProcessError`
+def verify_checksum(md5_file, path):
+    """If verfication fails calls `sys.exit()`
 
     Parameters
     ---------------------
     md5_file : str
-    out_path : str
+    path : str
+        Path to directory with `md5_file` to validate
     """
-    subprocess.run(['md5sum', '-c', md5_file],
-                   capture_output=True,
-                   text=True,
-                   check=True,
-                   cwd=out_path)
+    logger = logging.getLogger('pgosm-flex')
+    logger.debug(f'Validating {md5_file} in {path}')
+
+    output = subprocess.run(['md5sum', '-c', md5_file],
+                            text=True,
+                            check=False,
+                            cwd=path,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+
+    if output.returncode != 0:
+        err_msg = f'Failed to validate md5sum. Return code: {output.returncode} {output.stdout}'
+        logger.error(err_msg)
+        sys.exit(err_msg)
+
+    logger.info(f'md5sum validated')

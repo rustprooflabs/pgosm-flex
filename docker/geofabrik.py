@@ -64,7 +64,7 @@ def prepare_data(region, subregion, pgosm_date, paths):
         logging.getLogger('pgosm-flex').info('Copying Archived files')
         unarchive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date)
 
-    helpers.verify_checksum(md5_file, paths['out_path'])
+    helpers.verify_checksum(md5_file, out_path)
 
     return pbf_file
 
