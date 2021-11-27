@@ -2,7 +2,6 @@
 import os
 import unittest
 
-
 import pgosm_flex, helpers
 
 pgosm_flex.setup_logger(debug=True)
@@ -14,7 +13,6 @@ class HelpersTests(unittest.TestCase):
         expected = str
         actual = type(helpers.get_today())
         self.assertEqual(expected, actual)
-
 
     def test_verify_checksum_returns_None_when_valid_md5(self):
         txt_file = 'checksum-test.txt'

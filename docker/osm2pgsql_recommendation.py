@@ -30,7 +30,7 @@ def osm2pgsql_recommendation(ram, pbf_filename, out_path):
     """
     system_ram_gb = ram
     # The layerset is now set via env var.  This is used to set filename for osm2pgsql command
-    pgosm_layer_set = 'run'
+
     if not os.path.isabs(pbf_filename):
         pbf_file = os.path.join(out_path, pbf_filename)
     else:
@@ -44,13 +44,10 @@ def osm2pgsql_recommendation(ram, pbf_filename, out_path):
                                            osm_pbf_gb,
                                            append,
                                            pbf_file,
-                                           pgosm_layer_set,
                                            out_path)
     return osm2pgsql_cmd
 
-def get_recommended_script(system_ram_gb, osm_pbf_gb,
-                           append, pbf_filename,
-                           pgosm_layer_set,
+def get_recommended_script(system_ram_gb, osm_pbf_gb, append, pbf_filename,
                            output_path):
     """Builds API call and cleans up returned command for use here.
 
@@ -61,7 +58,6 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb,
     append : bool
     pbf_filename : str
         Can be filename or absolute path.
-    pgosm_layer_set : str
     output_path : str
 
     Returns
@@ -79,8 +75,7 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb,
     rec = tuner.recommendation(system_ram_gb=system_ram_gb,
                                osm_pbf_gb=osm_pbf_gb,
                                append=append,
-                               ssd=True,
-                               pgosm_layer_set=pgosm_layer_set)
+                               ssd=True)
 
     # FIXME: Currently requires .osm.pbf input. Will block full functionality of #192
     # Uses basename to work with absolute paths
