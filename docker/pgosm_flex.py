@@ -10,7 +10,6 @@ import os
 from pathlib import Path
 import sys
 import subprocess
-import time
 
 import click
 
@@ -98,7 +97,7 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
         geofabrik.prepare_data(region=region,
                                subregion=subregion,
                                pgosm_date=pgosm_date,
-                               paths=paths)
+                               out_path=paths['out_path'])
 
         pbf_filename = geofabrik.get_region_filename(region, subregion)
         osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
@@ -109,9 +108,9 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
                                            pbf_filename=input_file,
                                            out_path=paths['out_path'])
 
-    wait_for_postgres()
+    db.wait_for_postgres()
 
-    db.prepare_pgosm_db(data_only=data_only, paths=paths)
+    db.prepare_pgosm_db(data_only=data_only, db_path=paths['db_path'])
 
     run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, paths=paths)
 
@@ -210,10 +209,12 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
         os.environ['PGOSM_LAYERSET_PATH'] = str(layerset_path)
 
     os.environ['PGOSM_DATE'] = pgosm_date
-
     os.environ['PGOSM_LAYERSET'] = layerset
-
+    # PGOSM_CONN is required by Lua scripts for osm2pgsql. This should
+    # be the only place a connection string is defined outside of Sqitch usage.
     os.environ['PGOSM_CONN'] = db.connection_string(db_name='pgosm')
+    # Connection to DB for admin purposes, e.g. drop/create main database
+    os.environ['PGOSM_CONN_PG'] = db.connection_string(db_name='postgres')
 
 
 def unset_env_vars():
@@ -226,6 +227,7 @@ def unset_env_vars():
     os.environ.pop('PGOSM_DATE', None)
     os.environ.pop('PGOSM_LAYERSET', None)
     os.environ.pop('PGOSM_CONN', None)
+    os.environ.pop('PGOSM_CONN_PG', None)
 
 
 def setup_logger(debug):
@@ -313,47 +315,6 @@ def get_export_filename(region, subregion, layerset, pgosm_date, input_file):
     return filename
 
 
-def wait_for_postgres():
-    """Ensures Postgres service is reliably ready for use.
-
-    Required b/c Postgres process in Docker gets restarted shortly
-    after starting.
-    """
-    logger = logging.getLogger('pgosm-flex')
-    logger.info('Checking for Postgres service to be available')
-
-    required_checks = 2
-    found = 0
-    i = 0
-    max_loops = 30
-
-    while found < required_checks:
-        if i > max_loops:
-            err = 'Postgres still has not started. Exiting.'
-            logger.error(err)
-            sys.exit(err)
-
-        time.sleep(5)
-
-        if db.pg_isready():
-            found += 1
-            logger.info(f'Postgres up {found} times')
-
-        if i % 5 == 0:
-            logger.info('Waiting...')
-
-        if i > 100:
-            err = 'Postgres still not available. Exiting.'
-            logger.error(err)
-            sys.exit(err)
-        i += 1
-
-    logger.info('Database passed two checks - should be ready')
-
-
-
-
-
 def run_osm2pgsql(osm2pgsql_command, paths):
     """Runs the provided osm2pgsql command.
 
@@ -407,11 +368,9 @@ def check_layerset_places(layerset_path, layerset, paths):
     try:
         place = config['layerset']['place']
     except KeyError:
-        # No place key, skip_nested should be true
         logger.debug('Place layer not defined, setting skip_nested')
         return True
 
-    # If Place is true
     if place:
         logger.debug('Place layer is defined as true. Not setting skip_nested')
         return False
@@ -431,14 +390,13 @@ def run_post_processing(paths, skip_nested):
 
     skip_nested : bool
     """
-    db.pgosm_after_import(paths)
+    db.pgosm_after_import(paths['flex_path'])
     logger = logging.getLogger('pgosm-flex')
     if skip_nested:
         logger.info('Skipping calculating nested polygons')
     else:
         logger.info('Calculating nested polygons')
         db.pgosm_nested_admin_polygons(paths)
-
 
 
 if __name__ == "__main__":

@@ -29,7 +29,7 @@ def get_region_filename(region, subregion):
     return filename
 
 
-def prepare_data(region, subregion, pgosm_date, paths):
+def prepare_data(region, subregion, pgosm_date, out_path):
     """Ensures the PBF file is available.
 
     Checks if it already exists locally, download if needed,
@@ -40,14 +40,13 @@ def prepare_data(region, subregion, pgosm_date, paths):
     region : str
     subregion : str
     pgosm_date : str
-    paths : dict
+    out_path : str
 
     Returns
     ----------------------
     pbf_file : str
         Full path to PBF file
     """
-    out_path = paths['out_path']
     pbf_filename = get_region_filename(region, subregion)
 
     pbf_file = os.path.join(out_path, pbf_filename)
@@ -64,7 +63,7 @@ def prepare_data(region, subregion, pgosm_date, paths):
         logging.getLogger('pgosm-flex').info('Copying Archived files')
         unarchive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date)
 
-    helpers.verify_checksum(md5_file, paths['out_path'])
+    helpers.verify_checksum(md5_file, out_path)
 
     return pbf_file
 
