@@ -5,6 +5,7 @@ import geofabrik
 REGION_US = 'north-america/us'
 SUBREGION_DC = 'district-of-columbia'
 
+
 class GeofabrikTests(unittest.TestCase):
 
     def test_get_region_filename_returns_subregion_when_exists(self):

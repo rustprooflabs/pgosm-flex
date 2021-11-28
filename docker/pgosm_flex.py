@@ -97,7 +97,7 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
         geofabrik.prepare_data(region=region,
                                subregion=subregion,
                                pgosm_date=pgosm_date,
-                               paths=paths)
+                               out_path=paths['out_path'])
 
         pbf_filename = geofabrik.get_region_filename(region, subregion)
         osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
@@ -110,7 +110,7 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
 
     db.wait_for_postgres()
 
-    db.prepare_pgosm_db(data_only=data_only, paths=paths)
+    db.prepare_pgosm_db(data_only=data_only, db_path=paths['db_path'])
 
     run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, paths=paths)
 
@@ -209,10 +209,12 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
         os.environ['PGOSM_LAYERSET_PATH'] = str(layerset_path)
 
     os.environ['PGOSM_DATE'] = pgosm_date
-
     os.environ['PGOSM_LAYERSET'] = layerset
-
+    # PGOSM_CONN is required by Lua scripts for osm2pgsql. This should
+    # be the only place a connection string is defined outside of Sqitch usage.
     os.environ['PGOSM_CONN'] = db.connection_string(db_name='pgosm')
+    # Connection to DB for admin purposes, e.g. drop/create main database
+    os.environ['PGOSM_CONN_PG'] = db.connection_string(db_name='postgres')
 
 
 def unset_env_vars():
@@ -225,6 +227,7 @@ def unset_env_vars():
     os.environ.pop('PGOSM_DATE', None)
     os.environ.pop('PGOSM_LAYERSET', None)
     os.environ.pop('PGOSM_CONN', None)
+    os.environ.pop('PGOSM_CONN_PG', None)
 
 
 def setup_logger(debug):
@@ -365,11 +368,9 @@ def check_layerset_places(layerset_path, layerset, paths):
     try:
         place = config['layerset']['place']
     except KeyError:
-        # No place key, skip_nested should be true
         logger.debug('Place layer not defined, setting skip_nested')
         return True
 
-    # If Place is true
     if place:
         logger.debug('Place layer is defined as true. Not setting skip_nested')
         return False
@@ -389,14 +390,13 @@ def run_post_processing(paths, skip_nested):
 
     skip_nested : bool
     """
-    db.pgosm_after_import(paths)
+    db.pgosm_after_import(paths['flex_path'])
     logger = logging.getLogger('pgosm-flex')
     if skip_nested:
         logger.info('Skipping calculating nested polygons')
     else:
         logger.info('Calculating nested polygons')
         db.pgosm_nested_admin_polygons(paths)
-
 
 
 if __name__ == "__main__":

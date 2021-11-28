@@ -136,20 +136,20 @@ def pg_isready():
     return True
 
 
-def prepare_pgosm_db(data_only, paths):
+def prepare_pgosm_db(data_only, db_path):
     """Runs through series of steps to prepare database for PgOSM
 
     Parameters
     --------------------------
     data_only : bool
-    paths : dict
+    db_path : str
     """
     drop_pgosm_db()
     create_pgosm_db()
     if not data_only:
         LOGGER.info('Loading extras via Sqitch.')
-        run_sqitch_prep(paths)
-        load_qgis_styles(paths)
+        run_sqitch_prep(db_path)
+        load_qgis_styles(db_path)
     else:
         LOGGER.info('Data only mode enabled, no Sqitch or QGIS styles.')
 
@@ -165,7 +165,7 @@ def pg_version_check():
     """
     sql_raw = 'SHOW server_version;'
 
-    with get_db_conn(db_name='postgres') as conn:
+    with get_db_conn(conn_string=os.environ['PGOSM_CONN_PG']) as conn:
         cur = conn.cursor()
         cur.execute(sql_raw)
         results = cur.fetchone()
@@ -179,7 +179,7 @@ def pg_version_check():
 def drop_pgosm_db():
     """Drops the pgosm database if it exists."""
     sql_raw = 'DROP DATABASE IF EXISTS pgosm;'
-    conn = get_db_conn(db_name='postgres')
+    conn = get_db_conn(conn_string=os.environ['PGOSM_CONN_PG'])
 
     LOGGER.debug('Setting Pg conn to enable autocommit - required for drop/create DB')
     conn.autocommit = True
@@ -192,7 +192,7 @@ def create_pgosm_db():
     """Creates the pgosm database and prepares with PostGIS and osm schema
     """
     sql_raw = 'CREATE DATABASE pgosm;'
-    conn = get_db_conn(db_name='postgres')
+    conn = get_db_conn(conn_string=os.environ['PGOSM_CONN_PG'])
 
     LOGGER.debug('Setting Pg conn to enable autocommit - required for drop/create DB')
     conn.autocommit = True
@@ -203,7 +203,7 @@ def create_pgosm_db():
     sql_create_postgis = "CREATE EXTENSION postgis;"
     sql_create_schema = "CREATE SCHEMA osm;"
 
-    with get_db_conn(db_name='pgosm') as conn:
+    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
         cur = conn.cursor()
         cur.execute(sql_create_postgis)
         LOGGER.debug('Installed PostGIS extension')
@@ -211,12 +211,12 @@ def create_pgosm_db():
         LOGGER.debug('Created osm schema')
 
 
-def run_sqitch_prep(paths):
+def run_sqitch_prep(db_path):
     """Runs Sqitch to create DB structure and populate helper data.
 
     Parameters
     -------------------------
-    paths : dict
+    db_path : str
 
     Returns
     -------------------------
@@ -224,7 +224,7 @@ def run_sqitch_prep(paths):
     """
     LOGGER.info('Deploy schema via Sqitch')
 
-    conn_string = connection_string(db_name='pgosm')
+    conn_string = os.environ['PGOSM_CONN']
     conn_string_sqitch = sqitch_db_string(db_name='pgosm')
 
     cmds_sqitch = ['sqitch', 'deploy', conn_string_sqitch]
@@ -232,7 +232,7 @@ def run_sqitch_prep(paths):
     output = subprocess.run(cmds_sqitch,
                             text=True,
                             capture_output=True,
-                            cwd=paths['db_path'],
+                            cwd=db_path,
                             check=False)
     if output.returncode > 0:
         LOGGER.error('Loading Sqitch schema failed. pgosm schema will not be included in output.')
@@ -244,7 +244,7 @@ def run_sqitch_prep(paths):
     output = subprocess.run(cmds_roads,
                             text=True,
                             capture_output=True,
-                            cwd=paths['db_path'],
+                            cwd=db_path,
                             check=False)
     if output.returncode > 0:
         LOGGER.error('Loading roads helper data failed. Check output')
@@ -256,21 +256,21 @@ def run_sqitch_prep(paths):
     return True
 
 
-def load_qgis_styles(paths):
+def load_qgis_styles(db_path):
     """Loads QGIS style data for easy formatting of most common layers.
 
     Parameters
     -------------------------
-    paths : dict
+    db_path : str
     """
     LOGGER.info('Load QGIS styles...')
     # These two paths can easily be ran via psycopg
-    create_path = os.path.join(paths['db_path'],
+    create_path = os.path.join(db_path,
                                'qgis-style',
                                'create_layer_styles.sql')
-    load_path = os.path.join(paths['db_path'],
-                               'qgis-style',
-                               '_load_layer_styles.sql')
+    load_path = os.path.join(db_path,
+                             'qgis-style',
+                             '_load_layer_styles.sql')
 
     with open(create_path, 'r') as file_in:
         create_sql = file_in.read()
@@ -278,31 +278,31 @@ def load_qgis_styles(paths):
     with open(load_path, 'r') as file_in:
         load_sql = file_in.read()
 
-    with get_db_conn(db_name='pgosm') as conn:
+    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
         cur = conn.cursor()
         cur.execute(create_sql)
     LOGGER.debug('QGIS Style table created')
 
     # Loading layer_styles data is done from files created by pg_dump, using
     # psql to reload is easiest
-    conn_string = connection_string(db_name='pgosm')
+    conn_string = os.environ['PGOSM_CONN']
     cmds_populate = ['psql', '-d', conn_string,
                      '-f', 'qgis-style/layer_styles.sql']
 
     output = subprocess.run(cmds_populate,
                             text=True,
                             capture_output=True,
-                            cwd=paths['db_path'],
+                            cwd=db_path,
                             check=False)
 
     LOGGER.debug(f'Output from loading QGIS style data: {output.stdout}')
 
-    with get_db_conn(db_name='pgosm') as conn:
+    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
         cur = conn.cursor()
         cur.execute(load_sql)
     LOGGER.info('QGIS Style table populated')
 
-    with get_db_conn(db_name='pgosm') as conn:
+    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
         sql_clean = 'DELETE FROM public.layer_styles_staging;'
         cur = conn.cursor()
         cur.execute(sql_clean)
@@ -335,18 +335,17 @@ def sqitch_db_string(db_name):
 
 
 
-def get_db_conn(db_name):
+def get_db_conn(conn_string):
     """Establishes psycopg database connection.
 
     Parameters
     -----------------------
-    db_name : str
+    conn_string : str
 
     Returns
     -----------------------
     conn : psycopg.Connection
     """
-    conn_string = connection_string(db_name)
     try:
         conn = psycopg.connect(conn_string)
         LOGGER.debug('Connection to Postgres established')
@@ -358,7 +357,7 @@ def get_db_conn(db_name):
     return conn
 
 
-def pgosm_after_import(paths):
+def pgosm_after_import(flex_path):
     """Runs post-processing SQL via Lua script.
 
     Layerset logic is established via environment variable, must happen
@@ -366,7 +365,7 @@ def pgosm_after_import(paths):
 
     Parameters
     ---------------------
-    paths : dict
+    flex_path : str
     """
     LOGGER.info('Running post-processing...')
 
@@ -375,7 +374,7 @@ def pgosm_after_import(paths):
     output = subprocess.run(cmds,
                             text=True,
                             capture_output=True,
-                            cwd=paths['flex_path'],
+                            cwd=flex_path,
                             check=True)
     LOGGER.info(f'Post-processing output: \n {output.stderr}')
 
@@ -389,7 +388,7 @@ def pgosm_nested_admin_polygons(paths):
     """
     sql_raw = 'CALL osm.build_nested_admin_polygons();'
 
-    conn_string = connection_string(db_name='pgosm')
+    conn_string = os.environ['PGOSM_CONN']
     cmds = ['psql', '-d', conn_string, '-c', sql_raw]
     LOGGER.info('Building nested polygons... (this can take a while)')
     output = subprocess.run(cmds,
@@ -418,7 +417,7 @@ def rename_schema(schema_name):
     LOGGER.info(f'Renaming schema from osm to {schema_name}')
     sql_raw = f'ALTER SCHEMA osm RENAME TO {schema_name} ;'
 
-    with get_db_conn(db_name='pgosm') as conn:
+    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
         cur = conn.cursor()
         cur.execute(sql_raw)
 
@@ -439,7 +438,7 @@ def run_pg_dump(export_filename, out_path, data_only, schema_name):
         export_path = export_filename
     logger = logging.getLogger('pgosm-flex')
     db_name = 'pgosm'
-    conn_string = connection_string(db_name=db_name)
+    conn_string = os.environ['PGOSM_CONN']
 
     if data_only:
         logger.info(f'Running pg_dump (only {schema_name} schema)')
