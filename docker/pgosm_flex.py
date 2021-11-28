@@ -213,6 +213,8 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
     # PGOSM_CONN is required by Lua scripts for osm2pgsql. This should
     # be the only place a connection string is defined outside of Sqitch usage.
     os.environ['PGOSM_CONN'] = db.connection_string(db_name='pgosm')
+    # Connection to DB for admin purposes, e.g. drop/create main database
+    os.environ['PGOSM_CONN_PG'] = db.connection_string(db_name='postgres')
 
 
 def unset_env_vars():
@@ -225,6 +227,7 @@ def unset_env_vars():
     os.environ.pop('PGOSM_DATE', None)
     os.environ.pop('PGOSM_LAYERSET', None)
     os.environ.pop('PGOSM_CONN', None)
+    os.environ.pop('PGOSM_CONN_PG', None)
 
 
 def setup_logger(debug):

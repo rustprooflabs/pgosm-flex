@@ -165,7 +165,7 @@ def pg_version_check():
     """
     sql_raw = 'SHOW server_version;'
 
-    with get_db_conn(db_name='postgres') as conn:
+    with get_db_conn(conn_string=os.environ['PGOSM_CONN_PG']) as conn:
         cur = conn.cursor()
         cur.execute(sql_raw)
         results = cur.fetchone()
@@ -179,7 +179,7 @@ def pg_version_check():
 def drop_pgosm_db():
     """Drops the pgosm database if it exists."""
     sql_raw = 'DROP DATABASE IF EXISTS pgosm;'
-    conn = get_db_conn(db_name='postgres')
+    conn = get_db_conn(conn_string=os.environ['PGOSM_CONN_PG'])
 
     LOGGER.debug('Setting Pg conn to enable autocommit - required for drop/create DB')
     conn.autocommit = True
@@ -192,7 +192,7 @@ def create_pgosm_db():
     """Creates the pgosm database and prepares with PostGIS and osm schema
     """
     sql_raw = 'CREATE DATABASE pgosm;'
-    conn = get_db_conn(db_name='postgres')
+    conn = get_db_conn(conn_string=os.environ['PGOSM_CONN_PG'])
 
     LOGGER.debug('Setting Pg conn to enable autocommit - required for drop/create DB')
     conn.autocommit = True
@@ -203,7 +203,7 @@ def create_pgosm_db():
     sql_create_postgis = "CREATE EXTENSION postgis;"
     sql_create_schema = "CREATE SCHEMA osm;"
 
-    with get_db_conn(db_name='pgosm') as conn:
+    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
         cur = conn.cursor()
         cur.execute(sql_create_postgis)
         LOGGER.debug('Installed PostGIS extension')
@@ -278,7 +278,7 @@ def load_qgis_styles(db_path):
     with open(load_path, 'r') as file_in:
         load_sql = file_in.read()
 
-    with get_db_conn(db_name='pgosm') as conn:
+    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
         cur = conn.cursor()
         cur.execute(create_sql)
     LOGGER.debug('QGIS Style table created')
@@ -297,12 +297,12 @@ def load_qgis_styles(db_path):
 
     LOGGER.debug(f'Output from loading QGIS style data: {output.stdout}')
 
-    with get_db_conn(db_name='pgosm') as conn:
+    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
         cur = conn.cursor()
         cur.execute(load_sql)
     LOGGER.info('QGIS Style table populated')
 
-    with get_db_conn(db_name='pgosm') as conn:
+    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
         sql_clean = 'DELETE FROM public.layer_styles_staging;'
         cur = conn.cursor()
         cur.execute(sql_clean)
@@ -335,18 +335,17 @@ def sqitch_db_string(db_name):
 
 
 
-def get_db_conn(db_name):
+def get_db_conn(conn_string):
     """Establishes psycopg database connection.
 
     Parameters
     -----------------------
-    db_name : str
+    conn_string : str
 
     Returns
     -----------------------
     conn : psycopg.Connection
     """
-    conn_string = connection_string(db_name)
     try:
         conn = psycopg.connect(conn_string)
         LOGGER.debug('Connection to Postgres established')
@@ -418,7 +417,7 @@ def rename_schema(schema_name):
     LOGGER.info(f'Renaming schema from osm to {schema_name}')
     sql_raw = f'ALTER SCHEMA osm RENAME TO {schema_name} ;'
 
-    with get_db_conn(db_name='pgosm') as conn:
+    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
         cur = conn.cursor()
         cur.execute(sql_raw)
 
