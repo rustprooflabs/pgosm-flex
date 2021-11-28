@@ -224,7 +224,7 @@ def run_sqitch_prep(db_path):
     """
     LOGGER.info('Deploy schema via Sqitch')
 
-    conn_string = connection_string(db_name='pgosm')
+    conn_string = os.environ['PGOSM_CONN']
     conn_string_sqitch = sqitch_db_string(db_name='pgosm')
 
     cmds_sqitch = ['sqitch', 'deploy', conn_string_sqitch]
@@ -285,7 +285,7 @@ def load_qgis_styles(db_path):
 
     # Loading layer_styles data is done from files created by pg_dump, using
     # psql to reload is easiest
-    conn_string = connection_string(db_name='pgosm')
+    conn_string = os.environ['PGOSM_CONN']
     cmds_populate = ['psql', '-d', conn_string,
                      '-f', 'qgis-style/layer_styles.sql']
 
@@ -358,7 +358,7 @@ def get_db_conn(db_name):
     return conn
 
 
-def pgosm_after_import(paths):
+def pgosm_after_import(flex_path):
     """Runs post-processing SQL via Lua script.
 
     Layerset logic is established via environment variable, must happen
@@ -366,7 +366,7 @@ def pgosm_after_import(paths):
 
     Parameters
     ---------------------
-    paths : dict
+    flex_path : str
     """
     LOGGER.info('Running post-processing...')
 
@@ -375,7 +375,7 @@ def pgosm_after_import(paths):
     output = subprocess.run(cmds,
                             text=True,
                             capture_output=True,
-                            cwd=paths['flex_path'],
+                            cwd=flex_path,
                             check=True)
     LOGGER.info(f'Post-processing output: \n {output.stderr}')
 
@@ -389,7 +389,7 @@ def pgosm_nested_admin_polygons(paths):
     """
     sql_raw = 'CALL osm.build_nested_admin_polygons();'
 
-    conn_string = connection_string(db_name='pgosm')
+    conn_string = os.environ['PGOSM_CONN']
     cmds = ['psql', '-d', conn_string, '-c', sql_raw]
     LOGGER.info('Building nested polygons... (this can take a while)')
     output = subprocess.run(cmds,
@@ -439,7 +439,7 @@ def run_pg_dump(export_filename, out_path, data_only, schema_name):
         export_path = export_filename
     logger = logging.getLogger('pgosm-flex')
     db_name = 'pgosm'
-    conn_string = connection_string(db_name=db_name)
+    conn_string = os.environ['PGOSM_CONN']
 
     if data_only:
         logger.info(f'Running pg_dump (only {schema_name} schema)')

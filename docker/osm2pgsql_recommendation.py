@@ -49,7 +49,7 @@ def osm2pgsql_recommendation(ram, pbf_filename, out_path):
 
 def get_recommended_script(system_ram_gb, osm_pbf_gb, append, pbf_filename,
                            output_path):
-    """Builds API call and cleans up returned command for use here.
+    """Generates recommended osm2pgsql command from osm2pgsql-tuner.
 
     Parameters
     -------------------------------
