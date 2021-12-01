@@ -27,11 +27,17 @@ CREATE TABLE IF NOT EXISTS osm.pgosm_flex (
     project_url text NOT NULL,
     osm2pgsql_version text NOT NULL,
     "language" text NOT NULL,
+    osm2pgsql_mode TEXT NOT NULL DEFAULT 'create',
     CONSTRAINT pk_osm_pgosm_flex PRIMARY KEY (id)
 );
 ]=]
 
-
+-- Ensures tables created by pgosm flex 0.4.0 and earlier do not break
+sql_ensure_osm2pgsql_mode_column = [=[
+ALTER TABLE osm.pgosm_flex
+    ADD COLUMN IF NOT EXISTS osm2pgsql_mode
+    TEXT NOT NULL DEFAULT 'create';
+]=]
 
 function pgosm_get_commit_hash()
     local cmd = 'git rev-parse --short HEAD'
@@ -56,8 +62,11 @@ end
 
 local commit_hash = pgosm_get_commit_hash()
 local git_tag = pgosm_get_latest_tag()
-local osm2pgsql_version = osm2pgsql.version
 print ('PgOSM-Flex version:', git_tag, commit_hash)
+
+local osm2pgsql_version = osm2pgsql.version
+local osm2pgsql_mode = osm2pgsql.mode
+
 local pgosm_flex_version = git_tag .. '-' .. commit_hash
 local project_url = 'https://github.com/rustprooflabs/pgosm-flex'
 
@@ -67,6 +76,7 @@ con = assert (env:connect(pgosm_conn))
 
 print('ensuring pgosm_flex table exists.')
 con:execute(sql_create_table)
+con:execute(sql_ensure_osm2pgsql_mode_column)
 
 if default_date then
     default_date_str = 'true'
@@ -74,7 +84,9 @@ else
     default_date_str = 'false'
 end
 
-local sql_insert = [[ INSERT INTO osm.pgosm_flex (osm_date, default_date, region, pgosm_flex_version, srid, project_url, osm2pgsql_version, "language") ]] ..
+local sql_insert = [[ INSERT INTO osm.pgosm_flex (osm_date, default_date, region,
+        pgosm_flex_version, srid, project_url, osm2pgsql_version, "language",
+        osm2pgsql_mode) ]] ..
  [[ VALUES (']] ..
  con:escape(pgosm_date) .. [[', ]] ..
  default_date_str .. [[ , ']] .. -- special handling for boolean
@@ -83,7 +95,8 @@ local sql_insert = [[ INSERT INTO osm.pgosm_flex (osm_date, default_date, region
  con:escape(srid) .. [[', ']] ..
  con:escape(project_url) .. [[', ']] ..
  con:escape(osm2pgsql_version) .. [[', ']] ..
- con:escape(pgosm_language) .. [[' );]]
+ con:escape(pgosm_language) .. [[', ']] ..
+ con:escape(osm2pgsql_mode) .. [[' );]]
 
 
 -- simple query to verify connection
