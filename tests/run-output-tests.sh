@@ -43,7 +43,7 @@ for filename in sql/*.sql; do
 done
 
 if $failed; then
-    echo "One or more tests failed."
+    echo "One or more data output tests failed."
 else
-    echo "Tests completed successfully."
+    echo "Data output tests completed successfully."
 fi

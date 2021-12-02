@@ -112,13 +112,15 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
 
     db.prepare_pgosm_db(data_only=data_only, db_path=paths['db_path'])
 
-    run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, paths=paths)
+    flex_path = paths['flex_path']
+    run_osm2pgsql(osm2pgsql_command=osm2pgsql_command,
+                  flex_path=flex_path)
 
     if not skip_nested:
         # Auto-set skip_nested when place layer not imported
-        skip_nested = check_layerset_places(layerset_path, layerset, paths)
+        skip_nested = check_layerset_places(layerset_path, layerset, flex_path)
 
-    run_post_processing(paths=paths, skip_nested=skip_nested)
+    run_post_processing(flex_path=flex_path, skip_nested=skip_nested)
 
     if input_file is None:
         geofabrik.remove_latest_files(region, subregion, paths)
@@ -129,14 +131,15 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
                                           pgosm_date,
                                           input_file)
 
+    export_path = get_export_full_path(paths['out_path'], export_filename)
+
     if schema_name != 'osm':
         db.rename_schema(schema_name)
 
     if skip_dump:
         logger.info('Skipping pg_dump')
     else:
-        db.run_pg_dump(export_filename,
-                       out_path=paths['out_path'],
+        db.run_pg_dump(export_path=export_path,
                        data_only=data_only,
                        schema_name=schema_name)
     logger.info('PgOSM Flex complete!')
@@ -306,7 +309,7 @@ def get_export_filename(region, subregion, layerset, pgosm_date, input_file):
     if input_file:
         # Assumes .osm.pbf
         base_name = input_file[:-8]
-        filename = f'{base_name}-{layerset}.sql'
+        filename = f'{base_name}-{layerset}-{pgosm_date}.sql'
     elif subregion is None:
         filename = f'{region}-{layerset}-{pgosm_date}.sql'
     else:
@@ -315,20 +318,41 @@ def get_export_filename(region, subregion, layerset, pgosm_date, input_file):
     return filename
 
 
-def run_osm2pgsql(osm2pgsql_command, paths):
+def get_export_full_path(out_path, export_filename):
+    """If `export_filename` is an absolute path, `out_path` is not considered.
+
+    Parameters
+    -----------------
+    out_path : str
+    export_filename : str
+
+    Returns
+    -----------------
+    export_path : str
+    """
+
+    if os.path.isabs(export_filename):
+        export_path = export_filename
+    else:
+        export_path = os.path.join(out_path, export_filename)
+
+    return export_path
+
+
+def run_osm2pgsql(osm2pgsql_command, flex_path):
     """Runs the provided osm2pgsql command.
 
     Parameters
     ----------------------
     osm2pgsql_command : str
-    paths : dict
+    flex_path : str
     """
     logger = logging.getLogger('pgosm-flex')
     logger.info('Running osm2pgsql')
 
     output = subprocess.run(osm2pgsql_command.split(),
                             text=True,
-                            cwd=paths['flex_path'],
+                            cwd=flex_path,
                             check=False,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT)
@@ -343,14 +367,14 @@ def run_osm2pgsql(osm2pgsql_command, paths):
     logger.info('osm2pgsql completed.')
 
 
-def check_layerset_places(layerset_path, layerset, paths):
+def check_layerset_places(layerset_path, layerset, flex_path):
     """If `place` layer is not included `skip_nested` should be true.
 
     Parameters
     ------------------------
     layerset_path : str
     layerset : str
-    paths : dict
+    flex_path : str
 
     Returns
     ------------------------
@@ -359,7 +383,7 @@ def check_layerset_places(layerset_path, layerset, paths):
     logger = logging.getLogger('pgosm-flex')
 
     if layerset_path is None:
-        layerset_path = os.path.join(paths['flex_path'], 'layerset')
+        layerset_path = os.path.join(flex_path, 'layerset')
         logger.info(f'Using default layerset path {layerset_path}')
 
     ini_file = os.path.join(layerset_path, f'{layerset}.ini')
@@ -379,24 +403,24 @@ def check_layerset_places(layerset_path, layerset, paths):
     return True
 
 
-def run_post_processing(paths, skip_nested):
+def run_post_processing(flex_path, skip_nested):
     """Runs steps following osm2pgsql import.
 
     Post-processing SQL scripts and (optionally) calculate nested admin polgyons
 
     Parameters
     ----------------------
-    paths : dict
+    flex_path : str
 
     skip_nested : bool
     """
-    db.pgosm_after_import(paths['flex_path'])
+    db.pgosm_after_import(flex_path)
     logger = logging.getLogger('pgosm-flex')
     if skip_nested:
         logger.info('Skipping calculating nested polygons')
     else:
         logger.info('Calculating nested polygons')
-        db.pgosm_nested_admin_polygons(paths)
+        db.pgosm_nested_admin_polygons(flex_path)
 
 
 if __name__ == "__main__":
