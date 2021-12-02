@@ -5,7 +5,6 @@ import os
 import sys
 import subprocess
 import time
-
 import psycopg
 import sh
 
@@ -379,12 +378,12 @@ def pgosm_after_import(flex_path):
     LOGGER.info(f'Post-processing output: \n {output.stderr}')
 
 
-def pgosm_nested_admin_polygons(paths):
+def pgosm_nested_admin_polygons(flex_path):
     """Runs stored procedure to calculate nested admin polygons via psql.
 
     Parameters
     ----------------------
-    paths : dict
+    flex_path : str
     """
     sql_raw = 'CALL osm.build_nested_admin_polygons();'
 
@@ -393,18 +392,16 @@ def pgosm_nested_admin_polygons(paths):
     LOGGER.info('Building nested polygons... (this can take a while)')
     output = subprocess.run(cmds,
                             text=True,
-                            cwd=paths['flex_path'],
+                            cwd=flex_path,
                             check=False,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT)
     LOGGER.info(f'Nested polygon output: \n {output.stdout}')
 
-
     if output.returncode != 0:
         err_msg = f'Failed to build nested polygons. Return code: {output.returncode}'
         LOGGER.error(err_msg)
         sys.exit(f'{err_msg} - Check the log output for details.')
-
 
 
 def rename_schema(schema_name):
