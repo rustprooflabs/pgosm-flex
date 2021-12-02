@@ -5,7 +5,6 @@ import os
 import sys
 import subprocess
 import time
-
 import psycopg
 import sh
 
@@ -379,12 +378,12 @@ def pgosm_after_import(flex_path):
     LOGGER.info(f'Post-processing output: \n {output.stderr}')
 
 
-def pgosm_nested_admin_polygons(paths):
+def pgosm_nested_admin_polygons(flex_path):
     """Runs stored procedure to calculate nested admin polygons via psql.
 
     Parameters
     ----------------------
-    paths : dict
+    flex_path : str
     """
     sql_raw = 'CALL osm.build_nested_admin_polygons();'
 
@@ -393,18 +392,16 @@ def pgosm_nested_admin_polygons(paths):
     LOGGER.info('Building nested polygons... (this can take a while)')
     output = subprocess.run(cmds,
                             text=True,
-                            cwd=paths['flex_path'],
+                            cwd=flex_path,
                             check=False,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT)
     LOGGER.info(f'Nested polygon output: \n {output.stdout}')
 
-
     if output.returncode != 0:
         err_msg = f'Failed to build nested polygons. Return code: {output.returncode}'
         LOGGER.error(err_msg)
         sys.exit(f'{err_msg} - Check the log output for details.')
-
 
 
 def rename_schema(schema_name):
@@ -422,20 +419,16 @@ def rename_schema(schema_name):
         cur.execute(sql_raw)
 
 
-def run_pg_dump(export_filename, out_path, data_only, schema_name):
+def run_pg_dump(export_path, data_only, schema_name):
     """Runs pg_dump to save processed data to load into other PostGIS DBs.
 
     Parameters
     ---------------------------
-    export_filename : str
-    out_path : str
+    export_path : str
+        Absolute path to output .sql file
     data_only : bool
     schema_name : str
     """
-    if not os.path.isabs(export_filename):
-        export_path = os.path.join(out_path, export_filename)
-    else:
-        export_path = export_filename
     logger = logging.getLogger('pgosm-flex')
     db_name = 'pgosm'
     conn_string = os.environ['PGOSM_CONN']
