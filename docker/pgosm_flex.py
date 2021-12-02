@@ -131,14 +131,15 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
                                           pgosm_date,
                                           input_file)
 
+    export_path = get_export_full_path(paths['out_path'], export_filename)
+
     if schema_name != 'osm':
         db.rename_schema(schema_name)
 
     if skip_dump:
         logger.info('Skipping pg_dump')
     else:
-        db.run_pg_dump(export_filename,
-                       out_path=paths['out_path'],
+        db.run_pg_dump(export_path=export_path,
                        data_only=data_only,
                        schema_name=schema_name)
     logger.info('PgOSM Flex complete!')
@@ -308,13 +309,34 @@ def get_export_filename(region, subregion, layerset, pgosm_date, input_file):
     if input_file:
         # Assumes .osm.pbf
         base_name = input_file[:-8]
-        filename = f'{base_name}-{layerset}.sql'
+        filename = f'{base_name}-{layerset}-{pgosm_date}.sql'
     elif subregion is None:
         filename = f'{region}-{layerset}-{pgosm_date}.sql'
     else:
         filename = f'{region}-{subregion}-{layerset}-{pgosm_date}.sql'
 
     return filename
+
+
+def get_export_full_path(out_path, export_filename):
+    """If `export_filename` is an absolute path, `out_path` is not considered.
+
+    Parameters
+    -----------------
+    out_path : str
+    export_filename : str
+
+    Returns
+    -----------------
+    export_path : str
+    """
+
+    if os.path.isabs(export_filename):
+        export_path = export_filename
+    else:
+        export_path = os.path.join(out_path, export_filename)
+
+    return export_path
 
 
 def run_osm2pgsql(osm2pgsql_command, flex_path):

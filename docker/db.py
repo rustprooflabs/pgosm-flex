@@ -419,20 +419,16 @@ def rename_schema(schema_name):
         cur.execute(sql_raw)
 
 
-def run_pg_dump(export_filename, out_path, data_only, schema_name):
+def run_pg_dump(export_path, data_only, schema_name):
     """Runs pg_dump to save processed data to load into other PostGIS DBs.
 
     Parameters
     ---------------------------
-    export_filename : str
-    out_path : str
+    export_path : str
+        Absolute path to output .sql file
     data_only : bool
     schema_name : str
     """
-    if not os.path.isabs(export_filename):
-        export_path = os.path.join(out_path, export_filename)
-    else:
-        export_path = export_filename
     logger = logging.getLogger('pgosm-flex')
     db_name = 'pgosm'
     conn_string = os.environ['PGOSM_CONN']
