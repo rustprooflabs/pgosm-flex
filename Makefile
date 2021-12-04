@@ -15,6 +15,7 @@ CURRENT_GID := $(shell id -g)
 TODAY := $(shell date +'%Y-%m-%d')
 INPUT_FILE_NAME=custom_source_file.osm.pbf
 REGION_FILE_NAME=region-dc
+RAM=2
 
 # The docker-exec-default and unit-test targets run last
 # to make unit test results visible at the end.
@@ -66,7 +67,7 @@ docker-exec-default: build-run-docker
 		-u $(CURRENT_UID):$(CURRENT_GID) \
 		pgosm python3 docker/pgosm_flex.py  \
 		--layerset=default \
-		--ram=1 \
+		--ram=$(RAM) \
 		--region=north-america/us \
 		--subregion=district-of-columbia
 
@@ -93,7 +94,7 @@ docker-exec-input-file: build-run-docker
 		-u $(CURRENT_UID):$(CURRENT_GID) \
 		pgosm python3 docker/pgosm_flex.py  \
 		--layerset=default \
-		--ram=1 \
+		--ram=$(RAM) \
 		--input-file=/app/output/$(INPUT_FILE_NAME)
 
 
@@ -122,7 +123,7 @@ docker-exec-region: build-run-docker
 		-u $(CURRENT_UID):$(CURRENT_GID) \
 		pgosm python3 docker/pgosm_flex.py  \
 		--layerset=default \
-		--ram=1 \
+		--ram=$(RAM) \
 		--region=$(REGION_FILE_NAME)
 
 
