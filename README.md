@@ -34,6 +34,11 @@ Minimum versions supported:
 * PostGIS 3.0
 * osm2pgsql 1.5.0
 
+## Minimum Hardware
+
+osm2pgsql requires [at least 2 GB RAM](https://osm2pgsql.org/doc/manual.html#main-memory).
+Fast SSD drives are strongly recommended.
+
 
 ## PgOSM via Docker
 
