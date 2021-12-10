@@ -40,7 +40,6 @@ DEFAULT_SRID = '3857'
               help='Debugging option. Used when testing locally and not within Docker')
 @click.option('--data-only',
               default=False,
-              envvar="PGOSM_DATA_SCHEMA_ONLY",
               is_flag=True,
               help="When set, skips running Sqitch and importing QGIS Styles.")
 @click.option('--debug', is_flag=True,
@@ -68,7 +67,6 @@ DEFAULT_SRID = '3857'
               help='Skips the final pg_dump at the end. Useful for local testing when not loading into more permanent instance.')
 @click.option('--skip-nested',
               default=False,
-              envvar="PGOSM_SKIP_NESTED_POLYGON",
               is_flag=True,
               help='When set, skips calculating nested admin polygons. Can be time consuming on large regions.')
 @click.option('--srid', required=False, default=DEFAULT_SRID,
