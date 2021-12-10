@@ -63,6 +63,8 @@ DEFAULT_SRID = '3857'
 @click.option('--schema-name', required=False,
               default='osm',
               help="Change the final schema name, defaults to 'osm'.")
+@click.option('--skip-db-prep', default=False, is_flag=True,
+              help='EXPERIMENTAL. Option name will likely change in name and exact definitionl. Skips DROP/CREATE DATABASE and other related preparation.')
 @click.option('--skip-dump', default=False, is_flag=True,
               help='Skips the final pg_dump at the end. Useful for local testing when not loading into more permanent instance.')
 @click.option('--skip-nested',
@@ -72,9 +74,9 @@ DEFAULT_SRID = '3857'
 @click.option('--srid', required=False, default=DEFAULT_SRID,
               envvar="PGOSM_SRID",
               help="SRID for data loaded by osm2pgsql to PostGIS. Defaults to 3857")
-def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
-                    pgosm_date, language, schema_name, skip_nested, data_only,
-                    skip_dump, debug, basepath, input_file):
+def run_pgosm_flex(ram, region, subregion, basepath, data_only, debug,
+                    input_file, layerset, layerset_path, language, pgosm_date,
+                    schema_name, skip_db_prep, skip_dump, skip_nested, srid):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
     """
     paths = get_paths(base_path=basepath)
@@ -108,7 +110,17 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
 
     db.wait_for_postgres()
 
-    db.prepare_pgosm_db(data_only=data_only, db_path=paths['db_path'])
+    # WARNING:  This logic will likely flip to be "enable_db_prep" which will
+    #     default to True when db host is localhost (in docker).
+    #    When db host is anything but localhost, it should default to False.
+    #    Manually requiring to enable for external Pg should make it
+    #    *** less likely ***
+    #    for a user with external DB to accidentally wipe a prod database.
+    if skip_db_prep:
+        logger.warning('Skipping database preparation. If errors are encounted, ensure your target DB is properly configured for PgOSM Flex.')
+    else:
+        logger.debug('Running standard database prep for in-Docker operation. Includes DROP/CREATE DATABASE')
+        db.prepare_pgosm_db(data_only=data_only, db_path=paths['db_path'])
 
     flex_path = paths['flex_path']
     run_osm2pgsql(osm2pgsql_command=osm2pgsql_command,
