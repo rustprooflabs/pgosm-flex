@@ -19,6 +19,21 @@ export POSTGRES_DB=your_db_name
 export POSTGRES_PORT=5432
 ```
 
+Create the database.
+
+```sql
+CREATE DATABASE your_db_name;"
+```
+
+The target database needs the `postgis` extension and the `osm` schema created.
+
+
+```sql
+CREATE EXTENSION postgis;
+CREATE SCHEMA osm;"
+```
+
+
 WARNING:  DB Name and Port are currently hard coded to `pgosm` and `5432`.
 The above setting is for planned, not yet implemented, behavior.
 

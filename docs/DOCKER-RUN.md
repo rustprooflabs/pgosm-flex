@@ -20,7 +20,6 @@ export POSTGRES_USER=postgres
 export POSTGRES_PASSWORD=mysecretpassword
 ```
 
-
 Start the `pgosm` Docker container to make PostgreSQL/PostGIS available.
 This command exposes Postgres inside Docker on port 5433 and establishes links
 to the local directory created above (`~/pgosm-data`).

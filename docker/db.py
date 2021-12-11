@@ -136,7 +136,10 @@ def pg_isready():
 
 
 def prepare_pgosm_db(data_only, db_path):
-    """Runs through series of steps to prepare database for PgOSM
+    """Runs through series of steps to prepare database for PgOSM.
+
+    Only should run on in-Docker database, intentionally leaving sub-components
+    hard coded to `pgosm` database.
 
     Parameters
     --------------------------
@@ -176,7 +179,10 @@ def pg_version_check():
 
 
 def drop_pgosm_db():
-    """Drops the pgosm database if it exists."""
+    """Drops the pgosm database if it exists.
+
+    Intentionally hard coded to `pgosm` database for in-Docker use only.
+    """
     sql_raw = 'DROP DATABASE IF EXISTS pgosm;'
     conn = get_db_conn(conn_string=os.environ['PGOSM_CONN_PG'])
 
@@ -189,6 +195,8 @@ def drop_pgosm_db():
 
 def create_pgosm_db():
     """Creates the pgosm database and prepares with PostGIS and osm schema
+
+    Intentionally hard coded to `pgosm` database for in-Docker use only.
     """
     sql_raw = 'CREATE DATABASE pgosm;'
     conn = get_db_conn(conn_string=os.environ['PGOSM_CONN_PG'])
@@ -212,6 +220,8 @@ def create_pgosm_db():
 
 def run_sqitch_prep(db_path):
     """Runs Sqitch to create DB structure and populate helper data.
+
+    Intentionally hard coded to `pgosm` database for in-Docker use only.
 
     Parameters
     -------------------------
@@ -430,7 +440,7 @@ def run_pg_dump(export_path, data_only, schema_name):
     schema_name : str
     """
     logger = logging.getLogger('pgosm-flex')
-    db_name = 'pgosm'
+    db_name = os.environ['POSTGRES_DB']
     conn_string = os.environ['PGOSM_CONN']
 
     if data_only:
