@@ -110,8 +110,7 @@ def run_pgosm_flex(ram, region, subregion, basepath, data_only, debug,
         logger.debug('Running standard database prep for in-Docker operation. Includes DROP/CREATE DATABASE')
         db.prepare_pgosm_db(data_only=data_only, db_path=paths['db_path'])
     else:
-        logger.warning('Skipping database preparation. If errors are encounted, ensure your target DB is properly configured for PgOSM Flex.')
-
+        logger.warning('Using external database requires the target database is setup properly for PgOSM Flex.')
 
     flex_path = paths['flex_path']
     run_osm2pgsql(osm2pgsql_command=osm2pgsql_command,

@@ -146,6 +146,12 @@ def prepare_pgosm_db(data_only, db_path):
     data_only : bool
     db_path : str
     """
+    # Outer logic should skip this step. Additional check here is safety to ensure
+    # this does not run outside Docker image
+    if not get_pg_user_pass()['pg_host'] == 'localhost':
+        LOGGER.error('Attempted running db.prepare_pgosm_db() on non-Docker database.')
+        return False
+
     drop_pgosm_db()
     create_pgosm_db()
     if not data_only:
