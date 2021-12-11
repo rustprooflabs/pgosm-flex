@@ -22,7 +22,7 @@ export POSTGRES_PORT=5432
 Create the database.
 
 ```sql
-CREATE DATABASE your_db_name;"
+CREATE DATABASE your_db_name;
 ```
 
 The target database needs the `postgis` extension and the `osm` schema created.
@@ -30,7 +30,7 @@ The target database needs the `postgis` extension and the `osm` schema created.
 
 ```sql
 CREATE EXTENSION postgis;
-CREATE SCHEMA osm;"
+CREATE SCHEMA osm;
 ```
 
 

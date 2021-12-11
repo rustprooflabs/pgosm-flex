@@ -165,7 +165,12 @@ def pg_version_check():
     --------------------
     pg_version : str
     """
-    sql_raw = 'SHOW server_version;'
+    sql_raw = """
+SELECT setting
+    FROM pg_catalog.pg_settings
+    WHERE name = 'server_version_num'
+;
+"""
 
     with get_db_conn(conn_string=os.environ['PGOSM_CONN_PG']) as conn:
         cur = conn.cursor()
@@ -173,7 +178,10 @@ def pg_version_check():
         results = cur.fetchone()
 
     pg_version = results[0]
-    LOGGER.info(f'Postgres version {pg_version}')
+    if pg_version < '120000':
+        raise EnvironmentError('Postgres version {pg_verson} not supported. Postgres 12+ required.')
+
+    LOGGER.debug(f'Postgres version number {pg_version}')
     return pg_version
 
 
