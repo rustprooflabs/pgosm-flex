@@ -94,23 +94,10 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
     os.environ['PGOSM_DATE'] = pgosm_date
     os.environ['PGOSM_LAYERSET'] = layerset
 
-    pg_user_pass = db.get_pg_user_pass()
-    try:
-        if pg_user_pass['pg_host'] == 'localhost':
-            # Force in-Docker to always use pgosm db name
-            db_name = 'pgosm'
-        else:
-            db_name = os.environ['POSTGRES_DB']
-    except KeyError:
-        db_name = 'pgosm'
-
-    os.environ['POSTGRES_DB'] = db_name
-
-    # PGOSM_CONN is required by Lua scripts for osm2pgsql. This should
-    # be the only place a connection string is defined outside of Sqitch usage.
-    os.environ['PGOSM_CONN'] = db.connection_string(db_name=db_name)
+    # PGOSM_CONN is required to be set by the Lua styles used by osm2pgsql
+    os.environ['PGOSM_CONN'] = db.connection_string()
     # Connection to DB for admin purposes, e.g. drop/create main database
-    os.environ['PGOSM_CONN_PG'] = db.connection_string(db_name='postgres')
+    os.environ['PGOSM_CONN_PG'] = db.connection_string(admin=True)
 
 
 def unset_env_vars():
@@ -124,4 +111,6 @@ def unset_env_vars():
     os.environ.pop('PGOSM_LAYERSET', None)
     os.environ.pop('PGOSM_CONN', None)
     os.environ.pop('PGOSM_CONN_PG', None)
+    # FIXME: Should POSTGRES_DB be popped?  It's set with `docker run` so doesn't this
+    # hose subsequent attempts from the same container?
     os.environ.pop('POSTGRES_DB', None)

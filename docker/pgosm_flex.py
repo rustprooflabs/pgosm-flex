@@ -106,7 +106,7 @@ def run_pgosm_flex(ram, region, subregion, basepath, data_only, debug,
 
     db.wait_for_postgres()
 
-    if db.get_pg_user_pass()['pg_host'] == 'localhost':
+    if db.pg_conn_parts()['pg_host'] == 'localhost':
         logger.debug('Running standard database prep for in-Docker operation. Includes DROP/CREATE DATABASE')
         db.prepare_pgosm_db(data_only=data_only, db_path=paths['db_path'])
     else:

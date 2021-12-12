@@ -12,7 +12,7 @@ import sh
 LOGGER = logging.getLogger('pgosm-flex')
 
 
-def connection_string(db_name):
+def connection_string(admin=False):
     """Returns connection string to `db_name`.
 
     Env vars for user/password defined by Postgres docker image.
@@ -21,10 +21,13 @@ def connection_string(db_name):
     * POSTGRES_PASSWORD
     * POSTGRES_USER
     * POSTGRES_HOST
+    * POSTGRES_DB
 
     Parameters
     --------------------------
-    db_name : str
+    admin : boolean
+        Default False. Set to True to connect to admin database, currently
+        hard-coded to `postgres`
 
     Returns
     --------------------------
@@ -32,10 +35,16 @@ def connection_string(db_name):
     """
     app_str = '?application_name=pgosm-flex'
 
-    pg_details = get_pg_user_pass()
+    pg_details = pg_conn_parts()
     pg_user = pg_details['pg_user']
     pg_pass = pg_details['pg_pass']
     pg_host = pg_details['pg_host']
+    pg_db = pg_details['pg_db']
+
+    if admin:
+        db_name = 'postgres'
+    else:
+        db_name = pg_db
 
     if pg_pass is None:
         conn_string = f'postgresql://{pg_user}@{pg_host}/{db_name}{app_str}'
@@ -45,7 +54,7 @@ def connection_string(db_name):
     return conn_string
 
 
-def get_pg_user_pass():
+def pg_conn_parts():
     """Retrieves username/password from environment variables if they exist.
 
     Returns
@@ -72,9 +81,21 @@ def get_pg_user_pass():
         pg_host = 'localhost'
         LOGGER.debug(f'POSTGRES_HOST not configured. Defaulting to {pg_host}')
 
+    try:
+        if pg_host == 'localhost':
+            # Force in-Docker to always use pgosm db name
+            pg_db = 'pgosm'
+        else:
+            pg_db = os.environ['POSTGRES_DB']
+    except KeyError:
+        pg_db = 'pgosm'
+
+    os.environ['POSTGRES_DB'] = pg_db
+
     pg_details = {'pg_user': pg_user,
                   'pg_pass': pg_pass,
-                  'pg_host': pg_host}
+                  'pg_host': pg_host,
+                  'pg_db': pg_db}
 
     return pg_details
 
@@ -148,7 +169,7 @@ def prepare_pgosm_db(data_only, db_path):
     """
     # Outer logic should skip this step. Additional check here is safety to ensure
     # this does not run outside Docker image
-    if not get_pg_user_pass()['pg_host'] == 'localhost':
+    if not pg_conn_parts()['pg_host'] == 'localhost':
         LOGGER.error('Attempted running db.prepare_pgosm_db() on non-Docker database.')
         return False
 
@@ -189,7 +210,6 @@ SELECT setting
 
     LOGGER.debug(f'Postgres version number {pg_version}')
     return pg_version
-
 
 
 def drop_pgosm_db():
@@ -248,7 +268,7 @@ def run_sqitch_prep(db_path):
     LOGGER.info('Deploy schema via Sqitch')
 
     conn_string = os.environ['PGOSM_CONN']
-    conn_string_sqitch = sqitch_db_string(db_name='pgosm')
+    conn_string_sqitch = sqitch_db_string()
 
     cmds_sqitch = ['sqitch', 'deploy', conn_string_sqitch]
     cmds_roads = ['psql', '-d', conn_string, '-f', 'data/roads-us.sql']
@@ -332,30 +352,15 @@ def load_qgis_styles(db_path):
         LOGGER.debug('QGIS Style staging table cleaned')
 
 
-
-def sqitch_db_string(db_name):
+def sqitch_db_string():
     """Returns DB string used for Sqitch.
-
-    Parameters
-    -----------------------
-    db_name : str
 
     Returns
     -----------------------
     conn_string : str
     """
-    pg_details = get_pg_user_pass()
-    pg_user = pg_details['pg_user']
-    pg_pass = pg_details['pg_pass']
-    pg_host = pg_details['pg_host']
-
-    if pg_pass is None:
-        conn_string = f'db:pg://{pg_user}@{pg_host}/{db_name}'
-    else:
-        conn_string = f'db:pg://{pg_user}:{pg_pass}@{pg_host}/{db_name}'
-
+    conn_string = f'db:{connection_string()}'
     return conn_string
-
 
 
 def get_db_conn(conn_string):
