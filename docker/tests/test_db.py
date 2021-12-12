@@ -17,19 +17,19 @@ PG_USER_AND_PW = {'POSTGRES_USER': POSTGRES_USER,
 class DBTests(unittest.TestCase):
 
     @mock.patch.dict(os.environ, PG_USER_ONLY)
-    def test_get_pg_user_pass_user_only_returns_expected_values(self):
+    def test_pg_conn_parts_user_only_returns_expected_values(self):
         expected_user = POSTGRES_USER
         expected_pw = None
-        results = db.get_pg_user_pass()
+        results = db.pg_conn_parts()
         self.assertEqual(expected_user, results['pg_user'])
         self.assertEqual(expected_pw, results['pg_pass'])
 
 
     @mock.patch.dict(os.environ, PG_USER_AND_PW)
-    def test_get_pg_user_pass_user_w_pw_returns_expected_values(self):
+    def test_pg_conn_parts_user_w_pw_returns_expected_values(self):
         expected_user = POSTGRES_USER
         expected_pw = POSTGRES_PASSWORD
-        results = db.get_pg_user_pass()
+        results = db.pg_conn_parts()
         self.assertEqual(expected_user, results['pg_user'])
         self.assertEqual(expected_pw, results['pg_pass'])
 
@@ -37,12 +37,12 @@ class DBTests(unittest.TestCase):
     @mock.patch.dict(os.environ, PG_USER_ONLY)
     def test_connection_string_user_only_returns_expected_string(self):
         expected = f'postgresql://{POSTGRES_USER}@localhost/pgosm?application_name=pgosm-flex'
-        result = db.connection_string(db_name='pgosm')
+        result = db.connection_string()
         self.assertEqual(expected, result)
 
 
     @mock.patch.dict(os.environ, PG_USER_AND_PW)
     def test_connection_string_user_w_pw_returns_expected_string(self):
         expected = f'postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost/pgosm?application_name=pgosm-flex'
-        result = db.connection_string(db_name='pgosm')
+        result = db.connection_string()
         self.assertEqual(expected, result)

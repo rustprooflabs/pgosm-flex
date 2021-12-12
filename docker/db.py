@@ -81,15 +81,25 @@ def pg_conn_parts():
         pg_host = 'localhost'
         LOGGER.debug(f'POSTGRES_HOST not configured. Defaulting to {pg_host}')
 
-    try:
-        if pg_host == 'localhost':
-            # Force in-Docker to always use pgosm db name
-            pg_db = 'pgosm'
-        else:
-            pg_db = os.environ['POSTGRES_DB']
-    except KeyError:
-        pg_db = 'pgosm'
+    LOGGER.debug(f'PG Host: {pg_host}')
 
+    default_db = 'pgosm'
+    pg_db = None
+
+    try:
+        pg_db = os.environ['POSTGRES_DB']
+    except KeyError:
+        LOGGER.debug(f'POSTGRES_DB not set.  Using default {default_db}')
+
+    if pg_db is not None and pg_host == 'localhost':
+        if pg_db != default_db:
+            LOGGER.warning('POSTGRES_DB ignored when using in-Docker database.')
+            pg_db = default_db
+
+    if pg_db is None:
+        pg_db = default_db
+
+    LOGGER.debug(f'DB Name: {pg_db}')
     os.environ['POSTGRES_DB'] = pg_db
 
     pg_details = {'pg_user': pg_user,

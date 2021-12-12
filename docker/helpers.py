@@ -102,6 +102,8 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
 
 def unset_env_vars():
     """Unsets environment variables used by PgOSM Flex.
+
+    Does not pop POSTGRES_DB on purpose to allow non-Docker operation.
     """
     os.environ.pop('PGOSM_REGION', None)
     os.environ.pop('PGOSM_SRID', None)
@@ -111,6 +113,3 @@ def unset_env_vars():
     os.environ.pop('PGOSM_LAYERSET', None)
     os.environ.pop('PGOSM_CONN', None)
     os.environ.pop('PGOSM_CONN_PG', None)
-    # FIXME: Should POSTGRES_DB be popped?  It's set with `docker run` so doesn't this
-    # hose subsequent attempts from the same container?
-    os.environ.pop('POSTGRES_DB', None)

@@ -9,10 +9,14 @@ may differ from expecations.
 ----
 
 
-Optional, set Postgres host outside of Docker image.  Warning: experimental!
+These prodecures outline how to use PgOSM Flex's Docker image
+with a Postgres host outside of Docker image.
+
+> Warning: experimental!
+
 
 ```bash
-export POSTGRES_USER=postgres
+export POSTGRES_USER=your_postgres_role
 export POSTGRES_PASSWORD=mysecretpassword
 export POSTGRES_HOST=your-host-or-ip
 export POSTGRES_DB=your_db_name
@@ -25,13 +29,25 @@ Create the database.
 CREATE DATABASE your_db_name;
 ```
 
-The target database needs the `postgis` extension and the `osm` schema created.
-
+The target database needs the `postgis` extension.
 
 ```sql
 CREATE EXTENSION postgis;
-CREATE SCHEMA osm;
 ```
+
+PgOSM Flex uses the `osm` schema, the easiest way to enable permissions
+to run is to create a dedicated `pgosm_flex` role that owns the `osm`
+schema, and grant that role to your login user role.
+
+
+
+```sql
+CREATE ROLE pgosm_flex;
+GRANT pgosm_flex TO your_login_role;
+CREATE SCHEMA osm AUTHORIZATION pgosm_flex;
+```
+
+
 
 
 WARNING:  DB Port is currently hard coded to `5432`.
@@ -58,7 +74,8 @@ docker exec -it \
     pgosm python3 docker/pgosm_flex.py \
     --ram=8 \
     --region=north-america/us \
-    --subregion=district-of-columbia
+    --subregion=district-of-columbia \
+    --skip-dump --data-only
 ```
 
 
