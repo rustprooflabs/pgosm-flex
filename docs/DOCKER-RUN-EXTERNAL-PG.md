@@ -75,7 +75,7 @@ docker exec -it \
     --ram=8 \
     --region=north-america/us \
     --subregion=district-of-columbia \
-    --skip-dump --data-only
+    --skip-dump
 ```
 
 
