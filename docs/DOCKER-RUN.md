@@ -270,39 +270,8 @@ time docker exec -it \
 The PgOSM Flex Docker image can be used with an external Postgres
 database instead of using the in-Docker Postgres database.
 
-In the target Postgres instance, create your database.
-
-```sql
-CREATE DATABASE your_db_name;
-```
-
-In `your_db_name` create the PostGIS extension.
-
-```sql
-CREATE EXTENSION postgis;
-```
-
-Your target database needs to have an `osm` schema and the database user
-requires the ability to create and populate tables.
-An easy way to enable these permissions is through the use of a
-`pgosm_flex` group role.
-
-
-The following commands show one approach to granting permissions
-required for PgOSM Flex to run on an external database.
-Do not simply run this assuming this is the proper approach
-for your database security!
-
-
-```sql
-CREATE ROLE pgosm_flex;
-GRANT pgosm_flex TO your_login_role;
-CREATE SCHEMA osm AUTHORIZATION pgosm_flex;
-GRANT CREATE ON DATABASE your_db_name
-    TO pgosm_flex;
-```
-
-> `GRANT CREATE` is required to allow the sqitch process to run and create the `pgosm` schema. Running `docker exec` with `--data-only` skips these steps and would make the `GRANT CREATE` permission unnessecary for the `pgosm_flex` role.
+Prepare the database and permissions as described in
+[POSTGRES-PERMISSIONS.md](POSTGRES-PERMISSIONS.md).
 
 
 Set environment variables to define the connection.
