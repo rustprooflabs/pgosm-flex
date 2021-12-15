@@ -261,3 +261,85 @@ time docker exec -it \
     --layerset=basic \
     --pgosm-date=2021-10-08
 ```
+
+
+## Use external Postgres connection
+
+> New in 0.4.3!
+
+The PgOSM Flex Docker image can be used with an external Postgres
+database instead of using the in-Docker Postgres database.
+
+In the target Postgres instance, create your database.
+
+```sql
+CREATE DATABASE your_db_name;
+```
+
+In `your_db_name` create the PostGIS extension.
+
+```sql
+CREATE EXTENSION postgis;
+```
+
+Your target database needs to have an `osm` schema and the database user
+requires the ability to create and populate tables.
+An easy way to enable these permissions is through the use of a
+`pgosm_flex` group role.
+
+
+The following commands show one approach to granting permissions
+required for PgOSM Flex to run on an external database.
+Do not simply run this assuming this is the proper approach
+for your database security!
+
+
+```sql
+CREATE ROLE pgosm_flex;
+GRANT pgosm_flex TO your_login_role;
+CREATE SCHEMA osm AUTHORIZATION pgosm_flex;
+GRANT CREATE ON DATABASE your_db_name
+    TO pgosm_flex;
+```
+
+> `GRANT CREATE` is required to allow the sqitch process to run and create the `pgosm` schema. Running `docker exec` with `--data-only` skips these steps and would make the `GRANT CREATE` permission unnessecary for the `pgosm_flex` role.
+
+
+Set environment variables to define the connection.
+
+```bash
+export POSTGRES_USER=your_login_role
+export POSTGRES_PASSWORD=mysecretpassword
+export POSTGRES_HOST=your-host-or-ip
+export POSTGRES_DB=your_db_name
+```
+
+Run the container with the additional environment variables.
+
+```bash
+docker run --name pgosm -d --rm \
+    -v ~/pgosm-data:/app/output \
+    -v /etc/localtime:/etc/localtime:ro \
+    -e POSTGRES_USER=$POSTGRES_USER \
+    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+    -e POSTGRES_HOST=$POSTGRES_HOST \
+    -e POSTGRES_DB=$POSTGRES_DB \
+    -p 5433:5432 -d rustprooflabs/pgosm-flex
+```
+
+> Note: Setting `POSTGRES_HOST` to anything but `localhost` disables the drop/create database step.
+
+
+The `docker exec` command can be used as normal. The following
+example adds `--skip-dump` to remove the overhead of that final step.
+
+
+```bash
+docker exec -it \
+    pgosm python3 docker/pgosm_flex.py \
+    --ram=8 \
+    --region=north-america/us \
+    --subregion=district-of-columbia \
+    --skip-dump
+```
+
