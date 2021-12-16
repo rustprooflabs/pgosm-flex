@@ -3,7 +3,13 @@
 import datetime
 import logging
 import subprocess
+import os
 import sys
+
+import db
+
+
+DEFAULT_SRID = '3857'
 
 
 def get_today():
@@ -42,3 +48,68 @@ def verify_checksum(md5_file, path):
         sys.exit(err_msg)
 
     logger.info(f'md5sum validated')
+
+
+def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
+                 layerset_path):
+    """Sets environment variables needed by PgOSM Flex.
+
+    See /docs/MANUAL-STEPS-RUN.md for usage examples of environment variables.
+
+    Parameters
+    ------------------------
+    region : str
+    subregion : str
+    srid : str
+    language : str
+    pgosm_date : str
+    layerset : str
+    layerset_path : str
+        str when set, or None
+    """
+    logger = logging.getLogger('pgosm-flex')
+    logger.debug('Ensuring env vars are not set from prior run')
+    unset_env_vars()
+    logger.debug('Setting environment variables')
+
+    if subregion is None:
+        pgosm_region = f'{region}'
+    else:
+        pgosm_region = f'{region}-{subregion}'
+
+    logger.info(f'PGOSM_REGION: {pgosm_region}')
+    os.environ['PGOSM_REGION'] = pgosm_region
+
+    if srid != DEFAULT_SRID:
+        logger.info(f'SRID set: {srid}')
+        os.environ['PGOSM_SRID'] = str(srid)
+    if language is not None:
+        logger.info(f'Language set: {language}')
+        os.environ['PGOSM_LANGUAGE'] = str(language)
+
+    if layerset_path is not None:
+        logger.info(f'Custom layerset path set: {layerset_path}')
+        os.environ['PGOSM_LAYERSET_PATH'] = str(layerset_path)
+
+    os.environ['PGOSM_DATE'] = pgosm_date
+    os.environ['PGOSM_LAYERSET'] = layerset
+
+    # PGOSM_CONN is required to be set by the Lua styles used by osm2pgsql
+    os.environ['PGOSM_CONN'] = db.connection_string()
+    # Connection to DB for admin purposes, e.g. drop/create main database
+    os.environ['PGOSM_CONN_PG'] = db.connection_string(admin=True)
+
+
+def unset_env_vars():
+    """Unsets environment variables used by PgOSM Flex.
+
+    Does not pop POSTGRES_DB on purpose to allow non-Docker operation.
+    """
+    os.environ.pop('PGOSM_REGION', None)
+    os.environ.pop('PGOSM_SRID', None)
+    os.environ.pop('PGOSM_LANGUAGE', None)
+    os.environ.pop('PGOSM_LAYERSET_PATH', None)
+    os.environ.pop('PGOSM_DATE', None)
+    os.environ.pop('PGOSM_LAYERSET', None)
+    os.environ.pop('PGOSM_CONN', None)
+    os.environ.pop('PGOSM_CONN_PG', None)

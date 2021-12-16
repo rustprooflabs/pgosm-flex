@@ -20,7 +20,6 @@ export POSTGRES_USER=postgres
 export POSTGRES_PASSWORD=mysecretpassword
 ```
 
-
 Start the `pgosm` Docker container to make PostgreSQL/PostGIS available.
 This command exposes Postgres inside Docker on port 5433 and establishes links
 to the local directory created above (`~/pgosm-data`).
@@ -262,3 +261,54 @@ time docker exec -it \
     --layerset=basic \
     --pgosm-date=2021-10-08
 ```
+
+
+## Use external Postgres connection
+
+> New in 0.4.3!
+
+The PgOSM Flex Docker image can be used with an external Postgres
+database instead of using the in-Docker Postgres database.
+
+Prepare the database and permissions as described in
+[POSTGRES-PERMISSIONS.md](POSTGRES-PERMISSIONS.md).
+
+
+Set environment variables to define the connection.
+
+```bash
+export POSTGRES_USER=your_login_role
+export POSTGRES_PASSWORD=mysecretpassword
+export POSTGRES_HOST=your-host-or-ip
+export POSTGRES_DB=your_db_name
+```
+
+Run the container with the additional environment variables.
+
+```bash
+docker run --name pgosm -d --rm \
+    -v ~/pgosm-data:/app/output \
+    -v /etc/localtime:/etc/localtime:ro \
+    -e POSTGRES_USER=$POSTGRES_USER \
+    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+    -e POSTGRES_HOST=$POSTGRES_HOST \
+    -e POSTGRES_DB=$POSTGRES_DB \
+    -p 5433:5432 -d rustprooflabs/pgosm-flex
+```
+
+> Note: Setting `POSTGRES_HOST` to anything but `localhost` disables the drop/create database step.
+
+
+The `docker exec` command can be used as normal. The following
+example adds `--skip-dump` to remove the overhead of that final step.
+
+
+```bash
+docker exec -it \
+    pgosm python3 docker/pgosm_flex.py \
+    --ram=8 \
+    --region=north-america/us \
+    --subregion=district-of-columbia \
+    --skip-dump
+```
+

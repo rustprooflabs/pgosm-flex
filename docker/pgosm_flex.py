@@ -21,8 +21,6 @@ BASE_PATH_DEFAULT = '/app'
 """Default path for pgosm-flex project for Docker.
 """
 
-DEFAULT_SRID = '3857'
-
 
 @click.command()
 # Required and most common options first
@@ -69,12 +67,12 @@ DEFAULT_SRID = '3857'
               default=False,
               is_flag=True,
               help='When set, skips calculating nested admin polygons. Can be time consuming on large regions.')
-@click.option('--srid', required=False, default=DEFAULT_SRID,
+@click.option('--srid', required=False, default=helpers.DEFAULT_SRID,
               envvar="PGOSM_SRID",
               help="SRID for data loaded by osm2pgsql to PostGIS. Defaults to 3857")
-def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
-                    pgosm_date, language, schema_name, skip_nested, data_only,
-                    skip_dump, debug, basepath, input_file):
+def run_pgosm_flex(ram, region, subregion, basepath, data_only, debug,
+                    input_file, layerset, layerset_path, language, pgosm_date,
+                    schema_name, skip_dump, skip_nested, srid):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
     """
     paths = get_paths(base_path=basepath)
@@ -88,8 +86,8 @@ def run_pgosm_flex(layerset, layerset_path, ram, region, subregion, srid,
     if region is None and input_file:
         region = input_file
 
-    set_env_vars(region, subregion, srid, language, pgosm_date,
-                 layerset, layerset_path)
+    helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
+                         layerset, layerset_path)
 
     if input_file is None:
         geofabrik.prepare_data(region=region,
@@ -167,68 +165,6 @@ def validate_region_inputs(region, subregion, input_file):
             err_msg += 'should be the --subregion.'
             raise ValueError(err_msg)
 
-
-def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
-                 layerset_path):
-    """Sets environment variables needed by PgOSM Flex.
-
-    See /docs/MANUAL-STEPS-RUN.md for usage examples of environment variables.
-
-    Parameters
-    ------------------------
-    region : str
-    subregion : str
-    srid : str
-    language : str
-    pgosm_date : str
-    layerset : str
-    layerset_path : str
-        str when set, or None
-    """
-    logger = logging.getLogger('pgosm-flex')
-    logger.debug('Ensuring env vars are not set from prior run')
-    unset_env_vars()
-    logger.debug('Setting environment variables')
-
-    if subregion is None:
-        pgosm_region = f'{region}'
-    else:
-        pgosm_region = f'{region}-{subregion}'
-
-    logger.info(f'PGOSM_REGION: {pgosm_region}')
-    os.environ['PGOSM_REGION'] = pgosm_region
-
-    if srid != DEFAULT_SRID:
-        logger.info(f'SRID set: {srid}')
-        os.environ['PGOSM_SRID'] = str(srid)
-    if language is not None:
-        logger.info(f'Language set: {language}')
-        os.environ['PGOSM_LANGUAGE'] = str(language)
-
-    if layerset_path is not None:
-        logger.info(f'Custom layerset path set: {layerset_path}')
-        os.environ['PGOSM_LAYERSET_PATH'] = str(layerset_path)
-
-    os.environ['PGOSM_DATE'] = pgosm_date
-    os.environ['PGOSM_LAYERSET'] = layerset
-    # PGOSM_CONN is required by Lua scripts for osm2pgsql. This should
-    # be the only place a connection string is defined outside of Sqitch usage.
-    os.environ['PGOSM_CONN'] = db.connection_string(db_name='pgosm')
-    # Connection to DB for admin purposes, e.g. drop/create main database
-    os.environ['PGOSM_CONN_PG'] = db.connection_string(db_name='postgres')
-
-
-def unset_env_vars():
-    """Unsets environment variables used by PgOSM Flex.
-    """
-    os.environ.pop('PGOSM_REGION', None)
-    os.environ.pop('PGOSM_SRID', None)
-    os.environ.pop('PGOSM_LANGUAGE', None)
-    os.environ.pop('PGOSM_LAYERSET_PATH', None)
-    os.environ.pop('PGOSM_DATE', None)
-    os.environ.pop('PGOSM_LAYERSET', None)
-    os.environ.pop('PGOSM_CONN', None)
-    os.environ.pop('PGOSM_CONN_PG', None)
 
 
 def setup_logger(debug):

@@ -95,7 +95,8 @@ docker-exec-input-file: build-run-docker
 		pgosm python3 docker/pgosm_flex.py  \
 		--layerset=default \
 		--ram=$(RAM) \
-		--input-file=/app/output/$(INPUT_FILE_NAME)
+		--input-file=/app/output/$(INPUT_FILE_NAME) \
+		--data-only --skip-dump --skip-nested # Make this test run faster
 
 
 .PHONE: docker-exec-region
@@ -124,7 +125,8 @@ docker-exec-region: build-run-docker
 		pgosm python3 docker/pgosm_flex.py  \
 		--layerset=default \
 		--ram=$(RAM) \
-		--region=$(REGION_FILE_NAME)
+		--region=$(REGION_FILE_NAME) \
+		--data-only --skip-dump --skip-nested # Make this test run faster
 
 
 .PHONY: unit-tests

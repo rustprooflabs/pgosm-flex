@@ -12,7 +12,7 @@ import sh
 LOGGER = logging.getLogger('pgosm-flex')
 
 
-def connection_string(db_name):
+def connection_string(admin=False):
     """Returns connection string to `db_name`.
 
     Env vars for user/password defined by Postgres docker image.
@@ -21,10 +21,13 @@ def connection_string(db_name):
     * POSTGRES_PASSWORD
     * POSTGRES_USER
     * POSTGRES_HOST
+    * POSTGRES_DB
 
     Parameters
     --------------------------
-    db_name : str
+    admin : boolean
+        Default False. Set to True to connect to admin database, currently
+        hard-coded to `postgres`
 
     Returns
     --------------------------
@@ -32,10 +35,22 @@ def connection_string(db_name):
     """
     app_str = '?application_name=pgosm-flex'
 
-    pg_details = get_pg_user_pass()
+    pg_details = pg_conn_parts()
     pg_user = pg_details['pg_user']
     pg_pass = pg_details['pg_pass']
     pg_host = pg_details['pg_host']
+    pg_db = pg_details['pg_db']
+
+    if admin:
+        if pg_host == 'localhost':
+            db_name = 'postgres'
+        else:
+            # External databases only use admin connection for version check.
+            # Can connect to main data DB for this, `postgres` db not required.
+            # Should allow connection even when `postgres` database does not exist.
+            db_name = pg_db
+    else:
+        db_name = pg_db
 
     if pg_pass is None:
         conn_string = f'postgresql://{pg_user}@{pg_host}/{db_name}{app_str}'
@@ -45,7 +60,7 @@ def connection_string(db_name):
     return conn_string
 
 
-def get_pg_user_pass():
+def pg_conn_parts():
     """Retrieves username/password from environment variables if they exist.
 
     Returns
@@ -72,9 +87,31 @@ def get_pg_user_pass():
         pg_host = 'localhost'
         LOGGER.debug(f'POSTGRES_HOST not configured. Defaulting to {pg_host}')
 
+    LOGGER.debug(f'PG Host: {pg_host}')
+
+    default_db = 'pgosm'
+    pg_db = None
+
+    try:
+        pg_db = os.environ['POSTGRES_DB']
+    except KeyError:
+        LOGGER.debug(f'POSTGRES_DB not set.  Using default {default_db}')
+
+    if pg_db is not None and pg_host == 'localhost':
+        if pg_db != default_db:
+            LOGGER.warning('POSTGRES_DB ignored when using in-Docker database.')
+            pg_db = default_db
+
+    if pg_db is None:
+        pg_db = default_db
+
+    LOGGER.debug(f'DB Name: {pg_db}')
+    os.environ['POSTGRES_DB'] = pg_db
+
     pg_details = {'pg_user': pg_user,
                   'pg_pass': pg_pass,
-                  'pg_host': pg_host}
+                  'pg_host': pg_host,
+                  'pg_db': pg_db}
 
     return pg_details
 
@@ -125,9 +162,10 @@ def pg_isready():
     """
     try:
         result = pg_version_check()
-    except:
-        err_msg = f'Error checking version. Ensure Postgres connection details are correct.'
-        logging.getLogger('pgosm-flex').error(err_msg)
+    except AttributeError:
+        err_msg = 'Error checking version, likely waiting for Postgres to start.'
+        err_msg += ' Only an error if it does not go away after a few attempts.'
+        logging.getLogger('pgosm-flex').warning(err_msg)
         return False
 
     if result is None:
@@ -136,17 +174,23 @@ def pg_isready():
 
 
 def prepare_pgosm_db(data_only, db_path):
-    """Runs through series of steps to prepare database for PgOSM
+    """Runs through series of steps to prepare database for PgOSM.
 
     Parameters
     --------------------------
     data_only : bool
     db_path : str
     """
-    drop_pgosm_db()
-    create_pgosm_db()
+
+    if pg_conn_parts()['pg_host'] == 'localhost':
+        LOGGER.debug('Running standard database prep for in-Docker operation. Includes DROP/CREATE DATABASE')
+        drop_pgosm_db()
+        create_pgosm_db()
+    else:
+        LOGGER.info('Using external database. Ensure the target database is setup properly for PgOSM Flex with PostGIS, osm schema, and proper permissions.')
+
     if not data_only:
-        LOGGER.info('Loading extras via Sqitch.')
+        LOGGER.info('Loading extras via Sqitch plus QGIS styles.')
         run_sqitch_prep(db_path)
         load_qgis_styles(db_path)
     else:
@@ -154,29 +198,44 @@ def prepare_pgosm_db(data_only, db_path):
 
 
 def pg_version_check():
-    """Checks Postgres version.
+    """Checks Postgres machine-readible server_version_num.
 
     Sends to logs and returns value.
 
     Results
     --------------------
-    pg_version : str
+    pg_version : int
     """
-    sql_raw = 'SHOW server_version;'
+    sql_raw = """
+SELECT setting
+    FROM pg_catalog.pg_settings
+    WHERE name = 'server_version_num'
+;"""
 
     with get_db_conn(conn_string=os.environ['PGOSM_CONN_PG']) as conn:
         cur = conn.cursor()
         cur.execute(sql_raw)
         results = cur.fetchone()
 
-    pg_version = results[0]
-    LOGGER.info(f'Postgres version {pg_version}')
+    # It's an int https://www.postgresql.org/docs/current/runtime-config-preset.html#GUC-SERVER-VERSION-NUM
+    pg_version = int(results[0])
+    if pg_version < 120000:
+        err_msg = f'Postgres version {pg_version} not supported. Postgres 12+ required.'
+        LOGGER.error(err_msg)
+        sys.exit(9)
+
     return pg_version
 
 
-
 def drop_pgosm_db():
-    """Drops the pgosm database if it exists."""
+    """Drops the pgosm database if it exists.
+
+    Intentionally hard coded to `pgosm` database for in-Docker use only.
+    """
+    if not pg_conn_parts()['pg_host'] == 'localhost':
+        LOGGER.error('Attempted to drop database external from Docker. Not doing that')
+        return False
+
     sql_raw = 'DROP DATABASE IF EXISTS pgosm;'
     conn = get_db_conn(conn_string=os.environ['PGOSM_CONN_PG'])
 
@@ -189,7 +248,13 @@ def drop_pgosm_db():
 
 def create_pgosm_db():
     """Creates the pgosm database and prepares with PostGIS and osm schema
+
+    Intentionally hard coded to `pgosm` database for in-Docker use only.
     """
+    if not pg_conn_parts()['pg_host'] == 'localhost':
+        LOGGER.error('Attempted to create database external from Docker. Not doing that')
+        return False
+
     sql_raw = 'CREATE DATABASE pgosm;'
     conn = get_db_conn(conn_string=os.environ['PGOSM_CONN_PG'])
 
@@ -213,6 +278,8 @@ def create_pgosm_db():
 def run_sqitch_prep(db_path):
     """Runs Sqitch to create DB structure and populate helper data.
 
+    Intentionally hard coded to `pgosm` database for in-Docker use only.
+
     Parameters
     -------------------------
     db_path : str
@@ -224,7 +291,7 @@ def run_sqitch_prep(db_path):
     LOGGER.info('Deploy schema via Sqitch')
 
     conn_string = os.environ['PGOSM_CONN']
-    conn_string_sqitch = sqitch_db_string(db_name='pgosm')
+    conn_string_sqitch = sqitch_db_string()
 
     cmds_sqitch = ['sqitch', 'deploy', conn_string_sqitch]
     cmds_roads = ['psql', '-d', conn_string, '-f', 'data/roads-us.sql']
@@ -308,30 +375,15 @@ def load_qgis_styles(db_path):
         LOGGER.debug('QGIS Style staging table cleaned')
 
 
-
-def sqitch_db_string(db_name):
+def sqitch_db_string():
     """Returns DB string used for Sqitch.
-
-    Parameters
-    -----------------------
-    db_name : str
 
     Returns
     -----------------------
     conn_string : str
     """
-    pg_details = get_pg_user_pass()
-    pg_user = pg_details['pg_user']
-    pg_pass = pg_details['pg_pass']
-    pg_host = pg_details['pg_host']
-
-    if pg_pass is None:
-        conn_string = f'db:pg://{pg_user}@{pg_host}/{db_name}'
-    else:
-        conn_string = f'db:pg://{pg_user}:{pg_pass}@{pg_host}/{db_name}'
-
+    conn_string = f'db:{connection_string()}'
     return conn_string
-
 
 
 def get_db_conn(conn_string):
@@ -430,7 +482,7 @@ def run_pg_dump(export_path, data_only, schema_name):
     schema_name : str
     """
     logger = logging.getLogger('pgosm-flex')
-    db_name = 'pgosm'
+    db_name = os.environ['POSTGRES_DB']
     conn_string = os.environ['PGOSM_CONN']
 
     if data_only:

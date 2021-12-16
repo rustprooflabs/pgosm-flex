@@ -82,6 +82,7 @@ district-of-columbia-latest.osm.pbf: OK
 The typical use case is to run osm2pgsql and Postgres/PostGIS on the same node.
 When using Postgres locally, only add the database name to the connection strings.
 
+
 ```bash
 export PGOSM_CONN_PG="postgres"
 export PGOSM_CONN="pgosm"
@@ -105,6 +106,9 @@ Create the `postgis` extension and the `osm` schema.
 ```bash
 psql -d $PGOSM_CONN -c "CREATE EXTENSION postgis; CREATE SCHEMA osm;"
 ```
+
+See [POSTGRES-PERMISSIONS.md](POSTGRES-PERMISSIONS.md) for more about
+permissions required by PgOSM Flex to run.
 
 
 ## Prepare PgOSM-Flex
