@@ -309,13 +309,13 @@ the latest documented functionality.
 
 * Check `osm2pgsql --version`, typically the latest version is assumed
 * Does your `.osm.pbf` file exist in the correct location?
-* Does the database user have proper [permissisions in Postgres](PERMISSIONS.md)?
+* Does the database user have proper [permissisions in Postgres](POSTGRES-PERMISSIONS.md)?
 
 
 ### Luarocks not installed properly
 
 This problem results in the error message `'luasql.postgres' not found`.
-An example of this issue is reported via #218.
+An example of this issue is reported [via #218](https://github.com/rustprooflabs/pgosm-flex/issues/218).
 
 May need to install LuaRocks from source package, instructions
 [from luarocks.org](https://luarocks.org/).
