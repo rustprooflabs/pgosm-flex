@@ -2,6 +2,8 @@ FROM postgis/postgis:14-3.1
 
 LABEL maintainer="PgOSM-Flex - https://github.com/rustprooflabs/pgosm-flex"
 
+ARG OSM2PGSQL_BRANCH=1.6.0
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         sqitch wget ca-certificates \
@@ -23,7 +25,7 @@ RUN luarocks install luasql-postgres PGSQL_INCDIR=/usr/include/postgresql/
 
 
 WORKDIR /tmp
-RUN git clone git://github.com/openstreetmap/osm2pgsql.git \
+RUN git clone --depth 1 --branch $OSM2PGSQL_BRANCH git://github.com/openstreetmap/osm2pgsql.git \
     && mkdir osm2pgsql/build \
     && cd osm2pgsql/build \
     && cmake .. \
