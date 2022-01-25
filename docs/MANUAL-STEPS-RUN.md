@@ -291,3 +291,40 @@ The value of `PGOSM_LANGUAGE` should match the codes used by OSM:
 ```bash
 export PGOSM_LANGUAGE=kn
 ```
+
+
+## Troubleshooting
+
+There are a lot of moving parts in this process.
+This section is a collection of troubleshooting notes related to running PgOSM Flex
+and osm2pgsql manually.
+
+
+### Error in osm2pgsql processing
+
+A variety of issues can create problems in the osm2pgsql processing step.
+The following is a generic list of things to check for the most common issues.
+Please check the [documentation on osm2pgsql.org](https://osm2pgsql.org/) for
+the latest documented functionality.
+
+* Check `osm2pgsql --version`, typically the latest version is assumed
+* Does your `.osm.pbf` file exist in the correct location?
+* Does the database user have proper [permissisions in Postgres](POSTGRES-PERMISSIONS.md)?
+
+
+### Luarocks not installed properly
+
+This problem results in the error message `'luasql.postgres' not found`.
+An example of this issue is reported [via #218](https://github.com/rustprooflabs/pgosm-flex/issues/218).
+
+May need to install LuaRocks from source package, instructions
+[from luarocks.org](https://luarocks.org/).
+
+
+```bash
+wget https://luarocks.org/releases/luarocks-3.8.0.tar.gz
+tar zxpf luarocks-3.8.0.tar.gz
+cd luarocks-3.8.0
+./configure && make && sudo make install
+```
+
