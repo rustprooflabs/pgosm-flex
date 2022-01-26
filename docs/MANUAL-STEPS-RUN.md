@@ -202,7 +202,7 @@ NOTE: Include the trailing slash!
 export PGOSM_LAYERSET_PATH=/custom-layerset/
 ```
 
-Read more about [LAYERSETS.md](LAYERSETS.md).
+Read more about layersets in [LAYERSETS.md](LAYERSETS.md).
 
 
 
