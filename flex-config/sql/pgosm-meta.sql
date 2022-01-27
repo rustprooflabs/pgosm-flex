@@ -51,3 +51,7 @@ CREATE OR REPLACE PROCEDURE osm.append_data_finish(skip_nested BOOLEAN = False)
 
 END $$;
 
+
+COMMENT ON PROCEDURE osm.append_data_start() IS 'Prepares PgOSM Flex database for running osm2pgsql in append mode.  Removes records from place_polygon_nested if they existed.';
+COMMENT ON PROCEDURE osm.append_data_finish() IS 'Finalizes PgOSM Flex after osm2pgsql-replication.  Refreshes materialized view and (optionally) processes the place_polygon_nested data.';
+
