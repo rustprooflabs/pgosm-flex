@@ -146,17 +146,31 @@ COMMENT ON COLUMN osm.place_polygon_nested.osm_type IS 'Values from place if a p
 COMMENT ON COLUMN osm.place_polygon_nested.geom IS 'Geometry loaded by osm2pgsql.';
 
 
-INSERT INTO osm.place_polygon_nested (osm_id, name, osm_type, admin_level, geom)
-SELECT p.osm_id, p.name, p.osm_type,
-        COALESCE(p.admin_level::INT, 99) AS admin_level,
-        geom
-    FROM osm.vplace_polygon p
-    WHERE (p.boundary = 'administrative'
-            OR p.osm_type IN   ('neighborhood', 'city', 'suburb', 'town', 'admin_level', 'locality')
-       )
-        AND p.name IS NOT NULL
-;
+CREATE OR REPLACE PROCEDURE osm.populate_place_polygon_nested()
+LANGUAGE sql
+AS $$
 
+
+    INSERT INTO osm.place_polygon_nested (osm_id, name, osm_type, admin_level, geom)
+    SELECT p.osm_id, p.name, p.osm_type,
+            COALESCE(p.admin_level::INT, 99) AS admin_level,
+            geom
+        FROM osm.vplace_polygon p
+        WHERE (p.boundary = 'administrative'
+                OR p.osm_type IN   ('neighborhood', 'city', 'suburb', 'town', 'admin_level', 'locality')
+           )
+            AND p.name IS NOT NULL
+            AND NOT EXISTS (
+                SELECT osm_id
+                    FROM osm.place_polygon_nested n
+                    WHERE n.osm_id = p.osm_id
+                )
+    ;
+
+$$;
+
+
+CALL osm.populate_place_polygon_nested();
 
 
 CREATE OR REPLACE PROCEDURE osm.build_nested_admin_polygons(
