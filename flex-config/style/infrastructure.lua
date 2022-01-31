@@ -101,9 +101,9 @@ local function get_osm_type_subtype(object)
     elseif object.tags.utility then
         osm_type_table['osm_type'] = 'utility'
         osm_type_table['osm_subtype'] = nil
-    elseif object.tags.aeroway == 'aerodrome' then
+    elseif object.tags.aeroway then
         osm_type_table['osm_type'] = 'aeroway'
-        osm_type_table['osm_subtype'] = nil
+        osm_type_table['osm_subtype'] = object.tags.aeroway
     else
         osm_type_table['osm_type'] = 'unknown'
         osm_type_table['osm_subtype'] = nil
