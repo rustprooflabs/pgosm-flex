@@ -214,6 +214,7 @@ The post-processing SQL scripts create a procedure to calculate the nested place
 
 
 ```bash
+psql -d $PGOSM_CONN -c "CALL osm.populate_place_polygon_nested();"
 psql -d $PGOSM_CONN -c "CALL osm.build_nested_admin_polygons();"
 ```
 
