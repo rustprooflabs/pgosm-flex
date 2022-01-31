@@ -32,7 +32,7 @@ Minimum versions supported:
 
 * Postgres 12
 * PostGIS 3.0
-* osm2pgsql 1.5.0
+* osm2pgsql 1.6.0
 
 ## Minimum Hardware
 
@@ -159,7 +159,6 @@ psql -h localhost -p 5433 -d pgosm -U postgres -c "SELECT COUNT(*) FROM osm.road
 │ 39865 │
 └───────┘
 ```
-
 
 
 
