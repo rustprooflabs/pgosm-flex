@@ -32,6 +32,7 @@ BASE_PATH_DEFAULT = '/app'
 @click.option('--subregion', required=False,
               help='Sub-region name matching the filename for data sourced from Geofabrik. e.g. district-of-columbia')
 # Remainder of options in alphabetical order
+@click.option('--append', default=False, is_flag=True, help='EXPERIMENTAL - Enable Append mode to enable updates via osm2pgsql-replication.')
 @click.option('--basepath',
               required=False,
               default=BASE_PATH_DEFAULT,
@@ -70,7 +71,7 @@ BASE_PATH_DEFAULT = '/app'
 @click.option('--srid', required=False, default=helpers.DEFAULT_SRID,
               envvar="PGOSM_SRID",
               help="SRID for data loaded by osm2pgsql to PostGIS. Defaults to 3857")
-def run_pgosm_flex(ram, region, subregion, basepath, data_only, debug,
+def run_pgosm_flex(ram, region, subregion, append, basepath, data_only, debug,
                     input_file, layerset, layerset_path, language, pgosm_date,
                     schema_name, skip_dump, skip_nested, srid):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
@@ -98,7 +99,8 @@ def run_pgosm_flex(ram, region, subregion, basepath, data_only, debug,
         pbf_filename = geofabrik.get_region_filename(region, subregion)
         osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
                                            pbf_filename=pbf_filename,
-                                           out_path=paths['out_path'])
+                                           out_path=paths['out_path'],
+                                           append=append)
     else:
         osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
                                            pbf_filename=input_file,
@@ -117,6 +119,12 @@ def run_pgosm_flex(ram, region, subregion, basepath, data_only, debug,
         skip_nested = check_layerset_places(layerset_path, layerset, flex_path)
 
     run_post_processing(flex_path=flex_path, skip_nested=skip_nested)
+
+    if append:
+        run_osm2pgsql_replication_init(pbf_path=paths['out_path'],
+                                       pbf_filename=pbf_filename)
+    else:
+        print('DEBUG MESSAGE -- Not using append mode.')
 
     if input_file is None:
         geofabrik.remove_latest_files(region, subregion, paths)
@@ -355,6 +363,32 @@ def run_post_processing(flex_path, skip_nested):
     else:
         logger.info('Calculating nested polygons')
         db.pgosm_nested_admin_polygons(flex_path)
+
+
+def run_osm2pgsql_replication_init(pbf_path, pbf_filename):
+    logger = logging.getLogger('pgosm-flex')
+    pbf_path = os.path.join(pbf_path, pbf_filename)
+    init_cmd = 'osm2pgsql-replication init -d $PGOSM_CONN '
+    init_cmd += f'--osm-file {pbf_path}'
+    print(f'RUNNING INIT COMMAND:\n{init_cmd}')
+    conn_string = db.connection_string()
+    ## Currently fails - osm2pgsql-replication not working with conninfo string
+    init_cmd = init_cmd.replace('-d $PGOSM_CONN', f'-d {conn_string}')
+    output = subprocess.run(init_cmd.split(),
+                            text=True,
+                            check=False,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+
+    logger.info(f'osm2pgsql-replication output:\n{output.stdout}')
+
+    if output.returncode != 0:
+        err_msg = f'Failed to run osm2pgsql-replication. Return code: {output.returncode}'
+        logger.error(err_msg)
+        sys.exit(f'{err_msg} - Check the log output for details.')
+
+    logger.info('osm2pgsql-replication init completed.')
+
 
 
 if __name__ == "__main__":
