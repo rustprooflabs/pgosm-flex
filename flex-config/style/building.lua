@@ -63,6 +63,10 @@ function address_only_building(tags)
         or tags.tourism then
             return false
     end
+    -- postal codes are not buildings but can have an address
+    if tags.boundary == 'postal_code' then
+        return false
+    end
 
     -- Opting to include any addr: tag that was not excluded explicitly above
     --   This might be too wide of a net, but trying to be too picky risks
