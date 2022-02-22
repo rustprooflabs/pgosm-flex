@@ -60,12 +60,10 @@ function address_only_building(tags)
         or tags.landuse
         or tags.leisure
         or tags.office
-        or tags.tourism then
+        or tags.tourism
+        or tags.boundary -- included in place layer
+        then
             return false
-    end
-    -- postal codes are not buildings but can have an address
-    if tags.boundary == 'postal_code' then
-        return false
     end
 
     -- Opting to include any addr: tag that was not excluded explicitly above
