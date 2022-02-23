@@ -141,14 +141,14 @@ def wait_for_postgres():
 
         if pg_isready():
             found += 1
-            logger.info(f'Postgres up {found} times')
+            logger.debug(f'Postgres up {found} times')
 
         if i % 5 == 0:
-            logger.info('Waiting for Postgres connection...')
+            logger.debug('Waiting for Postgres connection...')
 
         i += 1
 
-    logger.info('Database passed two checks - should be ready')
+    logger.info('Postgres instance ready')
 
 
 def pg_isready():
