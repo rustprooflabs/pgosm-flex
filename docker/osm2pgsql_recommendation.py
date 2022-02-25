@@ -36,7 +36,7 @@ def osm2pgsql_recommendation(ram, pbf_filename, out_path):
     else:
         pbf_file = pbf_filename
     osm_pbf_gb = os.path.getsize(pbf_file) / 1024 / 1024 / 1024
-    LOGGER.info(f'PBF size (GB): {osm_pbf_gb}')
+    LOGGER.debug(f'PBF size (GB): {osm_pbf_gb}')
 
     # PgOSM-Flex currently does not support/test append mode.
     append = False
@@ -77,13 +77,8 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb, append, pbf_filename,
                                append=append,
                                ssd=True)
 
-    # FIXME: Currently requires .osm.pbf input. Will block full functionality of #192
-    # Uses basename to work with absolute paths
-    filename_no_ext = os.path.basename(pbf_filename).replace('.osm.pbf', '')
-    LOGGER.info(f'Filename for osm2pgsql command: {filename_no_ext}')
-
     osm2pgsql_cmd = rec.get_osm2pgsql_command(out_format='api',
-                                              pbf_filename=filename_no_ext)
+                                              pbf_path=pbf_filename)
 
     osm2pgsql_cmd = osm2pgsql_cmd.replace('~/pgosm-data', output_path)
 
