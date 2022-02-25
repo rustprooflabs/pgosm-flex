@@ -129,8 +129,10 @@ Options:
   --data-only           When set, skips running Sqitch and importing QGIS
                         Styles.
   --debug               Enables additional log output
-  --input-file TEXT     Set explicit filepath to input osm.pbf file. Overrides
-                        default file handling, archiving, and MD5 checksum.
+  --input-file TEXT     Set filename or absolute filepath to input osm.pbf
+                        file. Overrides default file handling, archiving, and
+                        MD5 checksum validation. Filename is assumed under
+                        /app/output unless absolute path is used.
   --layerset TEXT       Layerset to load. Defines name of included layerset
                         unless --layerset-path is defined.  [required]
   --layerset-path TEXT  Custom path to load layerset INI from. Custom paths
