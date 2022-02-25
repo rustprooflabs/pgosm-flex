@@ -141,16 +141,15 @@ function place_process_relation(object)
     local name = get_name(object.tags)
     local member_ids = osm2pgsql.way_member_ids(object)
 
-    if object.tags.type == 'multipolygon' or object.tags.type == 'boundary' then
-        tables.place_polygon:add_row({
-            osm_type = osm_type,
-            boundary = boundary,
-            admin_level = admin_level,
-            name = name,
-            member_ids = member_ids,
-            geom = { create = 'area' }
-        })
-    end
+    tables.place_polygon:add_row({
+        osm_type = osm_type,
+        boundary = boundary,
+        admin_level = admin_level,
+        name = name,
+        member_ids = member_ids,
+        geom = { create = 'area' }
+    })
+
 end
 
 

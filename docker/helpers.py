@@ -77,7 +77,7 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
     else:
         pgosm_region = f'{region}-{subregion}'
 
-    logger.info(f'PGOSM_REGION: {pgosm_region}')
+    logger.debug(f'PGOSM_REGION: {pgosm_region}')
     os.environ['PGOSM_REGION'] = pgosm_region
 
     if srid != DEFAULT_SRID:
