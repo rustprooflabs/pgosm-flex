@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-"""Python script to run PgOSM Flex.
+"""Python script to run PgOSM Flex within Docker container.
 
-Designed to be ran in Docker image:
+Docker image available on Docker Hub
     https://hub.docker.com/r/rustprooflabs/pgosm-flex
+
+Usage instructions:
+    https://github.com/rustprooflabs/pgosm-flex/blob/main/docs/DOCKER-RUN.md
 """
 import configparser
 import logging
@@ -45,7 +48,7 @@ BASE_PATH_DEFAULT = '/app'
 @click.option('--input-file',
               required=False,
               default=None,
-              help='Set explicit filepath to input osm.pbf file. Overrides default file handling, archiving, and MD5 checksum.')
+              help='Set filename or absolute filepath to input osm.pbf file. Overrides default file handling, archiving, and MD5 checksum validation. Filename is assumed under /app/output unless absolute path is used.')
 @click.option('--layerset', required=True,
               default='default',
               help='Layerset to load. Defines name of included layerset unless --layerset-path is defined.')
