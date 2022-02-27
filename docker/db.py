@@ -173,18 +173,24 @@ def pg_isready():
     return True
 
 
-def prepare_pgosm_db(data_only, db_path):
+def prepare_pgosm_db(data_only, db_path, append):
     """Runs through series of steps to prepare database for PgOSM.
 
     Parameters
     --------------------------
     data_only : bool
     db_path : str
+    append : bool
     """
 
     if pg_conn_parts()['pg_host'] == 'localhost':
         LOGGER.debug('Running standard database prep for in-Docker operation. Includes DROP/CREATE DATABASE')
-        drop_pgosm_db()
+        if append:
+            LOGGER.debug('Skipping DB drop b/c of append mode')
+        else:
+            LOGGER.debug('Dropping database')
+            drop_pgosm_db()
+
         create_pgosm_db()
     else:
         LOGGER.info('Using external database. Ensure the target database is setup properly for PgOSM Flex with PostGIS, osm schema, and proper permissions.')
@@ -260,12 +266,16 @@ def create_pgosm_db():
 
     LOGGER.debug('Setting Pg conn to enable autocommit - required for drop/create DB')
     conn.autocommit = True
-    conn.execute(sql_raw)
-    conn.close()
-    LOGGER.info('Created pgosm database')
+    try:
+        conn.execute(sql_raw)
+        LOGGER.info('Created pgosm database')
+    except psycopg.errors.DuplicateDatabase:
+        LOGGER.info('Database already existed.')
+    finally:
+        conn.close()
 
-    sql_create_postgis = "CREATE EXTENSION postgis;"
-    sql_create_schema = "CREATE SCHEMA osm;"
+    sql_create_postgis = "CREATE EXTENSION IF NOT EXISTS postgis;"
+    sql_create_schema = "CREATE SCHEMA IF NOT EXISTS osm;"
 
     with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
         cur = conn.cursor()
