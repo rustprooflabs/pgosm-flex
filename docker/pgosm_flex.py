@@ -157,7 +157,8 @@ def run_osm2pgsql_standard(region, subregion, input_file, pgosm_date, out_path,
     else:
         osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
                                            pbf_filename=input_file,
-                                           out_path=out_path)
+                                           out_path=out_path,
+                                           append=append)
 
     run_osm2pgsql(osm2pgsql_command=osm2pgsql_command,
                   flex_path=flex_path)
