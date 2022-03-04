@@ -86,6 +86,10 @@ def run_pgosm_flex(ram, region, subregion, append, basepath, data_only, debug,
 
     validate_region_inputs(region, subregion, input_file)
 
+    if schema_name != 'osm' and append:
+        sys.exit('ERROR: Append mode with custom schema name currently not supported')
+
+
     # Ensure always a region name
     if region is None and input_file:
         region = input_file
@@ -105,6 +109,7 @@ def run_pgosm_flex(ram, region, subregion, append, basepath, data_only, debug,
 
     if replication_update:
         logger.error('UPDATE mode coming soon!')
+        run_replication_update()
     else:
         logger.info('Running normal osm2pgsql mode')
         run_osm2pgsql_standard(region=region,
@@ -177,6 +182,43 @@ def run_osm2pgsql_standard(region, subregion, input_file, pgosm_date, out_path,
 
     if input_file is None:
         geofabrik.remove_latest_files(region, subregion, out_path)
+
+
+def run_replication_update():
+    logger = logging.getLogger('pgosm-flex')
+    conn_string = db.connection_string()
+
+    logger.error('Not running cleanup step in SQL yet!')
+    sql_prep_replication = 'CALL osm.append_data_start();'
+
+    cmd_osm2pgsql_replication = """
+osm2pgsql-replication update -d $PGOSM_CONN \
+    -- \
+    --output=flex --style=./run.lua \
+    --slim \
+    -d $PGOSM_CONN
+"""
+    cmd_osm2pgsql_replication = cmd_osm2pgsql_replication.replace('-d $PGOSM_CONN', f'-d {conn_string}')
+
+    output = subprocess.run(cmd_osm2pgsql_replication.split(),
+                            text=True,
+                            check=False,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+
+    logger.info(f'osm2pgsql-replication output:\n{output.stdout}')
+
+    if output.returncode != 0:
+        err_msg = f'Failure. Return code: {output.returncode}'
+        logger.warning(err_msg)
+        return False
+
+    logger.info('osm2pgsql-replication update complete.')
+    return True
+
+
+    logger.error('Not running post-import step in SQL yet!')
+    sql_finish_replication = 'CALL osm.append_data_finish();'
 
 
 def validate_region_inputs(region, subregion, input_file):
@@ -409,7 +451,7 @@ def check_replication_exists():
                             stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT)
 
-    logger.info(f'osm2pgsql-replication output:\n{output.stdout}')
+    logger.debug(f'osm2pgsql-replication output:\n{output.stdout}')
 
     if output.returncode != 0:
         err_msg = f'Failure. Return code: {output.returncode}'
