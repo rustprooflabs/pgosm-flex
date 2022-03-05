@@ -443,6 +443,9 @@ def pgosm_after_import(flex_path):
     if output.returncode != 0:
         err_msg = f'Failed to run post-processing SQL. Return code: {output.returncode}'
         LOGGER.error(err_msg)
+        return False
+
+    return True
 
 
 def pgosm_nested_admin_polygons(flex_path):

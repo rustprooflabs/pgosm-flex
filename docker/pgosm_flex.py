@@ -113,17 +113,17 @@ def run_pgosm_flex(ram, region, subregion, append, basepath, data_only, debug,
                                flex_path=paths['flex_path'])
     else:
         logger.info('Running normal osm2pgsql mode')
-        run_osm2pgsql_standard(region=region,
-                               subregion=subregion,
-                               input_file=input_file,
-                               pgosm_date=pgosm_date,
-                               out_path=paths['out_path'],
-                               flex_path=paths['flex_path'],
-                               ram=ram,
-                               skip_nested=skip_nested,
-                               layerset_path=layerset_path,
-                               layerset=layerset,
-                               append=append)
+        success = run_osm2pgsql_standard(region=region,
+                                         subregion=subregion,
+                                         input_file=input_file,
+                                         pgosm_date=pgosm_date,
+                                         out_path=paths['out_path'],
+                                         flex_path=paths['flex_path'],
+                                         ram=ram,
+                                         skip_nested=skip_nested,
+                                         layerset_path=layerset_path,
+                                         layerset=layerset,
+                                         append=append)
 
 
     if schema_name != 'osm':
@@ -143,8 +143,10 @@ def run_pgosm_flex(ram, region, subregion, append, basepath, data_only, debug,
         db.run_pg_dump(export_path=export_path,
                        data_only=data_only,
                        schema_name=schema_name)
-    logger.info('PgOSM Flex complete!')
-
+    if success:
+        logger.info('PgOSM Flex complete!')
+    else:
+        logger.warning('PgOSM Flex completed with errors. Details in output')
 
 def run_osm2pgsql_standard(region, subregion, input_file, pgosm_date, out_path,
                            flex_path, ram, skip_nested, layerset_path,
@@ -173,7 +175,8 @@ def run_osm2pgsql_standard(region, subregion, input_file, pgosm_date, out_path,
         # Auto-set skip_nested when place layer not imported
         skip_nested = check_layerset_places(layerset_path, layerset, flex_path)
 
-    run_post_processing(flex_path=flex_path, skip_nested=skip_nested)
+    post_processing = run_post_processing(flex_path=flex_path,
+                                          skip_nested=skip_nested)
 
     if append:
         run_osm2pgsql_replication_init(pbf_path=out_path,
@@ -183,6 +186,8 @@ def run_osm2pgsql_standard(region, subregion, input_file, pgosm_date, out_path,
 
     if input_file is None:
         geofabrik.remove_latest_files(region, subregion, out_path)
+
+    return post_processing
 
 
 def run_replication_update(skip_nested, flex_path):
@@ -427,13 +432,18 @@ def run_post_processing(flex_path, skip_nested):
 
     skip_nested : bool
     """
-    db.pgosm_after_import(flex_path)
+    post_processing_sql = db.pgosm_after_import(flex_path)
     logger = logging.getLogger('pgosm-flex')
     if skip_nested:
         logger.info('Skipping calculating nested polygons')
     else:
         logger.info('Calculating nested polygons')
         db.pgosm_nested_admin_polygons(flex_path)
+
+    if not post_processing_sql:
+        return False
+
+    return True
 
 
 def check_replication_exists():
