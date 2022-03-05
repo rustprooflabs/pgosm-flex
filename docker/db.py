@@ -434,10 +434,15 @@ def pgosm_after_import(flex_path):
 
     output = subprocess.run(cmds,
                             text=True,
-                            capture_output=True,
                             cwd=flex_path,
-                            check=True)
-    LOGGER.info(f'Post-processing output: \n {output.stderr}')
+                            check=False,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+    LOGGER.info(f'Post-processing SQL output: \n {output.stdout}')
+
+    if output.returncode != 0:
+        err_msg = f'Failed to run post-processing SQL. Return code: {output.returncode}'
+        LOGGER.error(err_msg)
 
 
 def pgosm_nested_admin_polygons(flex_path):
