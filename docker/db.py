@@ -466,6 +466,34 @@ def pgosm_nested_admin_polygons(flex_path):
         sys.exit(f'{err_msg} - Check the log output for details.')
 
 
+
+def osm2pgsql_replication_start():
+    LOGGER.error('Not running cleanup step in SQL yet!')
+    sql_raw = 'CALL osm.append_data_start   ();'
+
+
+    with get_db_conn(conn_string=connection_string()) as conn:
+        cur = conn.cursor()
+        cur.execute(sql_raw)
+        results = cur.fetchone()
+
+    LOGGER.error(f'TESTING OUTPUT {results}')
+
+
+def osm2pgsql_replication_finish(skip_nested):
+    logger.error('Not running post-import step in SQL yet!')
+    sql_raw = 'CALL osm.append_data_finish(skip_nested := %(skip_nested)s );'
+    params = {'skip_nested': skip_nested}
+
+    with get_db_conn(conn_string=connection_string()) as conn:
+        cur = conn.cursor()
+        cur.execute(sql_raw)
+        results = cur.fetchone()
+
+    LOGGER.error(f'TESTING OUTPUT {results}')
+
+
+
 def rename_schema(schema_name):
     """Renames default schema name "osm" to `schema_name`
 

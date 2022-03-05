@@ -109,7 +109,8 @@ def run_pgosm_flex(ram, region, subregion, append, basepath, data_only, debug,
 
     if replication_update:
         logger.error('UPDATE mode coming soon!')
-        run_replication_update()
+        run_replication_update(skip_nested=skip_nested,
+                               flex_path=paths['flex_path'])
     else:
         logger.info('Running normal osm2pgsql mode')
         run_osm2pgsql_standard(region=region,
@@ -184,25 +185,25 @@ def run_osm2pgsql_standard(region, subregion, input_file, pgosm_date, out_path,
         geofabrik.remove_latest_files(region, subregion, out_path)
 
 
-def run_replication_update():
+def run_replication_update(skip_nested, flex_path):
     logger = logging.getLogger('pgosm-flex')
     conn_string = db.connection_string()
 
-    logger.error('Not running cleanup step in SQL yet!')
-    sql_prep_replication = 'CALL osm.append_data_start();'
+    db.osm2pgsql_replication_start()
 
-    cmd_osm2pgsql_replication = """
+    update_cmd = """
 osm2pgsql-replication update -d $PGOSM_CONN \
     -- \
     --output=flex --style=./run.lua \
     --slim \
     -d $PGOSM_CONN
 """
-    cmd_osm2pgsql_replication = cmd_osm2pgsql_replication.replace('-d $PGOSM_CONN', f'-d {conn_string}')
+    update_cmd = update_cmd.replace('-d $PGOSM_CONN', f'-d {conn_string}')
 
-    output = subprocess.run(cmd_osm2pgsql_replication.split(),
+    output = subprocess.run(update_cmd.split(),
                             text=True,
                             check=False,
+                            cwd=flex_path,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT)
 
@@ -213,12 +214,10 @@ osm2pgsql-replication update -d $PGOSM_CONN \
         logger.warning(err_msg)
         return False
 
+    db.osm2pgsql_replication_finish(skip_nested=skip_nested)
+
     logger.info('osm2pgsql-replication update complete.')
     return True
-
-
-    logger.error('Not running post-import step in SQL yet!')
-    sql_finish_replication = 'CALL osm.append_data_finish();'
 
 
 def validate_region_inputs(region, subregion, input_file):
