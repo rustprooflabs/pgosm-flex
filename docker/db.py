@@ -479,26 +479,37 @@ def osm2pgsql_replication_start():
     LOGGER.error('Not running cleanup step in SQL yet!')
     sql_raw = 'CALL osm.append_data_start   ();'
 
-
     with get_db_conn(conn_string=connection_string()) as conn:
         cur = conn.cursor()
         cur.execute(sql_raw)
-        results = cur.fetchone()
 
-    LOGGER.error(f'TESTING OUTPUT {results}')
+
 
 
 def osm2pgsql_replication_finish(skip_nested):
-    logger.error('Not running post-import step in SQL yet!')
-    sql_raw = 'CALL osm.append_data_finish(skip_nested := %(skip_nested)s );'
-    params = {'skip_nested': skip_nested}
+    # Fails via psycopg, using psql
+    if skip_nested:
+        LOGGER.info('Finishing Replication, skipping nested polygons')
+        sql_raw = 'CALL osm.append_data_finish(skip_nested := True );'
+    else:
+        LOGGER.info('Finishing Replication, including nested polygons')
+        sql_raw = 'CALL osm.append_data_finish(skip_nested := False );'
 
-    with get_db_conn(conn_string=connection_string()) as conn:
-        cur = conn.cursor()
-        cur.execute(sql_raw)
-        results = cur.fetchone()
+    conn_string = os.environ['PGOSM_CONN']
+    cmds = ['psql', '-d', conn_string, '-c', sql_raw]
+    LOGGER.info('Finishing Replication')
+    output = subprocess.run(cmds,
+                            text=True,
+                            check=False,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+    LOGGER.info(f'Finishing replication output: \n {output.stdout}')
 
-    LOGGER.error(f'TESTING OUTPUT {results}')
+    if output.returncode != 0:
+        err_msg = f'Failed to finish replication. Return code: {output.returncode}'
+        LOGGER.error(err_msg)
+        sys.exit(f'{err_msg} - Check the log output for details.')
+
 
 
 

@@ -109,8 +109,8 @@ def run_pgosm_flex(ram, region, subregion, append, basepath, data_only, debug,
 
     if replication_update:
         logger.error('UPDATE mode coming soon!')
-        run_replication_update(skip_nested=skip_nested,
-                               flex_path=paths['flex_path'])
+        success = run_replication_update(skip_nested=skip_nested,
+                                         flex_path=paths['flex_path'])
     else:
         logger.info('Running normal osm2pgsql mode')
         success = run_osm2pgsql_standard(region=region,
@@ -151,6 +151,7 @@ def run_pgosm_flex(ram, region, subregion, append, basepath, data_only, debug,
 def run_osm2pgsql_standard(region, subregion, input_file, pgosm_date, out_path,
                            flex_path, ram, skip_nested, layerset_path,
                            layerset, append):
+    logger = logging.getLogger('pgosm-flex')
     if input_file is None:
         geofabrik.prepare_data(region=region,
                                subregion=subregion,
@@ -172,7 +173,6 @@ def run_osm2pgsql_standard(region, subregion, input_file, pgosm_date, out_path,
                   flex_path=flex_path)
 
     if not skip_nested:
-        # Auto-set skip_nested when place layer not imported
         skip_nested = check_layerset_places(layerset_path, layerset, flex_path)
 
     post_processing = run_post_processing(flex_path=flex_path,
@@ -182,7 +182,7 @@ def run_osm2pgsql_standard(region, subregion, input_file, pgosm_date, out_path,
         run_osm2pgsql_replication_init(pbf_path=out_path,
                                        pbf_filename=pbf_filename)
     else:
-        print('DEBUG MESSAGE -- Not using append mode.')
+        logger.debug('Not using append mode')
 
     if input_file is None:
         geofabrik.remove_latest_files(region, subregion, out_path)
@@ -191,6 +191,18 @@ def run_osm2pgsql_standard(region, subregion, input_file, pgosm_date, out_path,
 
 
 def run_replication_update(skip_nested, flex_path):
+    """Runs osm2pgsql-replication between the DB start/finish steps.
+
+    Parameters
+    -----------------------
+    skip_nested : bool
+    flex_path : str
+
+    Returns
+    ---------------------
+    bool
+        Indicates success/failure of replication process.
+    """
     logger = logging.getLogger('pgosm-flex')
     conn_string = db.connection_string()
 
