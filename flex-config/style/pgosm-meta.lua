@@ -90,7 +90,7 @@ local sql_insert = [[ INSERT INTO osm.pgosm_flex (osm_date, default_date, region
  [[ VALUES (']] ..
  con:escape(pgosm_date) .. [[', ]] ..
  default_date_str .. [[ , ']] .. -- special handling for boolean
- con:escape(pgosm_region) .. [[', ']] ..
+ con:escape(pgosm_region_combined) .. [[', ']] ..
  con:escape(pgosm_flex_version) .. [[', ']] ..
  con:escape(srid) .. [[', ']] ..
  con:escape(project_url) .. [[', ']] ..

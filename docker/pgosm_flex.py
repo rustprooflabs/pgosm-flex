@@ -129,20 +129,11 @@ def run_pgosm_flex(ram, region, subregion, append, basepath, data_only, debug,
     if schema_name != 'osm':
         db.rename_schema(schema_name)
 
-    if skip_dump:
-        logger.info('Skipping pg_dump')
-    else:
-        export_filename = get_export_filename(region,
-                                              subregion,
-                                              layerset,
-                                              pgosm_date,
-                                              input_file)
+    dump_database(input_file=input_file,
+                  out_path=paths['out_path'],
+                  skip_dump=skip_dump, data_only=data_only,
+                  schema_name=schema_name)
 
-        export_path = get_export_full_path(paths['out_path'], export_filename)
-
-        db.run_pg_dump(export_path=export_path,
-                       data_only=data_only,
-                       schema_name=schema_name)
     if success:
         logger.info('PgOSM Flex complete!')
     else:
@@ -316,15 +307,11 @@ def get_paths(base_path):
 
 
 
-def get_export_filename(region, subregion, layerset, pgosm_date, input_file):
+def get_export_filename(input_file):
     """Returns the .sql filename to use for pg_dump.
 
     Parameters
     ----------------------
-    region : str
-    subregion : str
-    layerset : str
-    pgosm_date : str
     input_file : str
 
     Returns
@@ -332,6 +319,11 @@ def get_export_filename(region, subregion, layerset, pgosm_date, input_file):
     filename : str
     """
     # region is always set internally, even with --input-file and no --region
+    region = os.environ.get('PGOSM_REGION')
+    subregion = os.environ.get('PGOSM_SUBREGION')
+    layerset = os.environ.get('PGOSM_LAYERSET')
+    pgosm_date = os.environ.get('PGOSM_DATE')
+
     region = region.replace('/', '-')
     if subregion:
         subregion = subregion.replace('/', '-')
@@ -456,6 +448,24 @@ def run_post_processing(flex_path, skip_nested):
         return False
 
     return True
+
+
+def dump_database(input_file, out_path, skip_dump, data_only, schema_name):
+    region = os.environ.get('PGOSM_REGION')
+    subregion = os.environ.get('PGOSM_SUBREGION')
+    pgosm_date = os.environ.get('PGOSM_DATE')
+    layerset = os.environ.get('PGOSM_LAYERSET')
+
+    if skip_dump:
+        logging.getLogger('pgosm-flex').info('Skipping pg_dump')
+    else:
+        export_filename = get_export_filename(input_file)
+
+        export_path = get_export_full_path(out_path, export_filename)
+
+        db.run_pg_dump(export_path=export_path,
+                       data_only=data_only,
+                       schema_name=schema_name)
 
 
 def check_replication_exists():

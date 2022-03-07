@@ -314,3 +314,48 @@ docker exec -it \
     --skip-dump
 ```
 
+
+## Use `--append` for updates
+
+> Added `--append` as **Experimental** feature in 0.4.6.
+
+
+Using `--append` mode wraps around the `osm2pgsql-replication` package
+included with `osm2pgsql`.  The first time running an import with `--append`
+mode runs osm2pgsql normally, with `--slim` mode and without `--drop`.
+After osm2pgsql completes, `osm2pgsql-replication init ...` is ran to setup
+the DB for updates.
+
+Need to increase Postgres' `max_connections`, see
+[this discussion on osm2pgsql](https://github.com/openstreetmap/osm2pgsql/discussions/1650).
+
+
+```bash
+docker run --name pgosm -d --rm \
+    -v ~/pgosm-data:/app/output \
+    -v /etc/localtime:/etc/localtime:ro \
+    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+    -p 5433:5432 -d rustprooflabs/pgosm-flex \
+    -c max_connections=300
+```
+
+Run the `docker exec` step with `--append` and `--skip-dump`. This results in
+a larger database as the intermediate osm2pgsql tables must be left
+in the database.
+
+```bash
+docker exec -it \
+    pgosm python3 docker/pgosm_flex.py \
+    --ram=8 \
+    --region=north-america/us \
+    --subregion=district-of-columbia \
+    --pgosm-date 2022-02-22 \
+    --append --skip-dump
+```
+
+Running the above command a second time will detect that the target database
+has osm2pgsql replication setup and load data via the defined replication
+service.
+
+
+

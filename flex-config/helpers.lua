@@ -23,12 +23,12 @@ else
 end
 
 
-local pgosm_region_env = os.getenv("PGOSM_REGION")
+local pgosm_region_env = os.getenv("PGOSM_REGION_COMBINED")
 if pgosm_region_env then
-    pgosm_region = pgosm_region_env
-    print('INFO - Region: ' .. pgosm_region)
+    pgosm_region_combined = pgosm_region_env
+    print('INFO - Region: ' .. pgosm_region_combined)
 else
-    pgosm_region = 'Not Specified'
+    pgosm_region_combined = 'Not Specified'
     print('INFO - Set PGOSM_REGION env var to customize region. ')
 end
 
