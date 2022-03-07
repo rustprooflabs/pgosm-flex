@@ -8,18 +8,16 @@ import subprocess
 import helpers
 
 
-def get_region_filename(region, subregion):
+def get_region_filename():
     """Returns the filename needed to download/manage PBF files.
-
-    Parameters
-    ----------------------
-    region : str
-    subregion : str
 
     Returns
     ----------------------
     filename : str
     """
+    region = os.environ.get('PGOSM_REGION')
+    subregion = os.environ.get('PGOSM_SUBREGION')
+
     base_name = '{}-latest.osm.pbf'
     if subregion is None:
         filename = base_name.format(region)
@@ -29,7 +27,7 @@ def get_region_filename(region, subregion):
     return filename
 
 
-def prepare_data(region, subregion, pgosm_date, out_path):
+def prepare_data(out_path):
     """Ensures the PBF file is available.
 
     Checks if it already exists locally, download if needed,
@@ -37,9 +35,6 @@ def prepare_data(region, subregion, pgosm_date, out_path):
 
     Parameters
     ----------------------
-    region : str
-    subregion : str
-    pgosm_date : str
     out_path : str
 
     Returns
@@ -47,7 +42,11 @@ def prepare_data(region, subregion, pgosm_date, out_path):
     pbf_file : str
         Full path to PBF file
     """
-    pbf_filename = get_region_filename(region, subregion)
+    region = os.environ.get('PGOSM_REGION')
+    subregion = os.environ.get('PGOSM_SUBREGION')
+    pgosm_date = os.environ.get('PGOSM_DATE')
+
+    pbf_filename = get_region_filename()
 
     pbf_file = os.path.join(out_path, pbf_filename)
     pbf_file_with_date = pbf_file.replace('latest', pgosm_date)
@@ -227,7 +226,7 @@ def remove_latest_files(region, subregion, out_path):
     subregion : str
     out_path : str
     """
-    pbf_filename = get_region_filename(region, subregion)
+    pbf_filename = get_region_filename()
 
     pbf_file = os.path.join(out_path, pbf_filename)
     md5_file = f'{pbf_file}.md5'

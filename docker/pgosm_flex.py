@@ -113,16 +113,11 @@ def run_pgosm_flex(ram, region, subregion, append, basepath, data_only, debug,
                                          flex_path=paths['flex_path'])
     else:
         logger.info('Running normal osm2pgsql mode')
-        success = run_osm2pgsql_standard(region=region,
-                                         subregion=subregion,
-                                         input_file=input_file,
-                                         pgosm_date=pgosm_date,
+        success = run_osm2pgsql_standard(input_file=input_file,
                                          out_path=paths['out_path'],
                                          flex_path=paths['flex_path'],
                                          ram=ram,
                                          skip_nested=skip_nested,
-                                         layerset_path=layerset_path,
-                                         layerset=layerset,
                                          append=append)
 
 
@@ -139,17 +134,22 @@ def run_pgosm_flex(ram, region, subregion, append, basepath, data_only, debug,
     else:
         logger.warning('PgOSM Flex completed with errors. Details in output')
 
-def run_osm2pgsql_standard(region, subregion, input_file, pgosm_date, out_path,
-                           flex_path, ram, skip_nested, layerset_path,
-                           layerset, append):
+def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
+                           append):
+    """Runs standard osm2pgsql command and optionally inits for append mode.
+    """
     logger = logging.getLogger('pgosm-flex')
-    if input_file is None:
-        geofabrik.prepare_data(region=region,
-                               subregion=subregion,
-                               pgosm_date=pgosm_date,
-                               out_path=out_path)
 
-        pbf_filename = geofabrik.get_region_filename(region, subregion)
+    region = os.environ.get('PGOSM_REGION')
+    subregion = os.environ.get('PGOSM_SUBREGION')
+    layerset = os.environ.get('PGOSM_LAYERSET')
+    layerset_path = os.environ.get('PGOSM_LAYERSET_PATH')
+    pgosm_date = os.environ.get('PGOSM_DATE')
+
+    if input_file is None:
+        geofabrik.prepare_data(out_path=out_path)
+
+        pbf_filename = geofabrik.get_region_filename()
         osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
                                            pbf_filename=pbf_filename,
                                            out_path=out_path,
@@ -164,7 +164,7 @@ def run_osm2pgsql_standard(region, subregion, input_file, pgosm_date, out_path,
                   flex_path=flex_path)
 
     if not skip_nested:
-        skip_nested = check_layerset_places(layerset_path, layerset, flex_path)
+        skip_nested = check_layerset_places(flex_path)
 
     post_processing = run_post_processing(flex_path=flex_path,
                                           skip_nested=skip_nested)
@@ -319,12 +319,11 @@ def get_export_filename(input_file):
     filename : str
     """
     # region is always set internally, even with --input-file and no --region
-    region = os.environ.get('PGOSM_REGION')
+    region = os.environ.get('PGOSM_REGION').replace('/', '-')
     subregion = os.environ.get('PGOSM_SUBREGION')
     layerset = os.environ.get('PGOSM_LAYERSET')
     pgosm_date = os.environ.get('PGOSM_DATE')
 
-    region = region.replace('/', '-')
     if subregion:
         subregion = subregion.replace('/', '-')
 
@@ -389,13 +388,11 @@ def run_osm2pgsql(osm2pgsql_command, flex_path):
     logger.info('osm2pgsql completed.')
 
 
-def check_layerset_places(layerset_path, layerset, flex_path):
+def check_layerset_places(flex_path):
     """If `place` layer is not included `skip_nested` should be true.
 
     Parameters
     ------------------------
-    layerset_path : str
-    layerset : str
     flex_path : str
 
     Returns
@@ -403,6 +400,9 @@ def check_layerset_places(layerset_path, layerset, flex_path):
     skip_nested : boolean
     """
     logger = logging.getLogger('pgosm-flex')
+
+    layerset = os.environ.get('PGOSM_LAYERSET')
+    layerset_path = os.environ.get('PGOSM_LAYERSET_PATH')
 
     if layerset_path is None:
         layerset_path = os.path.join(flex_path, 'layerset')
