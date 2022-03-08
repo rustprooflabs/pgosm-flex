@@ -329,3 +329,21 @@ cd luarocks-3.8.0
 ./configure && make && sudo make install
 ```
 
+### Too many Postgres connections
+
+Using osm2pgsql opens a number of connections to the Postgres database. The
+number of connections opened depends on two factors:  # of tables, and create/update mode.
+You know you have encountered this problem if you get an error message such as
+`ERROR: Connecting to database failed: connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  sorry, too many clients already`.
+
+
+The osm2pgsql docs [document the number of connections](https://osm2pgsql.org/doc/manual.html#number-of-connections).  PgOSM Flex's default layerset creates 41
+tables.  This means running in create mode (fresh import) will require at least
+44 connections to Postgres.  Update mode (via `osm2pgsql-replication`) creates
+a minimum of 208 connections to Postgres.
+
+
+Using [pgBouncer](https://www.pgbouncer.org/) or another connection pool
+in front of Postgres is recommended.
+
+
