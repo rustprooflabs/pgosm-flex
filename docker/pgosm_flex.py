@@ -38,7 +38,7 @@ BASE_PATH_DEFAULT = '/app'
 @click.option('--basepath',
               required=False,
               default=BASE_PATH_DEFAULT,
-              help='Debugging option. Used when testing locally and not within Docker')
+              help='Deprecated debugging option, planned removal in 0.5.0. Used when testing locally and not within Docker')
 @click.option('--data-only',
               default=False,
               is_flag=True,
@@ -83,6 +83,8 @@ def run_pgosm_flex(ram, region, subregion, basepath, data_only, debug,
     logger = logging.getLogger('pgosm-flex')
     logger.info('PgOSM Flex starting...')
 
+    if basepath != BASE_PATH_DEFAULT:
+        logger.warning('Use of --basepath is deprecated and will be removed in v0.5.0.')
     validate_region_inputs(region, subregion, input_file)
 
     # Ensure always a region name
