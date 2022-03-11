@@ -17,7 +17,9 @@ import subprocess
 import click
 
 import osm2pgsql_recommendation as rec
-import db, geofabrik, helpers
+import db
+import geofabrik
+import helpers
 
 
 BASE_PATH_DEFAULT = '/app'
@@ -35,7 +37,10 @@ BASE_PATH_DEFAULT = '/app'
 @click.option('--subregion', required=False,
               help='Sub-region name matching the filename for data sourced from Geofabrik. e.g. district-of-columbia')
 # Remainder of options in alphabetical order
-@click.option('--append', default=False, is_flag=True, help='EXPERIMENTAL - Enable Append mode to enable updates via osm2pgsql-replication.')
+@click.option('--append',
+              default=False,
+              is_flag=True,
+              help='EXPERIMENTAL - Append mode enables updates via osm2pgsql-replication.')
 @click.option('--basepath',
               required=False,
               default=BASE_PATH_DEFAULT,
@@ -126,7 +131,8 @@ def run_pgosm_flex(ram, region, subregion, append, basepath, data_only, debug,
 
     dump_database(input_file=input_file,
                   out_path=paths['out_path'],
-                  skip_dump=skip_dump, data_only=data_only,
+                  skip_dump=skip_dump,
+                  data_only=data_only,
                   schema_name=schema_name)
 
     if success:
@@ -134,17 +140,26 @@ def run_pgosm_flex(ram, region, subregion, append, basepath, data_only, debug,
     else:
         logger.warning('PgOSM Flex completed with errors. Details in output')
 
+
 def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
                            append):
     """Runs standard osm2pgsql command and optionally inits for append mode.
+
+    Parameters
+    ---------------------------
+    input_file : str
+    out_path : str
+    flex_path : str
+    ram : float
+    skip_nested : boolean
+    append : boolean
+
+    Returns
+    ---------------------------
+    post_processing : boolean
+        Indicates overall success/failure of the steps within this function.
     """
     logger = logging.getLogger('pgosm-flex')
-
-    region = os.environ.get('PGOSM_REGION')
-    subregion = os.environ.get('PGOSM_SUBREGION')
-    layerset = os.environ.get('PGOSM_LAYERSET')
-    layerset_path = os.environ.get('PGOSM_LAYERSET_PATH')
-    pgosm_date = os.environ.get('PGOSM_DATE')
 
     if input_file is None:
         geofabrik.prepare_data(out_path=out_path)
@@ -176,7 +191,7 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
         logger.debug('Not using append mode')
 
     if input_file is None:
-        geofabrik.remove_latest_files(region, subregion, out_path)
+        geofabrik.remove_latest_files(out_path)
 
     return post_processing
 
@@ -253,7 +268,6 @@ def validate_region_inputs(region, subregion, input_file):
             raise ValueError(err_msg)
 
 
-
 def setup_logger(debug):
     """Prepares logging.
 
@@ -278,7 +292,6 @@ def setup_logger(debug):
 
     logger = logging.getLogger('pgosm-flex')
     logger.debug('Logger configured')
-
 
 
 def get_paths(base_path):
@@ -433,8 +446,11 @@ def run_post_processing(flex_path, skip_nested):
     Parameters
     ----------------------
     flex_path : str
-
     skip_nested : bool
+
+    Returns
+    ----------------------
+    status : bool
     """
     post_processing_sql = db.pgosm_after_import(flex_path)
     logger = logging.getLogger('pgosm-flex')
@@ -451,11 +467,16 @@ def run_post_processing(flex_path, skip_nested):
 
 
 def dump_database(input_file, out_path, skip_dump, data_only, schema_name):
-    region = os.environ.get('PGOSM_REGION')
-    subregion = os.environ.get('PGOSM_SUBREGION')
-    pgosm_date = os.environ.get('PGOSM_DATE')
-    layerset = os.environ.get('PGOSM_LAYERSET')
+    """Runs pg_dump when necessary to export the processed OpenStreetMap data.
 
+    Parameters
+    -----------------------
+    input_file : str
+    out_path : str
+    skip_dump : bool
+    data_only : bool
+    schema_name : str
+    """
     if skip_dump:
         logging.getLogger('pgosm-flex').info('Skipping pg_dump')
     else:
@@ -470,6 +491,10 @@ def dump_database(input_file, out_path, skip_dump, data_only, schema_name):
 
 def check_replication_exists():
     """Checks if replication already setup, if so should only run update.
+
+    Returns
+    -------------------
+    status : bool
     """
     logger = logging.getLogger('pgosm-flex')
     check_cmd = "osm2pgsql-replication status -d $PGOSM_CONN "

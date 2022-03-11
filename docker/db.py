@@ -237,6 +237,10 @@ def drop_pgosm_db():
     """Drops the pgosm database if it exists.
 
     Intentionally hard coded to `pgosm` database for in-Docker use only.
+
+    Returns
+    ------------------------
+    status : bool
     """
     if not pg_conn_parts()['pg_host'] == 'localhost':
         LOGGER.error('Attempted to drop database external from Docker. Not doing that')
@@ -250,12 +254,17 @@ def drop_pgosm_db():
     conn.execute(sql_raw)
     conn.close()
     LOGGER.info('Removed pgosm database')
+    return True
 
 
 def create_pgosm_db():
     """Creates the pgosm database and prepares with PostGIS and osm schema
 
     Intentionally hard coded to `pgosm` database for in-Docker use only.
+
+    Returns
+    -----------------------
+    status : bool
     """
     if not pg_conn_parts()['pg_host'] == 'localhost':
         LOGGER.error('Attempted to create database external from Docker. Not doing that')
@@ -283,6 +292,8 @@ def create_pgosm_db():
         LOGGER.debug('Installed PostGIS extension')
         cur.execute(sql_create_schema)
         LOGGER.debug('Created osm schema')
+
+    return True
 
 
 def run_sqitch_prep(db_path):
@@ -476,6 +487,8 @@ def pgosm_nested_admin_polygons(flex_path):
 
 
 def osm2pgsql_replication_start():
+    """Runs pre-replication step to clean out FKs that would prevent updates.
+    """
     LOGGER.error('Not running cleanup step in SQL yet!')
     sql_raw = 'CALL osm.append_data_start   ();'
 
@@ -484,9 +497,13 @@ def osm2pgsql_replication_start():
         cur.execute(sql_raw)
 
 
-
-
 def osm2pgsql_replication_finish(skip_nested):
+    """Runs post-replication step to put FKs back and refresh materialied views.
+
+    Parameters
+    ---------------------
+    skip_nested : bool
+    """
     # Fails via psycopg, using psql
     if skip_nested:
         LOGGER.info('Finishing Replication, skipping nested polygons')
@@ -509,8 +526,6 @@ def osm2pgsql_replication_finish(skip_nested):
         err_msg = f'Failed to finish replication. Return code: {output.returncode}'
         LOGGER.error(err_msg)
         sys.exit(f'{err_msg} - Check the log output for details.')
-
-
 
 
 def rename_schema(schema_name):
@@ -568,6 +583,10 @@ def fix_pg_dump_create_public(export_path):
     """Using pg_dump with `--schema=public` results in
     a .sql script containing `CREATE SCHEMA public;`, nearly always breaks
     in target DB.  Replaces with `CREATE SCHEMA IF NOT EXISTS public;`
+
+    Parameters
+    ----------------------
+    export_path : str
     """
     result = sh.sed('-i',
            's/CREATE SCHEMA public;/CREATE SCHEMA IF NOT EXISTS public;/',

@@ -354,7 +354,7 @@ docker exec -it \
 ```
 
 Running the above command a second time will detect that the target database
-has osm2pgsql replication setup and load data via the defined replication
+has `osm2pgsql-replication` setup and load data via the defined replication
 service.
 
 

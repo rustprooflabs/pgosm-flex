@@ -215,15 +215,13 @@ def unarchive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date):
     shutil.copy2(md5_file_with_date, md5_file)
 
 
-def remove_latest_files(region, subregion, out_path):
+def remove_latest_files(out_path):
     """Removes the PBF and MD5 file with -latest in the name.
 
     Files are archived via prepare_data() before processing starts
 
     Parameters
     -------------------------
-    region : str
-    subregion : str
     out_path : str
     """
     pbf_filename = get_region_filename()
@@ -234,4 +232,3 @@ def remove_latest_files(region, subregion, out_path):
     os.remove(pbf_file)
     logging.info(f'Done with {md5_file}, removing.')
     os.remove(md5_file)
-

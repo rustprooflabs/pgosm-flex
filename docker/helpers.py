@@ -47,7 +47,7 @@ def verify_checksum(md5_file, path):
         logger.error(err_msg)
         sys.exit(err_msg)
 
-    logger.info(f'md5sum validated')
+    logger.info('md5sum validated')
 
 
 def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
