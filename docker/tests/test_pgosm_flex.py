@@ -1,11 +1,27 @@
 """ Unit tests to cover the DB module."""
 import unittest
-import pgosm_flex
+import pgosm_flex, helpers
 
 REGION_US = 'north-america/us'
 SUBREGION_DC = 'district-of-columbia'
+LAYERSET = 'default'
+PGOSM_DATE = '2021-12-02'
+
 
 class PgOSMFlexTests(unittest.TestCase):
+
+    def setUp(self):
+        helpers.set_env_vars(region=REGION_US,
+                             subregion=SUBREGION_DC,
+                             srid=3857,
+                             language=None,
+                             pgosm_date=PGOSM_DATE,
+                             layerset=LAYERSET,
+                             layerset_path=None)
+
+
+    def tearDown(self):
+        helpers.unset_env_vars()
 
     def test_get_paths_returns_dict(self):
         base_path = pgosm_flex.BASE_PATH_DEFAULT
@@ -52,35 +68,30 @@ class PgOSMFlexTests(unittest.TestCase):
         Also tests the filename w/ region & subregion - no need for an additional
         test covering that behavior.
         """
-        region = 'north-america/us'
-        subregion = 'not/real'
-        layerset = 'default'
-        pgosm_date = '2021-12-02'
         input_file = None
-        result = pgosm_flex.get_export_filename(region, subregion, layerset, pgosm_date, input_file)
-        expected = 'north-america-us-not-real-default-2021-12-02.sql'
+        result = pgosm_flex.get_export_filename(input_file)
+        expected = 'north-america-us-district-of-columbia-default-2021-12-02.sql'
         self.assertEqual(expected, result)
 
     def test_get_export_filename_input_file_defined_overrides_region_subregion(self):
-        region = 'doesnotmatter' # Not setting to None to ensure expected behavior
-        subregion = 'alsodoesnotmatter' # Not setting to None to ensure expected behavior
-        layerset = 'default'
-        pgosm_date = '2021-12-02'
         input_file = '/my/inputfile.osm.pbf'
-        result = pgosm_flex.get_export_filename(region, subregion, layerset, pgosm_date, input_file)
+        result = pgosm_flex.get_export_filename(input_file)
         expected = '/my/inputfile-default-2021-12-02.sql'
         self.assertEqual(expected, result)
 
     def test_get_export_filename_region_only(self):
-        # Need 4 tests covering this function
-        # Check name when region , no subregion
-        #
-        region = 'north-america'
-        subregion = None
-        layerset = 'default'
-        pgosm_date = '2021-12-02'
+        # Override Subregion to None
+        helpers.unset_env_vars()
+        helpers.set_env_vars(region='north-america',
+                             subregion=None,
+                             srid=3857,
+                             language=None,
+                             pgosm_date=PGOSM_DATE,
+                             layerset=LAYERSET,
+                             layerset_path=None)
+
         input_file = None
-        result = pgosm_flex.get_export_filename(region, subregion, layerset, pgosm_date, input_file)
+        result = pgosm_flex.get_export_filename(input_file)
         expected = 'north-america-default-2021-12-02.sql'
         self.assertEqual(expected, result)
 

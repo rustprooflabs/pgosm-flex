@@ -10,7 +10,7 @@ import db
 LOGGER = logging.getLogger('pgosm-flex')
 
 
-def osm2pgsql_recommendation(ram, pbf_filename, out_path):
+def osm2pgsql_recommendation(ram, pbf_filename, out_path, append):
     """Returns recommended osm2pgsql command.
 
     Recommendation from API at https://osm2pgsql-tuner.com
@@ -23,6 +23,8 @@ def osm2pgsql_recommendation(ram, pbf_filename, out_path):
     pbf_filename : str
 
     out_path : str
+
+    append : boolean
 
     Returns
     ----------------------
@@ -38,8 +40,6 @@ def osm2pgsql_recommendation(ram, pbf_filename, out_path):
     osm_pbf_gb = os.path.getsize(pbf_file) / 1024 / 1024 / 1024
     LOGGER.debug(f'PBF size (GB): {osm_pbf_gb}')
 
-    # PgOSM-Flex currently does not support/test append mode.
-    append = False
     osm2pgsql_cmd = get_recommended_script(system_ram_gb,
                                            osm_pbf_gb,
                                            append,

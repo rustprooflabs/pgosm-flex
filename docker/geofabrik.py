@@ -8,18 +8,16 @@ import subprocess
 import helpers
 
 
-def get_region_filename(region, subregion):
+def get_region_filename():
     """Returns the filename needed to download/manage PBF files.
-
-    Parameters
-    ----------------------
-    region : str
-    subregion : str
 
     Returns
     ----------------------
     filename : str
     """
+    region = os.environ.get('PGOSM_REGION')
+    subregion = os.environ.get('PGOSM_SUBREGION')
+
     base_name = '{}-latest.osm.pbf'
     if subregion is None:
         filename = base_name.format(region)
@@ -29,7 +27,7 @@ def get_region_filename(region, subregion):
     return filename
 
 
-def prepare_data(region, subregion, pgosm_date, out_path):
+def prepare_data(out_path):
     """Ensures the PBF file is available.
 
     Checks if it already exists locally, download if needed,
@@ -37,9 +35,6 @@ def prepare_data(region, subregion, pgosm_date, out_path):
 
     Parameters
     ----------------------
-    region : str
-    subregion : str
-    pgosm_date : str
     out_path : str
 
     Returns
@@ -47,7 +42,11 @@ def prepare_data(region, subregion, pgosm_date, out_path):
     pbf_file : str
         Full path to PBF file
     """
-    pbf_filename = get_region_filename(region, subregion)
+    region = os.environ.get('PGOSM_REGION')
+    subregion = os.environ.get('PGOSM_SUBREGION')
+    pgosm_date = os.environ.get('PGOSM_DATE')
+
+    pbf_filename = get_region_filename()
 
     pbf_file = os.path.join(out_path, pbf_filename)
     pbf_file_with_date = pbf_file.replace('latest', pgosm_date)
@@ -216,23 +215,20 @@ def unarchive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date):
     shutil.copy2(md5_file_with_date, md5_file)
 
 
-def remove_latest_files(region, subregion, paths):
+def remove_latest_files(out_path):
     """Removes the PBF and MD5 file with -latest in the name.
 
     Files are archived via prepare_data() before processing starts
 
     Parameters
     -------------------------
-    region : str
-    subregion : str
-    paths : dict
+    out_path : str
     """
-    pbf_filename = get_region_filename(region, subregion)
+    pbf_filename = get_region_filename()
 
-    pbf_file = os.path.join(paths['out_path'], pbf_filename)
+    pbf_file = os.path.join(out_path, pbf_filename)
     md5_file = f'{pbf_file}.md5'
     logging.info(f'Done with {pbf_file}, removing.')
     os.remove(pbf_file)
     logging.info(f'Done with {md5_file}, removing.')
     os.remove(md5_file)
-

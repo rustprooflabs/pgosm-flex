@@ -27,7 +27,14 @@ local function post_processing(layerset)
     sql_raw = sql_file:read( '*all' )
     sql_file:close()
     local result = con:execute(sql_raw)
-    --print(result) -- Returns 0.0 on success?  nil on error?
+
+    -- Returns 0 on success, nil on error.
+    if result == nil then
+        print(string.format("Error in post-processing layerset: %s", layerset))
+        return false
+    end
+
+    return true
 end
 
 
@@ -44,12 +51,17 @@ while row do
   row = cur:fetch (row, "a")
 end
 
+local errors = 0
 
-post_processing('pgosm-meta')
+if not post_processing('pgosm-meta') then
+    errors = errors + 1
+end
 
 for ix, layer in ipairs(layers) do
     if conf['layerset'][layer] then
-        post_processing(layer)
+        if not post_processing(layer) then
+            errors = errors + 1
+        end
     end
 end
 
@@ -58,3 +70,7 @@ end
 cur:close()
 con:close()
 env:close()
+
+if errors > 0 then
+    os.exit(1)
+end
