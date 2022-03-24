@@ -25,7 +25,7 @@ RUN luarocks install luasql-postgres PGSQL_INCDIR=/usr/include/postgresql/
 
 
 WORKDIR /tmp
-RUN git clone --depth 1 --branch $OSM2PGSQL_BRANCH git://github.com/openstreetmap/osm2pgsql.git \
+RUN git clone --depth 1 --branch $OSM2PGSQL_BRANCH https://github.com/openstreetmap/osm2pgsql.git \
     && mkdir osm2pgsql/build \
     && cd osm2pgsql/build \
     && cmake .. \
