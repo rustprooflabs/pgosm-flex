@@ -115,7 +115,7 @@ def run_pgosm_flex(ram, region, subregion, append, basepath, data_only, debug,
         replication_update = False
 
     if replication_update:
-        logger.error('UPDATE mode coming soon!')
+        logger.warning('Append mode is Experimental!')
         success = run_replication_update(skip_nested=skip_nested,
                                          flex_path=paths['flex_path'])
     else:

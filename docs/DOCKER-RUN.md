@@ -326,7 +326,7 @@ mode runs osm2pgsql normally, with `--slim` mode and without `--drop`.
 After osm2pgsql completes, `osm2pgsql-replication init ...` is ran to setup
 the DB for updates.
 
-Need to increase Postgres' `max_connections`, see
+Need to pin the PgOSM Flex version. Also need to increase Postgres' `max_connections`, see
 [this discussion on osm2pgsql](https://github.com/openstreetmap/osm2pgsql/discussions/1650).
 
 
@@ -335,9 +335,13 @@ docker run --name pgosm -d --rm \
     -v ~/pgosm-data:/app/output \
     -v /etc/localtime:/etc/localtime:ro \
     -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
-    -p 5433:5432 -d rustprooflabs/pgosm-flex \
+    -p 5433:5432 \
+    -d rustprooflabs/pgosm-flex:0.4.6 \
     -c max_connections=300
 ```
+
+> Note: The instructions for `--append` include a specific version of the PgOSM Flex Docker image. Using append mode across PgOSM Flex versions is currently untested. Upgrading PgOSM Flex versions with append mode may be possible with manual DDL scripts, or may simply require loading the data from scratch to upgrade.
+
 
 Run the `docker exec` step with `--append` and `--skip-dump`. This results in
 a larger database as the intermediate osm2pgsql tables must be left
@@ -356,6 +360,5 @@ docker exec -it \
 Running the above command a second time will detect that the target database
 has `osm2pgsql-replication` setup and load data via the defined replication
 service.
-
 
 

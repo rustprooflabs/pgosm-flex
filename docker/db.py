@@ -489,8 +489,8 @@ def pgosm_nested_admin_polygons(flex_path):
 def osm2pgsql_replication_start():
     """Runs pre-replication step to clean out FKs that would prevent updates.
     """
-    LOGGER.error('Not running cleanup step in SQL yet!')
-    sql_raw = 'CALL osm.append_data_start   ();'
+    LOGGER.info('Prep database to allow data updates.')
+    sql_raw = 'CALL osm.append_data_start();'
 
     with get_db_conn(conn_string=connection_string()) as conn:
         cur = conn.cursor()
