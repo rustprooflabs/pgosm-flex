@@ -86,10 +86,13 @@ local function get_osm_type_subtype(object)
         osm_type = 'bench'
     elseif amenity == nil and object.tags.brewery then
         osm_type = 'brewery'
+    elseif (amenity == 'restaurant' or amenity == 'fast_food' or amenity == 'cafe') then
+        osm_type = amenity
+        osm_subtype = object.tags.cuisine
     elseif amenity == 'shelter' then
         osm_type = amenity
         osm_subtype = object.tags.shelter_type
-    elseif amenity ~= nil then
+    elseif amenity ~= nil and osm_type == nil then
         osm_type = amenity
     end
 
