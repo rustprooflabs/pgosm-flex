@@ -8,6 +8,7 @@ tables.amenity_point = osm2pgsql.define_table({
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'osm_subtype',     type = 'text' },
         { column = 'name',     type = 'text' },
         { column = 'housenumber', type = 'text'},
         { column = 'street',     type = 'text' },
@@ -27,6 +28,7 @@ tables.amenity_line = osm2pgsql.define_table({
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'osm_subtype',     type = 'text' },
         { column = 'name',     type = 'text' },
         { column = 'housenumber', type = 'text'},
         { column = 'street',     type = 'text' },
@@ -47,6 +49,7 @@ tables.amenity_polygon = osm2pgsql.define_table({
     ids = { type = 'area', id_column = 'osm_id' },
     columns = {
         { column = 'osm_type',     type = 'text', not_null = true },
+        { column = 'osm_subtype',     type = 'text' },
         { column = 'name',     type = 'text' },
         { column = 'housenumber', type = 'text'},
         { column = 'street',     type = 'text' },
@@ -71,16 +74,28 @@ local amenity_first_level_keys = {
 local is_first_level_amenity = make_check_in_list_func(amenity_first_level_keys)
 
 
-local function get_osm_type(object)
-    local osm_type = object.tags.amenity
+local function get_osm_type_subtype(object)
+    -- This function knowingly returns nil osm_type.
+    -- This allows filtering out bench=no records (and similar) in later logic
+    local osm_type_table = {}
+    local amenity = object.tags.amenity
+    local osm_type = nil
+    local osm_subtype = nil
 
-    if osm_type == nil and object.tags.bench == 'yes' then
+    if amenity == nil and object.tags.bench == 'yes' then
         osm_type = 'bench'
-    elseif osm_type == nil and object.tags.brewery then
+    elseif amenity == nil and object.tags.brewery then
         osm_type = 'brewery'
+    elseif amenity == 'shelter' then
+        osm_type = amenity
+        osm_subtype = object.tags.shelter_type
+    elseif amenity ~= nil then
+        osm_type = amenity
     end
 
-    return osm_type
+    osm_type_table['osm_type'] = osm_type
+    osm_type_table['osm_subtype'] = osm_subtype
+    return osm_type_table
 end
 
 
@@ -89,14 +104,13 @@ function amenity_process_node(object)
         return
     end
 
-    local osm_type = get_osm_type(object)
+    local osm_types = get_osm_type_subtype(object)
 
-    if osm_type == nil then
+    if osm_types['osm_type'] == nil then
         return
     end
 
     local name = get_name(object.tags)
-
 
     local housenumber  = object.tags['addr:housenumber']
     local street = object.tags['addr:street']
@@ -108,7 +122,8 @@ function amenity_process_node(object)
     local wheelchair_desc = get_wheelchair_desc(object.tags)
 
     tables.amenity_point:add_row({
-        osm_type = osm_type,
+        osm_type = osm_types['osm_type'],
+        osm_subtype = osm_types['osm_subtype'],
         name = name,
         housenumber = housenumber,
         street = street,
@@ -129,9 +144,9 @@ function amenity_process_way(object)
         return
     end
 
-    local osm_type = get_osm_type(object)
+    local osm_types = get_osm_type_subtype(object)
 
-    if osm_type == nil then
+    if osm_types['osm_type'] == nil then
         return
     end
 
@@ -148,7 +163,8 @@ function amenity_process_way(object)
 
     if object.is_closed then
         tables.amenity_polygon:add_row({
-            osm_type = osm_type,
+            osm_type = osm_types['osm_type'],
+            osm_subtype = osm_types['osm_subtype'],
             name = name,
             housenumber = housenumber,
             street = street,
@@ -162,7 +178,8 @@ function amenity_process_way(object)
         })
     else
         tables.amenity_line:add_row({
-            osm_type = osm_type,
+            osm_type = osm_types['osm_type'],
+            osm_subtype = osm_types['osm_subtype'],
             name = name,
             housenumber = housenumber,
             street = street,
@@ -184,33 +201,32 @@ function amenity_process_relation(object)
         return
     end
 
-    local osm_type = get_osm_type(object)
+    local osm_types = get_osm_type_subtype(object)
 
-    if osm_type == nil then
+    if osm_types['osm_type'] == nil then
         return
     end
 
     local name = get_name(object.tags)
-
     local address = get_address(object.tags)
     local wheelchair = object.tags.wheelchair
     local wheelchair_desc = get_wheelchair_desc(object.tags)
 
-    if object.tags.type == 'multipolygon' or object.tags.type == 'boundary' then
-        tables.amenity_polygon:add_row({
-            osm_type = osm_type,
-            name = name,
-            housenumber = housenumber,
-            street = street,
-            city = city,
-            state = state,
-            postcode = postcode,
-            address = address,
-            wheelchair = wheelchair,
-            wheelchair_desc = wheelchair_desc,
-            geom = { create = 'area' }
-        })
-    end
+    tables.amenity_polygon:add_row({
+        osm_type = osm_types['osm_type'],
+        osm_subtype = osm_types['osm_subtype'],
+        name = name,
+        housenumber = housenumber,
+        street = street,
+        city = city,
+        state = state,
+        postcode = postcode,
+        address = address,
+        wheelchair = wheelchair,
+        wheelchair_desc = wheelchair_desc,
+        geom = { create = 'area' }
+    })
+
 end
 
 
