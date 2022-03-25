@@ -13,8 +13,13 @@ RUN apt-get update \
         libbz2-dev libpq-dev libproj-dev lua5.2 liblua5.2-dev \
         python3 python3-distutils \
         postgresql-server-dev-14 \
-        curl luarocks \
+        curl unzip \
     && rm -rf /var/lib/apt/lists/*
+
+RUN wget https://luarocks.org/releases/luarocks-3.8.0.tar.gz \
+    && tar zxpf luarocks-3.8.0.tar.gz \
+    && cd luarocks-3.8.0 \
+    && ./configure && make && make install
 
 RUN curl -o /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py \
     && python3 /tmp/get-pip.py \
