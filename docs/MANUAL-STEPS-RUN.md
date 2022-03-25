@@ -22,10 +22,21 @@ sudo apt install -y \
         libboost-dev libboost-system-dev \
         libboost-filesystem-dev libexpat1-dev zlib1g-dev \
         libbz2-dev libpq-dev libproj-dev lua5.2 liblua5.2-dev \
-        luarocks
+        unzip
 ```
 
-I had to use the `PGSQL_INCDIR` on Ubuntu 20.04 to get it to find the libpq headers.
+LuaRocks is installed from source to ensure the latest version is available. Instructions
+[from luarocks.org](https://luarocks.org/).
+
+
+```bash
+wget https://luarocks.org/releases/luarocks-3.8.0.tar.gz
+tar zxpf luarocks-3.8.0.tar.gz
+cd luarocks-3.8.0
+./configure && make && sudo make install
+```
+
+Use `luarocks` to install `inifile` and `luasql-postgres`.
 
 
 ```bash
@@ -33,7 +44,9 @@ sudo luarocks install inifile
 sudo luarocks install luasql-postgres PGSQL_INCDIR=/usr/include/postgresql/
 ```
 
-Install osm2pgsql from source.
+Install osm2pgsql from source.  The version from `apt install` is unlikely to be new enough
+for use with this project.
+
 
 ```bash
 git clone git://github.com/openstreetmap/osm2pgsql.git
@@ -313,21 +326,6 @@ the latest documented functionality.
 * Does the database user have proper [permissisions in Postgres](POSTGRES-PERMISSIONS.md)?
 
 
-### Luarocks not installed properly
-
-This problem results in the error message `'luasql.postgres' not found`.
-An example of this issue is reported [via #218](https://github.com/rustprooflabs/pgosm-flex/issues/218).
-
-May need to install LuaRocks from source package, instructions
-[from luarocks.org](https://luarocks.org/).
-
-
-```bash
-wget https://luarocks.org/releases/luarocks-3.8.0.tar.gz
-tar zxpf luarocks-3.8.0.tar.gz
-cd luarocks-3.8.0
-./configure && make && sudo make install
-```
 
 ### Too many Postgres connections
 
