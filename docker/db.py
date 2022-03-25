@@ -173,18 +173,24 @@ def pg_isready():
     return True
 
 
-def prepare_pgosm_db(data_only, db_path):
+def prepare_pgosm_db(data_only, db_path, append):
     """Runs through series of steps to prepare database for PgOSM.
 
     Parameters
     --------------------------
     data_only : bool
     db_path : str
+    append : bool
     """
 
     if pg_conn_parts()['pg_host'] == 'localhost':
         LOGGER.debug('Running standard database prep for in-Docker operation. Includes DROP/CREATE DATABASE')
-        drop_pgosm_db()
+        if append:
+            LOGGER.debug('Skipping DB drop b/c of append mode')
+        else:
+            LOGGER.debug('Dropping database')
+            drop_pgosm_db()
+
         create_pgosm_db()
     else:
         LOGGER.info('Using external database. Ensure the target database is setup properly for PgOSM Flex with PostGIS, osm schema, and proper permissions.')
@@ -231,6 +237,10 @@ def drop_pgosm_db():
     """Drops the pgosm database if it exists.
 
     Intentionally hard coded to `pgosm` database for in-Docker use only.
+
+    Returns
+    ------------------------
+    status : bool
     """
     if not pg_conn_parts()['pg_host'] == 'localhost':
         LOGGER.error('Attempted to drop database external from Docker. Not doing that')
@@ -244,12 +254,17 @@ def drop_pgosm_db():
     conn.execute(sql_raw)
     conn.close()
     LOGGER.info('Removed pgosm database')
+    return True
 
 
 def create_pgosm_db():
     """Creates the pgosm database and prepares with PostGIS and osm schema
 
     Intentionally hard coded to `pgosm` database for in-Docker use only.
+
+    Returns
+    -----------------------
+    status : bool
     """
     if not pg_conn_parts()['pg_host'] == 'localhost':
         LOGGER.error('Attempted to create database external from Docker. Not doing that')
@@ -260,12 +275,16 @@ def create_pgosm_db():
 
     LOGGER.debug('Setting Pg conn to enable autocommit - required for drop/create DB')
     conn.autocommit = True
-    conn.execute(sql_raw)
-    conn.close()
-    LOGGER.info('Created pgosm database')
+    try:
+        conn.execute(sql_raw)
+        LOGGER.info('Created pgosm database')
+    except psycopg.errors.DuplicateDatabase:
+        LOGGER.info('Database already existed.')
+    finally:
+        conn.close()
 
-    sql_create_postgis = "CREATE EXTENSION postgis;"
-    sql_create_schema = "CREATE SCHEMA osm;"
+    sql_create_postgis = "CREATE EXTENSION IF NOT EXISTS postgis;"
+    sql_create_schema = "CREATE SCHEMA IF NOT EXISTS osm;"
 
     with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
         cur = conn.cursor()
@@ -273,6 +292,8 @@ def create_pgosm_db():
         LOGGER.debug('Installed PostGIS extension')
         cur.execute(sql_create_schema)
         LOGGER.debug('Created osm schema')
+
+    return True
 
 
 def run_sqitch_prep(db_path):
@@ -424,10 +445,18 @@ def pgosm_after_import(flex_path):
 
     output = subprocess.run(cmds,
                             text=True,
-                            capture_output=True,
                             cwd=flex_path,
-                            check=True)
-    LOGGER.info(f'Post-processing output: \n {output.stderr}')
+                            check=False,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+    LOGGER.info(f'Post-processing SQL output: \n {output.stdout}')
+
+    if output.returncode != 0:
+        err_msg = f'Failed to run post-processing SQL. Return code: {output.returncode}'
+        LOGGER.error(err_msg)
+        return False
+
+    return True
 
 
 def pgosm_nested_admin_polygons(flex_path):
@@ -452,6 +481,49 @@ def pgosm_nested_admin_polygons(flex_path):
 
     if output.returncode != 0:
         err_msg = f'Failed to build nested polygons. Return code: {output.returncode}'
+        LOGGER.error(err_msg)
+        sys.exit(f'{err_msg} - Check the log output for details.')
+
+
+
+def osm2pgsql_replication_start():
+    """Runs pre-replication step to clean out FKs that would prevent updates.
+    """
+    LOGGER.info('Prep database to allow data updates.')
+    sql_raw = 'CALL osm.append_data_start();'
+
+    with get_db_conn(conn_string=connection_string()) as conn:
+        cur = conn.cursor()
+        cur.execute(sql_raw)
+
+
+def osm2pgsql_replication_finish(skip_nested):
+    """Runs post-replication step to put FKs back and refresh materialied views.
+
+    Parameters
+    ---------------------
+    skip_nested : bool
+    """
+    # Fails via psycopg, using psql
+    if skip_nested:
+        LOGGER.info('Finishing Replication, skipping nested polygons')
+        sql_raw = 'CALL osm.append_data_finish(skip_nested := True );'
+    else:
+        LOGGER.info('Finishing Replication, including nested polygons')
+        sql_raw = 'CALL osm.append_data_finish(skip_nested := False );'
+
+    conn_string = os.environ['PGOSM_CONN']
+    cmds = ['psql', '-d', conn_string, '-c', sql_raw]
+    LOGGER.info('Finishing Replication')
+    output = subprocess.run(cmds,
+                            text=True,
+                            check=False,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+    LOGGER.info(f'Finishing replication output: \n {output.stdout}')
+
+    if output.returncode != 0:
+        err_msg = f'Failed to finish replication. Return code: {output.returncode}'
         LOGGER.error(err_msg)
         sys.exit(f'{err_msg} - Check the log output for details.')
 
@@ -511,6 +583,10 @@ def fix_pg_dump_create_public(export_path):
     """Using pg_dump with `--schema=public` results in
     a .sql script containing `CREATE SCHEMA public;`, nearly always breaks
     in target DB.  Replaces with `CREATE SCHEMA IF NOT EXISTS public;`
+
+    Parameters
+    ----------------------
+    export_path : str
     """
     result = sh.sed('-i',
            's/CREATE SCHEMA public;/CREATE SCHEMA IF NOT EXISTS public;/',

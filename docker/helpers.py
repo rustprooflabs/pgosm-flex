@@ -47,7 +47,7 @@ def verify_checksum(md5_file, path):
         logger.error(err_msg)
         sys.exit(err_msg)
 
-    logger.info(f'md5sum validated')
+    logger.info('md5sum validated')
 
 
 def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
@@ -72,13 +72,17 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
     unset_env_vars()
     logger.debug('Setting environment variables')
 
+    os.environ['PGOSM_REGION'] = region
+
     if subregion is None:
         pgosm_region = f'{region}'
     else:
+        os.environ['PGOSM_SUBREGION'] = subregion
         pgosm_region = f'{region}-{subregion}'
 
-    logger.debug(f'PGOSM_REGION: {pgosm_region}')
-    os.environ['PGOSM_REGION'] = pgosm_region
+    # Used by helpers.lua
+    logger.debug(f'PGOSM_REGION_COMBINED: {pgosm_region}')
+    os.environ['PGOSM_REGION_COMBINED'] = pgosm_region
 
     if srid != DEFAULT_SRID:
         logger.info(f'SRID set: {srid}')
@@ -106,6 +110,8 @@ def unset_env_vars():
     Does not pop POSTGRES_DB on purpose to allow non-Docker operation.
     """
     os.environ.pop('PGOSM_REGION', None)
+    os.environ.pop('PGOSM_SUBREGION', None)
+    os.environ.pop('PGOSM_COMBINED', None)
     os.environ.pop('PGOSM_SRID', None)
     os.environ.pop('PGOSM_LANGUAGE', None)
     os.environ.pop('PGOSM_LAYERSET_PATH', None)

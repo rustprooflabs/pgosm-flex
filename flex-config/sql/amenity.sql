@@ -59,3 +59,7 @@ COMMENT ON COLUMN osm.amenity_polygon.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.amenity_point.address IS 'Address combined from address parts in helpers.get_address().';
 COMMENT ON COLUMN osm.amenity_line.address IS 'Address combined from address parts in helpers.get_address().';
 COMMENT ON COLUMN osm.amenity_polygon.address IS 'Address combined from address parts in helpers.get_address().';
+
+COMMENT ON COLUMN osm.amenity_point.osm_subtype IS 'Further describes osm_type for amenities.';
+COMMENT ON COLUMN osm.amenity_line.osm_subtype IS 'Further describes osm_type for amenities.';
+COMMENT ON COLUMN osm.amenity_polygon.osm_subtype IS 'Further describes osm_type for amenities.';
