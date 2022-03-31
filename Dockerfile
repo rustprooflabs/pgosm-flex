@@ -3,6 +3,7 @@ FROM postgis/postgis:16-3.4
 LABEL maintainer="PgOSM Flex - https://github.com/rustprooflabs/pgosm-flex"
 
 ARG OSM2PGSQL_BRANCH=master
+ARG BOUNCER_VERSION=1.17.0
 
 RUN apt-get update \
     # Removed upgrade per https://github.com/rustprooflabs/pgosm-flex/issues/322
@@ -18,6 +19,7 @@ RUN apt-get update \
         curl unzip \
         postgresql-16-pgrouting \
         nlohmann-json3-dev \
+        pkg-config libevent-2.1-7 libevent-dev libudns-dev \
     && rm -rf /var/lib/apt/lists/*
 
 RUN wget https://luarocks.org/releases/luarocks-3.9.2.tar.gz \
@@ -32,6 +34,19 @@ RUN curl -o /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py \
 RUN luarocks install inifile
 RUN luarocks install luasql-postgres PGSQL_INCDIR=/usr/include/postgresql/
 
+# pgBouncer implementation based on: https://github.com/edoburu/docker-pgbouncer/blob/master/Dockerfile
+RUN   curl -o  /tmp/pgbouncer-$BOUNCER_VERSION.tar.gz -L https://pgbouncer.github.io/downloads/files/$BOUNCER_VERSION/pgbouncer-$BOUNCER_VERSION.tar.gz \
+  && cd /tmp \
+  && tar xvfz /tmp/pgbouncer-$BOUNCER_VERSION.tar.gz \
+  && cd pgbouncer-$BOUNCER_VERSION \
+  && ./configure --prefix=/usr --with-udns \
+  && make \
+  && cp pgbouncer /usr/bin \
+  && mkdir -p /etc/pgbouncer /var/log/pgbouncer /var/run/pgbouncer \
+  && cp etc/pgbouncer.ini /etc/pgbouncer/pgbouncer.ini.example \
+  && cp etc/userlist.txt /etc/pgbouncer/userlist.txt.example \
+  && touch /etc/pgbouncer/userlist.txt \
+  && chown -R postgres /var/run/pgbouncer /etc/pgbouncer
 
 WORKDIR /tmp
 RUN git clone --depth 1 --branch $OSM2PGSQL_BRANCH https://github.com/openstreetmap/osm2pgsql.git \
@@ -45,6 +60,7 @@ RUN git clone --depth 1 --branch $OSM2PGSQL_BRANCH https://github.com/openstreet
         libexpat1-dev zlib1g-dev \
         libbz2-dev libproj-dev \
         curl \
+        pkg-config libevent-dev \
     && apt autoremove -y \
     && cd /tmp && rm -r /tmp/osm2pgsql
 
