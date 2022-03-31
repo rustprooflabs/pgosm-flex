@@ -4,13 +4,21 @@ This README provides details about running PgOSM-Flex using the image defined
 in `Dockerfile` and the script loaded from `docker/pgosm_flex.py`.
 
 
-## Setup and Run Container
+## Directory for data files
 
-Create directory for the `.osm.pbf` file and output `.sql` file.
+Create directory for the `.osm.pbf` file and the output `.sql` file. The PBF and MD5 files
+downloaded from Geofabrik are stored in this directory.
 
 ```bash
 mkdir ~/pgosm-data
 ```
+
+Changing this directory location requires updating the `docker run` command.
+Update the line `-v ~/pgosm-data:/app/output` to link the appropriate path.
+
+
+## Run Container
+
 
 
 Set environment variables for the temporary Postgres connection in Docker.
@@ -22,9 +30,12 @@ export POSTGRES_PASSWORD=mysecretpassword
 
 Start the `pgosm` Docker container to make PostgreSQL/PostGIS available.
 This command exposes Postgres inside Docker on port 5433 and establishes links
-to the local directory created above (`~/pgosm-data`).
+to the local directory created above (`~/pgosm-data`). If your data is stored in a
+different location, update this value.
+
 Using `-v /etc/localtime:/etc/localtime:ro` allows the Docker image to use
-your the host machine's timezone, important when for archiving PBF & MD5 files by date.
+the host machine's timezone instead of UTC. This is important when determining if the data
+to load should be the latest file (download) or a historic (local) file.
 
 
 ```bash
@@ -116,9 +127,9 @@ Usage: pgosm_flex.py [OPTIONS]
 
 Options:
   --ram FLOAT           Amount of RAM in GB available on the machine running
-                        this process. Used to determine appropriate osm2pgsql
-                        command via osm2pgsql-tuner recommendation engine.
-                        [required]
+                        the Docker container. This is used to determine the
+                        appropriate osm2pgsql command via osm2pgsql-tuner
+                        recommendation engine.  [required]
   --region TEXT         Region name matching the filename for data sourced
                         from Geofabrik. e.g. north-america/us. Optional when
                         --input-file is specified, otherwise required.
@@ -298,7 +309,7 @@ docker run --name pgosm -d --rm \
     -p 5433:5432 -d rustprooflabs/pgosm-flex
 ```
 
-> Note: Setting `POSTGRES_HOST` to anything but `localhost` disables the drop/create database step.
+> Note: Setting `POSTGRES_HOST` to anything but `localhost` disables the drop/create database step. This means the target database must be created prior to running PgOSM Flex.
 
 
 The `docker exec` command can be used as normal. The following
