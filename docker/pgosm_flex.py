@@ -31,7 +31,7 @@ BASE_PATH_DEFAULT = '/app'
 # Required and most common options first
 @click.option('--ram', required=True,
               type=float,
-              help='Amount of RAM in GB available on the machine running this process. Used to determine appropriate osm2pgsql command via osm2pgsql-tuner recommendation engine.')
+              help='Amount of RAM in GB available on the machine running the Docker container. This is used to determine the appropriate osm2pgsql command via osm2pgsql-tuner recommendation engine.')
 @click.option('--region', required=False,
               help='Region name matching the filename for data sourced from Geofabrik. e.g. north-america/us. Optional when --input-file is specified, otherwise required.')
 @click.option('--subregion', required=False,
