@@ -4,6 +4,7 @@ aeroway|hangar|2
 aeroway|helipad|12
 aeroway|heliport|2
 aeroway|runway|3
+emergency||13
 power|generator|9
 power|plant|1
 power|substation|15

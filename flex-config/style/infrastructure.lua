@@ -69,15 +69,18 @@ local function get_osm_type_subtype(object)
 
     if object.tags.amenity == 'fire_hydrant'
             or object.tags.emergency == 'fire_hydrant' then
-        osm_type_table['osm_type'] = 'fire_hydrant'
-        osm_type_table['osm_subtype'] = nil
+        osm_type_table['osm_type'] = 'emergency'
+        osm_type_table['osm_subtype'] = 'fire_hydrant'
     elseif object.tags.amenity == 'emergency_phone'
             or object.tags.emergency == 'phone' then
-        osm_type_table['osm_type'] = 'emergency_phone'
-        osm_type_table['osm_subtype'] = nil
+        osm_type_table['osm_type'] = 'emergency'
+        osm_type_table['osm_subtype'] = 'phone'
+    elseif object.tags.emergency then
+        osm_type_table['osm_type'] = 'emergency'
+        osm_type_table['osm_type_subtype'] = object.tags.emergency
     elseif object.tags.highway == 'emergency_access_point' then
-        osm_type_table['osm_type'] = 'emergency_access'
-        osm_type_table['osm_subtype'] = nil
+        osm_type_table['osm_type'] = 'emergency'
+        osm_type_table['osm_subtype'] = 'highway_access'
     elseif object.tags.man_made == 'tower'
             or object.tags.man_made == 'communications_tower'
             or object.tags.man_made == 'mast'
