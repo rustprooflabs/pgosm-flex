@@ -1,10 +1,10 @@
 aeroway|helipad|9
 aeroway|navigationaid|1
 communications_tower||1
+emergency|ambulance_station|1
 emergency|fire_hydrant|357
 emergency|highway_access|1
 emergency|phone|16
-emergency||1
 flagpole||248
 mast||2
 power|generator|2

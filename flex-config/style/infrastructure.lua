@@ -64,50 +64,56 @@ tables.infrastructure_polygon = osm2pgsql.define_table({
     }
 })
 
-local function get_osm_type_subtype(object)
+local function get_osm_type_subtype(tags)
     local osm_type_table = {}
 
-    if object.tags.amenity == 'fire_hydrant'
-            or object.tags.emergency == 'fire_hydrant' then
+    if tags.amenity == 'fire_hydrant'
+            or tags.emergency == 'fire_hydrant' then
         osm_type_table['osm_type'] = 'emergency'
         osm_type_table['osm_subtype'] = 'fire_hydrant'
-    elseif object.tags.amenity == 'emergency_phone'
-            or object.tags.emergency == 'phone' then
+    elseif tags.amenity == 'emergency_phone'
+            or tags.emergency == 'phone' then
         osm_type_table['osm_type'] = 'emergency'
         osm_type_table['osm_subtype'] = 'phone'
-    elseif object.tags.emergency then
+    elseif tags.emergency then
         osm_type_table['osm_type'] = 'emergency'
-        osm_type_table['osm_type_subtype'] = object.tags.emergency
-    elseif object.tags.highway == 'emergency_access_point' then
+        osm_type_table['osm_subtype'] = tags.emergency
+    elseif tags.highway == 'emergency_access_point' then
         osm_type_table['osm_type'] = 'emergency'
         osm_type_table['osm_subtype'] = 'highway_access'
-    elseif object.tags.man_made == 'tower'
-            or object.tags.man_made == 'communications_tower'
-            or object.tags.man_made == 'mast'
-            or object.tags.man_made == 'lighthouse'
-            or object.tags.man_made == 'flagpole'
+    elseif tags.man_made == 'tower'
+            or tags.man_made == 'communications_tower'
+            or tags.man_made == 'mast'
+            or tags.man_made == 'lighthouse'
+            or tags.man_made == 'flagpole'
             then
-        osm_type_table['osm_type'] = object.tags.man_made
-        osm_type_table['osm_subtype'] = object.tags['tower:type']
+        osm_type_table['osm_type'] = tags.man_made
+        osm_type_table['osm_subtype'] = tags['tower:type']
 
-    elseif object.tags.man_made == 'silo'
-            or object.tags.man_made == 'storage_tank'
-            or object.tags.man_made == 'water_tower'
-            or object.tags.man_made == 'reservoir_covered'
+    elseif tags.man_made == 'silo'
+            or tags.man_made == 'storage_tank'
+            or tags.man_made == 'water_tower'
+            or tags.man_made == 'reservoir_covered'
             then
-        osm_type_table['osm_type'] = object.tags.man_made
-        osm_type_table['osm_subtype'] = object.tags['content']
-    elseif object.tags.power
+        osm_type_table['osm_type'] = tags.man_made
+        osm_type_table['osm_subtype'] = tags['content']
+    elseif tags.power
             then
         osm_type_table['osm_type'] = 'power'
-        osm_type_table['osm_subtype'] = object.tags['power']
-    elseif object.tags.utility then
+        osm_type_table['osm_subtype'] = tags['power']
+    elseif tags.utility then
         osm_type_table['osm_type'] = 'utility'
         osm_type_table['osm_subtype'] = nil
-    elseif object.tags.aeroway then
+    elseif tags.aeroway then
         osm_type_table['osm_type'] = 'aeroway'
-        osm_type_table['osm_subtype'] = object.tags.aeroway
+        osm_type_table['osm_subtype'] = tags.aeroway
     else
+        osm_type_table['osm_type'] = 'unknown'
+        osm_type_table['osm_subtype'] = nil
+    end
+
+    if osm_type_table['osm_type'] == 'emergency'
+            and osm_type_table['osm_subtype'] == 'no' then
         osm_type_table['osm_type'] = 'unknown'
         osm_type_table['osm_subtype'] = nil
     end
@@ -123,7 +129,7 @@ function infrastructure_process_node(object)
         return
     end
 
-    local osm_types = get_osm_type_subtype(object)
+    local osm_types = get_osm_type_subtype(object.tags)
 
     if osm_types.osm_type == 'unknown' then
         return
@@ -155,7 +161,7 @@ function infrastructure_process_way(object)
         return
     end
 
-    local osm_types = get_osm_type_subtype(object)
+    local osm_types = get_osm_type_subtype(object.tags)
 
     if osm_types.osm_type == 'unknown' then
         return

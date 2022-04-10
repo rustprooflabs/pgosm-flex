@@ -1,6 +1,6 @@
 aeroway|runway|2
 aeroway|taxiway|1
-emergency||3
+emergency|yes|3
 power|cable|6
 power|line|11
 power|minor_line|2
