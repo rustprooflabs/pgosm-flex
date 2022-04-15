@@ -40,6 +40,7 @@ def connection_string(admin=False):
     pg_pass = pg_details['pg_pass']
     pg_host = pg_details['pg_host']
     pg_db = pg_details['pg_db']
+    pg_port = pg_details['pg_port']
 
     if admin:
         if pg_host == 'localhost':
@@ -53,9 +54,9 @@ def connection_string(admin=False):
         db_name = pg_db
 
     if pg_pass is None:
-        conn_string = f'postgresql://{pg_user}@{pg_host}/{db_name}{app_str}'
+        conn_string = f'postgresql://{pg_user}@{pg_host}:{pg_port}/{db_name}{app_str}'
     else:
-        conn_string = f'postgresql://{pg_user}:{pg_pass}@{pg_host}/{db_name}{app_str}'
+        conn_string = f'postgresql://{pg_user}:{pg_pass}@{pg_host}:{pg_port}/{db_name}{app_str}'
 
     return conn_string
 
@@ -87,7 +88,13 @@ def pg_conn_parts():
         pg_host = 'localhost'
         LOGGER.debug(f'POSTGRES_HOST not configured. Defaulting to {pg_host}')
 
-    LOGGER.debug(f'PG Host: {pg_host}')
+    try:
+        pg_port = os.environ['POSTGRES_PORT']
+    except KeyError:
+        pg_port = '5432'
+        LOGGER.debug(f'POSTGRES_HOST not configured. Defaulting to {pg_port}')
+
+    LOGGER.debug(f'PG Host: {pg_host} -- Port: {pg_port}')
 
     default_db = 'pgosm'
     pg_db = None
@@ -111,6 +118,7 @@ def pg_conn_parts():
     pg_details = {'pg_user': pg_user,
                   'pg_pass': pg_pass,
                   'pg_host': pg_host,
+                  'pg_port': pg_port,
                   'pg_db': pg_db}
 
     return pg_details
@@ -554,7 +562,6 @@ def run_pg_dump(export_path, data_only, schema_name):
     schema_name : str
     """
     logger = logging.getLogger('pgosm-flex')
-    db_name = os.environ['POSTGRES_DB']
     conn_string = os.environ['PGOSM_CONN']
 
     if data_only:
