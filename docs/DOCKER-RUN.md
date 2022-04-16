@@ -294,6 +294,7 @@ export POSTGRES_USER=your_login_role
 export POSTGRES_PASSWORD=mysecretpassword
 export POSTGRES_HOST=your-host-or-ip
 export POSTGRES_DB=your_db_name
+export POSTGRES_PORT=5432
 ```
 
 Run the container with the additional environment variables.
@@ -306,6 +307,7 @@ docker run --name pgosm -d --rm \
     -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
     -e POSTGRES_HOST=$POSTGRES_HOST \
     -e POSTGRES_DB=$POSTGRES_DB \
+    -e POSTGRES_PORT=$POSTGRES_PORT \
     -p 5433:5432 -d rustprooflabs/pgosm-flex
 ```
 

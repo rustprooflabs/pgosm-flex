@@ -62,6 +62,9 @@ function address_only_building(tags)
         or tags.office
         or tags.tourism
         or tags.boundary -- included in place layer
+        or tags.natural
+        or tags.aeroway
+        or tags.demolished
         then
             return false
     end
