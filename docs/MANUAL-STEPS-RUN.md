@@ -49,7 +49,7 @@ for use with this project.
 
 
 ```bash
-git clone git://github.com/openstreetmap/osm2pgsql.git
+git clone --depth 1 https://github.com/openstreetmap/osm2pgsql.git
 mkdir osm2pgsql/build
 cd osm2pgsql/build
 cmake ..
