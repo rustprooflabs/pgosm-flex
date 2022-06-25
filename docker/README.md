@@ -33,7 +33,6 @@ python3 pgosm_flex.py  \
  --layerset=run-all --ram=8 \
  --region=north-america/us \
   --subregion=district-of-columbia \
-  --basepath=/home/<your_user>/git/pgosm-flex \
   --debug
 ```
 

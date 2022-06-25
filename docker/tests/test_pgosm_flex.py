@@ -24,9 +24,8 @@ class PgOSMFlexTests(unittest.TestCase):
         helpers.unset_env_vars()
 
     def test_get_paths_returns_dict(self):
-        base_path = pgosm_flex.BASE_PATH_DEFAULT
         expected = dict
-        actual = pgosm_flex.get_paths(base_path=base_path)
+        actual = pgosm_flex.get_paths()
         self.assertEqual(expected, type(actual))
 
 
