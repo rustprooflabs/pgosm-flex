@@ -29,15 +29,17 @@ file.
 
 
 Timings skipping nested admin polygons the dump to `.sql`.  This adds
-`--skip-dump --skip-nested` to the `docker exec process`.
+`--skip-dump --skip-nested` to the `docker exec process`. The following
+table compares the import time using these skips against the full times reported
+above.
 
 
-| Sub-region            |  Import Time  |
-| :---                  |      :-:      |
-| District of Columbia  |    15.0 sec   |
-| Colorado              | 1 min 21 sec  |
-| Norway                | 5 min 12 sec  |
-| North America         |  1.25 hours   |
+| Sub-region            |  Import Time (full)  |  Import Time (skips)  |
+| :---                  |         :-:          |         :-:           |
+| District of Columbia  |        15.3 sec      |        15.0 sec       |
+| Colorado              |     1 min 23 sec     |     1 min 21 sec      |
+| Norway                |     5 min 36 sec     |     5 min 12 sec      |
+| North America         |      3.03 hours      |      1.25 hours       |
 
 
 ## Layerset:  Default
@@ -50,23 +52,25 @@ file.
 
 | Sub-region            | PBF Size  | PostGIS Size | `.sql` Size |  Import Time  |
 | :---                  |    :-:    |      :-:     |    :-:      |      :-:      |
-| District of Columbia  |   18 MB   |    ZZ MB     |    ZZ MB    |    ZZZZ sec   |
-| Colorado              |   226 MB  |    ZZZ MB    |   1.9 GB    | 8 min 20 sec  |
-| Norway                |   1.1 GB  |    ZZZ MB    |   ZZZ GB    | Z min ZZ sec  |
-| North America         |   ZZ GB   |     ZZ GB    |    ZZ GB    |      ZZZ      |
+| District of Columbia  |   18 MB   |    212 MB    |   160 MB    |     53 sec    |
+| Colorado              |   226 MB  |    2.1 GB    |   1.9 GB    | 8 min 20 sec  |
+| Norway                |   1.1 GB  |    ZZZ MB    |   6.5 GB    | 33 min 44 sec |
+| North America         |   12 GB   |     ZZ GB    |    ZZ GB    |      ZZZ      |
 
 
 
 Timings skipping nested admin polygons the dump to `.sql`.  This adds
-`--skip-dump --skip-nested` to the `docker exec process`.
+`--skip-dump --skip-nested` to the `docker exec process`. The following
+table compares the import time using these skips against the full times reported
+above.
 
 
-| Sub-region            |  Import Time  |
-| :---                  |      :-:      |
-| District of Columbia  |    ZZZZ sec   |
-| Colorado              | Z min Z sec   |
-| Norway                | Z min Z sec   |
-| North America         |      ZZZ      |
+| Sub-region            |  Import Time (full) |  Import Time (skips)  |
+| :---                  |         :-:         |          :-:          |
+| District of Columbia  |        53 sec       |         51 sec        |
+| Colorado              |    8 min 20 sec     |     7 min 55 sec      |
+| Norway                |    33 min 44 sec    |    32 min 18 sec      |
+| North America         |         ZZZ         |          ZZZ          |
 
 
 ## Methodology
@@ -82,17 +86,21 @@ Time for the import step is reported using the Linux `time` command on the `dock
 step as shown in the following commands.
 
 
-`PostGIS Size` reported is according to the meta-data in Postgres exposed through
-the [PgDD extension](https://github.com/rustprooflabs/pgdd) using this query.
+`PostGIS Size` reported is according to the meta-data in Postgres using this query.
 
 ```sql
-SELECT db_size
-    FROM dd.database
-;
+SELECT d.oid, d.datname AS db_name,
+        pg_size_pretty(pg_database_size(d.datname)) AS db_size
+    FROM pg_catalog.pg_database d
+    WHERE d.datname = current_database()
 ```
 
 
 ### Commands
+
+Set environment variables and start `pgosm` Docker container with configurations
+set per the [osm2pgsql tuning guidelines](https://osm2pgsql.org/doc/manual.html#tuning-the-postgresql-server).
+
 
 ```bash
 export POSTGRES_USER=postgres
@@ -114,7 +122,17 @@ docker run --name pgosm -d --rm \
     -c random_page_cost=1.0 \
     -c full_page_writes=off \
     -c fsync=off
+```
 
+> WARNING:  Setting `full_page_writes=off` and `fsync=off` is part of the [expert tuning](https://osm2pgsql.org/doc/manual.html#expert-tuning) for the best possible performance.  This is deemed acceptable in this Docker container running `--rm`, obviously this container will be discarded immediately after processing. **DO NOT** use these configurations unless you understand and accept the risks of corruption.
+
+
+
+Run PgOSM Flex within Docker.  The first run time is discarded because the first
+run time includes time downloading the PBF file.  Subsequent runs only include the 
+time running the processing.
+
+```bash
 
 time docker exec -it \
     pgosm python3 docker/pgosm_flex.py \
@@ -123,31 +141,4 @@ time docker exec -it \
     --subregion=colorado \
     --layerset=minimal
 ```
-
-> WARNING:  Setting `full_page_writes=off` and `fsync=off` is part of the [expert tuning](https://osm2pgsql.org/doc/manual.html#expert-tuning) for the best possible performance.  This is deemed acceptable in this Docker container running `--rm`, obviously this container will be discarded immediately after processing. **DO NOT** use these configurations unless you understand and accept the risks of corruption.
-
-
-
-
-## Other testing
-
-Initial results on larger scale tests (both data and hardware) are available
-in [issue #12](https://github.com/rustprooflabs/pgosm-flex/issues/12).  As this project
-matures additional performance testing results will become available.
-
-### Legacy benchmarks
-
-See the blog post
-[Scaling osm2pgsql: Process and costs](https://blog.rustprooflabs.com/2019/10/osm2pgsql-scaling)
-for a deeper look at how performance scales using various sizes of regions and hardware.
-
-### Comparisons to osm2pgsql legacy output
-
-The data loaded via PgOSM-Flex is of much higher quality than the
-legacy three-table load from osm2pgsql.  Due to this fundamental switch, data loaded
-via PgOSM-Flex is analysis-ready as soon as the load is done!  The legacy data model
-required substantial post-processing to achieve analysis-quality data.
-
-The limited comparsions show that loading a region using the
-default PgOSM Flex layerset will take a few times longer than using the legacy method.
 
