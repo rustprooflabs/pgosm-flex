@@ -22,11 +22,6 @@ import geofabrik
 import helpers
 
 
-BASE_PATH_DEFAULT = '/app'
-"""Default path for pgosm-flex project for Docker.
-"""
-
-
 @click.command()
 # Required and most common options first
 @click.option('--ram', required=True,
@@ -41,10 +36,6 @@ BASE_PATH_DEFAULT = '/app'
               default=False,
               is_flag=True,
               help='EXPERIMENTAL - Append mode enables updates via osm2pgsql-replication.')
-@click.option('--basepath',
-              required=False,
-              default=BASE_PATH_DEFAULT,
-              help='Deprecated debugging option, planned removal in 0.5.0. Used when testing locally and not within Docker')
 @click.option('--data-only',
               default=False,
               is_flag=True,
@@ -79,23 +70,20 @@ BASE_PATH_DEFAULT = '/app'
 @click.option('--srid', required=False, default=helpers.DEFAULT_SRID,
               envvar="PGOSM_SRID",
               help="SRID for data loaded by osm2pgsql to PostGIS. Defaults to 3857")
-def run_pgosm_flex(ram, region, subregion, append, basepath, data_only, debug,
+def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
                     input_file, layerset, layerset_path, language, pgosm_date,
                     schema_name, skip_dump, skip_nested, srid):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
     """
-    paths = get_paths(base_path=basepath)
+    paths = get_paths()
     setup_logger(debug)
     logger = logging.getLogger('pgosm-flex')
     logger.info('PgOSM Flex starting...')
 
-    if basepath != BASE_PATH_DEFAULT:
-        logger.warning('Use of --basepath is deprecated and will be removed in v0.5.0.')
     validate_region_inputs(region, subregion, input_file)
 
     if schema_name != 'osm' and append:
         sys.exit('ERROR: Append mode with custom schema name currently not supported')
-
 
     # Ensure always a region name
     if region is None and input_file:
@@ -296,19 +284,17 @@ def setup_logger(debug):
     logger.debug('Logger configured')
 
 
-def get_paths(base_path):
+def get_paths():
     """Returns dictionary of various paths used.
 
     Ensures `out_path` exists.
-
-    Parameters
-    -------------------
-    base_path : str
 
     Returns
     -------------------
     paths : dict
     """
+    base_path = '/app'
+
     db_path = os.path.join(base_path, 'db')
     out_path = os.path.join(base_path, 'output')
     flex_path = os.path.join(base_path, 'flex-config')

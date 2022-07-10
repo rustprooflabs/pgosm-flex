@@ -135,8 +135,6 @@ Options:
                         --input-file is specified, otherwise required.
   --subregion TEXT      Sub-region name matching the filename for data sourced
                         from Geofabrik. e.g. district-of-columbia
-  --basepath TEXT       Debugging option. Used when testing locally and not
-                        within Docker
   --data-only           When set, skips running Sqitch and importing QGIS
                         Styles.
   --debug               Enables additional log output
@@ -165,8 +163,7 @@ Options:
   --help                Show this message and exit.
 ```
 
-An example of running with all current options, except `--basepath` which is only
-used during development.
+An example of running with all current options.
 
 ```bash
 docker exec -it \
