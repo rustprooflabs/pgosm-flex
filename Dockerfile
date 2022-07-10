@@ -1,6 +1,6 @@
 FROM postgis/postgis:14-3.2
 
-LABEL maintainer="PgOSM-Flex - https://github.com/rustprooflabs/pgosm-flex"
+LABEL maintainer="PgOSM Flex - https://github.com/rustprooflabs/pgosm-flex"
 
 ARG OSM2PGSQL_BRANCH=master
 
