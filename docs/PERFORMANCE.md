@@ -1,147 +1,144 @@
 # PgOSM-Flex Performance
 
 This page provides timings for how long PgOSM-Flex runs for various region sizes.
-The server used for these tests has 8 vCPU and 64 GB RAM to match the target
+The server used to host these tests has 8 vCPU and 64 GB RAM to match the target
 server size [outlined in the osm2pgsql manual](https://osm2pgsql.org/doc/manual.html#preparing-the-database).
-
-> Note: The Flex output of osm2pgsql is currently **Experimental**
-and performance characteristics are likely to shift. 
 
 
 ## Versions Tested
 
-Versions used for testing:
-
-* Ubuntu 20.04
-* osm2pgsql 1.4.2
-* PostgreSQL 13.2
-* PostGIS 3.1
-* PgOSM-Flex 0.1.4
+Versions used for testing: PgOSM Flex 0.4.7 Docker image, based on the offical
+PostGIS image with Postgres 14 / PostGIS 3.2.
 
 
-## Road / Place
+## Layerset:  Minimal
 
-The `run-road-place` layer set is a minimal set only loads roads and places,
-7 tables and 3 views.
+The `minimal` layer set only loads major roads, places, and POIs.
+
+Timings with nested admin polygons and dumping the processed data to a `.sql`
+file.
 
 
-
-| Sub-region            | PBF Size | PostGIS Size | Import (s) | Post-import (s) | Nested Places (s) |
-| :---                  |    :-:    |      :-:    |    :-:    |       :-:        |   :-:   |
-| District of Columbia  |   17 MB   |    60 MB    |    10     |       0.3        |   0.08  |
-| Colorado              |   208 MB  |    398 MB   |    111    |       4.3        |   2.5   |
-| Norway                |   909 MB  |    797 MB   |    402    |       34         |   20    |
-| North America         |   11 GB   |     17 GB   |    4884   |       281        |   4174  |
+| Sub-region            | PBF Size | PostGIS Size | `.sql` Size |  Import Time  |
+| :---                  |    :-:    |      :-:    |    :-:      |      :-:      |
+| District of Columbia  |   18 MB   |    36 MB    |    14 MB    |    15.3 sec   |
+| Colorado              |   226 MB  |    181 MB   |   129 MB    | 1 min 23 sec  |
+| Norway                |   1.1 GB  |    618 MB   |   489 MB    | 5 min 36 sec  |
+| North America         |   12 GB   |    9.5 GB   |   7.7 GB    |  3.03 hours   |
 
 
 
-## No Tags
+Timings skipping nested admin polygons the dump to `.sql`.  This adds
+`--skip-dump --skip-nested` to the `docker exec process`. The following
+table compares the import time using these skips against the full times reported
+above.
 
-The `run-no-tags` layer set loads nearly all of the data, excluding the unstructured
-`tags` data.  35 tables and 6 views.
+
+| Sub-region            |  Import Time (full)  |  Import Time (skips)  |
+| :---                  |         :-:          |         :-:           |
+| District of Columbia  |        15.3 sec      |        15.0 sec       |
+| Colorado              |     1 min 23 sec     |     1 min 21 sec      |
+| Norway                |     5 min 36 sec     |     5 min 12 sec      |
+| North America         |      3.03 hours      |      1.25 hours       |
+
+
+## Layerset:  Default
+
+The `default` layer set....
+
+Timings with nested admin polygons and dumping the processed data to a `.sql`
+file.
+
+
+| Sub-region            | PBF Size  | PostGIS Size | `.sql` Size |  Import Time  |
+| :---                  |    :-:    |      :-:     |    :-:      |      :-:      |
+| District of Columbia  |   18 MB   |    212 MB    |   160 MB    |     53 sec    |
+| Colorado              |   226 MB  |    2.1 GB    |   1.9 GB    | 8 min 20 sec  |
+| Norway                |   1.1 GB  |    7.2 GB    |   6.5 GB    | 33 min 44 sec |
+| North America         |   12 GB   |     98 GB    |    55 GB    |   8.78 hours  |
 
 
 
-| Sub-region            | PBF Size  | PostGIS Size | Import (s) | Post-import (s) |
-| :---                  |    :-:    |     :-:      |    :-:     |       :-:       |
-| District of Columbia  |   17 MB   |    182 MB    |    42      |      2.3        |
-| Colorado              |   208 MB  |    1449 MB   |    391     |       19        |
-| Norway                |   909 MB  |    3.8 GB    |    1403    |       57        |
-| North America         |   11 GB   |    65 GB     |    18809   |       1076      |
+Timings skipping nested admin polygons the dump to `.sql`.  This adds
+`--skip-dump --skip-nested` to the `docker exec process`. The following
+table compares the import time using these skips against the full times reported
+above.
+
+
+| Sub-region            |  Import Time (full) |  Import Time (skips)  |
+| :---                  |         :-:         |          :-:          |
+| District of Columbia  |        53 sec       |         51 sec        |
+| Colorado              |    8 min 20 sec     |     7 min 55 sec      |
+| Norway                |    33 min 44 sec    |    32 min 18 sec      |
+| North America         |      8.78 hours     |      6.58 hours       |
 
 
 ## Methodology
 
+The timing for the first `docker exec` for each region was discarded as
+it included the timing for downloading the PBF file.
+
 Timings are an average of multiple recorded test runs over more than one day.
-For example, the North America `run-road-place.lua` had two times: 4,845 seconds and 4,922 seconds for an average of 4,884 s
-(1 hour 21 minutes).
-The difference of these two runs was only 1 minute 17 seconds, a rather small
-amount of variation.
+For example, the Norway region for the `minimal` layerset had two times: 5 min 35 seconds
+and 5 minutes 37 seconds for an average of 5 minutes 36 seconds.
 
-Time for the import step is reported directly from osm2gpsql while the psql commands use the Linux `time` command as shown in the commands above.
+Time for the import step is reported using the Linux `time` command on the `docker exec`
+step as shown in the following commands.
 
 
-`PostGIS Size` reported is according to the meta-data in Postgres exposed through
-the [PgDD extension](https://github.com/rustprooflabs/pgdd) using this query.
+`PostGIS Size` reported is according to the meta-data in Postgres using this query.
 
 ```sql
-SELECT size_plus_indexes
-	FROM dd.schemas
-	WHERE s_name = 'osm'
-;
+SELECT d.oid, d.datname AS db_name,
+        pg_size_pretty(pg_database_size(d.datname)) AS db_size
+    FROM pg_catalog.pg_database d
+    WHERE d.datname = current_database()
 ```
-
 
 
 ### Commands
 
-D.C., Colorado, and Norway imports used this command format.
+Set environment variables and start `pgosm` Docker container with configurations
+set per the [osm2pgsql tuning guidelines](https://osm2pgsql.org/doc/manual.html#tuning-the-postgresql-server).
 
 
 ```bash
-osm2pgsql --slim --drop \
-    --cache=30000 \
-    --output=flex --style=./run-<layer-set-name>.lua \
-    -d $PGOSM_CONN \
-    ~/pgosm-data/<subregion>-latest.osm.pbf
+export POSTGRES_USER=postgres
+export POSTGRES_PASSWORD=mysecretpassword
+
+docker run --name pgosm -d --rm \
+    -v ~/pgosm-data:/app/output \
+    -v /etc/localtime:/etc/localtime:ro \
+    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+    -p 5433:5432 -d rustprooflabs/pgosm-flex \
+    -c shared_buffers=1GB \
+    -c work_mem=50MB \
+    -c maintenance_work_mem=10GB \
+    -c autovacuum_work_mem=2GB \
+    -c checkpoint_timeout=300min \
+    -c max_wal_senders=0 -c wal_level=minimal \
+    -c max_wal_size=10GB \
+    -c checkpoint_completion_target=0.9 \
+    -c random_page_cost=1.0 \
+    -c full_page_writes=off \
+    -c fsync=off
 ```
 
-North America loaded using `--flat-nodes` and sets `--cache=0`.
+> WARNING:  Setting `full_page_writes=off` and `fsync=off` is part of the [expert tuning](https://osm2pgsql.org/doc/manual.html#expert-tuning) for the best possible performance.  This is deemed acceptable in this Docker container running `--rm`, obviously this container will be discarded immediately after processing. **DO NOT** use these configurations unless you understand and accept the risks of corruption.
+
+
+
+Run PgOSM Flex within Docker.  The first run time is discarded because the first
+run time includes time downloading the PBF file.  Subsequent runs only include the 
+time running the processing.
 
 ```bash
-osm2pgsql --slim --drop \
-    --cache=0 \
-    --flat-nodes=/tmp/nodes \
-    --output=flex --style=./run-<layer-set-name>lua \
-    -d $PGOSM_CONN \
-    ~/pgosm-data/<subregion>-latest.osm.pbf
+
+time docker exec -it \
+    pgosm python3 docker/pgosm_flex.py \
+    --ram=64 \
+    --region=north-america/us \
+    --subregion=colorado \
+    --layerset=minimal
 ```
-
-All regions use the same post-processing command and build nested polygons.
-
-```bash
-time psql -d $PGOSM_CONN -f run-<layer-set-name>.sql
-time psql -d $PGOSM_CONN -c "CALL osm.build_nested_admin_polygons();"
-```
-
-## Postgres Config
-
-Postgres is configured per the [suggestions in the osm2pgsql manual](https://osm2pgsql.org/doc/manual.html#preparing-the-database).
-
-
-```bash
-shared_buffers = 1GB
-work_mem = 50MB
-maintenance_work_mem = 10GB
-autovacuum_work_mem = 2GB
-wal_level = minimal
-checkpoint_timeout = 60min
-max_wal_size = 10GB
-checkpoint_completion_target = 0.9
-max_wal_senders = 0
-random_page_cost = 1.0
-```
-
-
-## Other testing
-
-Initial results on larger scale tests (both data and hardware) are available
-in [issue #12](https://github.com/rustprooflabs/pgosm-flex/issues/12).  As this project
-matures additional performance testing results will become available.
-
-### Legacy benchmarks
-
-See the blog post
-[Scaling osm2pgsql: Process and costs](https://blog.rustprooflabs.com/2019/10/osm2pgsql-scaling)
-for a deeper look at how performance scales using various sizes of regions and hardware.
-
-### Comparisons to osm2pgsql legacy output
-
-The data loaded via PgOSM-Flex is of much higher quality than the
-legacy three-table load from osm2pgsql.  Due to this fundamental switch, data loaded
-via PgOSM-Flex is analysis-ready as soon as the load is done!  The legacy data model
-required substantial post-processing to achieve analysis-quality data.
-
-The limited comparsions done showed that loading a region using the
-full PgOSM-Flex (`run-all.lua`) will take a few times longer than using the legacy method.
 
