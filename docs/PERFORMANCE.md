@@ -54,8 +54,8 @@ file.
 | :---                  |    :-:    |      :-:     |    :-:      |      :-:      |
 | District of Columbia  |   18 MB   |    212 MB    |   160 MB    |     53 sec    |
 | Colorado              |   226 MB  |    2.1 GB    |   1.9 GB    | 8 min 20 sec  |
-| Norway                |   1.1 GB  |    ZZZ MB    |   6.5 GB    | 33 min 44 sec |
-| North America         |   12 GB   |     ZZ GB    |    ZZ GB    |      ZZZ      |
+| Norway                |   1.1 GB  |    7.2 GB    |   6.5 GB    | 33 min 44 sec |
+| North America         |   12 GB   |     98 GB    |    55 GB    |   8.78 hours  |
 
 
 
@@ -70,7 +70,7 @@ above.
 | District of Columbia  |        53 sec       |         51 sec        |
 | Colorado              |    8 min 20 sec     |     7 min 55 sec      |
 | Norway                |    33 min 44 sec    |    32 min 18 sec      |
-| North America         |         ZZZ         |          ZZZ          |
+| North America         |      8.78 hours     |      6.58 hours       |
 
 
 ## Methodology
