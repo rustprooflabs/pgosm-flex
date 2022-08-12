@@ -82,17 +82,15 @@ function road_major_process_relation(object)
     local bridge = object.tags.bridge
     local access = object.tags.access
 
-    tables.road_line:add_row({
+    tables.road_major:add_row({
         name = name,
         osm_type = osm_type,
         ref = ref,
         maxspeed = maxspeed,
-        oneway = oneway,
         major = major,
         layer = layer,
         tunnel = tunnel,
         bridge = bridge,
-        access = access,
         geom = { create = 'line' }
     })
 
