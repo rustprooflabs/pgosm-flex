@@ -48,7 +48,7 @@ tables.public_transport_line = osm2pgsql.define_table({
         { column = 'lit',     type = 'text' },
         { column = 'wheelchair', type = 'text'},
         { column = 'wheelchair_desc', type = 'text'},
-        { column = 'geom',     type = 'linestring', projection = srid }
+        { column = 'geom',     type = 'multilinestring', projection = srid }
     }
 })
 
@@ -291,6 +291,25 @@ function public_transport_process_relation(object)
             wheelchair = wheelchair,
             wheelchair_desc = wheelchair_desc,
             geom = { create = 'area' }
+        })
+    else
+        tables.public_transport_line:add_row({
+            osm_type = osm_types.osm_type,
+            osm_subtype = osm_types.osm_subtype,
+            public_transport = public_transport,
+            name = name,
+            ref = ref,
+            operator = operator,
+            layer = layer,
+            network = network,
+            surface = surface,
+            bus = bus,
+            shelter = shelter,
+            bench = bench,
+            lit = lit,
+            wheelchair = wheelchair,
+            wheelchair_desc = wheelchair_desc,
+            geom = { create = 'line' }
         })
     end
 end
