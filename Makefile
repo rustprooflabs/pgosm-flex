@@ -66,7 +66,7 @@ docker-exec-default: build-run-docker
 		-e POSTGRES_USER=postgres \
 		-u $(CURRENT_UID):$(CURRENT_GID) \
 		pgosm python3 docker/pgosm_flex.py  \
-		--layerset=default \
+		--layerset=everything \
 		--ram=$(RAM) \
 		--region=north-america/us \
 		--subregion=district-of-columbia
