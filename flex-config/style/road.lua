@@ -40,6 +40,7 @@ tables.road_line = osm2pgsql.define_table({
         { column = 'route_cycle',     type = 'boolean' },
         { column = 'route_motor',     type = 'boolean' },
         { column = 'access',     type = 'text' },
+        { column = 'member_ids', type = 'jsonb'},
         { column = 'geom',     type = 'multilinestring', projection = srid }
     }
 })
@@ -62,6 +63,7 @@ tables.road_polygon = osm2pgsql.define_table({
         { column = 'route_cycle',     type = 'boolean' },
         { column = 'route_motor',     type = 'boolean' },
         { column = 'access',     type = 'text' },
+        { column = 'member_ids', type = 'jsonb'},
         { column = 'geom',     type = 'multipolygon', projection = srid }
     }
 })
@@ -173,6 +175,8 @@ function road_process_relation(object)
         return
     end
 
+    local member_ids = osm2pgsql.way_member_ids(object)
+
     local name = get_name(object.tags)
     local route_foot = routable_foot(object.tags)
     local route_cycle = routable_cycle(object.tags)
@@ -209,6 +213,7 @@ function road_process_relation(object)
             route_cycle = route_cycle,
             route_motor = route_motor,
             access = access,
+            member_ids = member_ids,
             geom = { create = 'area' }
         })
     else
@@ -226,6 +231,7 @@ function road_process_relation(object)
             route_cycle = route_cycle,
             route_motor = route_motor,
             access = access,
+            member_ids = member_ids,
             geom = { create = 'line' }
         })
     end

@@ -31,6 +31,7 @@ tables.water_line = osm2pgsql.define_table({
         { column = 'tunnel',     type = 'text' },
         { column = 'bridge',     type = 'text' },
         { column = 'boat',     type = 'text' },
+        { column = 'member_ids', type = 'jsonb'},
         { column = 'geom',     type = 'multilinestring' , projection = srid},
     }
 })
@@ -48,6 +49,7 @@ tables.water_polygon = osm2pgsql.define_table({
         { column = 'tunnel',     type = 'text' },
         { column = 'bridge',     type = 'text' },
         { column = 'boat',     type = 'text' },
+        { column = 'member_ids', type = 'jsonb'},
         { column = 'geom',     type = 'multipolygon' , projection = srid},
     }
 })
@@ -206,6 +208,8 @@ function water_process_relation(object)
         return
     end
 
+    local member_ids = osm2pgsql.way_member_ids(object)
+
     if object.tags.natural == 'water'
             or object.tags.natural == 'lake'
             or object.tags.natural == 'hot_spring'
@@ -233,6 +237,7 @@ function water_process_relation(object)
                 tunnel = tunnel,
                 bridge = bridge,
                 boat = boat,
+                member_ids = member_ids,
                 geom = { create = 'area' }
             })
         else
@@ -244,6 +249,7 @@ function water_process_relation(object)
                 tunnel = tunnel,
                 bridge = bridge,
                 boat = boat,
+                member_ids = member_ids,
                 geom = { create = 'line' }
             })
         end
@@ -266,6 +272,7 @@ function water_process_relation(object)
                 tunnel = tunnel,
                 bridge = bridge,
                 boat = boat,
+                member_ids = member_ids,
                 geom = { create = 'area' }
             })
         else
@@ -277,6 +284,7 @@ function water_process_relation(object)
                 tunnel = tunnel,
                 bridge = bridge,
                 boat = boat,
+                member_ids = member_ids,
                 geom = { create = 'line' }
             })
         end
