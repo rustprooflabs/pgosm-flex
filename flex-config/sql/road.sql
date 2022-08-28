@@ -58,8 +58,7 @@ CREATE INDEX ix_osm_road_line_major
 
 
 ------------------------------------------------
-
-CREATE VIEW osm.road_polygon_in_relations AS
+CREATE TEMP TABLE road_polygon_in_relations AS
 SELECT p_no_rel.osm_id
     FROM osm.road_polygon p_no_rel
     WHERE osm_id > 0
@@ -73,29 +72,20 @@ SELECT p_no_rel.osm_id
             ) 
 ;
 
-COMMENT ON VIEW osm.road_polygon_in_relations IS 'Lists all osm_id values included in a road_polygon relation''s member_ids list.  Technically could contain duplicates, but not a concern with current expected use of this view.';
-COMMENT ON COLUMN osm.road_polygon_in_relations.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 
-
-CREATE MATERIALIZED VIEW osm.vroad_polygon AS
-SELECT p.*
+DELETE
     FROM osm.road_polygon p
-    WHERE NOT EXISTS (
-        SELECT 1 
-            FROM osm.road_polygon_in_relations pir
-            WHERE p.osm_id = pir.osm_id)
+    WHERE EXISTS (
+        SELECT osm_id
+            FROM road_polygon_in_relations pir
+            WHERE p.osm_id = pir.osm_id
+    )
 ;
-
-CREATE UNIQUE INDEX uix_osm_vroad_polygon_osm_id
-    ON osm.vroad_polygon (osm_id);
-CREATE INDEX gix_osm_vroad_polygon
-    ON osm.vroad_polygon USING GIST (geom);
 
 
 
 ------------------------------------------------
-
-CREATE VIEW osm.road_line_in_relations AS
+CREATE TEMP TABLE road_line_in_relations AS
 SELECT p_no_rel.osm_id
     FROM osm.road_line p_no_rel
     WHERE osm_id > 0
@@ -109,22 +99,12 @@ SELECT p_no_rel.osm_id
             ) 
 ;
 
-COMMENT ON VIEW osm.road_line_in_relations IS 'Lists all osm_id values included in a road_line relation''s member_ids list.  Technically could contain duplicates, but not a concern with current expected use of this view.';
-COMMENT ON COLUMN osm.road_line_in_relations.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
-
-
-CREATE MATERIALIZED VIEW osm.vroad_line AS
-SELECT p.*
+DELETE
     FROM osm.road_line p
-    WHERE NOT EXISTS (
-        SELECT 1 
-            FROM osm.road_line_in_relations pir
-            WHERE p.osm_id = pir.osm_id)
+    WHERE EXISTS (
+        SELECT osm_id
+            FROM road_line_in_relations pir
+            WHERE p.osm_id = pir.osm_id
+    )
 ;
-
-CREATE UNIQUE INDEX uix_osm_vroad_line_osm_id
-    ON osm.vroad_line (osm_id);
-CREATE INDEX gix_osm_vroad_line
-    ON osm.vroad_line USING GIST (geom);
-
 
