@@ -49,7 +49,7 @@ CREATE INDEX ix_osm_place_line_type ON osm.place_line (osm_type);
 CREATE INDEX ix_osm_place_polygon_type ON osm.place_polygon (osm_type);
 
 
-CREATE VIEW osm.places_in_relations AS
+CREATE VIEW osm.place_polygon_in_relations AS
 SELECT p_no_rel.osm_id
     FROM osm.place_polygon p_no_rel
     WHERE osm_id > 0
@@ -63,8 +63,8 @@ SELECT p_no_rel.osm_id
             ) 
 ;
 
-COMMENT ON VIEW osm.places_in_relations IS 'Lists all osm_id values included in a relation''s member_ids list.  Technically could contain duplicates, but not a concern with current expected use of this view.';
-COMMENT ON COLUMN osm.places_in_relations.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
+COMMENT ON VIEW osm.place_polygon_in_relations IS 'Lists all osm_id values included in a place_polygon relation''s member_ids list.  Technically could contain duplicates, but not a concern with current expected use of this view.';
+COMMENT ON COLUMN osm.place_polygon_in_relations.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 
 
 CREATE MATERIALIZED VIEW osm.vplace_polygon AS
@@ -72,7 +72,7 @@ SELECT p.*
     FROM osm.place_polygon p
     WHERE NOT EXISTS (
         SELECT 1 
-            FROM osm.places_in_relations pir 
+            FROM osm.place_polygon_in_relations pir
             WHERE p.osm_id = pir.osm_id)
 ;
 
@@ -83,7 +83,7 @@ CREATE INDEX gix_osm_vplace_polygon
 
 
 
-COMMENT ON MATERIALIZED VIEW osm.vplace_polygon IS 'Simplified polygon layer removing non-relation geometries when a relation contains it in the member_ids column.';
+COMMENT ON MATERIALIZED VIEW osm.vplace_polygon IS 'Simplified place polygon layer removing non-relation geometries when a relation contains it in the member_ids column.';
 COMMENT ON COLUMN osm.vplace_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.vplace_polygon.osm_type IS 'Values from place if a place tag exists.  If no place tag, values boundary or admin_level indicate the source of the feature.';
 COMMENT ON COLUMN osm.vplace_polygon.member_ids IS 'Member IDs making up the full relation.  NULL if not a relation.  Used to create improved osm.vplace_polygon.';

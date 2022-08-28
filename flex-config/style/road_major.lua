@@ -15,6 +15,7 @@ tables.road_major = osm2pgsql.define_table({
         { column = 'tunnel',     type = 'text' },
         { column = 'bridge',     type = 'text' },
         { column = 'major',   type = 'boolean', not_null = true},
+        { column = 'member_ids', type = 'jsonb'},
         { column = 'geom',     type = 'multilinestring', projection = srid },
     }
 })
@@ -65,6 +66,8 @@ function road_major_process_relation(object)
         return
     end
 
+    local member_ids = osm2pgsql.way_member_ids(object)
+
     local major = true
 
     local name = get_name(object.tags)
@@ -91,6 +94,7 @@ function road_major_process_relation(object)
         layer = layer,
         tunnel = tunnel,
         bridge = bridge,
+        member_ids = member_ids,
         geom = { create = 'line' }
     })
 

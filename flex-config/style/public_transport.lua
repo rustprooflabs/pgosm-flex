@@ -48,6 +48,7 @@ tables.public_transport_line = osm2pgsql.define_table({
         { column = 'lit',     type = 'text' },
         { column = 'wheelchair', type = 'text'},
         { column = 'wheelchair_desc', type = 'text'},
+        { column = 'member_ids', type = 'jsonb'},
         { column = 'geom',     type = 'multilinestring', projection = srid }
     }
 })
@@ -73,6 +74,7 @@ tables.public_transport_polygon = osm2pgsql.define_table({
         { column = 'lit',     type = 'text' },
         { column = 'wheelchair', type = 'text'},
         { column = 'wheelchair_desc', type = 'text'},
+        { column = 'member_ids', type = 'jsonb'},
         { column = 'geom',     type = 'multipolygon', projection = srid }
     }
 })
@@ -246,12 +248,12 @@ local function public_transport_process_way(object)
 end
 
 
-
 function public_transport_process_relation(object)
     if not is_first_level_public_transport(object.tags) then
         return
     end
 
+    local member_ids = osm2pgsql.way_member_ids(object)
     local osm_types = get_osm_type_subtype(object)
 
     local public_transport = object.tags.public_transport
@@ -290,6 +292,7 @@ function public_transport_process_relation(object)
             lit = lit,
             wheelchair = wheelchair,
             wheelchair_desc = wheelchair_desc,
+            member_ids = member_ids,
             geom = { create = 'area' }
         })
     else
@@ -309,6 +312,7 @@ function public_transport_process_relation(object)
             lit = lit,
             wheelchair = wheelchair,
             wheelchair_desc = wheelchair_desc,
+            member_ids = member_ids,
             geom = { create = 'line' }
         })
     end
