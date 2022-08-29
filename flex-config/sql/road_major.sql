@@ -20,3 +20,33 @@ ALTER TABLE osm.road_major
 ;
 
 CREATE INDEX ix_osm_road_major_type ON osm.road_major (osm_type);
+
+
+
+
+------------------------------------------------
+
+CREATE TEMP TABLE road_major_in_relations AS
+SELECT p_no_rel.osm_id
+    FROM osm.road_major p_no_rel
+    WHERE osm_id > 0
+        AND EXISTS (SELECT * 
+            FROM (SELECT i.osm_id AS relation_id, 
+                        jsonb_array_elements_text(i.member_ids)::BIGINT AS member_id
+                    FROM osm.road_major i
+                    WHERE i.osm_id < 0
+                    ) rel
+            WHERE rel.member_id = p_no_rel.osm_id
+            ) 
+;
+
+
+DELETE
+    FROM osm.road_major p
+    WHERE EXISTS (
+        SELECT osm_id
+            FROM road_major_in_relations pir
+            WHERE p.osm_id = pir.osm_id
+    )
+;
+

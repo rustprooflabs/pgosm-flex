@@ -54,3 +54,57 @@ CREATE INDEX ix_osm_road_line_highway ON osm.road_line (osm_type);
 CREATE INDEX ix_osm_road_line_major
     ON osm.road_line (major)
     WHERE major;
+
+
+
+------------------------------------------------
+CREATE TEMP TABLE road_polygon_in_relations AS
+SELECT p_no_rel.osm_id
+    FROM osm.road_polygon p_no_rel
+    WHERE osm_id > 0
+        AND EXISTS (SELECT * 
+            FROM (SELECT i.osm_id AS relation_id, 
+                        jsonb_array_elements_text(i.member_ids)::BIGINT AS member_id
+                    FROM osm.road_polygon i
+                    WHERE i.osm_id < 0
+                    ) rel
+            WHERE rel.member_id = p_no_rel.osm_id
+            ) 
+;
+
+
+DELETE
+    FROM osm.road_polygon p
+    WHERE EXISTS (
+        SELECT osm_id
+            FROM road_polygon_in_relations pir
+            WHERE p.osm_id = pir.osm_id
+    )
+;
+
+
+
+------------------------------------------------
+CREATE TEMP TABLE road_line_in_relations AS
+SELECT p_no_rel.osm_id
+    FROM osm.road_line p_no_rel
+    WHERE osm_id > 0
+        AND EXISTS (SELECT * 
+            FROM (SELECT i.osm_id AS relation_id, 
+                        jsonb_array_elements_text(i.member_ids)::BIGINT AS member_id
+                    FROM osm.road_line i
+                    WHERE i.osm_id < 0
+                    ) rel
+            WHERE rel.member_id = p_no_rel.osm_id
+            ) 
+;
+
+DELETE
+    FROM osm.road_line p
+    WHERE EXISTS (
+        SELECT osm_id
+            FROM road_line_in_relations pir
+            WHERE p.osm_id = pir.osm_id
+    )
+;
+

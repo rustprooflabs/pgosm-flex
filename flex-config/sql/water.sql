@@ -52,9 +52,60 @@ ALTER TABLE osm.water_polygon
     PRIMARY KEY (osm_id)
 ;
 
-
 -- osm_type column only has natural/waterway values.
 -- Indexing osm_subtype b/c has more selective and seems more likely to be used.
 CREATE INDEX ix_osm_water_point_type ON osm.water_point (osm_subtype);
 CREATE INDEX ix_osm_water_line_type ON osm.water_line (osm_subtype);
 CREATE INDEX ix_osm_water_polygon_type ON osm.water_polygon (osm_subtype);
+
+
+------------------------------------------------
+CREATE TEMP TABLE water_polygon_in_relations AS
+SELECT p_no_rel.osm_id
+    FROM osm.water_polygon p_no_rel
+    WHERE osm_id > 0
+        AND EXISTS (SELECT * 
+            FROM (SELECT i.osm_id AS relation_id, 
+                        jsonb_array_elements_text(i.member_ids)::BIGINT AS member_id
+                    FROM osm.water_polygon i
+                    WHERE i.osm_id < 0
+                    ) rel
+            WHERE rel.member_id = p_no_rel.osm_id
+            ) 
+;
+
+DELETE
+    FROM osm.water_polygon p
+    WHERE EXISTS (
+        SELECT osm_id
+            FROM water_polygon_in_relations pir
+            WHERE p.osm_id = pir.osm_id
+    )
+;
+
+
+------------------------------------------------
+
+CREATE TEMP TABLE water_line_in_relations AS
+SELECT p_no_rel.osm_id
+    FROM osm.water_line p_no_rel
+    WHERE osm_id > 0
+        AND EXISTS (SELECT * 
+            FROM (SELECT i.osm_id AS relation_id, 
+                        jsonb_array_elements_text(i.member_ids)::BIGINT AS member_id
+                    FROM osm.water_line i
+                    WHERE i.osm_id < 0
+                    ) rel
+            WHERE rel.member_id = p_no_rel.osm_id
+            ) 
+;
+
+DELETE
+    FROM osm.water_line p
+    WHERE EXISTS (
+        SELECT osm_id
+            FROM water_line_in_relations pir
+            WHERE p.osm_id = pir.osm_id
+    )
+;
+

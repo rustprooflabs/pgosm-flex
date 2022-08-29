@@ -49,7 +49,9 @@ CREATE INDEX ix_osm_place_line_type ON osm.place_line (osm_type);
 CREATE INDEX ix_osm_place_polygon_type ON osm.place_polygon (osm_type);
 
 
-CREATE VIEW osm.places_in_relations AS
+
+------------------------------------------------
+CREATE TEMP TABLE place_polygon_in_relations AS
 SELECT p_no_rel.osm_id
     FROM osm.place_polygon p_no_rel
     WHERE osm_id > 0
@@ -63,35 +65,16 @@ SELECT p_no_rel.osm_id
             ) 
 ;
 
-COMMENT ON VIEW osm.places_in_relations IS 'Lists all osm_id values included in a relation''s member_ids list.  Technically could contain duplicates, but not a concern with current expected use of this view.';
-COMMENT ON COLUMN osm.places_in_relations.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 
-
-CREATE MATERIALIZED VIEW osm.vplace_polygon AS
-SELECT p.*
+DELETE
     FROM osm.place_polygon p
-    WHERE NOT EXISTS (
-        SELECT 1 
-            FROM osm.places_in_relations pir 
-            WHERE p.osm_id = pir.osm_id)
+    WHERE EXISTS (
+        SELECT osm_id
+            FROM place_polygon_in_relations pir
+            WHERE p.osm_id = pir.osm_id
+    )
 ;
 
-CREATE UNIQUE INDEX uix_osm_vplace_polygon_osm_id
-    ON osm.vplace_polygon (osm_id);
-CREATE INDEX gix_osm_vplace_polygon
-    ON osm.vplace_polygon USING GIST (geom);
-
-
-
-COMMENT ON MATERIALIZED VIEW osm.vplace_polygon IS 'Simplified polygon layer removing non-relation geometries when a relation contains it in the member_ids column.';
-COMMENT ON COLUMN osm.vplace_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
-COMMENT ON COLUMN osm.vplace_polygon.osm_type IS 'Values from place if a place tag exists.  If no place tag, values boundary or admin_level indicate the source of the feature.';
-COMMENT ON COLUMN osm.vplace_polygon.member_ids IS 'Member IDs making up the full relation.  NULL if not a relation.  Used to create improved osm.vplace_polygon.';
-COMMENT ON COLUMN osm.vplace_polygon.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
-COMMENT ON COLUMN osm.vplace_polygon.admin_level IS 'Value from admin_level if it exists.';
-
-COMMENT ON COLUMN osm.vplace_polygon.boundary IS 'Value from boundary tag.  https://wiki.openstreetmap.org/wiki/Boundaries';
-COMMENT ON COLUMN osm.vplace_polygon.geom IS 'Geometry loaded by osm2pgsql.';
 
 
 DROP TABLE IF EXISTS osm.place_polygon_nested;
@@ -155,7 +138,7 @@ AS $$
     SELECT p.osm_id, p.name, p.osm_type,
             COALESCE(p.admin_level::INT, 99) AS admin_level,
             geom
-        FROM osm.vplace_polygon p
+        FROM osm.place_polygon p
         WHERE (p.boundary = 'administrative'
                 OR p.osm_type IN   ('neighborhood', 'city', 'suburb', 'town', 'admin_level', 'locality')
            )
@@ -208,13 +191,13 @@ CREATE OR REPLACE PROCEDURE osm.build_nested_admin_polygons(
     DROP TABLE IF EXISTS place_batch;
     CREATE TEMP TABLE place_batch AS
     SELECT p.osm_id, t.nest_level, t.name_path, t.osm_id_path, t.admin_level_path
-        FROM osm.vplace_polygon p
+        FROM osm.place_polygon p
         INNER JOIN LATERAL (
             SELECT COUNT(i.osm_id) AS nest_level,
                     ARRAY_AGG(i.name ORDER BY COALESCE(i.admin_level::INT, 99::INT) ASC) AS name_path,
                     ARRAY_AGG(i.osm_id ORDER BY COALESCE(i.admin_level::INT, 99::INT) ASC) AS osm_id_path,
                     ARRAY_AGG(COALESCE(i.admin_level::INT, 99::INT) ORDER BY i.admin_level ASC) AS admin_level_path
-                FROM osm.vplace_polygon i
+                FROM osm.place_polygon i
                 WHERE ST_Within(p.geom, i.geom)
                     AND EXISTS (
                             SELECT 1 FROM places_for_nesting include
@@ -275,7 +258,7 @@ COMMENT ON PROCEDURE osm.build_nested_admin_polygons IS 'Warning: Expensive proc
 
 CREATE MATERIALIZED VIEW osm.vplace_polygon_subdivide AS
 SELECT osm_id, ST_Subdivide(geom) AS geom
-    FROM osm.vplace_polygon
+    FROM osm.place_polygon
 ;
 CREATE INDEX gix_osm_vplace_polygon_subdivide
     ON osm.vplace_polygon_subdivide USING GIST (geom)
