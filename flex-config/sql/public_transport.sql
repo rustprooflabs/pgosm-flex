@@ -70,8 +70,7 @@ COMMENT ON COLUMN osm.public_transport_polygon.network IS 'Route, system or oper
 
 
 ------------------------------------------------
-
-CREATE VIEW osm.public_transport_polygon_in_relations AS
+CREATE TEMP TABLE public_transport_polygon_in_relations AS
 SELECT p_no_rel.osm_id
     FROM osm.public_transport_polygon p_no_rel
     WHERE osm_id > 0
@@ -85,29 +84,19 @@ SELECT p_no_rel.osm_id
             ) 
 ;
 
-COMMENT ON VIEW osm.public_transport_polygon_in_relations IS 'Lists all osm_id values included in a public_transport_polygon relation''s member_ids list.  Technically could contain duplicates, but not a concern with current expected use of this view.';
-COMMENT ON COLUMN osm.public_transport_polygon_in_relations.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
-
-
-CREATE MATERIALIZED VIEW osm.vpublic_transport_polygon AS
-SELECT p.*
+DELETE
     FROM osm.public_transport_polygon p
-    WHERE NOT EXISTS (
-        SELECT 1 
-            FROM osm.public_transport_polygon_in_relations pir
-            WHERE p.osm_id = pir.osm_id)
+    WHERE EXISTS (
+        SELECT osm_id
+            FROM public_transport_polygon_in_relations pir
+            WHERE p.osm_id = pir.osm_id
+    )
 ;
-
-CREATE UNIQUE INDEX uix_osm_vpublic_transport_polygon_osm_id
-    ON osm.vpublic_transport_polygon (osm_id);
-CREATE INDEX gix_osm_vpublic_transport_polygon
-    ON osm.vpublic_transport_polygon USING GIST (geom);
-
 
 
 ------------------------------------------------
 
-CREATE VIEW osm.public_transport_line_in_relations AS
+CREATE TEMP TABLE public_transport_line_in_relations AS
 SELECT p_no_rel.osm_id
     FROM osm.public_transport_line p_no_rel
     WHERE osm_id > 0
@@ -121,21 +110,12 @@ SELECT p_no_rel.osm_id
             ) 
 ;
 
-COMMENT ON VIEW osm.public_transport_line_in_relations IS 'Lists all osm_id values included in a public_transport_line relation''s member_ids list.  Technically could contain duplicates, but not a concern with current expected use of this view.';
-COMMENT ON COLUMN osm.public_transport_line_in_relations.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 
-
-CREATE MATERIALIZED VIEW osm.vpublic_transport_line AS
-SELECT p.*
+DELETE
     FROM osm.public_transport_line p
-    WHERE NOT EXISTS (
-        SELECT 1 
-            FROM osm.public_transport_line_in_relations pir
-            WHERE p.osm_id = pir.osm_id)
+    WHERE EXISTS (
+        SELECT osm_id
+            FROM public_transport_line_in_relations pir
+            WHERE p.osm_id = pir.osm_id
+    )
 ;
-
-CREATE UNIQUE INDEX uix_osm_vpublic_transport_line_osm_id
-    ON osm.vpublic_transport_line (osm_id);
-CREATE INDEX gix_osm_vpublic_transport_line
-    ON osm.vpublic_transport_line USING GIST (geom);
-

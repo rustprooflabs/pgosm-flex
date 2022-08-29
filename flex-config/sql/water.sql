@@ -60,8 +60,7 @@ CREATE INDEX ix_osm_water_polygon_type ON osm.water_polygon (osm_subtype);
 
 
 ------------------------------------------------
-
-CREATE VIEW osm.water_polygon_in_relations AS
+CREATE TEMP TABLE water_polygon_in_relations AS
 SELECT p_no_rel.osm_id
     FROM osm.water_polygon p_no_rel
     WHERE osm_id > 0
@@ -75,29 +74,19 @@ SELECT p_no_rel.osm_id
             ) 
 ;
 
-COMMENT ON VIEW osm.water_polygon_in_relations IS 'Lists all osm_id values included in a water_polygon relation''s member_ids list.  Technically could contain duplicates, but not a concern with current expected use of this view.';
-COMMENT ON COLUMN osm.water_polygon_in_relations.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
-
-
-CREATE MATERIALIZED VIEW osm.vwater_polygon AS
-SELECT p.*
+DELETE
     FROM osm.water_polygon p
-    WHERE NOT EXISTS (
-        SELECT 1 
-            FROM osm.water_polygon_in_relations pir
-            WHERE p.osm_id = pir.osm_id)
+    WHERE EXISTS (
+        SELECT osm_id
+            FROM water_polygon_in_relations pir
+            WHERE p.osm_id = pir.osm_id
+    )
 ;
-
-CREATE UNIQUE INDEX uix_osm_vwater_polygon_osm_id
-    ON osm.vwater_polygon (osm_id);
-CREATE INDEX gix_osm_vwater_polygon
-    ON osm.vwater_polygon USING GIST (geom);
-
 
 
 ------------------------------------------------
 
-CREATE VIEW osm.water_line_in_relations AS
+CREATE TEMP TABLE water_line_in_relations AS
 SELECT p_no_rel.osm_id
     FROM osm.water_line p_no_rel
     WHERE osm_id > 0
@@ -111,21 +100,12 @@ SELECT p_no_rel.osm_id
             ) 
 ;
 
-COMMENT ON VIEW osm.water_line_in_relations IS 'Lists all osm_id values included in a water_line relation''s member_ids list.  Technically could contain duplicates, but not a concern with current expected use of this view.';
-COMMENT ON COLUMN osm.water_line_in_relations.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
-
-
-CREATE MATERIALIZED VIEW osm.vwater_line AS
-SELECT p.*
+DELETE
     FROM osm.water_line p
-    WHERE NOT EXISTS (
-        SELECT 1 
-            FROM osm.water_line_in_relations pir
-            WHERE p.osm_id = pir.osm_id)
+    WHERE EXISTS (
+        SELECT osm_id
+            FROM water_line_in_relations pir
+            WHERE p.osm_id = pir.osm_id
+    )
 ;
-
-CREATE UNIQUE INDEX uix_osm_vwater_line_osm_id
-    ON osm.vwater_line (osm_id);
-CREATE INDEX gix_osm_vwater_line
-    ON osm.vwater_line USING GIST (geom);
 
