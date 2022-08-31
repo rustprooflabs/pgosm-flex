@@ -1,7 +1,7 @@
 click>=8.1.3
 coverage>=6.4.1
 osm2pgsql-tuner==0.0.5
-osmium==3.3.0
-psycopg>=3.0.15
-psycopg-binary>=3.0.15
+osmium==3.4.1
+psycopg>=3.1
+psycopg-binary>=3.1
 sh>=1.14.2
