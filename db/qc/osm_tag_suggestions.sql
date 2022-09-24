@@ -7,6 +7,8 @@
 
     This should only be used as a guide for humans with further review and discussion in the process.
 */
+DROP TABLE IF EXISTS osm_qc;
+CREATE TEMP TABLE osm_qc AS
 SELECT geom_type, osm_id,
         'Update to: amenity=bicycle_parking per https://wiki.openstreetmap.org/wiki/Key:bicycle_parking'::TEXT
             AS suggestion,
@@ -45,4 +47,30 @@ SELECT t.geom_type, t.osm_id,
         t.osm_url, t.tags
     FROM osm.tags  t
     WHERE t.tags->>'natural' = 'street_lamp'
+UNION
+SELECT t.geom_type, t.osm_id,
+        'Missing addr:street tag when record has addr:housenumber.'::TEXT
+            AS suggestion,
+        t.osm_url, t.tags
+    FROM osm.tags  t
+    WHERE t.tags->>'addr:housenumber' IS NOT NULL
+        AND t.tags ->> 'addr:street' IS NULL
+;
+
+
+-- Show counts of each detected suggestion
+SELECT suggestion, COUNT(*) AS cnt
+    FROM osm_qc
+    GROUP BY suggestion
+    ORDER BY cnt DESC
+;
+
+
+-- Explore data for specific suggestion
+SELECT q.*, u.geom
+    FROM osm_qc q
+    INNER JOIN osm.unitable u
+        ON q.geom_type = u.geom_type
+            AND q.osm_id = u.osm_id
+    WHERE suggestion = 'Missing addr:street tag when record has addr:housenumber.'
 ;
