@@ -1,4 +1,4 @@
-FROM postgis/postgis:14-3.3
+FROM postgis/postgis:15-master
 
 LABEL maintainer="PgOSM Flex - https://github.com/rustprooflabs/pgosm-flex"
 
@@ -12,7 +12,7 @@ RUN apt-get update \
         libboost-filesystem-dev libexpat1-dev zlib1g-dev \
         libbz2-dev libpq-dev libproj-dev lua5.4 liblua5.4-dev \
         python3 python3-distutils \
-        postgresql-server-dev-14 \
+        postgresql-server-dev-15 \
         curl unzip \
     && rm -rf /var/lib/apt/lists/*
 
@@ -33,7 +33,7 @@ WORKDIR /tmp
 RUN git clone --depth 1 --branch $OSM2PGSQL_BRANCH https://github.com/openstreetmap/osm2pgsql.git \
     && mkdir osm2pgsql/build \
     && cd osm2pgsql/build \
-    && cmake .. \
+    && cmake .. -D USE_PROJ_LIB=6 \
     && make -j$(nproc) \
     && make install \
     && apt remove -y \
