@@ -20,14 +20,14 @@ tables.infrastructure_point = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'osm_subtype',   type = 'text'},
-        { column = 'name',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'osm_subtype', type = 'text'},
+        { column = 'name', type = 'text' },
         { column = 'ele', type = 'int' },
-        { column = 'height',  sql_type = 'numeric'},
+        { column = 'height', sql_type = 'numeric'},
         { column = 'operator', type = 'text'},
         { column = 'material', type = 'text'},
-        { column = 'geom',     type = 'point' , projection = srid},
+        { column = 'geom', type = 'point', projection = srid, not_null = true},
     }
 })
 
@@ -36,14 +36,14 @@ tables.infrastructure_line = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'osm_subtype',   type = 'text'},
-        { column = 'name',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'osm_subtype', type = 'text'},
+        { column = 'name', type = 'text' },
         { column = 'ele', type = 'int' },
-        { column = 'height',  sql_type = 'numeric'},
+        { column = 'height', sql_type = 'numeric'},
         { column = 'operator', type = 'text'},
         { column = 'material', type = 'text'},
-        { column = 'geom',     type = 'linestring' , projection = srid},
+        { column = 'geom', type = 'linestring', projection = srid, not_null = true},
     }
 })
 
@@ -53,14 +53,14 @@ tables.infrastructure_polygon = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'osm_subtype',   type = 'text'},
-        { column = 'name',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'osm_subtype', type = 'text'},
+        { column = 'name', type = 'text' },
         { column = 'ele', type = 'int' },
-        { column = 'height',  sql_type = 'numeric'},
+        { column = 'height', sql_type = 'numeric'},
         { column = 'operator', type = 'text'},
         { column = 'material', type = 'text'},
-        { column = 'geom',     type = 'multipolygon' , projection = srid},
+        { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
     }
 })
 
@@ -141,7 +141,7 @@ function infrastructure_process_node(object)
     local operator = object.tags.operator
     local material = object.tags.material
 
-    tables.infrastructure_point:add_row({
+    tables.infrastructure_point:insert({
         osm_type = osm_types.osm_type,
         osm_subtype = osm_types.osm_subtype,
         name = name,
@@ -149,7 +149,7 @@ function infrastructure_process_node(object)
         height = height,
         operator = operator,
         material = material,
-        geom = { create = 'point' }
+        geom = object:as_point()
     })
 
 end
@@ -174,7 +174,7 @@ function infrastructure_process_way(object)
     local material = object.tags.material
 
     if object.is_closed then
-        tables.infrastructure_polygon:add_row({
+        tables.infrastructure_polygon:insert({
             osm_type = osm_types.osm_type,
             osm_subtype = osm_types.osm_subtype,
             name = name,
@@ -182,10 +182,10 @@ function infrastructure_process_way(object)
             height = height,
             operator = operator,
             material = material,
-            geom = { create = 'area' }
+            geom = object:as_polygon()
         })
     else
-        tables.infrastructure_line:add_row({
+        tables.infrastructure_line:insert({
             osm_type = osm_types.osm_type,
             osm_subtype = osm_types.osm_subtype,
             name = name,
@@ -193,7 +193,7 @@ function infrastructure_process_way(object)
             height = height,
             operator = operator,
             material = material,
-            geom = { create = 'line' }
+            geom = object:as_linestring()
         })
     end
 

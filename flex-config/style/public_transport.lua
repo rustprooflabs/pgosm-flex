@@ -7,22 +7,22 @@ tables.public_transport_point = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'osm_subtype',     type = 'text', not_null = false },
-        { column = 'public_transport',     type = 'text', not_null = true },
-        { column = 'layer',   type = 'int', not_null = true },
-        { column = 'name',     type = 'text' },
-        { column = 'ref',     type = 'text' },
-        { column = 'operator',     type = 'text' },
-        { column = 'network',     type = 'text' },
-        { column = 'surface',     type = 'text' },
-        { column = 'bus',     type = 'text' },
-        { column = 'shelter',     type = 'text' },
-        { column = 'bench',     type = 'text' },
-        { column = 'lit',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'osm_subtype', type = 'text', not_null = false },
+        { column = 'public_transport', type = 'text', not_null = true },
+        { column = 'layer', type = 'int', not_null = true },
+        { column = 'name', type = 'text' },
+        { column = 'ref', type = 'text' },
+        { column = 'operator', type = 'text' },
+        { column = 'network', type = 'text' },
+        { column = 'surface', type = 'text' },
+        { column = 'bus', type = 'text' },
+        { column = 'shelter', type = 'text' },
+        { column = 'bench', type = 'text' },
+        { column = 'lit', type = 'text' },
         { column = 'wheelchair', type = 'text'},
         { column = 'wheelchair_desc', type = 'text'},
-        { column = 'geom',     type = 'point', projection = srid }
+        { column = 'geom', type = 'point', projection = srid, not_null = true }
     }
 })
 
@@ -33,23 +33,23 @@ tables.public_transport_line = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'osm_subtype',     type = 'text', not_null = false },
-        { column = 'public_transport',     type = 'text', not_null = true },
-        { column = 'layer',   type = 'int', not_null = true },
-        { column = 'name',     type = 'text' },
-        { column = 'ref',     type = 'text' },
-        { column = 'operator',     type = 'text' },
-        { column = 'network',     type = 'text' },
-        { column = 'surface',     type = 'text' },
-        { column = 'bus',     type = 'text' },
-        { column = 'shelter',     type = 'text' },
-        { column = 'bench',     type = 'text' },
-        { column = 'lit',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'osm_subtype', type = 'text', not_null = false },
+        { column = 'public_transport', type = 'text', not_null = true },
+        { column = 'layer', type = 'int', not_null = true },
+        { column = 'name', type = 'text' },
+        { column = 'ref', type = 'text' },
+        { column = 'operator', type = 'text' },
+        { column = 'network', type = 'text' },
+        { column = 'surface', type = 'text' },
+        { column = 'bus', type = 'text' },
+        { column = 'shelter', type = 'text' },
+        { column = 'bench', type = 'text' },
+        { column = 'lit', type = 'text' },
         { column = 'wheelchair', type = 'text'},
         { column = 'wheelchair_desc', type = 'text'},
         { column = 'member_ids', type = 'jsonb'},
-        { column = 'geom',     type = 'multilinestring', projection = srid }
+        { column = 'geom', type = 'multilinestring', projection = srid, not_null = true }
     }
 })
 
@@ -59,23 +59,23 @@ tables.public_transport_polygon = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'area', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'osm_subtype',     type = 'text', not_null = false },
-        { column = 'public_transport',     type = 'text', not_null = true },
-        { column = 'layer',   type = 'int', not_null = true },
-        { column = 'name',     type = 'text' },
-        { column = 'ref',     type = 'text' },
-        { column = 'operator',     type = 'text' },
-        { column = 'network',     type = 'text' },
-        { column = 'surface',     type = 'text' },
-        { column = 'bus',     type = 'text' },
-        { column = 'shelter',     type = 'text' },
-        { column = 'bench',     type = 'text' },
-        { column = 'lit',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'osm_subtype', type = 'text', not_null = false },
+        { column = 'public_transport', type = 'text', not_null = true },
+        { column = 'layer', type = 'int', not_null = true },
+        { column = 'name', type = 'text' },
+        { column = 'ref', type = 'text' },
+        { column = 'operator', type = 'text' },
+        { column = 'network', type = 'text' },
+        { column = 'surface', type = 'text' },
+        { column = 'bus', type = 'text' },
+        { column = 'shelter', type = 'text' },
+        { column = 'bench', type = 'text' },
+        { column = 'lit', type = 'text' },
         { column = 'wheelchair', type = 'text'},
         { column = 'wheelchair_desc', type = 'text'},
         { column = 'member_ids', type = 'jsonb'},
-        { column = 'geom',     type = 'multipolygon', projection = srid }
+        { column = 'geom', type = 'multipolygon', projection = srid, not_null = true }
     }
 })
 
@@ -152,7 +152,7 @@ local function public_transport_process_node(object)
     local bench = object.tags.bench
     local lit = object.tags.lit
 
-    tables.public_transport_point:add_row({
+    tables.public_transport_point:insert({
         osm_type = osm_types.osm_type,
         osm_subtype = osm_types.osm_subtype,
         public_transport = public_transport,
@@ -168,7 +168,7 @@ local function public_transport_process_node(object)
         lit = lit,
         wheelchair = wheelchair,
         wheelchair_desc = wheelchair_desc,
-        geom = { create = 'point' }
+        geom = object:as_point()
     })
 
 end
@@ -202,10 +202,9 @@ local function public_transport_process_way(object)
     local bench = object.tags.bench
     local lit = object.tags.lit
 
-    -- temporarily discarding polygons
     if (object.tags.area == 'yes' or object.is_closed)
             then
-        tables.public_transport_polygon:add_row({
+        tables.public_transport_polygon:insert({
             osm_type = osm_types.osm_type,
             osm_subtype = osm_types.osm_subtype,
             public_transport = public_transport,
@@ -221,10 +220,10 @@ local function public_transport_process_way(object)
             lit = lit,
             wheelchair = wheelchair,
             wheelchair_desc = wheelchair_desc,
-            geom = { create = 'area' }
+            geom = object:as_polygon()
         })
     else
-        tables.public_transport_line:add_row({
+        tables.public_transport_line:insert({
             osm_type = osm_types.osm_type,
             osm_subtype = osm_types.osm_subtype,
             public_transport = public_transport,
@@ -240,7 +239,7 @@ local function public_transport_process_way(object)
             lit = lit,
             wheelchair = wheelchair,
             wheelchair_desc = wheelchair_desc,
-            geom = { create = 'line' }
+            geom = object:as_linestring()
         })
 
     end
@@ -276,7 +275,7 @@ function public_transport_process_relation(object)
     local lit = object.tags.lit
 
     if object.tags.type == 'multipolygon' then
-        tables.public_transport_polygon:add_row({
+        tables.public_transport_polygon:insert({
             osm_type = osm_types.osm_type,
             osm_subtype = osm_types.osm_subtype,
             public_transport = public_transport,
@@ -293,10 +292,10 @@ function public_transport_process_relation(object)
             wheelchair = wheelchair,
             wheelchair_desc = wheelchair_desc,
             member_ids = member_ids,
-            geom = { create = 'area' }
+            geom = object:as_mulitpolygon()
         })
     else
-        tables.public_transport_line:add_row({
+        tables.public_transport_line:insert({
             osm_type = osm_types.osm_type,
             osm_subtype = osm_types.osm_subtype,
             public_transport = public_transport,
@@ -313,7 +312,7 @@ function public_transport_process_relation(object)
             wheelchair = wheelchair,
             wheelchair_desc = wheelchair_desc,
             member_ids = member_ids,
-            geom = { create = 'line' }
+            geom = object:as_multilinestring()
         })
     end
 end
@@ -321,28 +320,24 @@ end
 
 
 if osm2pgsql.process_node == nil then
-    -- Change function name here
     osm2pgsql.process_node = public_transport_process_node
 else
     local nested = osm2pgsql.process_node
     osm2pgsql.process_node = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         public_transport_process_node(object_copy)
     end
 end
 
 
 if osm2pgsql.process_way == nil then
-    -- Change function name here
     osm2pgsql.process_way = public_transport_process_way
 else
     local nested = osm2pgsql.process_way
     osm2pgsql.process_way = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         public_transport_process_way(object_copy)
     end
 end

@@ -7,16 +7,16 @@ tables.road_point = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'name',     type = 'text' },
-        { column = 'ref',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'name', type = 'text' },
+        { column = 'ref', type = 'text' },
         { column = 'maxspeed', type = 'int' },
-        { column = 'oneway',     type = 'direction' },
-        { column = 'layer',   type = 'int', not_null = true },
-        { column = 'tunnel',     type = 'text' },
-        { column = 'bridge',     type = 'text' },
-        { column = 'access',     type = 'text' },
-        { column = 'geom',     type = 'point', projection = srid }
+        { column = 'oneway', type = 'direction' },
+        { column = 'layer', type = 'int', not_null = true },
+        { column = 'tunnel', type = 'text' },
+        { column = 'bridge', type = 'text' },
+        { column = 'access', type = 'text' },
+        { column = 'geom', type = 'point', projection = srid, not_null = true }
     }
 })
 
@@ -27,21 +27,21 @@ tables.road_line = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'name',     type = 'text' },
-        { column = 'ref',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'name', type = 'text' },
+        { column = 'ref', type = 'text' },
         { column = 'maxspeed', type = 'int' },
-        { column = 'oneway',     type = 'direction' },
-        { column = 'layer',   type = 'int', not_null = true },
-        { column = 'tunnel',     type = 'text' },
-        { column = 'bridge',     type = 'text' },
-        { column = 'major',   type = 'boolean', not_null = true},
-        { column = 'route_foot',     type = 'boolean' },
-        { column = 'route_cycle',     type = 'boolean' },
-        { column = 'route_motor',     type = 'boolean' },
-        { column = 'access',     type = 'text' },
+        { column = 'oneway', type = 'direction' },
+        { column = 'layer', type = 'int', not_null = true },
+        { column = 'tunnel', type = 'text' },
+        { column = 'bridge', type = 'text' },
+        { column = 'major', type = 'boolean', not_null = true},
+        { column = 'route_foot', type = 'boolean' },
+        { column = 'route_cycle', type = 'boolean' },
+        { column = 'route_motor', type = 'boolean' },
+        { column = 'access', type = 'text' },
         { column = 'member_ids', type = 'jsonb'},
-        { column = 'geom',     type = 'multilinestring', projection = srid }
+        { column = 'geom', type = 'multilinestring', projection = srid, not_null = true }
     }
 })
 
@@ -51,20 +51,20 @@ tables.road_polygon = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'name',     type = 'text' },
-        { column = 'ref',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'name', type = 'text' },
+        { column = 'ref', type = 'text' },
         { column = 'maxspeed', type = 'int' },
-        { column = 'layer',   type = 'int', not_null = true },
-        { column = 'tunnel',     type = 'text' },
-        { column = 'bridge',     type = 'text' },
-        { column = 'major',   type = 'boolean', not_null = true},
-        { column = 'route_foot',     type = 'boolean' },
-        { column = 'route_cycle',     type = 'boolean' },
-        { column = 'route_motor',     type = 'boolean' },
-        { column = 'access',     type = 'text' },
+        { column = 'layer', type = 'int', not_null = true },
+        { column = 'tunnel', type = 'text' },
+        { column = 'bridge', type = 'text' },
+        { column = 'major', type = 'boolean', not_null = true},
+        { column = 'route_foot', type = 'boolean' },
+        { column = 'route_cycle', type = 'boolean' },
+        { column = 'route_motor', type = 'boolean' },
+        { column = 'access', type = 'text' },
         { column = 'member_ids', type = 'jsonb'},
-        { column = 'geom',     type = 'multipolygon', projection = srid }
+        { column = 'geom', type = 'multipolygon', projection = srid, not_null = true }
     }
 })
 
@@ -90,7 +90,7 @@ function road_process_node(object)
     local bridge = object.tags.bridge
     local access = object.tags.access
 
-    tables.road_point:add_row({
+    tables.road_point:insert({
         name = name,
         osm_type = osm_type,
         ref = ref,
@@ -100,7 +100,7 @@ function road_process_node(object)
         tunnel = tunnel,
         bridge = bridge,
         access = access,
-        geom = { create = 'point' }
+        geom = object:as_point()
     })
 
 end
@@ -133,7 +133,7 @@ function road_process_way(object)
     if object.tags.area == 'yes'
         or object.tags.indoor == 'room'
             then
-        tables.road_polygon:add_row({
+        tables.road_polygon:insert({
             name = name,
             osm_type = osm_type,
             ref = ref,
@@ -146,10 +146,10 @@ function road_process_way(object)
             route_cycle = route_cycle,
             route_motor = route_motor,
             access = access,
-            geom = { create = 'area' }
+            geom = object:as_polygon()
         })
     else
-        tables.road_line:add_row({
+        tables.road_line:insert({
             name = name,
             osm_type = osm_type,
             ref = ref,
@@ -163,7 +163,7 @@ function road_process_way(object)
             route_cycle = route_cycle,
             route_motor = route_motor,
             access = access,
-            geom = { create = 'line' }
+            geom = object:as_linestring()
         })
     end
 
@@ -200,7 +200,7 @@ function road_process_relation(object)
     if object.tags.area == 'yes'
         or object.tags.indoor == 'room'
             then
-        tables.road_polygon:add_row({
+        tables.road_polygon:insert({
             name = name,
             osm_type = osm_type,
             ref = ref,
@@ -214,10 +214,10 @@ function road_process_relation(object)
             route_motor = route_motor,
             access = access,
             member_ids = member_ids,
-            geom = { create = 'area' }
+            geom = object:as_multipolygon()
         })
     else
-        tables.road_line:add_row({
+        tables.road_line:insert({
             name = name,
             osm_type = osm_type,
             ref = ref,
@@ -232,7 +232,7 @@ function road_process_relation(object)
             route_motor = route_motor,
             access = access,
             member_ids = member_ids,
-            geom = { create = 'line' }
+            geom = object:as_multilinestring()
         })
     end
 
@@ -240,28 +240,24 @@ end
 
 
 if osm2pgsql.process_node == nil then
-    -- Change function name here
     osm2pgsql.process_node = road_process_node
 else
     local nested = osm2pgsql.process_node
     osm2pgsql.process_node = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         road_process_node(object_copy)
     end
 end
 
 
 if osm2pgsql.process_way == nil then
-    -- Change function name here
     osm2pgsql.process_way = road_process_way
 else
     local nested = osm2pgsql.process_way
     osm2pgsql.process_way = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         road_process_way(object_copy)
     end
 end
@@ -274,7 +270,6 @@ else
     osm2pgsql.process_relation = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         road_process_relation(object_copy)
     end
 

@@ -8,9 +8,9 @@ tables.traffic_point = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'osm_subtype',     type = 'text' },
-        { column = 'geom',     type = 'point' , projection = srid},
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'osm_subtype', type = 'text' },
+        { column = 'geom', type = 'point', projection = srid, not_null = true },
     }
 })
 
@@ -20,9 +20,9 @@ tables.traffic_line = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'osm_subtype',     type = 'text' },
-        { column = 'geom',     type = 'linestring' , projection = srid},
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'osm_subtype', type = 'text' },
+        { column = 'geom', type = 'linestring', projection = srid, not_null = true},
     }
 })
 
@@ -32,14 +32,13 @@ tables.traffic_polygon = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'osm_subtype',     type = 'text' },
-        { column = 'geom',     type = 'multipolygon' , projection = srid},
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'osm_subtype', type = 'text' },
+        { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
     }
 })
 
 
--- Change function name here
 function traffic_process_node(object)
     if not object.tags.highway and not object.tags.railway and not
             object.tags.barrier and not object.tags.traffic_calming and not
@@ -61,17 +60,17 @@ function traffic_process_node(object)
             then
         local osm_type = object:grab_tag('highway')
 
-        tables.traffic_point:add_row({
+        tables.traffic_point:insert({
             osm_type = osm_type,
-            geom = { create = 'point' }
+            geom = object:as_point()
         })
 
     elseif object.tags.railway == 'level_crossing' then
         local osm_type = 'crossing'
 
-        tables.traffic_point:add_row({
+        tables.traffic_point:insert({
             osm_type = osm_type,
-            geom = { create = 'point' }
+            geom = object:as_point()
         })
 
     -- Beginning of traffic w/ subtypes
@@ -79,20 +78,20 @@ function traffic_process_node(object)
         local osm_type = 'barrier'
         local osm_subtype = object:grab_tag('barrier')
 
-        tables.traffic_point:add_row({
+        tables.traffic_point:insert({
             osm_type = osm_type,
             osm_subtype = osm_subtype,
-            geom = { create = 'point' }
+            geom = object:as_point()
         })
 
     elseif object.tags.traffic_calming then
         local osm_type = 'traffic_calming'
         local osm_subtype = object:grab_tag('traffic_calming')
 
-        tables.traffic_point:add_row({
+        tables.traffic_point:insert({
             osm_type = osm_type,
             osm_subtype = osm_subtype,
-            geom = { create = 'point' }
+            geom = object:as_point()
         })
 
     elseif object.tags.amenity == 'fuel'
@@ -101,10 +100,10 @@ function traffic_process_node(object)
             then
         local osm_type = 'amenity'
         local osm_subtype = object:grab_tag('amenity')
-        tables.traffic_point:add_row({
+        tables.traffic_point:insert({
             osm_type = osm_type,
             osm_subtype = osm_subtype,
-            geom = { create = 'point' }
+            geom = object:as_point()
         })
 
 
@@ -113,9 +112,9 @@ function traffic_process_node(object)
         local osm_type = 'noexit'
         -- No meaningful subtype, only defined value is "yes"
         -- https://wiki.openstreetmap.org/wiki/Key:noexit
-        tables.traffic_point:add_row({
+        tables.traffic_point:insert({
             osm_type = osm_type,
-            geom = { create = 'point' }
+            object:as_point()
         })
 
     else
@@ -125,7 +124,6 @@ function traffic_process_node(object)
 end
 
 
--- Change function name here
 function traffic_process_way(object)
     if not object.tags.highway and not object.tags.railway and not
             object.tags.barrier and not object.tags.traffic_calming and not
@@ -148,14 +146,14 @@ function traffic_process_way(object)
         local osm_type = object:grab_tag('highway')
 
         if object.is_closed then
-            tables.traffic_polygon:add_row({
+            tables.traffic_polygon:insert({
                 osm_type = osm_type,
-                geom = { create = 'area' }
+                geom = object:as_polygon()
             })
         else
-            tables.traffic_line:add_row({
+            tables.traffic_line:insert({
                 osm_type = osm_type,
-                geom = { create = 'line' }
+                geom = object:as_linestring()
             })
         end
 
@@ -163,14 +161,14 @@ function traffic_process_way(object)
         local osm_type = 'crossing'
 
         if object.is_closed then
-            tables.traffic_polygon:add_row({
+            tables.traffic_polygon:insert({
                 osm_type = osm_type,
-                geom = { create = 'area' }
+                geom = object:as_polygon()
             })
         else
-            tables.traffic_line:add_row({
+            tables.traffic_line:insert({
                 osm_type = osm_type,
-                geom = { create = 'line' }
+                geom = object:as_linestring()
             })
         end
 
@@ -180,16 +178,16 @@ function traffic_process_way(object)
         local osm_subtype = object:grab_tag('barrier')
 
         if object.is_closed then
-            tables.traffic_polygon:add_row({
+            tables.traffic_polygon:insert({
                 osm_type = osm_type,
                 osm_subtype = osm_subtype,
-                geom = { create = 'area' }
+                geom = object:as_polygon()
             })
         else
-            tables.traffic_line:add_row({
+            tables.traffic_line:insert({
                 osm_type = osm_type,
                 osm_subtype = osm_subtype,
-                geom = { create = 'line' }
+                geom = object:as_linestring()
             })
         end
 
@@ -198,16 +196,16 @@ function traffic_process_way(object)
         local osm_subtype = object:grab_tag('traffic_calming')
 
         if object.is_closed then
-            tables.traffic_polygon:add_row({
+            tables.traffic_polygon:insert({
                 osm_type = osm_type,
                 osm_subtype = osm_subtype,
-                geom = { create = 'area' }
+                geom = object:as_polygon()
             })
         else
-            tables.traffic_line:add_row({
+            tables.traffic_line:insert({
                 osm_type = osm_type,
                 osm_subtype = osm_subtype,
-                geom = { create = 'line' }
+                geom = object:as_linestring()
             })
         end
 
@@ -219,19 +217,18 @@ function traffic_process_way(object)
         local osm_subtype = object:grab_tag('amenity')
 
         if object.is_closed then
-            tables.traffic_polygon:add_row({
+            tables.traffic_polygon:insert({
                 osm_type = osm_type,
                 osm_subtype = osm_subtype,
-                geom = { create = 'area' }
+                geom = object:as_polygon()
             })
         else
-            tables.traffic_line:add_row({
+            tables.traffic_line:insert({
                 osm_type = osm_type,
                 osm_subtype = osm_subtype,
-                geom = { create = 'line' }
+                geom = object:as_linestring()
             })
         end
-
 
     elseif object.tags.noexit
             then
@@ -243,9 +240,9 @@ function traffic_process_way(object)
             -- noexit does not make sense for polygons
             return
         else
-            tables.traffic_line:add_row({
+            tables.traffic_line:insert({
                 osm_type = osm_type,
-                geom = { create = 'line' }
+                geom = object:as_linestring()
             })
         end
 

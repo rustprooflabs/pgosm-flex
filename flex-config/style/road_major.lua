@@ -7,16 +7,16 @@ tables.road_major = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'name',     type = 'text' },
-        { column = 'ref',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'name', type = 'text' },
+        { column = 'ref', type = 'text' },
         { column = 'maxspeed', type = 'int' },
-        { column = 'layer',   type = 'int', not_null = true },
-        { column = 'tunnel',     type = 'text' },
-        { column = 'bridge',     type = 'text' },
-        { column = 'major',   type = 'boolean', not_null = true},
+        { column = 'layer', type = 'int', not_null = true },
+        { column = 'tunnel', type = 'text' },
+        { column = 'bridge', type = 'text' },
+        { column = 'major', type = 'boolean', not_null = true},
         { column = 'member_ids', type = 'jsonb'},
-        { column = 'geom',     type = 'multilinestring', projection = srid },
+        { column = 'geom', type = 'multilinestring', projection = srid, not_null = true },
     }
 })
 
@@ -42,7 +42,7 @@ function road_major_process_way(object)
     local tunnel = object:grab_tag('tunnel')
     local bridge = object:grab_tag('bridge')
 
-    tables.road_major:add_row({
+    tables.road_major:insert({
         name = name,
         osm_type = osm_type,
         ref = ref,
@@ -51,7 +51,7 @@ function road_major_process_way(object)
         layer = layer,
         tunnel = tunnel,
         bridge = bridge,
-        geom = { create = 'line' }
+        geom = object:as_linestring()
     })
 
 end
@@ -85,7 +85,7 @@ function road_major_process_relation(object)
     local bridge = object.tags.bridge
     local access = object.tags.access
 
-    tables.road_major:add_row({
+    tables.road_major:insert({
         name = name,
         osm_type = osm_type,
         ref = ref,
@@ -95,10 +95,11 @@ function road_major_process_relation(object)
         tunnel = tunnel,
         bridge = bridge,
         member_ids = member_ids,
-        geom = { create = 'line' }
+        geom = object:as_multilinestring()
     })
 
 end
+
 
 if osm2pgsql.process_way == nil then
     osm2pgsql.process_way = road_major_process_way
@@ -112,7 +113,6 @@ else
 end
 
 
-
 if osm2pgsql.process_relation == nil then
     osm2pgsql.process_relation = road_major_process_relation
 else
@@ -120,7 +120,6 @@ else
     osm2pgsql.process_relation = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         road_major_process_relation(object_copy)
     end
 

@@ -7,16 +7,16 @@ tables.indoor_point = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'name',     type = 'text' },
-        { column = 'layer',   type = 'int', not_null = false },
-        { column = 'level',   type = 'text'},
-        { column = 'room',   type = 'text'},
-        { column = 'entrance',   type = 'text'},
-        { column = 'door',   type = 'text'},
-        { column = 'capacity',   type = 'text'},
-        { column = 'highway',   type = 'text'},
-        { column = 'geom',     type = 'point' , projection = srid},
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'name', type = 'text' },
+        { column = 'layer', type = 'int', not_null = false },
+        { column = 'level', type = 'text'},
+        { column = 'room', type = 'text'},
+        { column = 'entrance', type = 'text'},
+        { column = 'door', type = 'text'},
+        { column = 'capacity', type = 'text'},
+        { column = 'highway', type = 'text'},
+        { column = 'geom', type = 'point' , projection = srid, not_null = true},
     }
 })
 
@@ -26,16 +26,16 @@ tables.indoor_line = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'name',     type = 'text' },
-        { column = 'layer',   type = 'int', not_null = false },
-        { column = 'level',   type = 'text'},
-        { column = 'room',   type = 'text'},
-        { column = 'entrance',   type = 'text'},
-        { column = 'door',   type = 'text'},
-        { column = 'capacity',   type = 'text'},
-        { column = 'highway',   type = 'text'},
-        { column = 'geom',     type = 'linestring' , projection = srid},
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'name', type = 'text' },
+        { column = 'layer', type = 'int', not_null = false },
+        { column = 'level', type = 'text'},
+        { column = 'room', type = 'text'},
+        { column = 'entrance', type = 'text'},
+        { column = 'door', type = 'text'},
+        { column = 'capacity', type = 'text'},
+        { column = 'highway', type = 'text'},
+        { column = 'geom', type = 'linestring', projection = srid, not_null = true},
     }
 })
 
@@ -45,16 +45,16 @@ tables.indoor_polygon = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'name',     type = 'text' },
-        { column = 'layer',   type = 'int', not_null = false },
-        { column = 'level',   type = 'text'},
-        { column = 'room',   type = 'text'},
-        { column = 'entrance',   type = 'text'},
-        { column = 'door',   type = 'text'},
-        { column = 'capacity',   type = 'text'},
-        { column = 'highway',   type = 'text'},
-        { column = 'geom',     type = 'multipolygon' , projection = srid},
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'name', type = 'text' },
+        { column = 'layer', type = 'int', not_null = false },
+        { column = 'level', type = 'text'},
+        { column = 'room', type = 'text'},
+        { column = 'entrance', type = 'text'},
+        { column = 'door', type = 'text'},
+        { column = 'capacity', type = 'text'},
+        { column = 'highway', type = 'text'},
+        { column = 'geom', type = 'multipolygon' , projection = srid, not_null = true},
     }
 })
 
@@ -98,7 +98,7 @@ function indoor_process_node(object)
     local capacity = object.tags.capacity
     local highway = object.tags.highway
 
-    tables.indoor_point:add_row({
+    tables.indoor_point:insert({
         osm_type = osm_type,
         name = name,
         layer = layer,
@@ -108,7 +108,7 @@ function indoor_process_node(object)
         door = door,
         capacity = capacity,
         highway = highway,
-        geom = { create = 'point' }
+        geom = object:as_point()
     })
 
 end
@@ -118,7 +118,6 @@ function indoor_process_way(object)
     if not is_first_level_indoor(object.tags) then
         return
     end
-
 
     local osm_type = get_osm_type(object)
     local name = get_name(object.tags)
@@ -131,7 +130,7 @@ function indoor_process_way(object)
     local highway = object.tags.highway
 
     if object.is_closed then
-        tables.indoor_polygon:add_row({
+        tables.indoor_polygon:insert({
             osm_type = osm_type,
             name = name,
             layer = layer,
@@ -141,10 +140,10 @@ function indoor_process_way(object)
             door = door,
             capacity = capacity,
             highway = highway,
-            geom = { create = 'area' }
+            geom = object:as_polygon()
         })
     else
-        tables.indoor_line:add_row({
+        tables.indoor_line:insert({
             osm_type = osm_type,
             name = name,
             layer = layer,
@@ -154,7 +153,7 @@ function indoor_process_way(object)
             door = door,
             capacity = capacity,
             highway = highway,
-            geom = { create = 'line' }
+            geom = object:as_linestring()
         })
     end
 

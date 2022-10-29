@@ -8,21 +8,21 @@ tables.building_point = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text' , not_null = true},
-        { column = 'osm_subtype',   type = 'text'},
-        { column = 'name',     type = 'text' },
-        { column = 'levels',  type = 'int'},
+        { column = 'osm_type', type = 'text' , not_null = true},
+        { column = 'osm_subtype', type = 'text'},
+        { column = 'name', type = 'text' },
+        { column = 'levels', type = 'int'},
         { column = 'height', sql_type = 'numeric'},
         { column = 'housenumber', type = 'text'},
-        { column = 'street',     type = 'text' },
-        { column = 'city',     type = 'text' },
+        { column = 'street', type = 'text' },
+        { column = 'city', type = 'text' },
         { column = 'state', type = 'text'},
         { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
         { column = 'wheelchair', type = 'text'},
         { column = 'wheelchair_desc', type = 'text'},
         { column = 'operator', type = 'text'},
-        { column = 'geom',     type = 'point', projection = srid},
+        { column = 'geom', type = 'point', projection = srid, not_null = true},
     }
 })
 
@@ -32,21 +32,21 @@ tables.building_polygon = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text' , not_null = true},
-        { column = 'osm_subtype',   type = 'text'},
-        { column = 'name',     type = 'text' },
-        { column = 'levels',  type = 'int'},
-        { column = 'height',  sql_type = 'numeric'},
+        { column = 'osm_type', type = 'text', not_null = true},
+        { column = 'osm_subtype', type = 'text'},
+        { column = 'name', type = 'text' },
+        { column = 'levels', type = 'int'},
+        { column = 'height', sql_type = 'numeric'},
         { column = 'housenumber', type = 'text'},
-        { column = 'street',     type = 'text' },
-        { column = 'city',     type = 'text' },
+        { column = 'street', type = 'text' },
+        { column = 'city', type = 'text' },
         { column = 'state', type = 'text'},
         { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
         { column = 'wheelchair', type = 'text'},
         { column = 'wheelchair_desc', type = 'text'},
         { column = 'operator', type = 'text'},
-        { column = 'geom',     type = 'multipolygon', projection = srid},
+        { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
     }
 })
 
@@ -148,7 +148,7 @@ function building_process_node(object)
     local height = parse_to_meters(object.tags['height'])
     local operator  = object.tags.operator
 
-    tables.building_point:add_row({
+    tables.building_point:insert({
         osm_type = osm_types.osm_type,
         osm_subtype = osm_types.osm_subtype,
         name = name,
@@ -163,7 +163,7 @@ function building_process_node(object)
         levels = levels,
         height = height,
         operator = operator,
-        geom = { create = 'point' }
+        geom = object:as_point()
     })
 
 
@@ -197,7 +197,7 @@ function building_process_way(object)
     local height = parse_to_meters(object.tags['height'])
     local operator  = object.tags.operator
 
-    tables.building_polygon:add_row({
+    tables.building_polygon:insert({
         osm_type = osm_types.osm_type,
         osm_subtype = osm_types.osm_subtype,
         name = name,
@@ -212,7 +212,7 @@ function building_process_way(object)
         levels = levels,
         height = height,
         operator = operator,
-        geom = { create = 'area' }
+        geom = object:as_polygon()
     })
 
 
@@ -245,7 +245,7 @@ function building_process_relation(object)
     local operator  = object.tags.operator
 
     if object.tags.type == 'multipolygon' or object.tags.type == 'boundary' then
-        tables.building_polygon:add_row({
+        tables.building_polygon:insert({
             osm_type = osm_types.osm_type,
             osm_subtype = osm_types.osm_subtype,
             name = name,
@@ -260,7 +260,7 @@ function building_process_relation(object)
             levels = levels,
             height = height,
             operator = operator,
-            geom = { create = 'area' }
+            geom = object:as_multipolygon()
         })
     end
 end
