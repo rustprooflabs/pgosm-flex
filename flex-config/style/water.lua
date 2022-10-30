@@ -7,14 +7,14 @@ tables.water_point = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'osm_subtype',     type = 'text', not_null = true },
-        { column = 'name',     type = 'text' },
-        { column = 'layer',   type = 'int', not_null = true },
-        { column = 'tunnel',     type = 'text' },
-        { column = 'bridge',     type = 'text' },
-        { column = 'boat',     type = 'text' },
-        { column = 'geom',     type = 'point' , projection = srid},
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'osm_subtype', type = 'text', not_null = true },
+        { column = 'name', type = 'text' },
+        { column = 'layer', type = 'int', not_null = true },
+        { column = 'tunnel', type = 'text' },
+        { column = 'bridge', type = 'text' },
+        { column = 'boat', type = 'text' },
+        { column = 'geom', type = 'point', projection = srid, not_null = true},
     }
 })
 
@@ -24,15 +24,15 @@ tables.water_line = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'osm_subtype',     type = 'text', not_null = true },
-        { column = 'name',     type = 'text' },
-        { column = 'layer',   type = 'int', not_null = true },
-        { column = 'tunnel',     type = 'text' },
-        { column = 'bridge',     type = 'text' },
-        { column = 'boat',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'osm_subtype', type = 'text', not_null = true },
+        { column = 'name', type = 'text' },
+        { column = 'layer', type = 'int', not_null = true },
+        { column = 'tunnel', type = 'text' },
+        { column = 'bridge', type = 'text' },
+        { column = 'boat', type = 'text' },
         { column = 'member_ids', type = 'jsonb'},
-        { column = 'geom',     type = 'multilinestring' , projection = srid},
+        { column = 'geom', type = 'multilinestring', projection = srid, not_null = true},
     }
 })
 
@@ -42,15 +42,15 @@ tables.water_polygon = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'osm_subtype',     type = 'text', not_null = true },
-        { column = 'name',     type = 'text' },
-        { column = 'layer',   type = 'int', not_null = true },
-        { column = 'tunnel',     type = 'text' },
-        { column = 'bridge',     type = 'text' },
-        { column = 'boat',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'osm_subtype', type = 'text', not_null = true },
+        { column = 'name', type = 'text' },
+        { column = 'layer', type = 'int', not_null = true },
+        { column = 'tunnel', type = 'text' },
+        { column = 'bridge', type = 'text' },
+        { column = 'boat', type = 'text' },
         { column = 'member_ids', type = 'jsonb'},
-        { column = 'geom',     type = 'multipolygon' , projection = srid},
+        { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
     }
 })
 
@@ -79,7 +79,7 @@ function water_process_node(object)
         local bridge = object:grab_tag('bridge')
         local boat = object:grab_tag('boat')
 
-        tables.water_point:add_row({
+        tables.water_point:insert({
             osm_type = osm_type,
             osm_subtype = osm_subtype,
             name = name,
@@ -87,7 +87,7 @@ function water_process_node(object)
             tunnel = tunnel,
             bridge = bridge,
             boat = boat,
-            geom = { create = 'point' }
+            geom = object:as_point()
         })
 
     elseif object.tags.waterway then
@@ -99,7 +99,7 @@ function water_process_node(object)
         local bridge = object:grab_tag('bridge')
         local boat = object:grab_tag('boat')
 
-        tables.water_point:add_row({
+        tables.water_point:insert({
             osm_type = osm_type,
             osm_subtype = osm_subtype,
             name = name,
@@ -107,7 +107,7 @@ function water_process_node(object)
             tunnel = tunnel,
             bridge = bridge,
             boat = boat,
-            geom = { create = 'point' }
+            geom = object:as_point()
         })
 
     end
@@ -141,7 +141,7 @@ function water_process_way(object)
         local boat = object:grab_tag('boat')
 
         if object.is_closed then
-            tables.water_polygon:add_row({
+            tables.water_polygon:insert({
                 osm_type = osm_type,
                 osm_subtype = osm_subtype,
                 name = name,
@@ -149,10 +149,10 @@ function water_process_way(object)
                 tunnel = tunnel,
                 bridge = bridge,
                 boat = boat,
-                geom = { create = 'area' }
+                geom = object:as_polygon()
             })
         else
-            tables.water_line:add_row({
+            tables.water_line:insert({
                 osm_type = osm_type,
                 osm_subtype = osm_subtype,
                 name = name,
@@ -160,7 +160,7 @@ function water_process_way(object)
                 tunnel = tunnel,
                 bridge = bridge,
                 boat = boat,
-                geom = { create = 'line' }
+                geom = object:as_linestring()
             })
         end
 
@@ -174,7 +174,7 @@ function water_process_way(object)
         local boat = object:grab_tag('boat')
 
         if object.is_closed then
-            tables.water_polygon:add_row({
+            tables.water_polygon:insert({
                 osm_type = osm_type,
                 osm_subtype = osm_subtype,
                 name = name,
@@ -182,10 +182,10 @@ function water_process_way(object)
                 tunnel = tunnel,
                 bridge = bridge,
                 boat = boat,
-                geom = { create = 'area' }
+                geom = object:as_polygon()
             })
         else
-            tables.water_line:add_row({
+            tables.water_line:insert({
                 osm_type = osm_type,
                 osm_subtype = osm_subtype,
                 name = name,
@@ -193,7 +193,7 @@ function water_process_way(object)
                 tunnel = tunnel,
                 bridge = bridge,
                 boat = boat,
-                geom = { create = 'line' }
+                geom = object:as_linestring()
             })
         end
 
@@ -229,7 +229,7 @@ function water_process_relation(object)
         local boat = object:grab_tag('boat')
 
         if object.tags.type == 'multipolygon' then
-            tables.water_polygon:add_row({
+            tables.water_polygon:insert({
                 osm_type = osm_type,
                 osm_subtype = osm_subtype,
                 name = name,
@@ -238,10 +238,10 @@ function water_process_relation(object)
                 bridge = bridge,
                 boat = boat,
                 member_ids = member_ids,
-                geom = { create = 'area' }
+                geom = object:as_multipolygon()
             })
         else
-            tables.water_line:add_row({
+            tables.water_line:insert({
                 osm_type = osm_type,
                 osm_subtype = osm_subtype,
                 name = name,
@@ -250,7 +250,7 @@ function water_process_relation(object)
                 bridge = bridge,
                 boat = boat,
                 member_ids = member_ids,
-                geom = { create = 'line' }
+                geom = object:as_multilinestring()
             })
         end
 
@@ -264,7 +264,7 @@ function water_process_relation(object)
         local boat = object:grab_tag('boat')
 
         if object.tags.type == 'multipolygon' then
-            tables.water_polygon:add_row({
+            tables.water_polygon:insert({
                 osm_type = osm_type,
                 osm_subtype = osm_subtype,
                 name = name,
@@ -273,10 +273,10 @@ function water_process_relation(object)
                 bridge = bridge,
                 boat = boat,
                 member_ids = member_ids,
-                geom = { create = 'area' }
+                geom = object:as_multipolygon()
             })
         else
-            tables.water_line:add_row({
+            tables.water_line:insert({
                 osm_type = osm_type,
                 osm_subtype = osm_subtype,
                 name = name,
@@ -285,7 +285,7 @@ function water_process_relation(object)
                 bridge = bridge,
                 boat = boat,
                 member_ids = member_ids,
-                geom = { create = 'line' }
+                geom = object:as_multilinestring()
             })
         end
 
@@ -296,14 +296,12 @@ end
 
 
 if osm2pgsql.process_node == nil then
-    -- Change function name here
     osm2pgsql.process_node = water_process_node
 else
     local nested = osm2pgsql.process_node
     osm2pgsql.process_node = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         water_process_node(object_copy)
     end
 end
@@ -311,14 +309,12 @@ end
 
 
 if osm2pgsql.process_way == nil then
-    -- Change function name here
     osm2pgsql.process_way = water_process_way
 else
     local nested = osm2pgsql.process_way
     osm2pgsql.process_way = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         water_process_way(object_copy)
     end
 end

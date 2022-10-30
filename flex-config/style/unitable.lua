@@ -20,8 +20,8 @@ local dtable = osm2pgsql.define_table{
     -- "geom_type CHAR(1)" for the type of object: N(ode), W(way), R(relation)
     ids = { type = 'any', id_column = 'osm_id', type_column = 'geom_type' },
     columns = {
-        { column = 'tags',  type = 'jsonb' },
-        { column = 'geom',  type = 'geometry', projection = srid  },
+        { column = 'tags', type = 'jsonb' },
+        { column = 'geom', type = 'geometry', projection = srid, not_null = true },
     }
 }
 
@@ -42,9 +42,9 @@ function unitable_process_node(object)
     if clean_tags(object.tags) then
         return
     end
-    dtable:add_row({
+    dtable:insert({
         tags = object.tags,
-        geom = { create = 'point' }
+        geom = object:as_point()
     })
 end
 
@@ -53,9 +53,9 @@ function unitable_process_way(object)
     if clean_tags(object.tags) then
         return
     end
-    dtable:add_row({
+    dtable:insert({
         tags = object.tags,
-        geom = { create = 'line' }
+        geom = object:as_linestring()
     })
 end
 
@@ -68,9 +68,9 @@ function unitable_process_relation(object)
     if (object.tags.type == 'multipolygon'
             or object.tags.type == 'boundary')
             then
-        dtable:add_row({
+        dtable:insert({
             tags = object.tags,
-            geom = { create = 'area' }
+            geom = object:as_multipolygon()
         })
     elseif (object.tags.type == 'route'
             or object.tags.type == 'route_master'
@@ -83,55 +83,46 @@ function unitable_process_relation(object)
             or object.tags.type == 'tunnel'
             )
             then
-        dtable:add_row({
+        dtable:insert({
             tags = object.tags,
-            geom = { create = 'line' }
+            geom = object:as_multilinestring()
         })
     end
-
 
 end
 
 
-
 if osm2pgsql.process_node == nil then
-    -- Change function name here
     osm2pgsql.process_node = unitable_process_node
 else
     local nested = osm2pgsql.process_node
     osm2pgsql.process_node = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         unitable_process_node(object_copy)
     end
 end
 
 
-
 if osm2pgsql.process_way == nil then
-    -- Change function name here
     osm2pgsql.process_way = unitable_process_way
 else
     local nested = osm2pgsql.process_way
     osm2pgsql.process_way = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         unitable_process_way(object_copy)
     end
 end
 
 
 if osm2pgsql.process_relation == nil then
-    -- Change function name here
     osm2pgsql.process_relation = unitable_process_relation
 else
     local nested = osm2pgsql.process_relation
     osm2pgsql.process_relation = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         unitable_process_relation(object_copy)
     end
 end

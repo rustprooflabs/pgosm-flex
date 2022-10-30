@@ -7,12 +7,12 @@ tables.shop_point = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'osm_subtype',     type = 'text', not_null = true },
-        { column = 'name',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'osm_subtype', type = 'text', not_null = true },
+        { column = 'name', type = 'text' },
         { column = 'housenumber', type = 'text'},
-        { column = 'street',     type = 'text' },
-        { column = 'city',     type = 'text' },
+        { column = 'street', type = 'text' },
+        { column = 'city', type = 'text' },
         { column = 'state', type = 'text'},
         { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
@@ -22,7 +22,7 @@ tables.shop_point = osm2pgsql.define_table({
         { column = 'operator', type = 'text'},
         { column = 'brand', type = 'text'},
         { column = 'website', type = 'text'},
-        { column = 'geom',     type = 'point' , projection = srid},
+        { column = 'geom', type = 'point' , projection = srid, not_null = true },
     }
 })
 
@@ -32,12 +32,12 @@ tables.shop_polygon = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'osm_subtype',     type = 'text', not_null = true },
-        { column = 'name',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'osm_subtype', type = 'text', not_null = true },
+        { column = 'name', type = 'text' },
         { column = 'housenumber', type = 'text'},
-        { column = 'street',     type = 'text' },
-        { column = 'city',     type = 'text' },
+        { column = 'street', type = 'text' },
+        { column = 'city', type = 'text' },
         { column = 'state', type = 'text'},
         { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
@@ -47,7 +47,7 @@ tables.shop_polygon = osm2pgsql.define_table({
         { column = 'operator', type = 'text'},
         { column = 'brand', type = 'text'},
         { column = 'website', type = 'text'},
-        { column = 'geom',     type = 'multipolygon' , projection = srid},
+        { column = 'geom', type = 'multipolygon' , projection = srid, not_null = true},
     }
 })
 
@@ -76,7 +76,7 @@ function shop_process_node(object)
         local osm_type = 'shop'
         local osm_subtype = object:grab_tag('shop')
 
-        tables.shop_point:add_row({
+        tables.shop_point:insert({
             osm_type = osm_type,
             osm_subtype = osm_subtype,
             name = name,
@@ -91,7 +91,7 @@ function shop_process_node(object)
             operator = operator,
             brand = brand,
             website = website,
-            geom = { create = 'point' }
+            geom = object:as_point()
         })
 
     -- This creates overlap between this layer and amenity layer
@@ -109,7 +109,7 @@ function shop_process_node(object)
         local osm_type = 'amenity'
         local osm_subtype = object:grab_tag('amenity')
 
-        tables.shop_point:add_row({
+        tables.shop_point:insert({
             osm_type = osm_type,
             osm_subtype = osm_subtype,
             name = name,
@@ -125,7 +125,7 @@ function shop_process_node(object)
             operator = operator,
             brand = brand,
             website = website,
-            geom = { create = 'point' }
+            geom = object:as_point()
         })
 
     end
@@ -159,7 +159,7 @@ function shop_process_way(object)
         local osm_subtype = object:grab_tag('shop')
 
         if object.is_closed then
-            tables.shop_polygon:add_row({
+            tables.shop_polygon:insert({
                 osm_type = osm_type,
                 osm_subtype = osm_subtype,
                 name = name,
@@ -175,7 +175,7 @@ function shop_process_way(object)
                 operator = operator,
                 brand = brand,
                 website = website,
-                geom = { create = 'area' }
+                geom = object:as_polygon()
             })
         end
 
@@ -195,7 +195,7 @@ function shop_process_way(object)
         local osm_subtype = object:grab_tag('amenity')
 
         if object.is_closed then
-            tables.shop_polygon:add_row({
+            tables.shop_polygon:insert({
                 osm_type = osm_type,
                 osm_subtype = osm_subtype,
                 name = name,
@@ -211,7 +211,7 @@ function shop_process_way(object)
                 operator = operator,
                 brand = brand,
                 website = website,
-                geom = { create = 'area' }
+                geom = object:as_polygon()
             })
         end
     end
@@ -219,29 +219,24 @@ end
 
 
 if osm2pgsql.process_node == nil then
-    -- Change function name here
     osm2pgsql.process_node = shop_process_node
 else
     local nested = osm2pgsql.process_node
     osm2pgsql.process_node = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         shop_process_node(object_copy)
     end
 end
 
 
-
 if osm2pgsql.process_way == nil then
-    -- Change function name here
     osm2pgsql.process_way = shop_process_way
 else
     local nested = osm2pgsql.process_way
     osm2pgsql.process_way = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         shop_process_way(object_copy)
     end
 end

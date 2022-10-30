@@ -8,9 +8,9 @@ tables.landuse_point = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text' , not_null = true},
-        { column = 'name',     type = 'text' },
-        { column = 'geom',     type = 'point', projection = srid},
+        { column = 'osm_type', type = 'text' , not_null = true},
+        { column = 'name', type = 'text' },
+        { column = 'geom', type = 'point', projection = srid, not_null = true},
     }
 })
 
@@ -20,9 +20,9 @@ tables.landuse_polygon = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text' , not_null = true},
-        { column = 'name',     type = 'text' },
-        { column = 'geom',     type = 'multipolygon', projection = srid},
+        { column = 'osm_type', type = 'text', not_null = true},
+        { column = 'name', type = 'text' },
+        { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
     }
 })
 
@@ -36,10 +36,10 @@ function landuse_process_node(object)
     local osm_type = object:grab_tag('landuse')
     local name = get_name(object.tags)
 
-    tables.landuse_point:add_row({
+    tables.landuse_point:insert({
         osm_type = osm_type,
         name = name,
-        geom = { create = 'point' }
+        geom = object:as_point()
     })
 
 
@@ -58,10 +58,10 @@ function landuse_process_way(object)
     local osm_type = object:grab_tag('landuse')
     local name = get_name(object.tags)
 
-    tables.landuse_polygon:add_row({
+    tables.landuse_polygon:insert({
         osm_type = osm_type,
         name = name,
-        geom = { create = 'area' }
+        geom = object:as_polygon()
     })
 
 end
@@ -76,17 +76,16 @@ function landuse_process_relation(object)
     local name = get_name(object.tags)
 
     if object.tags.type == 'multipolygon' or object.tags.type == 'boundary' then
-        tables.landuse_polygon:add_row({
+        tables.landuse_polygon:insert({
             osm_type = osm_type,
             name = name,
-            geom = { create = 'area' }
+            geom = object:as_multipolygon()
         })
     end
 end
 
 
 if osm2pgsql.process_node == nil then
-    -- Change function name here
     osm2pgsql.process_node = landuse_process_node
 else
     local nested = osm2pgsql.process_node
@@ -100,14 +99,12 @@ end
 
 
 if osm2pgsql.process_way == nil then
-    -- Change function name here
     osm2pgsql.process_way = landuse_process_way
 else
     local nested = osm2pgsql.process_way
     osm2pgsql.process_way = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         landuse_process_way(object_copy)
     end
 end
