@@ -7,18 +7,18 @@ tables.amenity_point = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'osm_subtype',     type = 'text' },
-        { column = 'name',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'osm_subtype', type = 'text' },
+        { column = 'name', type = 'text' },
         { column = 'housenumber', type = 'text'},
-        { column = 'street',     type = 'text' },
-        { column = 'city',     type = 'text' },
+        { column = 'street', type = 'text' },
+        { column = 'city', type = 'text' },
         { column = 'state', type = 'text'},
         { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
         { column = 'wheelchair', type = 'text'},
         { column = 'wheelchair_desc', type = 'text'},
-        { column = 'geom',     type = 'point' , projection = srid},
+        { column = 'geom', type = 'point', projection = srid, not_null = true},
     }
 })
 
@@ -27,18 +27,18 @@ tables.amenity_line = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'osm_subtype',     type = 'text' },
-        { column = 'name',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'osm_subtype', type = 'text' },
+        { column = 'name', type = 'text' },
         { column = 'housenumber', type = 'text'},
-        { column = 'street',     type = 'text' },
-        { column = 'city',     type = 'text' },
+        { column = 'street', type = 'text' },
+        { column = 'city', type = 'text' },
         { column = 'state', type = 'text'},
         { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
         { column = 'wheelchair', type = 'text'},
         { column = 'wheelchair_desc', type = 'text'},
-        { column = 'geom',     type = 'linestring' , projection = srid},
+        { column = 'geom', type = 'linestring', projection = srid, not_null = true},
     }
 })
 
@@ -48,18 +48,18 @@ tables.amenity_polygon = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'area', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'osm_subtype',     type = 'text' },
-        { column = 'name',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'osm_subtype', type = 'text' },
+        { column = 'name', type = 'text' },
         { column = 'housenumber', type = 'text'},
-        { column = 'street',     type = 'text' },
-        { column = 'city',     type = 'text' },
+        { column = 'street', type = 'text' },
+        { column = 'city', type = 'text' },
         { column = 'state', type = 'text'},
         { column = 'postcode', type = 'text'},
         { column = 'address', type = 'text', not_null = true},
         { column = 'wheelchair', type = 'text'},
         { column = 'wheelchair_desc', type = 'text'},
-        { column = 'geom',     type = 'multipolygon' , projection = srid},
+        { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
     }
 })
 
@@ -124,7 +124,7 @@ function amenity_process_node(object)
     local wheelchair = object.tags.wheelchair
     local wheelchair_desc = get_wheelchair_desc(object.tags)
 
-    tables.amenity_point:add_row({
+    tables.amenity_point:insert({
         osm_type = osm_types['osm_type'],
         osm_subtype = osm_types['osm_subtype'],
         name = name,
@@ -136,7 +136,7 @@ function amenity_process_node(object)
         address = address,
         wheelchair = wheelchair,
         wheelchair_desc = wheelchair_desc,
-        geom = { create = 'point' }
+        geom = object:as_point()
     })
 
 end
@@ -165,7 +165,7 @@ function amenity_process_way(object)
     local wheelchair_desc = get_wheelchair_desc(object.tags)
 
     if object.is_closed then
-        tables.amenity_polygon:add_row({
+        tables.amenity_polygon:insert({
             osm_type = osm_types['osm_type'],
             osm_subtype = osm_types['osm_subtype'],
             name = name,
@@ -177,10 +177,10 @@ function amenity_process_way(object)
             address = address,
             wheelchair = wheelchair,
             wheelchair_desc = wheelchair_desc,
-            geom = { create = 'area' }
+            geom = object:as_polygon()
         })
     else
-        tables.amenity_line:add_row({
+        tables.amenity_line:insert({
             osm_type = osm_types['osm_type'],
             osm_subtype = osm_types['osm_subtype'],
             name = name,
@@ -192,7 +192,7 @@ function amenity_process_way(object)
             address = address,
             wheelchair = wheelchair,
             wheelchair_desc = wheelchair_desc,
-            geom = { create = 'line' }
+            geom = object:as_linestring()
         })
     end
     
@@ -215,7 +215,7 @@ function amenity_process_relation(object)
     local wheelchair = object.tags.wheelchair
     local wheelchair_desc = get_wheelchair_desc(object.tags)
 
-    tables.amenity_polygon:add_row({
+    tables.amenity_polygon:insert({
         osm_type = osm_types['osm_type'],
         osm_subtype = osm_types['osm_subtype'],
         name = name,
@@ -227,7 +227,7 @@ function amenity_process_relation(object)
         address = address,
         wheelchair = wheelchair,
         wheelchair_desc = wheelchair_desc,
-        geom = { create = 'area' }
+        geom = object:as_multipolygon()
     })
 
 end

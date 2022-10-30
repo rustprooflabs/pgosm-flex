@@ -8,10 +8,10 @@ tables.natural_point = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'name',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'name', type = 'text' },
         { column = 'ele', type = 'int' },
-        { column = 'geom',     type = 'point' , projection = srid},
+        { column = 'geom', type = 'point', projection = srid, not_null = true},
     }
 })
 
@@ -21,10 +21,10 @@ tables.natural_line = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'name',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'name', type = 'text' },
         { column = 'ele', type = 'int' },
-        { column = 'geom',     type = 'linestring' , projection = srid},
+        { column = 'geom', type = 'linestring' , projection = srid, not_null = true},
     }
 })
 
@@ -34,10 +34,10 @@ tables.natural_polygon = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'name',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'name', type = 'text' },
         { column = 'ele', type = 'int' },
-        { column = 'geom',     type = 'multipolygon' , projection = srid},
+        { column = 'geom', type = 'multipolygon' , projection = srid, not_null = true},
     }
 })
 
@@ -67,11 +67,11 @@ function natural_process_node(object)
     local name = get_name(object.tags)
     local ele = parse_to_meters(object.tags.ele)
 
-    tables.natural_point:add_row({
+    tables.natural_point:insert({
         osm_type = osm_type,
         name = name,
         ele = ele,
-        geom = { create = 'point' }
+        geom = object:as_point()
     })
 
 end
@@ -101,18 +101,18 @@ function natural_process_way(object)
     local ele = parse_to_meters(object.tags.ele)
 
     if object.is_closed then
-        tables.natural_polygon:add_row({
+        tables.natural_polygon:insert({
             osm_type = osm_type,
             name = name,
             ele = ele,
-            geom = { create = 'area' }
+            geom = object:as_polygon()
         })
     else
-        tables.natural_line:add_row({
+        tables.natural_line:insert({
             osm_type = osm_type,
             name = name,
             ele = ele,
-            geom = { create = 'line' }
+            geom = object:as_linestring()
         })
     end
     
@@ -120,29 +120,24 @@ end
 
 
 if osm2pgsql.process_node == nil then
-    -- Change function name here
     osm2pgsql.process_node = natural_process_node
 else
     local nested = osm2pgsql.process_node
     osm2pgsql.process_node = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         natural_process_node(object_copy)
     end
 end
 
 
-
 if osm2pgsql.process_way == nil then
-    -- Change function name here
     osm2pgsql.process_way = natural_process_way
 else
     local nested = osm2pgsql.process_way
     osm2pgsql.process_way = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         natural_process_way(object_copy)
     end
 end

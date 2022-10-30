@@ -8,11 +8,11 @@ tables.place_point = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'node', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'boundary',     type = 'text' },
-        { column = 'admin_level',     type = 'int4' },
-        { column = 'name',     type = 'text' },
-        { column = 'geom',     type = 'point' , projection = srid},
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'boundary', type = 'text' },
+        { column = 'admin_level', type = 'int4' },
+        { column = 'name', type = 'text' },
+        { column = 'geom', type = 'point', projection = srid, not_null = true},
     }
 })
 
@@ -21,11 +21,11 @@ tables.place_line = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'way', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'boundary',     type = 'text' },
-        { column = 'admin_level',     type = 'int4' },
-        { column = 'name',     type = 'text' },
-        { column = 'geom',     type = 'linestring' , projection = srid},
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'boundary', type = 'text' },
+        { column = 'admin_level', type = 'int4' },
+        { column = 'name', type = 'text' },
+        { column = 'geom', type = 'linestring', projection = srid, not_null = true},
     }
 })
 
@@ -35,12 +35,12 @@ tables.place_polygon = osm2pgsql.define_table({
     schema = schema_name,
     ids = { type = 'area', id_column = 'osm_id' },
     columns = {
-        { column = 'osm_type',     type = 'text', not_null = true },
-        { column = 'boundary',     type = 'text' },
-        { column = 'admin_level',     type = 'int4' },
-        { column = 'name',     type = 'text' },
+        { column = 'osm_type', type = 'text', not_null = true },
+        { column = 'boundary', type = 'text' },
+        { column = 'admin_level', type = 'int4' },
+        { column = 'name', type = 'text' },
         { column = 'member_ids', type = 'jsonb'},
-        { column = 'geom',     type = 'multipolygon' , projection = srid},
+        { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
     }
 })
 
@@ -66,12 +66,12 @@ function place_process_node(object)
     local admin_level = parse_admin_level(object:grab_tag('admin_level'))
     local name = get_name(object.tags)
 
-    tables.place_point:add_row({
+    tables.place_point:insert({
         osm_type = osm_type,
         boundary = boundary,
         admin_level = admin_level,
         name = name,
-        geom = { create = 'point' }
+        geom = object:as_point()
     })
 
 end
@@ -99,20 +99,20 @@ function place_process_way(object)
     local name = get_name(object.tags)
 
     if object.is_closed then
-        tables.place_polygon:add_row({
+        tables.place_polygon:insert({
             osm_type = osm_type,
             boundary = boundary,
             admin_level = admin_level,
             name = name,
-            geom = { create = 'area' }
+            geom = object:as_polygon()
         })
     else
-        tables.place_line:add_row({
+        tables.place_line:insert({
             osm_type = osm_type,
             boundary = boundary,
             admin_level = admin_level,
             name = name,
-            geom = { create = 'line' }
+            geom = object:as_linestring()
         })
     end
     
@@ -141,28 +141,25 @@ function place_process_relation(object)
     local name = get_name(object.tags)
     local member_ids = osm2pgsql.way_member_ids(object)
 
-    tables.place_polygon:add_row({
+    tables.place_polygon:insert({
         osm_type = osm_type,
         boundary = boundary,
         admin_level = admin_level,
         name = name,
         member_ids = member_ids,
-        geom = { create = 'area' }
+        geom = object:as_multipolygon()
     })
 
 end
 
 
-
 if osm2pgsql.process_node == nil then
-    -- Change function name here
     osm2pgsql.process_node = place_process_node
 else
     local nested = osm2pgsql.process_node
     osm2pgsql.process_node = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         place_process_node(object_copy)
     end
 end
@@ -170,28 +167,24 @@ end
 
 
 if osm2pgsql.process_way == nil then
-    -- Change function name here
     osm2pgsql.process_way = place_process_way
 else
     local nested = osm2pgsql.process_way
     osm2pgsql.process_way = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         place_process_way(object_copy)
     end
 end
 
 
 if osm2pgsql.process_relation == nil then
-    -- Change function name here
     osm2pgsql.process_relation = place_process_relation
 else
     local nested = osm2pgsql.process_relation
     osm2pgsql.process_relation = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         place_process_relation(object_copy)
     end
 end

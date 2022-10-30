@@ -47,45 +47,37 @@ function all_tags_process_relation(object)
 end
 
 
-
 if osm2pgsql.process_node == nil then
-    -- Change function name here
     osm2pgsql.process_node = all_tags_process_node
 else
     local nested = osm2pgsql.process_node
     osm2pgsql.process_node = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         all_tags_process_node(object_copy)
     end
 end
 
 
 if osm2pgsql.process_way == nil then
-    -- Change function name here
     osm2pgsql.process_way = all_tags_process_way
 else
     local nested = osm2pgsql.process_way
     osm2pgsql.process_way = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         all_tags_process_way(object_copy)
     end
 end
 
 
-
 if osm2pgsql.process_relation == nil then
-    -- Change function name here
     osm2pgsql.process_relation = all_tags_process_relation
 else
     local nested = osm2pgsql.process_relation
     osm2pgsql.process_relation = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        -- Change function name here
         all_tags_process_relation(object_copy)
     end
 end
