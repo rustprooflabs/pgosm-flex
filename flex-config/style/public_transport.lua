@@ -292,7 +292,7 @@ function public_transport_process_relation(object)
             wheelchair = wheelchair,
             wheelchair_desc = wheelchair_desc,
             member_ids = member_ids,
-            geom = object:as_mulitpolygon()
+            geom = object:as_multipolygon()
         })
     else
         tables.public_transport_line:insert({
