@@ -153,15 +153,12 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
 
     if input_file is None:
         geofabrik.prepare_data(out_path=out_path)
-
         pbf_filename = geofabrik.get_region_filename()
-        osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
-                                           pbf_filename=pbf_filename,
-                                           out_path=out_path,
-                                           append=append)
     else:
-        osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
-                                           pbf_filename=input_file,
+        pbf_filename = input_file
+
+    osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
+                                           pbf_filename=pbf_filename,
                                            out_path=out_path,
                                            append=append)
 
