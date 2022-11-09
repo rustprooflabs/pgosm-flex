@@ -82,7 +82,7 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb, append, pbf_filename,
 
     osm2pgsql_cmd = osm2pgsql_cmd.replace('~/pgosm-data', output_path)
 
-    LOGGER.info(f'Generic command to run: {osm2pgsql_cmd}')
+    LOGGER.debug(f'Generic command to run: {osm2pgsql_cmd}')
 
     # Replace generic connection string with specific conn string
     conn_string = db.connection_string()

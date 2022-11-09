@@ -83,15 +83,15 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
     validate_region_inputs(region, subregion, input_file)
 
     if schema_name != 'osm' and append:
-        sys.exit('ERROR: Append mode with custom schema name currently not supported')
+        err_msg = 'Append mode with custom schema name currently not supported'
+        logger.error(err_msg)
+        sys.exit(err_msg)
 
-    # Ensure always a region name
     if region is None and input_file:
         region = input_file
 
     helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
                          layerset, layerset_path)
-
     db.wait_for_postgres()
     db.prepare_pgosm_db(data_only=data_only,
                         db_path=paths['db_path'],
@@ -114,7 +114,6 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
                                          ram=ram,
                                          skip_nested=skip_nested,
                                          append=append)
-
 
     if schema_name != 'osm':
         db.rename_schema(schema_name)
