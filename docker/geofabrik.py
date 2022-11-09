@@ -60,7 +60,10 @@ def prepare_data(out_path):
         archive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date)
     else:
         logging.getLogger('pgosm-flex').info('Copying Archived files')
-        unarchive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date)
+        unarchive_data(pbf_file,
+                       md5_file,
+                       pbf_file_with_date,
+                       md5_file_with_date)
 
     helpers.verify_checksum(md5_file, out_path)
 
@@ -177,12 +180,12 @@ def archive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date):
     md5_file_with_date : str
     """
     if os.path.exists(pbf_file_with_date):
-        pass # Do nothing
+        pass
     else:
         shutil.copy2(pbf_file, pbf_file_with_date)
 
     if os.path.exists(md5_file_with_date):
-        pass # Do nothing
+        pass
     else:
         shutil.copy2(md5_file, md5_file_with_date)
 

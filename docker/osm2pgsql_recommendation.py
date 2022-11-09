@@ -31,12 +31,12 @@ def osm2pgsql_recommendation(ram, pbf_filename, out_path, append):
     osm2pgsql_cmd : str
     """
     system_ram_gb = ram
-    # The layerset is now set via env var.  This is used to set filename for osm2pgsql command
 
     if not os.path.isabs(pbf_filename):
         pbf_file = os.path.join(out_path, pbf_filename)
     else:
         pbf_file = pbf_filename
+
     osm_pbf_gb = os.path.getsize(pbf_file) / 1024 / 1024 / 1024
     LOGGER.debug(f'PBF size (GB): {osm_pbf_gb}')
 
@@ -86,7 +86,6 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb, append, pbf_filename,
 
     # Replace generic connection string with specific conn string
     conn_string = db.connection_string()
-    osm2pgsql_cmd = osm2pgsql_cmd.replace('-d $PGOSM_CONN',
-                                          f'-d {conn_string}')
+    osm2pgsql_cmd = osm2pgsql_cmd.replace('-d $PGOSM_CONN', f'-d {conn_string}')
     # Warning: Do not print() this string any more! Includes password
     return osm2pgsql_cmd

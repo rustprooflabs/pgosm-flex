@@ -103,7 +103,7 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
         replication_update = False
 
     if replication_update:
-        logger.warning('Append mode is Experimental!')
+        logger.warning('Append mode is Experimental (getting closer!)')
         success = run_replication_update(skip_nested=skip_nested,
                                          flex_path=paths['flex_path'])
     else:
@@ -158,12 +158,11 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
         pbf_filename = input_file
 
     osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
-                                           pbf_filename=pbf_filename,
-                                           out_path=out_path,
-                                           append=append)
+                                                     pbf_filename=pbf_filename,
+                                                     out_path=out_path,
+                                                     append=append)
 
-    run_osm2pgsql(osm2pgsql_command=osm2pgsql_command,
-                  flex_path=flex_path)
+    run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, flex_path=flex_path)
 
     if not skip_nested:
         skip_nested = check_layerset_places(flex_path)
@@ -198,7 +197,6 @@ def run_replication_update(skip_nested, flex_path):
     """
     logger = logging.getLogger('pgosm-flex')
     conn_string = db.connection_string()
-
     db.osm2pgsql_replication_start()
 
     update_cmd = """
@@ -225,8 +223,7 @@ osm2pgsql-replication update -d $PGOSM_CONN \
         return False
 
     db.osm2pgsql_replication_finish(skip_nested=skip_nested)
-
-    logger.info('osm2pgsql-replication update complete.')
+    logger.info('osm2pgsql-replication update complete')
     return True
 
 
@@ -276,7 +273,6 @@ def setup_logger(debug):
 
     # Reduce verbosity of urllib3 logging
     logging.getLogger('urllib3').setLevel(logging.INFO)
-
     logger = logging.getLogger('pgosm-flex')
     logger.debug('Logger configured')
 
@@ -532,7 +528,6 @@ def run_osm2pgsql_replication_init(pbf_path, pbf_filename):
         sys.exit(f'{err_msg} - Check the log output for details.')
 
     logger.debug('osm2pgsql-replication init completed.')
-
 
 
 if __name__ == "__main__":
