@@ -43,11 +43,12 @@ def verify_checksum(md5_file, path):
                             stderr=subprocess.STDOUT)
 
     if output.returncode != 0:
-        err_msg = f'Failed to validate md5sum. Return code: {output.returncode} {output.stdout}'
+        err_msg = 'Failed to validate md5sum. Return code: '
+        err_msg += f'{output.returncode} {output.stdout}'
         logger.error(err_msg)
         sys.exit(err_msg)
 
-    logger.info('md5sum validated')
+    logger.debug('md5sum validated')
 
 
 def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
