@@ -83,15 +83,15 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
     validate_region_inputs(region, subregion, input_file)
 
     if schema_name != 'osm' and append:
-        sys.exit('ERROR: Append mode with custom schema name currently not supported')
+        err_msg = 'Append mode with custom schema name currently not supported'
+        logger.error(err_msg)
+        sys.exit(err_msg)
 
-    # Ensure always a region name
     if region is None and input_file:
         region = input_file
 
     helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
                          layerset, layerset_path)
-
     db.wait_for_postgres()
     db.prepare_pgosm_db(data_only=data_only,
                         db_path=paths['db_path'],
@@ -103,7 +103,7 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
         replication_update = False
 
     if replication_update:
-        logger.warning('Append mode is Experimental!')
+        logger.warning('Append mode is Experimental (getting closer!)')
         success = run_replication_update(skip_nested=skip_nested,
                                          flex_path=paths['flex_path'])
     else:
@@ -114,7 +114,6 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
                                          ram=ram,
                                          skip_nested=skip_nested,
                                          append=append)
-
 
     if schema_name != 'osm':
         db.rename_schema(schema_name)
@@ -153,20 +152,16 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
 
     if input_file is None:
         geofabrik.prepare_data(out_path=out_path)
-
         pbf_filename = geofabrik.get_region_filename()
-        osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
-                                           pbf_filename=pbf_filename,
-                                           out_path=out_path,
-                                           append=append)
     else:
-        osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
-                                           pbf_filename=input_file,
-                                           out_path=out_path,
-                                           append=append)
+        pbf_filename = input_file
 
-    run_osm2pgsql(osm2pgsql_command=osm2pgsql_command,
-                  flex_path=flex_path)
+    osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
+                                                     pbf_filename=pbf_filename,
+                                                     out_path=out_path,
+                                                     append=append)
+
+    run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, flex_path=flex_path)
 
     if not skip_nested:
         skip_nested = check_layerset_places(flex_path)
@@ -201,7 +196,6 @@ def run_replication_update(skip_nested, flex_path):
     """
     logger = logging.getLogger('pgosm-flex')
     conn_string = db.connection_string()
-
     db.osm2pgsql_replication_start()
 
     update_cmd = """
@@ -228,8 +222,7 @@ osm2pgsql-replication update -d $PGOSM_CONN \
         return False
 
     db.osm2pgsql_replication_finish(skip_nested=skip_nested)
-
-    logger.info('osm2pgsql-replication update complete.')
+    logger.info('osm2pgsql-replication update complete')
     return True
 
 
@@ -279,7 +272,6 @@ def setup_logger(debug):
 
     # Reduce verbosity of urllib3 logging
     logging.getLogger('urllib3').setLevel(logging.INFO)
-
     logger = logging.getLogger('pgosm-flex')
     logger.debug('Logger configured')
 
@@ -535,7 +527,6 @@ def run_osm2pgsql_replication_init(pbf_path, pbf_filename):
         sys.exit(f'{err_msg} - Check the log output for details.')
 
     logger.debug('osm2pgsql-replication init completed.')
-
 
 
 if __name__ == "__main__":

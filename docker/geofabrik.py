@@ -60,7 +60,10 @@ def prepare_data(out_path):
         archive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date)
     else:
         logging.getLogger('pgosm-flex').info('Copying Archived files')
-        unarchive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date)
+        unarchive_data(pbf_file,
+                       md5_file,
+                       pbf_file_with_date,
+                       md5_file_with_date)
 
     helpers.verify_checksum(md5_file, out_path)
 
@@ -177,12 +180,12 @@ def archive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date):
     md5_file_with_date : str
     """
     if os.path.exists(pbf_file_with_date):
-        pass # Do nothing
+        pass
     else:
         shutil.copy2(pbf_file, pbf_file_with_date)
 
     if os.path.exists(md5_file_with_date):
-        pass # Do nothing
+        pass
     else:
         shutil.copy2(md5_file, md5_file_with_date)
 
@@ -205,13 +208,13 @@ def unarchive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date):
     if os.path.exists(pbf_file):
         logger.debug(f'{pbf_file} exists. Overwriting.')
 
-    logger.info(f'Copying {pbf_file_with_date} to {pbf_file}')
+    logger.debug(f'Copying {pbf_file_with_date} to {pbf_file}')
     shutil.copy2(pbf_file_with_date, pbf_file)
 
     if os.path.exists(md5_file):
         logger.debug(f'{md5_file} exists. Overwriting.')
 
-    logger.info(f'Copying {md5_file_with_date} to {md5_file}')
+    logger.debug(f'Copying {md5_file_with_date} to {md5_file}')
     shutil.copy2(md5_file_with_date, md5_file)
 
 
@@ -228,7 +231,7 @@ def remove_latest_files(out_path):
 
     pbf_file = os.path.join(out_path, pbf_filename)
     md5_file = f'{pbf_file}.md5'
-    logging.info(f'Done with {pbf_file}, removing.')
+    logging.debug(f'Removing {pbf_file}')
     os.remove(pbf_file)
-    logging.info(f'Done with {md5_file}, removing.')
+    logging.debug(f'Removing {md5_file}')
     os.remove(md5_file)
