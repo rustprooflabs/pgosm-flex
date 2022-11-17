@@ -1,4 +1,4 @@
-FROM postgis/postgis:15-master
+FROM postgis/postgis:15-3.3
 
 LABEL maintainer="PgOSM Flex - https://github.com/rustprooflabs/pgosm-flex"
 
