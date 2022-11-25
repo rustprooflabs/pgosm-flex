@@ -14,10 +14,10 @@
 ## enable testing the data processing itself.
 ##
 ##
-## The other targets should define the minimal layerset to reduce processing
-## times. Additional targets are testing functionality of the Docker
-## processing, not the output data so loading additional data serves
-## no benefit.
+## The other targets define the "minimal" layerset to reduce processing
+## times. These additional targets test functionality of the Docker
+## processing, not the output data.
+## Loading additional data serves no benefit.
 ## ----------------------------------------------------------------------
 CURRENT_UID := $(shell id -u)
 CURRENT_GID := $(shell id -g)
