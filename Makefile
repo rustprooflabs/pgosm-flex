@@ -20,7 +20,7 @@ RAM=2
 # The docker-exec-default and unit-test targets run last
 # to make unit test results visible at the end.
 .PHONY: all
-all: docker-exec-region docker-exec-input-file docker-exec-default unit-tests
+all: docker-exec-region docker-exec-input-file docker-exec-append-w-input-file docker-exec-default unit-tests
 
 .PHONY: docker-clean
 docker-clean:
@@ -95,6 +95,34 @@ docker-exec-input-file: build-run-docker
 		pgosm python3 docker/pgosm_flex.py  \
 		--layerset=default \
 		--ram=$(RAM) \
+		--input-file=/app/output/$(INPUT_FILE_NAME) \
+		--data-only --skip-dump --skip-nested # Make this test run faster
+
+
+
+.PHONE: docker-exec-append-w-input-file
+docker-exec-append-w-input-file: build-run-docker
+
+	# copy with arbitrary file name to test --input-file
+	docker cp tests/data/district-of-columbia-2021-01-13.osm.pbf \
+		pgosm:/app/output/$(INPUT_FILE_NAME)
+
+	# allow files created in later step to be created
+	docker exec -it pgosm \
+		chown $(CURRENT_UID):$(CURRENT_GID) /app/output/
+	# Needed for unit-tests
+	docker exec -it pgosm \
+		chown $(CURRENT_UID):$(CURRENT_GID) /app/docker/
+
+	# process it, this time without providing the region but directly the filename
+	docker exec -it \
+		-e POSTGRES_PASSWORD=mysecretpassword \
+		-e POSTGRES_USER=postgres \
+		-u $(CURRENT_UID):$(CURRENT_GID) \
+		pgosm python3 docker/pgosm_flex.py  \
+		--layerset=minimal \
+		--ram=$(RAM) \
+		--append \
 		--input-file=/app/output/$(INPUT_FILE_NAME) \
 		--data-only --skip-dump --skip-nested # Make this test run faster
 
