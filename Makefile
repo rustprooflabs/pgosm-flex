@@ -116,6 +116,17 @@ docker-exec-input-file: build-run-docker
 
 .PHONE: docker-exec-append-w-input-file
 docker-exec-append-w-input-file: build-run-docker
+	# NOTE: This step tests --append file for an initial load.
+	# It does **NOT** test the actual replication process for updating data
+	# using append mode. Testing actual replication over time in this format
+	# will not be trivial.  The historic file used (2021-01-13) cannot be used
+	# to seed a replication process, there is a time limit in upstream software
+	# that requires more recency to the source data. This also cannot simply
+	# download a file from Geofabrik, as the "latest" file will not have a diff
+	# to apply so also will not test the actual replication.
+	#
+	# Open a PR, Issue, discussion on https://github.com/rustprooflabs/pgosm-flex
+	# if you have an idea on how to implement this testing functionality.
 
 	# copy with arbitrary file name to test --input-file
 	docker cp tests/data/district-of-columbia-2021-01-13.osm.pbf \
