@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import sys
 import subprocess
+from time import sleep
 
 import click
 
@@ -364,21 +365,29 @@ def run_osm2pgsql(osm2pgsql_command, flex_path):
     logger = logging.getLogger('pgosm-flex')
     logger.info('Running osm2pgsql')
 
-    output = subprocess.run(osm2pgsql_command.split(),
-                            text=True,
-                            cwd=flex_path,
-                            check=False,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
+    with subprocess.Popen(osm2pgsql_command.split(),
+                          cwd=flex_path,
+                          stdout=subprocess.PIPE,
+                          stderr=subprocess.STDOUT) as process:
 
-    logger.info(f'osm2pgsql output: \n {output.stdout}\nEND PgOSM Flex output')
+        while True:
+            output = process.stdout.readline()
+            if process.poll() is not None and output == b'':
+                break
 
-    if output.returncode != 0:
-        err_msg = f'Failed to run osm2pgsql. Return code: {output.returncode}'
+            if output:
+                logger.info(output.strip())
+            else:
+                sleep(1)
+
+        returncode = process.poll()
+
+    if returncode != 0:
+        err_msg = f'Failed to run osm2pgsql. Return code: {returncode}'
         logger.error(err_msg)
-        sys.exit(f'{err_msg} - Check the log output for details.')
+        sys.exit(f'{err_msg} - Check the log output for details')
 
-    logger.info('osm2pgsql completed.')
+    logger.info('osm2pgsql completed')
 
 
 def check_layerset_places(flex_path):
