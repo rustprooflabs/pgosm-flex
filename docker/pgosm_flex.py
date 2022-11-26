@@ -107,7 +107,7 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
         success = run_replication_update(skip_nested=skip_nested,
                                          flex_path=paths['flex_path'])
     else:
-        logger.info('Running normal osm2pgsql mode')
+        logger.info('Running osm2pgsql without replication')
         success = run_osm2pgsql_standard(input_file=input_file,
                                          out_path=paths['out_path'],
                                          flex_path=paths['flex_path'],
@@ -490,11 +490,11 @@ def check_replication_exists():
     logger.debug(f'osm2pgsql-replication output:\n{output.stdout}')
 
     if output.returncode != 0:
-        err_msg = f'Failure. Return code: {output.returncode}'
-        logger.warning(err_msg)
+        logger.info('Replication not previously set up, fresh import.')
+        logger.debug(f'Return code: {output.returncode}')
         return False
 
-    logger.debug('osm2pgsql-replication status checked.')
+    logger.debug('Replication set up, candidate for update.')
     return True
 
 
