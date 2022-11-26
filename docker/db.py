@@ -201,7 +201,9 @@ def prepare_pgosm_db(data_only, db_path, append):
 
         create_pgosm_db()
     else:
-        LOGGER.info('Using external database. Ensure the target database is setup properly for PgOSM Flex with PostGIS, osm schema, and proper permissions.')
+        LOGGER.info('Using external database. Ensure the target database is setup properly with proper permissions.')
+
+    prepare_pgosm_schema()
 
     if not data_only:
         LOGGER.info('Loading extras via Sqitch plus QGIS styles.')
@@ -283,6 +285,7 @@ def create_pgosm_db():
 
     LOGGER.debug('Setting Pg conn to enable autocommit - required for drop/create DB')
     conn.autocommit = True
+
     try:
         conn.execute(sql_raw)
         LOGGER.info('Created pgosm database')
@@ -291,6 +294,12 @@ def create_pgosm_db():
     finally:
         conn.close()
 
+    return True
+
+
+def prepare_pgosm_schema():
+    """Prepares the database with PostGIS and osm schema
+    """
     sql_create_postgis = "CREATE EXTENSION IF NOT EXISTS postgis;"
     sql_create_schema = "CREATE SCHEMA IF NOT EXISTS osm;"
 
@@ -300,8 +309,6 @@ def create_pgosm_db():
         LOGGER.debug('Installed PostGIS extension')
         cur.execute(sql_create_schema)
         LOGGER.debug('Created osm schema')
-
-    return True
 
 
 def run_sqitch_prep(db_path):
