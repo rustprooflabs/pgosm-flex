@@ -12,7 +12,6 @@ import logging
 import os
 from pathlib import Path
 import sys
-import subprocess
 
 import click
 
@@ -107,7 +106,7 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
         success = run_replication_update(skip_nested=skip_nested,
                                          flex_path=paths['flex_path'])
     else:
-        logger.info('Running normal osm2pgsql mode')
+        logger.info('Running osm2pgsql without replication')
         success = run_osm2pgsql_standard(input_file=input_file,
                                          out_path=paths['out_path'],
                                          flex_path=paths['flex_path'],
@@ -206,18 +205,11 @@ osm2pgsql-replication update -d $PGOSM_CONN \
     -d $PGOSM_CONN
 """
     update_cmd = update_cmd.replace('-d $PGOSM_CONN', f'-d {conn_string}')
+    returncode = helpers.run_command_via_subprocess(cmd=update_cmd.split(),
+                                                    cwd=flex_path)
 
-    output = subprocess.run(update_cmd.split(),
-                            text=True,
-                            check=False,
-                            cwd=flex_path,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
-
-    logger.info(f'osm2pgsql-replication output:\n{output.stdout}')
-
-    if output.returncode != 0:
-        err_msg = f'Failure. Return code: {output.returncode}'
+    if returncode != 0:
+        err_msg = f'Failure. Return code: {returncode}'
         logger.warning(err_msg)
         return False
 
@@ -299,7 +291,6 @@ def get_paths():
     return paths
 
 
-
 def get_export_filename(input_file):
     """Returns the .sql filename to use for pg_dump.
 
@@ -344,7 +335,6 @@ def get_export_full_path(out_path, export_filename):
     -----------------
     export_path : str
     """
-
     if os.path.isabs(export_filename):
         export_path = export_filename
     else:
@@ -364,21 +354,15 @@ def run_osm2pgsql(osm2pgsql_command, flex_path):
     logger = logging.getLogger('pgosm-flex')
     logger.info('Running osm2pgsql')
 
-    output = subprocess.run(osm2pgsql_command.split(),
-                            text=True,
-                            cwd=flex_path,
-                            check=False,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
+    returncode = helpers.run_command_via_subprocess(cmd=osm2pgsql_command.split(),
+                                                    cwd=flex_path)
 
-    logger.info(f'osm2pgsql output: \n {output.stdout}\nEND PgOSM Flex output')
-
-    if output.returncode != 0:
-        err_msg = f'Failed to run osm2pgsql. Return code: {output.returncode}'
+    if returncode != 0:
+        err_msg = f'Failed to run osm2pgsql. Return code: {returncode}'
         logger.error(err_msg)
-        sys.exit(f'{err_msg} - Check the log output for details.')
+        sys.exit(f'{err_msg} - Check the log output for details')
 
-    logger.info('osm2pgsql completed.')
+    logger.info('osm2pgsql completed')
 
 
 def check_layerset_places(flex_path):
@@ -393,7 +377,6 @@ def check_layerset_places(flex_path):
     skip_nested : boolean
     """
     logger = logging.getLogger('pgosm-flex')
-
     layerset = os.environ.get('PGOSM_LAYERSET')
     layerset_path = os.environ.get('PGOSM_LAYERSET_PATH')
 
@@ -442,7 +425,6 @@ def run_post_processing(flex_path, skip_nested):
 
     if not post_processing_sql:
         return False
-
     return True
 
 
@@ -461,7 +443,6 @@ def dump_database(input_file, out_path, skip_dump, data_only, schema_name):
         logging.getLogger('pgosm-flex').info('Skipping pg_dump')
     else:
         export_filename = get_export_filename(input_file)
-
         export_path = get_export_full_path(out_path, export_filename)
 
         db.run_pg_dump(export_path=export_path,
@@ -481,20 +462,16 @@ def check_replication_exists():
     logger.debug(f'Command to check DB for replication status:\n{check_cmd}')
     conn_string = db.connection_string()
     check_cmd = check_cmd.replace('-d $PGOSM_CONN', f'-d {conn_string}')
-    output = subprocess.run(check_cmd.split(),
-                            text=True,
-                            check=False,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
 
-    logger.debug(f'osm2pgsql-replication output:\n{output.stdout}')
+    returncode = helpers.run_command_via_subprocess(cmd=check_cmd.split(),
+                                                    cwd=None)
 
-    if output.returncode != 0:
-        err_msg = f'Failure. Return code: {output.returncode}'
-        logger.warning(err_msg)
+    if returncode != 0:
+        logger.info('Replication not previously set up, fresh import.')
+        logger.debug(f'Return code: {returncode}')
         return False
 
-    logger.debug('osm2pgsql-replication status checked.')
+    logger.debug('Replication set up, candidate for update.')
     return True
 
 
@@ -513,16 +490,12 @@ def run_osm2pgsql_replication_init(pbf_path, pbf_filename):
     logger.debug(f'Initializing DB for replication with command:\n{init_cmd}')
     conn_string = db.connection_string()
     init_cmd = init_cmd.replace('-d $PGOSM_CONN', f'-d {conn_string}')
-    output = subprocess.run(init_cmd.split(),
-                            text=True,
-                            check=False,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
 
-    logger.info(f'osm2pgsql-replication output:\n{output.stdout}')
+    returncode = helpers.run_command_via_subprocess(cmd=init_cmd.split(),
+                                                    cwd=None)
 
-    if output.returncode != 0:
-        err_msg = f'Failed to run osm2pgsql-replication. Return code: {output.returncode}'
+    if returncode != 0:
+        err_msg = f'Failed to run osm2pgsql-replication. Return code: {returncode}'
         logger.error(err_msg)
         sys.exit(f'{err_msg} - Check the log output for details.')
 

@@ -5,6 +5,7 @@ import logging
 import subprocess
 import os
 import sys
+from time import sleep
 
 import db
 
@@ -23,6 +24,40 @@ def get_today():
     return today
 
 
+def run_command_via_subprocess(cmd, cwd):
+    """Wraps around subprocess.Popen to run commands outside of Python. Prints
+    output as it goes, returns the status code from the command.
+
+    Parameters
+    -----------------------
+    cmd : list
+        Parts of the command to run.
+    cwd : str or None
+        Set the working directory, or to None.
+
+    Returns
+    -----------------------
+    status : int
+        Return code from command
+    """
+    logger = logging.getLogger('pgosm-flex')
+    with subprocess.Popen(cmd, cwd=cwd, stdout=subprocess.PIPE,
+                          stderr=subprocess.STDOUT
+                          ) as process:
+        while True:
+            output = process.stdout.readline()
+            if process.poll() is not None and output == b'':
+                break
+
+            if output:
+                logger.info(output.strip().decode('utf-8'))
+            else:
+                # Only sleep when there wasn't output
+                sleep(1)
+        status = process.poll()
+    return status
+
+
 def verify_checksum(md5_file, path):
     """If verfication fails calls `sys.exit()`
 
@@ -35,16 +70,11 @@ def verify_checksum(md5_file, path):
     logger = logging.getLogger('pgosm-flex')
     logger.debug(f'Validating {md5_file} in {path}')
 
-    output = subprocess.run(['md5sum', '-c', md5_file],
-                            text=True,
-                            check=False,
-                            cwd=path,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
+    returncode = run_command_via_subprocess(cmd=['md5sum', '-c', md5_file],
+                                            cwd=path)
 
-    if output.returncode != 0:
-        err_msg = 'Failed to validate md5sum. Return code: '
-        err_msg += f'{output.returncode} {output.stdout}'
+    if returncode != 0:
+        err_msg = f'Failed to validate md5sum. Return code: {output.returncode}'
         logger.error(err_msg)
         sys.exit(err_msg)
 
