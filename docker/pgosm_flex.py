@@ -205,7 +205,6 @@ osm2pgsql-replication update -d $PGOSM_CONN \
     -d $PGOSM_CONN
 """
     update_cmd = update_cmd.replace('-d $PGOSM_CONN', f'-d {conn_string}')
-
     returncode = helpers.run_command_via_subprocess(cmd=update_cmd.split(),
                                                     cwd=flex_path)
 
@@ -292,7 +291,6 @@ def get_paths():
     return paths
 
 
-
 def get_export_filename(input_file):
     """Returns the .sql filename to use for pg_dump.
 
@@ -337,7 +335,6 @@ def get_export_full_path(out_path, export_filename):
     -----------------
     export_path : str
     """
-
     if os.path.isabs(export_filename):
         export_path = export_filename
     else:
@@ -380,7 +377,6 @@ def check_layerset_places(flex_path):
     skip_nested : boolean
     """
     logger = logging.getLogger('pgosm-flex')
-
     layerset = os.environ.get('PGOSM_LAYERSET')
     layerset_path = os.environ.get('PGOSM_LAYERSET_PATH')
 
@@ -429,7 +425,6 @@ def run_post_processing(flex_path, skip_nested):
 
     if not post_processing_sql:
         return False
-
     return True
 
 
@@ -448,7 +443,6 @@ def dump_database(input_file, out_path, skip_dump, data_only, schema_name):
         logging.getLogger('pgosm-flex').info('Skipping pg_dump')
     else:
         export_filename = get_export_filename(input_file)
-
         export_path = get_export_full_path(out_path, export_filename)
 
         db.run_pg_dump(export_path=export_path,

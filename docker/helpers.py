@@ -25,11 +25,15 @@ def get_today():
 
 
 def run_command_via_subprocess(cmd, cwd):
-    """
+    """Wraps around subprocess.Popen to run commands outside of Python. Prints
+    output as it goes, returns the status code from the command.
+
     Parameters
     -----------------------
     cmd : list
-    cwd : str
+        Parts of the command to run.
+    cwd : str or None
+        Set the working directory, or to None.
 
     Returns
     -----------------------
@@ -37,11 +41,9 @@ def run_command_via_subprocess(cmd, cwd):
         Return code from command
     """
     logger = logging.getLogger('pgosm-flex')
-    with subprocess.Popen(cmd,
-                          cwd=cwd,
-                          stdout=subprocess.PIPE,
-                          stderr=subprocess.STDOUT) as process:
-
+    with subprocess.Popen(cmd, cwd=cwd, stdout=subprocess.PIPE,
+                          stderr=subprocess.STDOUT
+                          ) as process:
         while True:
             output = process.stdout.readline()
             if process.poll() is not None and output == b'':
@@ -52,9 +54,7 @@ def run_command_via_subprocess(cmd, cwd):
             else:
                 # Only sleep when there wasn't output
                 sleep(1)
-
         status = process.poll()
-
     return status
 
 
@@ -72,7 +72,6 @@ def verify_checksum(md5_file, path):
 
     returncode = run_command_via_subprocess(cmd=['md5sum', '-c', md5_file],
                                             cwd=path)
-
 
     if returncode != 0:
         err_msg = f'Failed to validate md5sum. Return code: {output.returncode}'
