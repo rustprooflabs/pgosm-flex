@@ -1,4 +1,4 @@
-# Using PgOSM-Flex within Docker
+# Using PgOSM Flex within Docker
 
 This README provides details about running PgOSM-Flex using the image defined
 in `Dockerfile` and the script loaded from `docker/pgosm_flex.py`.
@@ -327,7 +327,7 @@ docker exec -it \
 
 ## Use `--append` for updates
 
-> Added `--append` as **Experimental** feature in 0.4.6.
+> Added `--append` as **Experimental** feature in 0.4.6.  As of 0.6.2 it's nearly ready for common use.
 
 
 Using `--append` mode wraps around the `osm2pgsql-replication` package
@@ -346,7 +346,7 @@ docker run --name pgosm -d --rm \
     -v /etc/localtime:/etc/localtime:ro \
     -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
     -p 5433:5432 \
-    -d rustprooflabs/pgosm-flex:0.4.6 \
+    -d rustprooflabs/pgosm-flex:0.6.2 \
     -c max_connections=300
 ```
 
