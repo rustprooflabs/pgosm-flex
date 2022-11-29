@@ -20,6 +20,7 @@ A few decisions made in this project:
 * Default to same units as OpenStreetMap (e.g. km/hr, meters)
 * Data not deemed worthy of a dedicated column goes in side table `osm.tags`. Raw key/value data stored in `JSONB` column
 * Points, Lines, and Polygons are not mixed in a single table
+* Tracks latest Postgres, PostGIS, and osm2pgsql versions
 
 This project's approach is to do as much processing in the Lua styles
 passed along to osm2pgsql, with post-processing steps creating indexes, constraints and comments.
@@ -34,10 +35,19 @@ Minimum versions supported:
 * PostGIS 3.0
 * osm2pgsql 1.6.0
 
+
 ## Minimum Hardware
 
+### RAM
+
 osm2pgsql requires [at least 2 GB RAM](https://osm2pgsql.org/doc/manual.html#main-memory).
-Fast SSD drives are strongly recommended.
+
+### Storage
+
+Fast SSD drives are strongly recommended.  It should work on slower storage devices (HDD,
+SD, etc),
+however the [osm2pgsql-tuner](https://github.com/rustprooflabs/osm2pgsql-tuner)
+package used to determine the best osm2pgsql command assumes fast SSDs.
 
 
 ## PgOSM via Docker
@@ -49,8 +59,8 @@ The image has all the pre-requisite software installed,
 handles downloading an OSM region (or subregion)
 from Geofabrik, and saves an output `.sql` file with the processed data
 ready to load into your database(s).
-The PBF/MD5 source files are archived by date with the ability to
-easily reload them at a later date.
+The PBF/MD5 source files are archived by date on your local storage
+with the ability to easily reload them at a later date.
 
 
 ### Basic Docker usage
@@ -166,19 +176,6 @@ See [more in docs/DOCKER-RUN.md](docs/DOCKER-RUN.md) about other ways to customi
 how PgOSM Flex runs.
 
 
-----
-
-## On-server import
-
-Don't want to use the Docker process?
-See [docs/MANUAL-STEPS-RUN.md](docs/MANUAL-STEPS-RUN.md) for prereqs and steps
-for running without Docker.
-
-
-----
-
-
-
 ## Layer Sets
 
 
@@ -189,14 +186,13 @@ See [docs/LAYERSETS.md](docs/LAYERSETS.md) for details.
 
 ## QGIS Layer Styles
 
-Use QGIS to visualize OpenStreetMap data? This project includes a few basic
+If you use QGIS to visualize OpenStreetMap, there are a few basic
 styles using the `public.layer_styles` table created by QGIS.
 
 See [the QGIS Style README.md](https://github.com/rustprooflabs/pgosm-flex/blob/main/db/qgis-style/README.md)
 for more information.
 
-Loaded by Docker process by default.  Is excluded when `--data-only` used.
-
+This data is loaded by default and can be excluded with `--data-only`.
 
 
 ## Explore data loaded
@@ -235,24 +231,25 @@ SELECT s_name, t_name, rows, size_plus_indexes
 
 ## Meta table
 
-PgOSM-Flex tracks basic metadata in table ``osm.pgosm_flex``.
-The `ts` is set by the post-processing script.  It does not necessarily
-indicate the date of the data loaded, though in general it should be close
-depending on your processing pipeline.
+PgOSM Flex tracks processing metadata in the ``osm.pgosm_flex``  table. The initial import
+has `osm2pgsql_mode = 'create'`, the subsequent update has
+`osm2pgsql_mode = 'append'`. 
 
 
 ```sql
-SELECT *
-    FROM osm.pgosm_flex;
+SELECT osm_date, region, srid,
+        pgosm_flex_version, osm2pgsql_version, osm2pgsql_mode
+    FROM osm.pgosm_flex
+;
 ```
 
 ```bash
-┌────────────┬──────────────┬───────────────┬────────────────────┬──────┬───────────────────────────────────┬───────────────────┐
-│  osm_date  │ default_date │    region     │ pgosm_flex_version │ srid │            project_url            │ osm2pgsql_version │
-╞════════════╪══════════════╪═══════════════╪════════════════════╪══════╪═══════════════════════════════════╪═══════════════════╡
-│ 2020-01-01 │ t            │ north-america │ 0.1.1-f488d7b      │ 3857 │ https://github.com/rustprooflabs/…│ 1.4.1             │
-│            │              │               │                    │      │…pgosm-flex                        │                   │
-└────────────┴──────────────┴───────────────┴────────────────────┴──────┴───────────────────────────────────┴───────────────────┘
+┌────────────┬───────────────────────────┬──────┬────────────────────┬───────────────────┬────────────────┐
+│  osm_date  │          region           │ srid │ pgosm_flex_version │ osm2pgsql_version │ osm2pgsql_mode │
+╞════════════╪═══════════════════════════╪══════╪════════════════════╪═══════════════════╪════════════════╡
+│ 2022-11-04 │ north-america/us-colorado │ 3857 │ 0.6.2-e1f140f      │ 1.7.2             │ create         │
+│ 2022-11-25 │ north-america/us-colorado │ 3857 │ 0.6.2-e1f140f      │ 1.7.2             │ append         │
+└────────────┴───────────────────────────┴──────┴────────────────────┴───────────────────┴────────────────┘
 ```
 
 
@@ -356,8 +353,7 @@ docker exec -it \
 ## JSONB support
 
 PgOSM-Flex uses `JSONB` in Postgres to store the raw OpenSteetMap
-key/value data (`tags` column)
-and relation members (`member_ids`).
+key/value data (`tags` column) and relation members (`member_ids`).
 
 Current `JSONB` columns:
 
@@ -366,6 +362,16 @@ Current `JSONB` columns:
 * `osm.place_polygon.member_ids`
 * `osm.vplace_polygon.member_ids`
 * `osm.poi_polygon.member_ids`
+
+
+
+## On-server import
+
+Don't want to use the Docker process?
+See [docs/MANUAL-STEPS-RUN.md](docs/MANUAL-STEPS-RUN.md) for prereqs and steps
+for running without Docker.
+
+
 
 ## Projects using PgOSM Flex
 

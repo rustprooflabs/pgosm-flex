@@ -1,4 +1,4 @@
-# PgOSM-Flex Performance
+# PgOSM Flex Performance
 
 This page provides timings for how long PgOSM-Flex runs for various region sizes.
 The server used to host these tests has 8 vCPU and 64 GB RAM to match the target

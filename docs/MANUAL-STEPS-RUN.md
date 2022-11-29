@@ -1,4 +1,4 @@
-# PgOSM-Flex Standard Import
+# PgOSM Flex Standard Import
 
 These instructions show how to manually run the PgOSM-Flex process.
 This is the best option for scaling to larger regions (North America, Europe, etc.)

@@ -1,4 +1,4 @@
-# PgOSM-Flex: Dump and reload data
+# PgOSM Flex: Dump and reload data
 
 
 To move data loaded on one Postgres instance to another, use `pg_dump`.

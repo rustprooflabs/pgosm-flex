@@ -2,13 +2,14 @@
 
 ----
 
-> WARNING: The process described here is experimental and details will probably change!
+> The `--append` feature is experimental.
 
 ----
 
+
 ## Using manual steps
 
-This page documents differences from [MANUAL-STEPS-RUN.md](MANUAL-STEPS-RUN.md)
+This section documents differences from [MANUAL-STEPS-RUN.md](MANUAL-STEPS-RUN.md)
 
 
 Setup - Need to use Python venv, osmium is a requirement.  Something like...

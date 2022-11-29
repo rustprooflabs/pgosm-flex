@@ -12,13 +12,13 @@ Layersets are defined in `.ini` files.
 
 ## Included layersets
 
-A few layersets are included with PgOSM Flex under `flex-config/layerset/`.
+PgOSM Flex includes a few layersets.  These are defined under `flex-config/layerset/`.
 If the `--layerset` is not defined, the `default` layerset is used.
 
-* `minimal`
 * `basic`
 * `default`
 * `everything`
+* `minimal`
 
 
 ## Custom layerset
@@ -34,5 +34,4 @@ road_major=true
 ```
 
 Layers not listed in the layerset `.ini` are not included.
-
 
