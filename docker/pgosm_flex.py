@@ -12,8 +12,6 @@ import logging
 import os
 from pathlib import Path
 import sys
-import subprocess
-from time import sleep
 
 import click
 
@@ -208,17 +206,11 @@ osm2pgsql-replication update -d $PGOSM_CONN \
 """
     update_cmd = update_cmd.replace('-d $PGOSM_CONN', f'-d {conn_string}')
 
-    output = subprocess.run(update_cmd.split(),
-                            text=True,
-                            check=False,
-                            cwd=flex_path,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
+    returncode = helpers.run_command_via_subprocess(cmd=update_cmd.split(),
+                                                    cwd=flex_path)
 
-    logger.info(f'osm2pgsql-replication output:\n{output.stdout}')
-
-    if output.returncode != 0:
-        err_msg = f'Failure. Return code: {output.returncode}'
+    if returncode != 0:
+        err_msg = f'Failure. Return code: {returncode}'
         logger.warning(err_msg)
         return False
 
@@ -365,22 +357,8 @@ def run_osm2pgsql(osm2pgsql_command, flex_path):
     logger = logging.getLogger('pgosm-flex')
     logger.info('Running osm2pgsql')
 
-    with subprocess.Popen(osm2pgsql_command.split(),
-                          cwd=flex_path,
-                          stdout=subprocess.PIPE,
-                          stderr=subprocess.STDOUT) as process:
-
-        while True:
-            output = process.stdout.readline()
-            if process.poll() is not None and output == b'':
-                break
-
-            if output:
-                logger.info(output.strip())
-            else:
-                sleep(1)
-
-        returncode = process.poll()
+    returncode = helpers.run_command_via_subprocess(cmd=osm2pgsql_command.split(),
+                                                    cwd=flex_path)
 
     if returncode != 0:
         err_msg = f'Failed to run osm2pgsql. Return code: {returncode}'
@@ -490,17 +468,13 @@ def check_replication_exists():
     logger.debug(f'Command to check DB for replication status:\n{check_cmd}')
     conn_string = db.connection_string()
     check_cmd = check_cmd.replace('-d $PGOSM_CONN', f'-d {conn_string}')
-    output = subprocess.run(check_cmd.split(),
-                            text=True,
-                            check=False,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
 
-    logger.debug(f'osm2pgsql-replication output:\n{output.stdout}')
+    returncode = helpers.run_command_via_subprocess(cmd=check_cmd.split(),
+                                                    cwd=None)
 
-    if output.returncode != 0:
+    if returncode != 0:
         logger.info('Replication not previously set up, fresh import.')
-        logger.debug(f'Return code: {output.returncode}')
+        logger.debug(f'Return code: {returncode}')
         return False
 
     logger.debug('Replication set up, candidate for update.')
@@ -522,16 +496,12 @@ def run_osm2pgsql_replication_init(pbf_path, pbf_filename):
     logger.debug(f'Initializing DB for replication with command:\n{init_cmd}')
     conn_string = db.connection_string()
     init_cmd = init_cmd.replace('-d $PGOSM_CONN', f'-d {conn_string}')
-    output = subprocess.run(init_cmd.split(),
-                            text=True,
-                            check=False,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
 
-    logger.info(f'osm2pgsql-replication output:\n{output.stdout}')
+    returncode = helpers.run_command_via_subprocess(cmd=init_cmd.split(),
+                                                    cwd=None)
 
-    if output.returncode != 0:
-        err_msg = f'Failed to run osm2pgsql-replication. Return code: {output.returncode}'
+    if returncode != 0:
+        err_msg = f'Failed to run osm2pgsql-replication. Return code: {returncode}'
         logger.error(err_msg)
         sys.exit(f'{err_msg} - Check the log output for details.')
 
