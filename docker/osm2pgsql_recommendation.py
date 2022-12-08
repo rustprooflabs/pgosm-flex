@@ -70,10 +70,10 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb, replication, pbf_filename,
     """
     LOGGER.debug('Generating recommended osm2pgsql command')
 
+   # This function call will change as this is implemented
+   # https://github.com/rustprooflabs/osm2pgsql-tuner/issues/24
     rec = tuner.recommendation(system_ram_gb=system_ram_gb,
                                osm_pbf_gb=osm_pbf_gb,
-                               # This will change as this is implemented
-                               # https://github.com/rustprooflabs/osm2pgsql-tuner/issues/24
                                append=replication,
                                ssd=True)
 
