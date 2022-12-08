@@ -135,6 +135,11 @@ Options:
                         --input-file is specified, otherwise required.
   --subregion TEXT      Sub-region name matching the filename for data sourced
                         from Geofabrik. e.g. district-of-columbia
+  --append              EXPERIMENTAL - Append mode enables updates via
+                        osm2pgsql-replication. This functionality will be
+                        renamed to --replication in future versions of PgOSM
+                        Flex. Details: https://github.com/rustprooflabs/pgosm-
+                        flex/issues/275
   --data-only           When set, skips running Sqitch and importing QGIS
                         Styles.
   --debug               Enables additional log output

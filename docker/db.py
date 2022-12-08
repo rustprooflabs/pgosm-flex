@@ -181,20 +181,20 @@ def pg_isready():
     return True
 
 
-def prepare_pgosm_db(data_only, db_path, append):
+def prepare_pgosm_db(data_only, db_path, replication):
     """Runs through series of steps to prepare database for PgOSM.
 
     Parameters
     --------------------------
     data_only : bool
     db_path : str
-    append : bool
+    replication : bool
     """
 
     if pg_conn_parts()['pg_host'] == 'localhost':
         LOGGER.debug('Running standard database prep for in-Docker operation. Includes DROP/CREATE DATABASE')
-        if append:
-            LOGGER.debug('Skipping DB drop b/c of append mode')
+        if replication:
+            LOGGER.debug('Skipping DB drop b/c of append (osm2pgsql-replication) mode')
         else:
             LOGGER.debug('Dropping database')
             drop_pgosm_db()
@@ -505,6 +505,7 @@ def osm2pgsql_replication_start():
     """Runs pre-replication step to clean out FKs that would prevent updates.
     """
     LOGGER.info('Prep database to allow data updates.')
+    # This use of append applies to both osm2pgsql --append and osm2pgsq-replication, not renaming from "append"
     sql_raw = 'CALL osm.append_data_start();'
 
     with get_db_conn(conn_string=connection_string()) as conn:

@@ -10,21 +10,19 @@ import db
 LOGGER = logging.getLogger('pgosm-flex')
 
 
-def osm2pgsql_recommendation(ram, pbf_filename, out_path, append):
+def osm2pgsql_recommendation(ram, pbf_filename, out_path, replication):
     """Returns recommended osm2pgsql command.
 
-    Recommendation from API at https://osm2pgsql-tuner.com
+    Recommendation from Python project.
+    Public API available at https://osm2pgsql-tuner.com
 
     Parameters
     ----------------------
     ram : float
         Total system RAM available in GB
-
     pbf_filename : str
-
     out_path : str
-
-    append : boolean
+    replication : boolean
 
     Returns
     ----------------------
@@ -42,12 +40,12 @@ def osm2pgsql_recommendation(ram, pbf_filename, out_path, append):
 
     osm2pgsql_cmd = get_recommended_script(system_ram_gb,
                                            osm_pbf_gb,
-                                           append,
+                                           replication,
                                            pbf_file,
                                            out_path)
     return osm2pgsql_cmd
 
-def get_recommended_script(system_ram_gb, osm_pbf_gb, append, pbf_filename,
+def get_recommended_script(system_ram_gb, osm_pbf_gb, replication, pbf_filename,
                            output_path):
     """Generates recommended osm2pgsql command from osm2pgsql-tuner.
 
@@ -55,7 +53,7 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb, append, pbf_filename,
     -------------------------------
     system_ram_gb : float
     osm_pbf_gb : float
-    append : bool
+    replication : bool
     pbf_filename : str
         Can be filename or absolute path.
     output_path : str
@@ -72,9 +70,11 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb, append, pbf_filename,
     """
     LOGGER.debug('Generating recommended osm2pgsql command')
 
+   # This function call will change as this is implemented
+   # https://github.com/rustprooflabs/osm2pgsql-tuner/issues/24
     rec = tuner.recommendation(system_ram_gb=system_ram_gb,
                                osm_pbf_gb=osm_pbf_gb,
-                               append=append,
+                               append=replication,
                                ssd=True)
 
     osm2pgsql_cmd = rec.get_osm2pgsql_command(out_format='api',

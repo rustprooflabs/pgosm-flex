@@ -34,7 +34,7 @@ import helpers
 @click.option('--append',
               default=False,
               is_flag=True,
-              help='EXPERIMENTAL - Append mode enables updates via osm2pgsql-replication.')
+              help='EXPERIMENTAL - Append mode enables updates via osm2pgsql-replication. This functionality will be renamed to --replication in future versions of PgOSM Flex. Details: https://github.com/rustprooflabs/pgosm-flex/issues/275')
 @click.option('--data-only',
               default=False,
               is_flag=True,
@@ -79,10 +79,16 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
     logger = logging.getLogger('pgosm-flex')
     logger.info('PgOSM Flex starting...')
 
+    # Starting to address issues identified in
+    # https://github.com/rustprooflabs/pgosm-flex/issues/275
+    # Not changing user interface, but setting stage to call it `--replication`
+    # instead of `--append` to avoid confusion.
+    replication = append
+
     validate_region_inputs(region, subregion, input_file)
 
-    if schema_name != 'osm' and append:
-        err_msg = 'Append mode with custom schema name currently not supported'
+    if schema_name != 'osm' and replication:
+        err_msg = 'Append (osm2pgsql-replication) mode with custom schema name currently not supported'
         logger.error(err_msg)
         sys.exit(err_msg)
 
@@ -94,25 +100,25 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
     db.wait_for_postgres()
     db.prepare_pgosm_db(data_only=data_only,
                         db_path=paths['db_path'],
-                        append=append)
+                        replication=replication)
 
-    if append:
+    if replication:
         replication_update = check_replication_exists()
     else:
         replication_update = False
 
     if replication_update:
-        logger.warning('Append mode is Experimental (getting closer!)')
+        logger.warning('Append (osm2pgsql-replication) mode is Experimental (getting closer!)')
         success = run_replication_update(skip_nested=skip_nested,
                                          flex_path=paths['flex_path'])
     else:
-        logger.info('Running osm2pgsql without replication')
+        logger.info('Running osm2pgsql without osm2pgsql-replication')
         success = run_osm2pgsql_standard(input_file=input_file,
                                          out_path=paths['out_path'],
                                          flex_path=paths['flex_path'],
                                          ram=ram,
                                          skip_nested=skip_nested,
-                                         append=append)
+                                         replication=replication)
 
     if schema_name != 'osm':
         db.rename_schema(schema_name)
@@ -130,8 +136,9 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
 
 
 def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
-                           append):
-    """Runs standard osm2pgsql command and optionally inits for append mode.
+                           replication):
+    """Runs standard osm2pgsql command and optionally inits for append
+    (osm2pgsql-replication) mode.
 
     Parameters
     ---------------------------
@@ -140,7 +147,7 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
     flex_path : str
     ram : float
     skip_nested : boolean
-    append : boolean
+    replication : boolean
 
     Returns
     ---------------------------
@@ -158,7 +165,7 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
     osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
                                                      pbf_filename=pbf_filename,
                                                      out_path=out_path,
-                                                     append=append)
+                                                     replication=replication)
 
     run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, flex_path=flex_path)
 
@@ -168,11 +175,11 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
     post_processing = run_post_processing(flex_path=flex_path,
                                           skip_nested=skip_nested)
 
-    if append:
+    if replication:
         run_osm2pgsql_replication_init(pbf_path=out_path,
                                        pbf_filename=pbf_filename)
     else:
-        logger.debug('Not using append mode')
+        logger.debug('Not using append (osm2pgsql-replication) mode')
 
     if input_file is None:
         geofabrik.remove_latest_files(out_path)
