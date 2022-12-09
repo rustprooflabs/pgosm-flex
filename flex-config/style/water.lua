@@ -15,6 +15,11 @@ tables.water_point = osm2pgsql.define_table({
         { column = 'bridge', type = 'text' },
         { column = 'boat', type = 'text' },
         { column = 'geom', type = 'point', projection = srid, not_null = true},
+    },
+    indexes = {
+        { column = 'geom', method = 'gist' },
+        { column = 'osm_type', method = 'btree' },
+        { column = 'osm_subtype', method = 'btree', where = 'name IS NOT NULL ' },
     }
 })
 
@@ -33,6 +38,11 @@ tables.water_line = osm2pgsql.define_table({
         { column = 'boat', type = 'text' },
         { column = 'member_ids', type = 'jsonb'},
         { column = 'geom', type = 'multilinestring', projection = srid, not_null = true},
+    },
+    indexes = {
+        { column = 'geom', method = 'gist' },
+        { column = 'osm_type', method = 'btree' },
+        { column = 'osm_subtype', method = 'btree', where = 'name IS NOT NULL ' },
     }
 })
 
@@ -51,6 +61,11 @@ tables.water_polygon = osm2pgsql.define_table({
         { column = 'boat', type = 'text' },
         { column = 'member_ids', type = 'jsonb'},
         { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
+    },
+    indexes = {
+        { column = 'geom', method = 'gist' },
+        { column = 'osm_type', method = 'btree' },
+        { column = 'osm_subtype', method = 'btree', where = 'name IS NOT NULL ' },
     }
 })
 

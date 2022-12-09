@@ -11,6 +11,11 @@ tables.traffic_point = osm2pgsql.define_table({
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'osm_subtype', type = 'text' },
         { column = 'geom', type = 'point', projection = srid, not_null = true },
+    },
+    indexes = {
+        { column = 'geom', method = 'gist' },
+        { column = 'osm_type', method = 'btree' },
+        { column = 'osm_subtype', method = 'btree', where = 'name IS NOT NULL ' },
     }
 })
 
@@ -23,6 +28,11 @@ tables.traffic_line = osm2pgsql.define_table({
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'osm_subtype', type = 'text' },
         { column = 'geom', type = 'linestring', projection = srid, not_null = true},
+    },
+    indexes = {
+        { column = 'geom', method = 'gist' },
+        { column = 'osm_type', method = 'btree' },
+        { column = 'osm_subtype', method = 'btree', where = 'name IS NOT NULL ' },
     }
 })
 
@@ -35,6 +45,11 @@ tables.traffic_polygon = osm2pgsql.define_table({
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'osm_subtype', type = 'text' },
         { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
+    },
+    indexes = {
+        { column = 'geom', method = 'gist' },
+        { column = 'osm_type', method = 'btree' },
+        { column = 'osm_subtype', method = 'btree', where = 'name IS NOT NULL ' },
     }
 })
 

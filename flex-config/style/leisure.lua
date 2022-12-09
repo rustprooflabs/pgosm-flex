@@ -11,6 +11,10 @@ tables.leisure_point = osm2pgsql.define_table({
         { column = 'osm_type', type = 'text', not_null = true},
         { column = 'name', type = 'text' },
         { column = 'geom', type = 'point', projection = srid, not_null = true},
+    },
+    indexes = {
+        { column = 'geom', method = 'gist' },
+        { column = 'osm_type', method = 'btree' },
     }
 })
 
@@ -23,6 +27,10 @@ tables.leisure_polygon = osm2pgsql.define_table({
         { column = 'osm_type', type = 'text' , not_null = true},
         { column = 'name', type = 'text' },
         { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
+    },
+    indexes = {
+        { column = 'geom', method = 'gist' },
+        { column = 'osm_type', method = 'btree' },
     }
 })
 

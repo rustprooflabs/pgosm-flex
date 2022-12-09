@@ -45,17 +45,6 @@ ALTER TABLE osm.road_line
 ;
 
 
-CREATE INDEX ix_osm_road_point_highway ON osm.road_point (osm_type);
-CREATE INDEX ix_osm_road_line_highway ON osm.road_line (osm_type);
-
-
--- Standard use case is to query WHERE major.
---   Opting for partial index to maximize benefits.
-CREATE INDEX ix_osm_road_line_major
-    ON osm.road_line (major)
-    WHERE major;
-
-
 
 ------------------------------------------------
 CREATE TEMP TABLE road_polygon_in_relations AS

@@ -5,8 +5,6 @@ ALTER TABLE osm.infrastructure_point
     PRIMARY KEY (osm_id)
 ;
 
-CREATE INDEX ix_osm_infrastructure_point_highway ON osm.infrastructure_point (osm_type);
-
 COMMENT ON COLUMN osm.infrastructure_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.infrastructure_point.ele IS 'Elevation in meters';
 
