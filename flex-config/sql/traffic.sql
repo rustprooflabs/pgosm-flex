@@ -17,8 +17,6 @@ ALTER TABLE osm.traffic_point
 ;
 
 
-CREATE INDEX ix_osm_traffic_point_type ON osm.traffic_point (osm_type);
-
 COMMENT ON COLUMN osm.traffic_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.traffic_line.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.traffic_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';

@@ -19,11 +19,6 @@ ALTER TABLE osm.poi_polygon
 ;
 
 
-CREATE INDEX ix_osm_poi_point_type ON osm.poi_point (osm_type);
-CREATE INDEX ix_osm_poi_line_type ON osm.poi_line (osm_type);
-CREATE INDEX ix_osm_poi_polygon_type ON osm.poi_polygon (osm_type);
-
-
 COMMENT ON COLUMN osm.poi_point.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer. Value from key stored in osm_subtype.';
 COMMENT ON COLUMN osm.poi_line.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer. Value from key stored in osm_subtype.';
 COMMENT ON COLUMN osm.poi_polygon.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer. Value from key stored in osm_subtype.';
