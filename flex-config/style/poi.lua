@@ -143,7 +143,7 @@ tables.poi_point = osm2pgsql.define_table({
     indexes = {
         { column = 'geom', method = 'gist' },
         { column = 'osm_type', method = 'btree' },
-        { column = 'osm_subtype', method = 'btree', where = 'name IS NOT NULL ' },
+        { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL ' },
     }
 })
 
@@ -168,7 +168,7 @@ tables.poi_line = osm2pgsql.define_table({
     indexes = {
         { column = 'geom', method = 'gist' },
         { column = 'osm_type', method = 'btree' },
-        { column = 'osm_subtype', method = 'btree', where = 'name IS NOT NULL ' },
+        { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL ' },
     }
 })
 
@@ -193,7 +193,7 @@ tables.poi_polygon = osm2pgsql.define_table({
     indexes = {
         { column = 'geom', method = 'gist' },
         { column = 'osm_type', method = 'btree' },
-        { column = 'osm_subtype', method = 'btree', where = 'name IS NOT NULL ' },
+        { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL ' },
     }
 })
 
