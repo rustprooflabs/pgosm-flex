@@ -74,7 +74,7 @@ def verify_checksum(md5_file, path):
                                             cwd=path)
 
     if returncode != 0:
-        err_msg = f'Failed to validate md5sum. Return code: {output.returncode}'
+        err_msg = f'Failed to validate md5sum. Return code: {returncode}'
         logger.error(err_msg)
         sys.exit(err_msg)
 
