@@ -283,8 +283,6 @@ time docker exec -it \
 
 ## Use external Postgres connection
 
-> New in 0.4.3!
-
 The PgOSM Flex Docker image can be used with an external Postgres
 database instead of using the in-Docker Postgres database.
 
