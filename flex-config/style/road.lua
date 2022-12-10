@@ -19,7 +19,7 @@ tables.road_point = osm2pgsql.define_table({
         { column = 'geom', type = 'point', projection = srid, not_null = true }
     },
     indexes = {
-        { column = 'geom', method = 'gist' },
+        { column = 'geom', method = gist_type },
         { column = 'osm_type', method = 'btree' },
         { column = 'ref', method = 'btree' },
     }
@@ -49,7 +49,7 @@ tables.road_line = osm2pgsql.define_table({
         { column = 'geom', type = 'multilinestring', projection = srid, not_null = true }
     },
     indexes = {
-        { column = 'geom', method = 'gist' },
+        { column = 'geom', method = gist_type },
         { column = 'major', method = 'btree', where = 'major' },
         { column = 'osm_type', method = 'btree' },
         { column = 'ref', method = 'btree' },
@@ -78,7 +78,7 @@ tables.road_polygon = osm2pgsql.define_table({
         { column = 'geom', type = 'multipolygon', projection = srid, not_null = true }
     },
     indexes = {
-        { column = 'geom', method = 'gist' },
+        { column = 'geom', method = gist_type },
         { column = 'major', method = 'btree', where = 'major' },
         { column = 'osm_type', method = 'btree' },
         { column = 'ref', method = 'btree' },

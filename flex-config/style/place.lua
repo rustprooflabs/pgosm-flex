@@ -15,7 +15,7 @@ tables.place_point = osm2pgsql.define_table({
         { column = 'geom', type = 'point', projection = srid, not_null = true},
     },
     indexes = {
-        { column = 'geom', method = 'gist' },
+        { column = 'geom', method = gist_type },
         { column = 'osm_type', method = 'btree' },
         { column = 'boundary', method = 'btree', where = 'boundary IS NOT NULL ' },
         { column = 'admin_level', method = 'btree', where = 'admin_level IS NOT NULL ' },
@@ -35,7 +35,7 @@ tables.place_line = osm2pgsql.define_table({
         { column = 'geom', type = 'linestring', projection = srid, not_null = true},
     },
     indexes = {
-        { column = 'geom', method = 'gist' },
+        { column = 'geom', method = gist_type },
         { column = 'osm_type', method = 'btree' },
         { column = 'boundary', method = 'btree', where = 'boundary IS NOT NULL ' },
         { column = 'admin_level', method = 'btree', where = 'admin_level IS NOT NULL ' },
@@ -57,7 +57,7 @@ tables.place_polygon = osm2pgsql.define_table({
         { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
     },
     indexes = {
-        { column = 'geom', method = 'gist' },
+        { column = 'geom', method = gist_type },
         { column = 'osm_type', method = 'btree' },
         { column = 'boundary', method = 'btree', where = 'boundary IS NOT NULL ' },
         { column = 'admin_level', method = 'btree', where = 'admin_level IS NOT NULL ' },

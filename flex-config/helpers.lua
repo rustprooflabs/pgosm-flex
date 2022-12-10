@@ -43,6 +43,19 @@ else
 end
 
 
+local gist_type_env = os.getenv("PGOSM_GIST_TYPE")
+if gist_type_env then
+    gist_type = gist_type_env
+else
+    gist_type = 'gist'
+end
+
+if gist_type ~= 'gist' and gist_type ~= 'spgist' then
+    error('Invalid PGOSM_GIST_TYPE.  Must be gist or spgist. Value: ' .. gist_type)
+end
+print('Spatial index type: ' .. gist_type)
+
+
 -- Best way to change schema name is post-processing.
 -- Use ALTER SCHEMA osm RENAME TO your_schema;
 schema_name = 'osm'

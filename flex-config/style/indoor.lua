@@ -19,7 +19,7 @@ tables.indoor_point = osm2pgsql.define_table({
         { column = 'geom', type = 'point' , projection = srid, not_null = true},
     },
     indexes = {
-        { column = 'geom', method = 'gist' },
+        { column = 'geom', method = gist_type },
         { column = 'osm_type', method = 'btree' },
     }
 })
@@ -42,7 +42,7 @@ tables.indoor_line = osm2pgsql.define_table({
         { column = 'geom', type = 'linestring', projection = srid, not_null = true},
     },
     indexes = {
-        { column = 'geom', method = 'gist' },
+        { column = 'geom', method = gist_type },
         { column = 'osm_type', method = 'btree' },
     }
 })
@@ -65,7 +65,7 @@ tables.indoor_polygon = osm2pgsql.define_table({
         { column = 'geom', type = 'multipolygon' , projection = srid, not_null = true},
     },
     indexes = {
-        { column = 'geom', method = 'gist' },
+        { column = 'geom', method = gist_type },
         { column = 'osm_type', method = 'btree' },
     }
 })
