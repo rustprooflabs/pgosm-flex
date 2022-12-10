@@ -332,9 +332,12 @@ docker exec -it \
 ```
 
 
-## Use `--append` for updates
+## Use `--append` (changing to `--replication`) for updates
 
-> Added `--append` as **Experimental** feature in 0.4.6.  As of 0.6.2 it's nearly ready for common use.
+> Important:  The `--append` option will be renamed to `--replication` in PgOSM Flex 0.7.0.  See [the conversation](https://github.com/rustprooflabs/pgosm-flex/issues/275#issuecomment-1340362190) for context.
+
+
+> Added as **Experimental** feature in 0.4.6.  As of 0.6.2 it's nearly ready for common use.
 
 
 Using `--append` mode wraps around the `osm2pgsql-replication` package
@@ -357,7 +360,7 @@ docker run --name pgosm -d --rm \
     -c max_connections=300
 ```
 
-> Note: The instructions for `--append` include a specific version of the PgOSM Flex Docker image. Using append mode across PgOSM Flex versions is currently untested. Upgrading PgOSM Flex versions with append mode may be possible with manual DDL scripts, or may simply require loading the data from scratch to upgrade.
+> Note: The instructions for `--append` use a specific tagged version of the PgOSM Flex Docker image. Upgrading PgOSM Flex versions with replication mode is possible with manual DDL scripts.  Caution and testing is strongly recommended before proceeding on production. See the release notes, along with the scripts under `pgosm-flex/db/data-migration/`.
 
 
 Run the `docker exec` step with `--append` and `--skip-dump`. This results in
