@@ -34,7 +34,7 @@ import helpers
 @click.option('--append',
               default=False,
               is_flag=True,
-              help='EXPERIMENTAL - Append mode enables updates via osm2pgsql-replication. This functionality will be renamed to --replication in future versions of PgOSM Flex. Details: https://github.com/rustprooflabs/pgosm-flex/issues/275')
+              help='Deprecated! Use --replication. --append will be removed in 0.7.0 Details: https://github.com/rustprooflabs/pgosm-flex/issues/275')
 @click.option('--data-only',
               default=False,
               is_flag=True,
@@ -57,6 +57,10 @@ import helpers
               default=helpers.get_today(),
               envvar="PGOSM_DATE",
               help="Date of the data in YYYY-MM-DD format. If today (default), automatically downloads when files not found locally. Set to historic date to load locally archived PBF/MD5 file, will fail if both files do not exist.")
+@click.option('--replication',
+              default=False,
+              is_flag=True,
+              help='EXPERIMENTAL - Replication mode enables updates via osm2pgsql-replication.')
 @click.option('--schema-name', required=False,
               default='osm',
               help="Change the final schema name, defaults to 'osm'.")
@@ -73,6 +77,7 @@ import helpers
               help='When set, builds SP-GIST indexes on geom column instead of the default GIST indexes.')
 def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
                     input_file, layerset, layerset_path, language, pgosm_date,
+                    replication,
                     schema_name, skip_dump, skip_nested, srid, sp_gist):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
     """
@@ -83,14 +88,14 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
 
     # Starting to address issues identified in
     # https://github.com/rustprooflabs/pgosm-flex/issues/275
-    # Not changing user interface, but setting stage to call it `--replication`
-    # instead of `--append` to avoid confusion.
-    replication = append
+    if append:
+        logger.warning('--append mode is deprecated. Use --replication instead.')
+        replication = True
 
     validate_region_inputs(region, subregion, input_file)
 
     if schema_name != 'osm' and replication:
-        err_msg = 'Append (osm2pgsql-replication) mode with custom schema name currently not supported'
+        err_msg = 'Replication mode with custom schema name currently not supported'
         logger.error(err_msg)
         sys.exit(err_msg)
 
@@ -110,7 +115,7 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
         replication_update = False
 
     if replication_update:
-        logger.warning('Append (osm2pgsql-replication) mode is Experimental (getting closer!)')
+        logger.warning('Replication mode is Experimental (getting closer!)')
         success = run_replication_update(skip_nested=skip_nested,
                                          flex_path=paths['flex_path'])
     else:
@@ -139,7 +144,7 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
 
 def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
                            replication):
-    """Runs standard osm2pgsql command and optionally inits for append
+    """Runs standard osm2pgsql command and optionally inits for replication
     (osm2pgsql-replication) mode.
 
     Parameters
@@ -181,7 +186,7 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
         run_osm2pgsql_replication_init(pbf_path=out_path,
                                        pbf_filename=pbf_filename)
     else:
-        logger.debug('Not using append (osm2pgsql-replication) mode')
+        logger.debug('Not using replication mode')
 
     if input_file is None:
         geofabrik.remove_latest_files(out_path)
@@ -485,7 +490,7 @@ def check_replication_exists():
 
 
 def run_osm2pgsql_replication_init(pbf_path, pbf_filename):
-    """Runs osm2pgsql-replication init to support append mode.
+    """Runs osm2pgsql-replication init to support replication mode.
 
     Parameters
     ---------------------
