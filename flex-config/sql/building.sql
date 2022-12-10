@@ -39,8 +39,6 @@ ALTER TABLE osm.building_polygon
 ;
 
 
-CREATE INDEX ix_osm_building_polygon_type ON osm.building_polygon (osm_type);
-
 
 CREATE VIEW osm.vbuilding_all AS
 SELECT osm_id, 'N' AS geom_type, osm_type, osm_subtype, name, levels,

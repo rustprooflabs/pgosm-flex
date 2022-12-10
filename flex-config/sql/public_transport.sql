@@ -17,11 +17,6 @@ ALTER TABLE osm.public_transport_polygon
 ;
 
 
-CREATE INDEX ix_osm_public_transport_point_type ON osm.public_transport_point (osm_type);
-CREATE INDEX ix_osm_public_transport_line_type ON osm.public_transport_line (osm_type);
-CREATE INDEX ix_osm_public_transport_polygon_type ON osm.public_transport_polygon (osm_type);
-
-
 COMMENT ON COLUMN osm.public_transport_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.public_transport_line.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.public_transport_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';

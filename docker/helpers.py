@@ -82,7 +82,7 @@ def verify_checksum(md5_file, path):
 
 
 def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
-                 layerset_path):
+                 layerset_path, sp_gist):
     """Sets environment variables needed by PgOSM Flex.
 
     See /docs/MANUAL-STEPS-RUN.md for usage examples of environment variables.
@@ -97,6 +97,8 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
     layerset : str
     layerset_path : str
         str when set, or None
+    sp_gist : bool
+        When `True` uses SP-GIST index instead of GIST for spatial indexes.
     """
     logger = logging.getLogger('pgosm-flex')
     logger.debug('Ensuring env vars are not set from prior run')
@@ -134,6 +136,11 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
     # Connection to DB for admin purposes, e.g. drop/create main database
     os.environ['PGOSM_CONN_PG'] = db.connection_string(admin=True)
 
+    if sp_gist:
+        os.environ['PGOSM_GIST_TYPE'] = 'spgist'
+    else:
+        os.environ['PGOSM_GIST_TYPE'] = 'gist'
+
 
 def unset_env_vars():
     """Unsets environment variables used by PgOSM Flex.
@@ -150,3 +157,4 @@ def unset_env_vars():
     os.environ.pop('PGOSM_LAYERSET', None)
     os.environ.pop('PGOSM_CONN', None)
     os.environ.pop('PGOSM_CONN_PG', None)
+    os.environ.pop('PGOSM_GIST_TYPE', None)

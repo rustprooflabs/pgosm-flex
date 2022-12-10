@@ -52,13 +52,6 @@ ALTER TABLE osm.water_polygon
     PRIMARY KEY (osm_id)
 ;
 
--- osm_type column only has natural/waterway values.
--- Indexing osm_subtype b/c has more selective and seems more likely to be used.
-CREATE INDEX ix_osm_water_point_type ON osm.water_point (osm_subtype);
-CREATE INDEX ix_osm_water_line_type ON osm.water_line (osm_subtype);
-CREATE INDEX ix_osm_water_polygon_type ON osm.water_polygon (osm_subtype);
-
-
 ------------------------------------------------
 CREATE TEMP TABLE water_polygon_in_relations AS
 SELECT p_no_rel.osm_id

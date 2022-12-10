@@ -44,11 +44,6 @@ ALTER TABLE osm.place_polygon
 ;
 
 
-CREATE INDEX ix_osm_place_point_type ON osm.place_point (osm_type);
-CREATE INDEX ix_osm_place_line_type ON osm.place_line (osm_type);
-CREATE INDEX ix_osm_place_polygon_type ON osm.place_polygon (osm_type);
-
-
 
 ------------------------------------------------
 CREATE TEMP TABLE place_polygon_in_relations AS

@@ -17,6 +17,9 @@ tables.road_major = osm2pgsql.define_table({
         { column = 'major', type = 'boolean', not_null = true},
         { column = 'member_ids', type = 'jsonb'},
         { column = 'geom', type = 'multilinestring', projection = srid, not_null = true },
+    },
+    indexes = {
+        { column = 'geom', method = gist_type }
     }
 })
 

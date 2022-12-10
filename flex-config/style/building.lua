@@ -23,6 +23,11 @@ tables.building_point = osm2pgsql.define_table({
         { column = 'wheelchair_desc', type = 'text'},
         { column = 'operator', type = 'text'},
         { column = 'geom', type = 'point', projection = srid, not_null = true},
+    },
+    indexes = {
+        { column = 'geom', method = gist_type },
+        { column = 'osm_type', method = 'btree' },
+        { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL' },
     }
 })
 
@@ -47,6 +52,11 @@ tables.building_polygon = osm2pgsql.define_table({
         { column = 'wheelchair_desc', type = 'text'},
         { column = 'operator', type = 'text'},
         { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
+    },
+    indexes = {
+        { column = 'geom', method = gist_type },
+        { column = 'osm_type', method = 'btree' },
+        { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL' },
     }
 })
 

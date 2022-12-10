@@ -139,6 +139,11 @@ tables.poi_point = osm2pgsql.define_table({
         { column = 'address', type = 'text', not_null = true},
         { column = 'operator', type = 'text'},
         { column = 'geom', type = 'point', projection = srid, not_null = true},
+    },
+    indexes = {
+        { column = 'geom', method = gist_type },
+        { column = 'osm_type', method = 'btree' },
+        { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL ' },
     }
 })
 
@@ -159,6 +164,11 @@ tables.poi_line = osm2pgsql.define_table({
         { column = 'address', type = 'text', not_null = true},
         { column = 'operator', type = 'text'},
         { column = 'geom', type = 'linestring', projection = srid, not_null = true},
+    },
+    indexes = {
+        { column = 'geom', method = gist_type },
+        { column = 'osm_type', method = 'btree' },
+        { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL ' },
     }
 })
 
@@ -179,6 +189,11 @@ tables.poi_polygon = osm2pgsql.define_table({
         { column = 'operator', type = 'text'},
         { column = 'member_ids', type = 'jsonb'},
         { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
+    },
+    indexes = {
+        { column = 'geom', method = gist_type },
+        { column = 'osm_type', method = 'btree' },
+        { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL ' },
     }
 })
 

@@ -17,6 +17,11 @@ tables.road_point = osm2pgsql.define_table({
         { column = 'bridge', type = 'text' },
         { column = 'access', type = 'text' },
         { column = 'geom', type = 'point', projection = srid, not_null = true }
+    },
+    indexes = {
+        { column = 'geom', method = gist_type },
+        { column = 'osm_type', method = 'btree' },
+        { column = 'ref', method = 'btree' },
     }
 })
 
@@ -42,6 +47,12 @@ tables.road_line = osm2pgsql.define_table({
         { column = 'access', type = 'text' },
         { column = 'member_ids', type = 'jsonb'},
         { column = 'geom', type = 'multilinestring', projection = srid, not_null = true }
+    },
+    indexes = {
+        { column = 'geom', method = gist_type },
+        { column = 'major', method = 'btree', where = 'major' },
+        { column = 'osm_type', method = 'btree' },
+        { column = 'ref', method = 'btree' },
     }
 })
 
@@ -65,6 +76,12 @@ tables.road_polygon = osm2pgsql.define_table({
         { column = 'access', type = 'text' },
         { column = 'member_ids', type = 'jsonb'},
         { column = 'geom', type = 'multipolygon', projection = srid, not_null = true }
+    },
+    indexes = {
+        { column = 'geom', method = gist_type },
+        { column = 'major', method = 'btree', where = 'major' },
+        { column = 'osm_type', method = 'btree' },
+        { column = 'ref', method = 'btree' },
     }
 })
 
