@@ -135,11 +135,9 @@ Options:
                         --input-file is specified, otherwise required.
   --subregion TEXT      Sub-region name matching the filename for data sourced
                         from Geofabrik. e.g. district-of-columbia
-  --append              EXPERIMENTAL - Append mode enables updates via
-                        osm2pgsql-replication. This functionality will be
-                        renamed to --replication in future versions of PgOSM
-                        Flex. Details: https://github.com/rustprooflabs/pgosm-
-                        flex/issues/275
+  --append              Deprecated! Use --replication. --append will be
+                        removed in 0.7.0 Details:
+                        https://github.com/rustprooflabs/pgosm-flex/issues/275
   --data-only           When set, skips running Sqitch and importing QGIS
                         Styles.
   --debug               Enables additional log output
@@ -158,6 +156,8 @@ Options:
                         found locally. Set to historic date to load locally
                         archived PBF/MD5 file, will fail if both files do not
                         exist.
+  --replication         EXPERIMENTAL - Replication mode enables updates via
+                        osm2pgsql-replication.
   --schema-name TEXT    Change the final schema name, defaults to 'osm'.
   --skip-dump           Skips the final pg_dump at the end. Useful for local
                         testing when not loading into more permanent instance.
@@ -170,7 +170,7 @@ Options:
   --help                Show this message and exit.
 ```
 
-An example of running with all current options.
+An example of running with many of the current options.
 
 ```bash
 docker exec -it \
@@ -187,6 +187,7 @@ docker exec -it \
     --data-only \
     --skip-dump \
     --skip-nested \
+    --sp-gist \
     --debug
 ```
 
@@ -282,8 +283,6 @@ time docker exec -it \
 
 ## Use external Postgres connection
 
-> New in 0.4.3!
-
 The PgOSM Flex Docker image can be used with an external Postgres
 database instead of using the in-Docker Postgres database.
 
@@ -332,19 +331,19 @@ docker exec -it \
 ```
 
 
-## Use `--append` (changing to `--replication`) for updates
-
-> Important:  The `--append` option will be renamed to `--replication` in PgOSM Flex 0.7.0.  See [the conversation](https://github.com/rustprooflabs/pgosm-flex/issues/275#issuecomment-1340362190) for context.
-
+## Use `--replication` for updates
 
 > Added as **Experimental** feature in 0.4.6.  As of 0.6.2 it's nearly ready for common use.
 
-
-Using `--append` mode wraps around the `osm2pgsql-replication` package
-included with `osm2pgsql`.  The first time running an import with `--append`
+PgOSM Flex's `--replication` mode wraps around the `osm2pgsql-replication` package
+included with `osm2pgsql`.  The first time running an import with `--replication`
 mode runs osm2pgsql normally, with `--slim` mode and without `--drop`.
 After osm2pgsql completes, `osm2pgsql-replication init ...` is ran to setup
 the DB for updates.
+
+> Important:  The original `--append` option is now under `--replication`. The `--append` option will be removed in PgOSM Flex 0.7.0.  See [the conversation](https://github.com/rustprooflabs/pgosm-flex/issues/275#issuecomment-1340362190) for context.
+
+
 
 Need to pin the PgOSM Flex version. Also need to increase Postgres' `max_connections`, see
 [this discussion on osm2pgsql](https://github.com/openstreetmap/osm2pgsql/discussions/1650).
@@ -356,14 +355,14 @@ docker run --name pgosm -d --rm \
     -v /etc/localtime:/etc/localtime:ro \
     -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
     -p 5433:5432 \
-    -d rustprooflabs/pgosm-flex:0.6.2 \
+    -d rustprooflabs/pgosm-flex:0.6.3 \
     -c max_connections=300
 ```
 
-> Note: The instructions for `--append` use a specific tagged version of the PgOSM Flex Docker image. Upgrading PgOSM Flex versions with replication mode is possible with manual DDL scripts.  Caution and testing is strongly recommended before proceeding on production. See the release notes, along with the scripts under `pgosm-flex/db/data-migration/`.
+> Note: The instructions for `--replication` use a specific tagged version of the PgOSM Flex Docker image. Upgrading PgOSM Flex versions with replication mode is possible with manual DDL scripts.  Caution and testing is strongly recommended before proceeding on production. See the release notes, along with the scripts under `pgosm-flex/db/data-migration/`.
 
 
-Run the `docker exec` step with `--append` and `--skip-dump`. This results in
+Run the `docker exec` step with `--replication` and `--skip-dump`. This results in
 a larger database as the intermediate osm2pgsql tables must be left
 in the database.
 
@@ -374,7 +373,7 @@ docker exec -it \
     --region=north-america/us \
     --subregion=district-of-columbia \
     --pgosm-date 2022-02-22 \
-    --append --skip-dump
+    --replication --skip-dump
 ```
 
 Running the above command a second time will detect that the target database
