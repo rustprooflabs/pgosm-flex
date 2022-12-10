@@ -30,7 +30,7 @@ RAM=2
 # to make unit test results visible at the end.
 .PHONY: all
 all: docker-exec-region docker-exec-input-file \
-	docker-exec-append-w-input-file \
+	docker-exec-replication-w-input-file \
 	docker-exec-default unit-tests
 
 .PHONY: docker-clean
@@ -114,11 +114,11 @@ docker-exec-input-file: build-run-docker
 
 
 
-.PHONE: docker-exec-append-w-input-file
-docker-exec-append-w-input-file: build-run-docker
-	# NOTE: This step tests --append file for an initial load.
+.PHONE: docker-exec-replication-w-input-file
+docker-exec-replication-w-input-file: build-run-docker
+	# NOTE: This step tests --replication file for an initial load.
 	# It does **NOT** test the actual replication process for updating data
-	# using append mode. Testing actual replication over time in this format
+	# using replication mode. Testing actual replication over time in this format
 	# will not be trivial.  The historic file used (2021-01-13) cannot be used
 	# to seed a replication process, there is a time limit in upstream software
 	# that requires more recency to the source data. This also cannot simply
@@ -147,7 +147,7 @@ docker-exec-append-w-input-file: build-run-docker
 		pgosm python3 docker/pgosm_flex.py  \
 		--layerset=minimal \
 		--ram=$(RAM) \
-		--append \
+		--replication \
 		--input-file=/app/output/$(INPUT_FILE_NAME) \
 		--data-only --skip-dump --skip-nested # Make this test run faster
 
