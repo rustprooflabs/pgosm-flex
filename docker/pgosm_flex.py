@@ -69,9 +69,11 @@ import helpers
 @click.option('--srid', required=False, default=helpers.DEFAULT_SRID,
               envvar="PGOSM_SRID",
               help="SRID for data loaded by osm2pgsql to PostGIS. Defaults to 3857")
+@click.option('--sp-gist', default=False, is_flag=True,
+              help='When set, builds SP-GIST indexes on geom column instead of the default GIST indexes.')
 def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
                     input_file, layerset, layerset_path, language, pgosm_date,
-                    schema_name, skip_dump, skip_nested, srid):
+                    schema_name, skip_dump, skip_nested, srid, sp_gist):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
     """
     paths = get_paths()
@@ -96,7 +98,7 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
         region = input_file
 
     helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
-                         layerset, layerset_path)
+                         layerset, layerset_path, sp_gist)
     db.wait_for_postgres()
     db.prepare_pgosm_db(data_only=data_only,
                         db_path=paths['db_path'],

@@ -17,7 +17,7 @@ tables.water_point = osm2pgsql.define_table({
         { column = 'geom', type = 'point', projection = srid, not_null = true},
     },
     indexes = {
-        { column = 'geom', method = 'gist' },
+        { column = 'geom', method = gist_type },
         { column = 'osm_type', method = 'btree' },
         { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL ' },
     }
@@ -40,7 +40,7 @@ tables.water_line = osm2pgsql.define_table({
         { column = 'geom', type = 'multilinestring', projection = srid, not_null = true},
     },
     indexes = {
-        { column = 'geom', method = 'gist' },
+        { column = 'geom', method = gist_type },
         { column = 'osm_type', method = 'btree' },
         { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL ' },
     }
@@ -63,7 +63,7 @@ tables.water_polygon = osm2pgsql.define_table({
         { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
     },
     indexes = {
-        { column = 'geom', method = 'gist' },
+        { column = 'geom', method = gist_type },
         { column = 'osm_type', method = 'btree' },
         { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL ' },
     }

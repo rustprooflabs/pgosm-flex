@@ -165,6 +165,8 @@ Options:
                         be time consuming on large regions.
   --srid TEXT           SRID for data loaded by osm2pgsql to PostGIS. Defaults
                         to 3857
+  --sp-gist             When set, builds SP-GIST indexes on geom column
+                        instead of the default GIST indexes.
   --help                Show this message and exit.
 ```
 
