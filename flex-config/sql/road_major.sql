@@ -19,9 +19,6 @@ ALTER TABLE osm.road_major
     PRIMARY KEY (osm_id)
 ;
 
-CREATE INDEX ix_osm_road_major_type ON osm.road_major (osm_type);
-
-
 
 
 ------------------------------------------------
