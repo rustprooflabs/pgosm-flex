@@ -62,11 +62,6 @@ COMMENT ON COLUMN osm.shop_point.address IS 'Address combined from address parts
 COMMENT ON COLUMN osm.shop_polygon.address IS 'Address combined from address parts in helpers.get_address().';
 
 
--- osm_type column only has shop/amenity values.
--- Indexing osm_subtype b/c has more selective and seems more likely to be used.
-CREATE INDEX ix_osm_shop_point_type ON osm.shop_point (osm_subtype);
-CREATE INDEX ix_osm_shop_polygon_type ON osm.shop_polygon (osm_subtype);
-
 
 CREATE VIEW osm.vshop_all AS
 SELECT osm_id, 'N' AS geom_type, osm_type, osm_subtype, name,
