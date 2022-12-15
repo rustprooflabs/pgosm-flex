@@ -75,10 +75,12 @@ import helpers
               help="SRID for data loaded by osm2pgsql to PostGIS. Defaults to 3857")
 @click.option('--sp-gist', default=False, is_flag=True,
               help='When set, builds SP-GIST indexes on geom column instead of the default GIST indexes.')
+@click.option('--update', default=None,
+              help='EXPERIMENTAL - Options:  create / append.  Using to wrap around osm2pgsql create v. append modes, without using osm2pgsql-replication.')
 def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
                     input_file, layerset, layerset_path, language, pgosm_date,
-                    replication,
-                    schema_name, skip_dump, skip_nested, srid, sp_gist):
+                    replication, schema_name, skip_dump, skip_nested,
+                    srid, sp_gist, update):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
     """
     paths = get_paths()
@@ -86,18 +88,15 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
     logger = logging.getLogger('pgosm-flex')
     logger.info('PgOSM Flex starting...')
 
-    # Starting to address issues identified in
-    # https://github.com/rustprooflabs/pgosm-flex/issues/275
-    if append:
-        logger.warning('--append mode is deprecated. Use --replication instead.')
-        replication = True
-
     validate_region_inputs(region, subregion, input_file)
 
-    if schema_name != 'osm' and replication:
-        err_msg = 'Replication mode with custom schema name currently not supported'
-        logger.error(err_msg)
-        sys.exit(err_msg)
+    print(f'UPDATE setting:  {update}')
+    import_mode = get_import_mode(replication=replication,
+                                  schema_name=schema_name,
+                                  update=update,
+                                  append=append)
+    print(f'IMPORT MODE {import_mode}')
+    single_import = import_mode['single_import']
 
     if region is None and input_file:
         region = input_file
@@ -107,8 +106,9 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
     db.wait_for_postgres()
     db.prepare_pgosm_db(data_only=data_only,
                         db_path=paths['db_path'],
-                        replication=replication)
+                        single_import=single_import)
 
+    logger.error('Check on the replication status ---  Need to verify how this changes w/ update mode...')
     if replication:
         replication_update = check_replication_exists()
     else:
@@ -125,7 +125,8 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
                                          flex_path=paths['flex_path'],
                                          ram=ram,
                                          skip_nested=skip_nested,
-                                         replication=replication)
+                                         replication=replication,
+                                         single_import=single_import)
 
     if schema_name != 'osm':
         db.rename_schema(schema_name)
@@ -143,7 +144,7 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
 
 
 def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
-                           replication):
+                           replication, single_import):
     """Runs standard osm2pgsql command and optionally inits for replication
     (osm2pgsql-replication) mode.
 
@@ -155,6 +156,7 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
     ram : float
     skip_nested : boolean
     replication : boolean
+    single_import : boolean
 
     Returns
     ---------------------------
@@ -172,7 +174,7 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
     osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
                                                      pbf_filename=pbf_filename,
                                                      out_path=out_path,
-                                                     replication=replication)
+                                                     single_import=single_import)
 
     run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, flex_path=flex_path)
 
@@ -230,6 +232,44 @@ osm2pgsql-replication update -d $PGOSM_CONN \
     db.osm2pgsql_replication_finish(skip_nested=skip_nested)
     logger.info('osm2pgsql-replication update complete')
     return True
+
+def get_import_mode(replication, schema_name, update, append):
+    """
+    Parameters
+    --------------------------
+    replication : bool
+    schema_name : str
+    update : str
+    append : bool
+        DEPRECATED
+    """
+    # Starting to address issues identified in
+    # https://github.com/rustprooflabs/pgosm-flex/issues/275
+    logger = logging.getLogger('pgosm-flex')
+
+    if schema_name != 'osm' and replication:
+        err_msg = 'Replication mode with custom schema name currently not supported'
+        logger.error(err_msg)
+        sys.exit(err_msg)
+
+    single_import = True
+
+    if append:
+        logger.warning('--append mode is deprecated. Use --replication instead.')
+        replication = True
+        single_import = False
+
+    if replication:
+        single_import = False
+
+    if update is not None:
+        logger.error('NOT Fully Implemented!  Update mode functionality in progress.')
+        single_import = False
+        valid_options = ['append', 'create']
+        if update not in valid_options:
+            sys.exit('Uh oh!')
+
+    return {'single_import': single_import, 'replication': replication}
 
 
 def validate_region_inputs(region, subregion, input_file):

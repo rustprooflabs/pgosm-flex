@@ -10,7 +10,7 @@ import db
 LOGGER = logging.getLogger('pgosm-flex')
 
 
-def osm2pgsql_recommendation(ram, pbf_filename, out_path, replication):
+def osm2pgsql_recommendation(ram, pbf_filename, out_path, single_import):
     """Returns recommended osm2pgsql command.
 
     Recommendation from Python project.
@@ -22,7 +22,7 @@ def osm2pgsql_recommendation(ram, pbf_filename, out_path, replication):
         Total system RAM available in GB
     pbf_filename : str
     out_path : str
-    replication : boolean
+    single_import : boolean
 
     Returns
     ----------------------
@@ -40,12 +40,12 @@ def osm2pgsql_recommendation(ram, pbf_filename, out_path, replication):
 
     osm2pgsql_cmd = get_recommended_script(system_ram_gb,
                                            osm_pbf_gb,
-                                           replication,
+                                           single_import,
                                            pbf_file,
                                            out_path)
     return osm2pgsql_cmd
 
-def get_recommended_script(system_ram_gb, osm_pbf_gb, replication, pbf_filename,
+def get_recommended_script(system_ram_gb, osm_pbf_gb, single_import, pbf_filename,
                            output_path):
     """Generates recommended osm2pgsql command from osm2pgsql-tuner.
 
@@ -53,7 +53,7 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb, replication, pbf_filename,
     -------------------------------
     system_ram_gb : float
     osm_pbf_gb : float
-    replication : bool
+    single_import : bool
     pbf_filename : str
         Can be filename or absolute path.
     output_path : str
@@ -70,11 +70,15 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb, replication, pbf_filename,
     """
     LOGGER.debug('Generating recommended osm2pgsql command')
 
-   # This function call will change as this is implemented
-   # https://github.com/rustprooflabs/osm2pgsql-tuner/issues/24
+    # This function call will change as this is implemented
+    # https://github.com/rustprooflabs/osm2pgsql-tuner/issues/24
+    #
+    print ('---- WARNING')
+    print('Need to adjust for single_import -- MISSING -- update to set append_first_run')
+    replication_legacy = not single_import
     rec = tuner.recommendation(system_ram_gb=system_ram_gb,
                                osm_pbf_gb=osm_pbf_gb,
-                               append=replication,
+                               append=replication_legacy,
                                ssd=True)
 
     osm2pgsql_cmd = rec.get_osm2pgsql_command(out_format='api',

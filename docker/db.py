@@ -181,23 +181,23 @@ def pg_isready():
     return True
 
 
-def prepare_pgosm_db(data_only, db_path, replication):
+def prepare_pgosm_db(data_only, db_path, single_import):
     """Runs through series of steps to prepare database for PgOSM.
 
     Parameters
     --------------------------
     data_only : bool
     db_path : str
-    replication : bool
+    single_import : bool
     """
 
     if pg_conn_parts()['pg_host'] == 'localhost':
         LOGGER.debug('Running standard database prep for in-Docker operation. Includes DROP/CREATE DATABASE')
-        if replication:
-            LOGGER.debug('Skipping DB drop b/c of append (osm2pgsql-replication) mode')
-        else:
+        if single_import:
             LOGGER.debug('Dropping database')
             drop_pgosm_db()
+        else:
+            LOGGER.debug('Skipping DB drop. Not a single import.')
 
         create_pgosm_db()
     else:
