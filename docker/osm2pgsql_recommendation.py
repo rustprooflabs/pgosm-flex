@@ -73,12 +73,13 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb, single_import, pbf_filenam
     # This function call will change as this is implemented
     # https://github.com/rustprooflabs/osm2pgsql-tuner/issues/24
     #
-    print ('---- WARNING')
-    print('Need to adjust for single_import -- MISSING -- update to set append_first_run')
+    print('FIXME: append_first_run hard coded to True')
+    append_first_run = True
     replication_legacy = not single_import
     rec = tuner.recommendation(system_ram_gb=system_ram_gb,
                                osm_pbf_gb=osm_pbf_gb,
                                append=replication_legacy,
+                               append_first_run=append_first_run,
                                ssd=True)
 
     osm2pgsql_cmd = rec.get_osm2pgsql_command(out_format='api',
