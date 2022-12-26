@@ -21,6 +21,13 @@ import geofabrik
 import helpers
 
 
+APPEND_REMOVED_MSG = """-----  ERROR -----
+
+The --append option was removed in PgOSM Flex v0.7.0; use --replication.
+
+Details: https://github.com/rustprooflabs/pgosm-flex/issues/275
+"""
+
 @click.command()
 # Required and most common options first
 @click.option('--ram', required=True,
@@ -34,7 +41,7 @@ import helpers
 @click.option('--append',
               default=False,
               is_flag=True,
-              help='Deprecated! Use --replication. --append will be removed in 0.7.0 Details: https://github.com/rustprooflabs/pgosm-flex/issues/275')
+              help=APPEND_REMOVED_MSG)
 @click.option('--data-only',
               default=False,
               is_flag=True,
@@ -83,50 +90,45 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
                     srid, sp_gist, update):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
     """
+    if append:
+        sys.exit(APPEND_REMOVED_MSG)
+
     paths = get_paths()
     setup_logger(debug)
     logger = logging.getLogger('pgosm-flex')
     logger.info('PgOSM Flex starting...')
 
     validate_region_inputs(region, subregion, input_file)
-
-    print(f'UPDATE setting:  {update}')
-    import_mode = get_import_mode(replication=replication,
-                                  schema_name=schema_name,
-                                  update=update,
-                                  append=append)
-    print(f'IMPORT MODE {import_mode}')
-    single_import = import_mode['single_import']
-
     if region is None and input_file:
         region = input_file
 
     helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
                          layerset, layerset_path, sp_gist)
     db.wait_for_postgres()
+
+    logger.debug(f'UPDATE setting:  {update}')
+    import_mode = get_import_mode(replication=replication,
+                                  schema_name=schema_name,
+                                  update=update)
+    logger.debug(f'IMPORT MODE {import_mode}')
+
     db.prepare_pgosm_db(data_only=data_only,
                         db_path=paths['db_path'],
-                        single_import=single_import)
+                        import_mode=import_mode)
 
-    logger.error('Check on the replication status ---  Need to verify how this changes w/ update mode...')
-    if replication:
-        replication_update = check_replication_exists()
-    else:
-        replication_update = False
-
-    if replication_update:
+    if import_mode['replication_update']:
+        logger.info('Running osm2pgsql-replication in update mode')
         logger.warning('Replication mode is Experimental (getting closer!)')
         success = run_replication_update(skip_nested=skip_nested,
                                          flex_path=paths['flex_path'])
     else:
-        logger.info('Running osm2pgsql without osm2pgsql-replication')
+        logger.info('Running osm2pgsql')
         success = run_osm2pgsql_standard(input_file=input_file,
                                          out_path=paths['out_path'],
                                          flex_path=paths['flex_path'],
                                          ram=ram,
                                          skip_nested=skip_nested,
-                                         replication=replication,
-                                         single_import=single_import)
+                                         import_mode=import_mode)
 
     if schema_name != 'osm':
         db.rename_schema(schema_name)
@@ -144,7 +146,7 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
 
 
 def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
-                           replication, single_import):
+                           import_mode):
     """Runs standard osm2pgsql command and optionally inits for replication
     (osm2pgsql-replication) mode.
 
@@ -155,8 +157,7 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
     flex_path : str
     ram : float
     skip_nested : boolean
-    replication : boolean
-    single_import : boolean
+    import_mode : dict
 
     Returns
     ---------------------------
@@ -174,7 +175,7 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
     osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
                                                      pbf_filename=pbf_filename,
                                                      out_path=out_path,
-                                                     single_import=single_import)
+                                                     import_mode=import_mode)
 
     run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, flex_path=flex_path)
 
@@ -184,7 +185,7 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
     post_processing = run_post_processing(flex_path=flex_path,
                                           skip_nested=skip_nested)
 
-    if replication:
+    if import_mode['replication']:
         run_osm2pgsql_replication_init(pbf_path=out_path,
                                        pbf_filename=pbf_filename)
     else:
@@ -233,15 +234,30 @@ osm2pgsql-replication update -d $PGOSM_CONN \
     logger.info('osm2pgsql-replication update complete')
     return True
 
-def get_import_mode(replication, schema_name, update, append):
-    """
+
+def get_import_mode(replication, schema_name, update):
+    """Determines logical variables used to control program flow.
+
+    WARNING:  The values for `append_first_run` and `replication_update`
+    are used to determine when to drop the local DB.  Be careful with any
+    changes to these values.
+
     Parameters
     --------------------------
     replication : bool
     schema_name : str
     update : str
-    append : bool
-        DEPRECATED
+
+    Returns
+    --------------------------
+    import_mode : dict
+        Various variables used to control program flow for various import modes.
+
+        Keys:
+            slim_no_drop : bool
+            append_first_run : bool
+            replication : bool
+            replication_update : bool
     """
     # Starting to address issues identified in
     # https://github.com/rustprooflabs/pgosm-flex/issues/275
@@ -252,24 +268,42 @@ def get_import_mode(replication, schema_name, update, append):
         logger.error(err_msg)
         sys.exit(err_msg)
 
-    single_import = True
-
-    if append:
-        logger.warning('--append mode is deprecated. Use --replication instead.')
-        replication = True
-        single_import = False
+    slim_no_drop = False
+    append_first_run = None
 
     if replication:
-        single_import = False
+        slim_no_drop = True
+
+    logger.error('Check on the replication status ---  Need to verify how this changes w/ update mode...')
+    if replication:
+        replication_update = check_replication_exists()
+    else:
+        replication_update = False
+
+    if replication_update:
+        append_first_run = False
+    else:
+        append_first_run = True
 
     if update is not None:
-        logger.error('NOT Fully Implemented!  Update mode functionality in progress.')
-        single_import = False
+        logger.error('Handling osm2pgsql --update is a WIP.')
         valid_options = ['append', 'create']
+        slim_no_drop = True
+
         if update not in valid_options:
             sys.exit('Uh oh!')
 
-    return {'single_import': single_import, 'replication': replication}
+        if update == 'create':
+            append_first_run = True
+        else:
+            append_first_run = False
+
+    import_mode = {'slim_no_drop': slim_no_drop,
+                   'append_first_run': append_first_run,
+                   'replication': replication,
+                   'replication_update': replication_update,
+                   }
+    return import_mode
 
 
 def validate_region_inputs(region, subregion, input_file):
@@ -356,7 +390,7 @@ def get_export_filename(input_file):
     ----------------------
     filename : str
     """
-    # region is always set internally, even with --input-file and no --region
+    # always set internally, even with --input-file and no --region
     region = os.environ.get('PGOSM_REGION').replace('/', '-')
     subregion = os.environ.get('PGOSM_SUBREGION')
     layerset = os.environ.get('PGOSM_LAYERSET')

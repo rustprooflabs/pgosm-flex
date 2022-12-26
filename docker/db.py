@@ -181,25 +181,33 @@ def pg_isready():
     return True
 
 
-def prepare_pgosm_db(data_only, db_path, single_import):
+def prepare_pgosm_db(data_only, db_path, import_mode):
     """Runs through series of steps to prepare database for PgOSM.
 
     Parameters
     --------------------------
     data_only : bool
     db_path : str
-    single_import : bool
+    import_mode : dict
     """
-
     if pg_conn_parts()['pg_host'] == 'localhost':
+        drop_it = True
         LOGGER.debug('Running standard database prep for in-Docker operation. Includes DROP/CREATE DATABASE')
-        if single_import:
-            LOGGER.debug('Dropping database')
+        LOGGER.debug(f'import_mode: {import_mode}')
+        if import_mode['slim_no_drop']:
+            if not import_mode['append_first_run']:
+                drop_it = False
+            if import_mode['replication_update']:
+                drop_it = False
+
+        if drop_it:
+            LOGGER.debug('Dropping local database if exists')
             drop_pgosm_db()
         else:
-            LOGGER.debug('Skipping DB drop. Not a single import.')
+            LOGGER.debug('Not dropping local DB. This is expected with subsequent import via --replication OR --update=append.')
 
         create_pgosm_db()
+
     else:
         LOGGER.info('Using external database. Ensure the target database is setup properly with proper permissions.')
 
@@ -214,7 +222,7 @@ def prepare_pgosm_db(data_only, db_path, single_import):
 
 
 def pg_version_check():
-    """Checks Postgres machine-readible server_version_num.
+    """Checks Postgres machine-readable server_version_num.
 
     Sends to logs and returns value.
 
