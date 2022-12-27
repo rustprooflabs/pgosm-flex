@@ -100,7 +100,7 @@ docker run --name pgosm -d --rm \
 ```
 
 Use `docker exec` to run the processing for the Washington D.C subregion.
-This example uses three (3) parameters to specify the totaol system RAM (8 GB)
+This example uses three (3) parameters to specify the total system RAM (8 GB)
 along with a region/subregion.
 
 * Total RAM for osm2pgsql, Postgres and OS (`8`)

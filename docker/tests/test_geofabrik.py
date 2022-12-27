@@ -17,7 +17,8 @@ class GeofabrikTests(unittest.TestCase):
                              language=None,
                              pgosm_date=PGOSM_DATE,
                              layerset=LAYERSET,
-                             layerset_path=None)
+                             layerset_path=None,
+                             sp_gist=False)
 
 
     def tearDown(self):
@@ -37,7 +38,8 @@ class GeofabrikTests(unittest.TestCase):
                              language=None,
                              pgosm_date=PGOSM_DATE,
                              layerset=LAYERSET,
-                             layerset_path=None)
+                             layerset_path=None,
+                             sp_gist=False)
 
         result = geofabrik.get_region_filename()
         expected = f'{REGION_US}-latest.osm.pbf'

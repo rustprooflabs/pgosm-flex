@@ -356,7 +356,7 @@ docker run --name pgosm -d --rm \
     -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
     -p 5433:5432 \
     -d rustprooflabs/pgosm-flex:0.6.3 \
-    -c max_connections=300
+        -c max_connections=300
 ```
 
 > Note: The instructions for `--replication` use a specific tagged version of the PgOSM Flex Docker image. Upgrading PgOSM Flex versions with replication mode is possible with manual DDL scripts.  Caution and testing is strongly recommended before proceeding on production. See the release notes, along with the scripts under `pgosm-flex/db/data-migration/`.

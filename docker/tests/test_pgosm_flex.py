@@ -17,7 +17,8 @@ class PgOSMFlexTests(unittest.TestCase):
                              language=None,
                              pgosm_date=PGOSM_DATE,
                              layerset=LAYERSET,
-                             layerset_path=None)
+                             layerset_path=None,
+                             sp_gist=False)
 
 
     def tearDown(self):
@@ -87,7 +88,8 @@ class PgOSMFlexTests(unittest.TestCase):
                              language=None,
                              pgosm_date=PGOSM_DATE,
                              layerset=LAYERSET,
-                             layerset_path=None)
+                             layerset_path=None,
+                             sp_gist=False)
 
         input_file = None
         result = pgosm_flex.get_export_filename(input_file)
