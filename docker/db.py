@@ -188,16 +188,16 @@ def prepare_pgosm_db(data_only, db_path, import_mode):
     --------------------------
     data_only : bool
     db_path : str
-    import_mode : dict
+    import_mode : import_mode.ImportMode
     """
     if pg_conn_parts()['pg_host'] == 'localhost':
         drop_it = True
         LOGGER.debug('Running standard database prep for in-Docker operation. Includes DROP/CREATE DATABASE')
         LOGGER.debug(f'import_mode: {import_mode}')
-        if import_mode['slim_no_drop']:
-            if not import_mode['append_first_run']:
+        if import_mode.slim_no_drop:
+            if not import_mode.append_first_run:
                 drop_it = False
-            if import_mode['replication_update']:
+            if import_mode.replication_update:
                 drop_it = False
 
         if drop_it:

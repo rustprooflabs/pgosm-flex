@@ -72,8 +72,8 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb, import_mode, pbf_filename,
 
     rec = tuner.recommendation(system_ram_gb=system_ram_gb,
                                osm_pbf_gb=osm_pbf_gb,
-                               slim_no_drop=import_mode['slim_no_drop'],
-                               append_first_run=import_mode['append_first_run'],
+                               slim_no_drop=import_mode.slim_no_drop,
+                               append_first_run=import_mode.append_first_run,
                                ssd=True)
 
     osm2pgsql_cmd = rec.get_osm2pgsql_command(out_format='api',

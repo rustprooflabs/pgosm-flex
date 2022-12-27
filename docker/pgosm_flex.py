@@ -19,6 +19,7 @@ import osm2pgsql_recommendation as rec
 import db
 import geofabrik
 import helpers
+from import_mode import ImportMode
 
 
 APPEND_REMOVED_MSG = """-----  ERROR -----
@@ -93,6 +94,14 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
     if append:
         sys.exit(APPEND_REMOVED_MSG)
 
+    if schema_name != 'osm' and replication:
+        err_msg = 'Replication mode with custom schema name currently not supported'
+        logger.error(err_msg)
+        sys.exit(err_msg)
+
+    if replication and (update is not None):
+        sys.exit('The --replication and --update features are mutually exclusive. Use one or the other.') 
+
     paths = get_paths()
     setup_logger(debug)
     logger = logging.getLogger('pgosm-flex')
@@ -106,17 +115,22 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
                          layerset, layerset_path, sp_gist)
     db.wait_for_postgres()
 
+    if replication:
+        replication_update = check_replication_exists()
+    else:
+        replication_update = False
+
     logger.debug(f'UPDATE setting:  {update}')
-    import_mode = get_import_mode(replication=replication,
-                                  schema_name=schema_name,
-                                  update=update)
+    import_mode = ImportMode(replication=replication,
+                             replication_update=replication_update,
+                             update=update)
     logger.debug(f'IMPORT MODE {import_mode}')
 
     db.prepare_pgosm_db(data_only=data_only,
                         db_path=paths['db_path'],
                         import_mode=import_mode)
 
-    if import_mode['replication_update']:
+    if import_mode.replication_update:
         logger.info('Running osm2pgsql-replication in update mode')
         logger.warning('Replication mode is Experimental (getting closer!)')
         success = run_replication_update(skip_nested=skip_nested,
@@ -157,7 +171,7 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
     flex_path : str
     ram : float
     skip_nested : boolean
-    import_mode : dict
+    import_mode : import_mode.ImportMode
 
     Returns
     ---------------------------
@@ -185,7 +199,7 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
     post_processing = run_post_processing(flex_path=flex_path,
                                           skip_nested=skip_nested)
 
-    if import_mode['replication']:
+    if import_mode.replication:
         run_osm2pgsql_replication_init(pbf_path=out_path,
                                        pbf_filename=pbf_filename)
     else:
@@ -233,77 +247,6 @@ osm2pgsql-replication update -d $PGOSM_CONN \
     db.osm2pgsql_replication_finish(skip_nested=skip_nested)
     logger.info('osm2pgsql-replication update complete')
     return True
-
-
-def get_import_mode(replication, schema_name, update):
-    """Determines logical variables used to control program flow.
-
-    WARNING:  The values for `append_first_run` and `replication_update`
-    are used to determine when to drop the local DB.  Be careful with any
-    changes to these values.
-
-    Parameters
-    --------------------------
-    replication : bool
-    schema_name : str
-    update : str
-
-    Returns
-    --------------------------
-    import_mode : dict
-        Various variables used to control program flow for various import modes.
-
-        Keys:
-            slim_no_drop : bool
-            append_first_run : bool
-            replication : bool
-            replication_update : bool
-    """
-    # Starting to address issues identified in
-    # https://github.com/rustprooflabs/pgosm-flex/issues/275
-    logger = logging.getLogger('pgosm-flex')
-
-    if schema_name != 'osm' and replication:
-        err_msg = 'Replication mode with custom schema name currently not supported'
-        logger.error(err_msg)
-        sys.exit(err_msg)
-
-    slim_no_drop = False
-    append_first_run = None
-
-    if replication:
-        slim_no_drop = True
-
-    logger.error('Check on the replication status ---  Need to verify how this changes w/ update mode...')
-    if replication:
-        replication_update = check_replication_exists()
-    else:
-        replication_update = False
-
-    if replication_update:
-        append_first_run = False
-    else:
-        append_first_run = True
-
-    if update is not None:
-        logger.error('Handling osm2pgsql --update is a WIP.')
-        valid_options = ['append', 'create']
-        slim_no_drop = True
-
-        if update not in valid_options:
-            sys.exit('Uh oh!')
-
-        if update == 'create':
-            append_first_run = True
-        else:
-            append_first_run = False
-
-    import_mode = {'slim_no_drop': slim_no_drop,
-                   'append_first_run': append_first_run,
-                   'replication': replication,
-                   'replication_update': replication_update,
-                   }
-    return import_mode
 
 
 def validate_region_inputs(region, subregion, input_file):
