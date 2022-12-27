@@ -203,7 +203,8 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
         skip_nested = check_layerset_places(flex_path)
 
     post_processing = run_post_processing(flex_path=flex_path,
-                                          skip_nested=skip_nested)
+                                          skip_nested=skip_nested,
+                                          import_mode=import_mode)
 
     if import_mode.replication:
         run_osm2pgsql_replication_init(pbf_path=out_path,
@@ -438,7 +439,7 @@ def check_layerset_places(flex_path):
     return True
 
 
-def run_post_processing(flex_path, skip_nested):
+def run_post_processing(flex_path, skip_nested, import_mode):
     """Runs steps following osm2pgsql import.
 
     Post-processing SQL scripts and (optionally) calculate nested admin polgyons
@@ -447,13 +448,20 @@ def run_post_processing(flex_path, skip_nested):
     ----------------------
     flex_path : str
     skip_nested : bool
+    import_mode : import_mode.ImportMode
 
     Returns
     ----------------------
     status : bool
     """
-    post_processing_sql = db.pgosm_after_import(flex_path)
     logger = logging.getLogger('pgosm-flex')
+
+    if not import_mode.run_post_sql:
+        logger.info('Running with --update append: Skipping post-processing SQL')
+        return True
+
+    post_processing_sql = db.pgosm_after_import(flex_path)
+
     if skip_nested:
         logger.info('Skipping calculating nested polygons')
     else:

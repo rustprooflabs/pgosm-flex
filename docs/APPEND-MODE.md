@@ -1,8 +1,17 @@
 # Running osm2pgsql in append mode
 
+## FIXME:  These docs are outdated and inaccurate
+
+Needs updating, `--append` is removed, now under `--replication`
+
+New option to `--update` in create/append mode making osm2pgsql's append
+option available.
+
+
 ----
 
-> The `--append` feature is experimental.
+
+> The `--replication` feature is experimental.
 
 ----
 

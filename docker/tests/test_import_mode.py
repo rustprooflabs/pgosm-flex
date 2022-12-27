@@ -70,3 +70,29 @@ class ImportModeTests(unittest.TestCase):
                                    update=update)
 
 
+
+    def test_import_mode_with_update_create_sets_value_run_post_sql_True(self):
+        replication = False
+        replication_update = False
+        update = 'create'
+        expected = True
+        im = import_mode.ImportMode(replication=replication,
+                                    replication_update=replication_update,
+                                    update=update)
+
+        actual = im.run_post_sql
+        self.assertEqual(expected, actual)
+
+
+    def test_import_mode_with_update_append_sets_value_run_post_sql_False(self):
+        replication = False
+        replication_update = False
+        update = 'append'
+        expected = False
+        im = import_mode.ImportMode(replication=replication,
+                                    replication_update=replication_update,
+                                    update=update)
+
+        actual = im.run_post_sql
+        self.assertEqual(expected, actual)
+
