@@ -19,11 +19,15 @@ class ImportMode():
         --------------------------
         replication : bool
         replication_update : bool
-        update : str
+        update : str or None
+            Valid options are 'create' or 'append', lining up with osm2pgsql's
+            `--create` and `--append` modes.
         """
         self.logger = logging.getLogger('pgosm-flex')
         self.replication = replication
         self.replication_update = replication_update
+
+        # The input via click should enforce this, still worth checking here
         valid_update_options = ['append', 'create', None]
 
         if update not in valid_update_options:
@@ -35,6 +39,9 @@ class ImportMode():
 
 
     def set_append_first_run(self):
+        """Uses `replication_update` and `update` to determine value for
+        `self.append_first_run`
+        """
         if self.replication_update:
             self.append_first_run = False
         else:
@@ -47,6 +54,9 @@ class ImportMode():
                 self.append_first_run = False
 
     def set_slim_no_drop(self):
+        """Uses `replication` and `update` to determine value for
+        `self.slim_no_drop`
+        """
         self.slim_no_drop = False
 
         if self.replication:
@@ -55,30 +65,3 @@ class ImportMode():
         if self.update is not None:
             self.slim_no_drop = True
 
-
-def get_import_mode(replication, schema_name, update):
-    """
-
-    Returns
-    --------------------------
-    import_mode : dict
-        Various variables used to control program flow for various import modes.
-
-        Keys:
-            slim_no_drop : bool
-            append_first_run : bool
-            replication : bool
-            replication_update : bool
-    """
-    # Starting to address issues identified in
-    # https://github.com/rustprooflabs/pgosm-flex/issues/275
-    slim_no_drop = False
-    append_first_run = None
-
-
-    import_mode = {'slim_no_drop': slim_no_drop,
-                   'append_first_run': append_first_run,
-                   'replication': replication,
-                   'replication_update': replication_update,
-                   }
-    return import_mode

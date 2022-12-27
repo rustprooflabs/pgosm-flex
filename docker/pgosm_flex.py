@@ -84,6 +84,7 @@ Details: https://github.com/rustprooflabs/pgosm-flex/issues/275
 @click.option('--sp-gist', default=False, is_flag=True,
               help='When set, builds SP-GIST indexes on geom column instead of the default GIST indexes.')
 @click.option('--update', default=None,
+              type=click.Choice(['append', 'create'], case_sensitive=True),
               help='EXPERIMENTAL - Options:  create / append.  Using to wrap around osm2pgsql create v. append modes, without using osm2pgsql-replication.')
 def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
                     input_file, layerset, layerset_path, language, pgosm_date,
@@ -91,6 +92,12 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
                     srid, sp_gist, update):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
     """
+    paths = get_paths()
+    setup_logger(debug)
+    logger = logging.getLogger('pgosm-flex')
+    logger.info('PgOSM Flex starting...')
+
+    # Input validation
     if append:
         sys.exit(APPEND_REMOVED_MSG)
 
@@ -100,12 +107,10 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
         sys.exit(err_msg)
 
     if replication and (update is not None):
-        sys.exit('The --replication and --update features are mutually exclusive. Use one or the other.') 
-
-    paths = get_paths()
-    setup_logger(debug)
-    logger = logging.getLogger('pgosm-flex')
-    logger.info('PgOSM Flex starting...')
+        err_msg = 'The --replication and --update features are mutually exclusive. Use one or the other.'
+        logger.error(err_msg)
+        sys.exit(err_msg)
+    # End of input validation
 
     validate_region_inputs(region, subregion, input_file)
     if region is None and input_file:
@@ -121,6 +126,7 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
         replication_update = False
 
     logger.debug(f'UPDATE setting:  {update}')
+    # Warning: Reusing the module's name here as import_mode...
     import_mode = ImportMode(replication=replication,
                              replication_update=replication_update,
                              update=update)
