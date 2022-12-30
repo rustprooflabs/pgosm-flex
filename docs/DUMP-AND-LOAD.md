@@ -1,5 +1,8 @@
 # PgOSM Flex: Dump and reload data
 
+> These manual procedures (outside of Docker) are not regularly tested or reviewed. The recommended way to use PgOSM Flex is through the Docker image.  The Docker image is capable of renaming the schema and running pg_dump when desired.
+
+----
 
 To move data loaded on one Postgres instance to another, use `pg_dump`.
 The import from PBF to PostGIS is far more taxing on resources than general

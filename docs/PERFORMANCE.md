@@ -7,7 +7,7 @@ server size [outlined in the osm2pgsql manual](https://osm2pgsql.org/doc/manual.
 
 ## Versions Tested
 
-Versions used for testing: PgOSM Flex 0.4.7 Docker image, based on the offical
+Versions used for testing: PgOSM Flex 0.4.7 Docker image, based on the official
 PostGIS image with Postgres 14 / PostGIS 3.2.
 
 
