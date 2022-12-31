@@ -29,6 +29,14 @@ The --append option was removed in PgOSM Flex v0.7.0; use --replication.
 Details: https://github.com/rustprooflabs/pgosm-flex/issues/275
 """
 
+SKIP_DUMP_REMOVED_MSG = """-----  ERROR -----
+
+The --skip-dump option was replaced in PgOSM Flex v0.7.0 by --pg-dump.
+
+Details: https://github.com/rustprooflabs/pgosm-flex/issues/266
+"""
+
+
 @click.command()
 # Required and most common options first
 @click.option('--ram', required=True,
@@ -61,6 +69,8 @@ Details: https://github.com/rustprooflabs/pgosm-flex/issues/275
 @click.option('--language', default=None,
               envvar="PGOSM_LANGUAGE",
               help="Set default language in loaded OpenStreetMap data when available.  e.g. 'en' or 'kn'.")
+@click.option('--pg-dump', default=False, is_flag=True,
+              help='Uses pg_dump after processing is completed to enable easily load OpenStreetMap data into a different database')
 @click.option('--pgosm-date', required=False,
               default=helpers.get_today(),
               envvar="PGOSM_DATE",
@@ -73,7 +83,7 @@ Details: https://github.com/rustprooflabs/pgosm-flex/issues/275
               default='osm',
               help="Change the final schema name, defaults to 'osm'.")
 @click.option('--skip-dump', default=False, is_flag=True,
-              help='Skips the final pg_dump at the end. Useful for local testing when not loading into more permanent instance.')
+              help=SKIP_DUMP_REMOVED_MSG)
 @click.option('--skip-nested',
               default=False,
               is_flag=True,
@@ -87,8 +97,8 @@ Details: https://github.com/rustprooflabs/pgosm-flex/issues/275
               type=click.Choice(['append', 'create'], case_sensitive=True),
               help='EXPERIMENTAL - Options:  create / append.  Using to wrap around osm2pgsql create v. append modes, without using osm2pgsql-replication.')
 def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
-                    input_file, layerset, layerset_path, language, pgosm_date,
-                    replication, schema_name, skip_dump, skip_nested,
+                    input_file, layerset, layerset_path, language, pg_dump,
+                    pgosm_date, replication, schema_name, skip_dump, skip_nested,
                     srid, sp_gist, update):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
     """
@@ -100,6 +110,8 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
     # Input validation
     if append:
         sys.exit(APPEND_REMOVED_MSG)
+    if skip_dump:
+        sys.exit(SKIP_DUMP_REMOVED_MSG)
 
     if schema_name != 'osm' and replication:
         err_msg = 'Replication mode with custom schema name currently not supported'
@@ -155,7 +167,7 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
 
     dump_database(input_file=input_file,
                   out_path=paths['out_path'],
-                  skip_dump=skip_dump,
+                  pg_dump=pg_dump,
                   data_only=data_only,
                   schema_name=schema_name)
 
@@ -473,26 +485,26 @@ def run_post_processing(flex_path, skip_nested, import_mode):
     return True
 
 
-def dump_database(input_file, out_path, skip_dump, data_only, schema_name):
+def dump_database(input_file, out_path, pg_dump, data_only, schema_name):
     """Runs pg_dump when necessary to export the processed OpenStreetMap data.
 
     Parameters
     -----------------------
     input_file : str
     out_path : str
-    skip_dump : bool
+    pg_dump : bool
     data_only : bool
     schema_name : str
     """
-    if skip_dump:
-        logging.getLogger('pgosm-flex').info('Skipping pg_dump')
-    else:
+    if pg_dump:
         export_filename = get_export_filename(input_file)
         export_path = get_export_full_path(out_path, export_filename)
 
         db.run_pg_dump(export_path=export_path,
                        data_only=data_only,
                        schema_name=schema_name)
+    else:
+        logging.getLogger('pgosm-flex').info('Skipping pg_dump')
 
 
 def check_replication_exists():

@@ -129,39 +129,6 @@ it takes to download the 17 MB PBF file + ~ 1 minute processing.
 ### After processing
 
 
-The `~/pgosm-data` directory has three (3) files from a single run.
-The PBF file and its MD5 checksum have been renamed with the date in the filename.
-This enables loading the file downloaded today 
-again in the future, either with the same version of PgOSM Flex or the latest version. The `docker exec` command uses the `PGOSM_DATE` environment variable
-to load these historic files.
-
-
-The output `.sql` is also saved in the `~/pgosm-data` directory.
-
-
-```bash
-ls -alh ~/pgosm-data/
-
--rw-r--r--  1 root        root         17M Nov  2 19:57 district-of-columbia-2021-11-03.osm.pbf
--rw-r--r--  1 root        root          70 Nov  2 19:59 district-of-columbia-2021-11-03.osm.pbf.md5
--rw-r--r--  1 root        root        156M Nov  3 19:10 pgosm-flex-north-america-us-district-of-columbia-default-2021-11-03.sql
-
-```
-
-
-This `.sql` file can be loaded into a PostGIS enabled database. The following example
-creates an empty `myosm` database to load the processed OpenStreetMap data into.
-
-
-```bash
-psql -d postgres -c "CREATE DATABASE myosm;"
-psql -d myosm -c "CREATE EXTENSION postgis;"
-
-psql -d myosm \
-    -f ~/pgosm-data/pgosm-flex-north-america-us-district-of-columbia-default-2021-11-03.sql
-```
-
-
 The processed OpenStreetMap data is also available in the Docker container on port `5433`.
 You can connect and query directly in the Docker container.
 
@@ -176,9 +143,39 @@ psql -h localhost -p 5433 -d pgosm -U postgres -c "SELECT COUNT(*) FROM osm.road
 ```
 
 
+The `~/pgosm-data` directory has two (2) files from a typical single run.
+The PBF file and its MD5 checksum have been renamed with the date in the filename.
+This enables loading the file downloaded today 
+again in the future, either with the same version of PgOSM Flex or the latest version. The `docker exec` command uses the `PGOSM_DATE` environment variable
+to load these historic files.
 
-See [more in docs/DOCKER-RUN.md](docs/DOCKER-RUN.md) about other ways to customize
-how PgOSM Flex runs.
+
+If the optional `--pg-dump` option is used, the output `.sql` is also saved in
+the `~/pgosm-data` directory.
+
+
+```bash
+ls -alh ~/pgosm-data/
+
+-rw-r--r--  1 root        root         17M Nov  2 19:57 district-of-columbia-2021-11-03.osm.pbf
+-rw-r--r--  1 root        root          70 Nov  2 19:59 district-of-columbia-2021-11-03.osm.pbf.md5
+-rw-r--r--  1 root        root        156M Nov  3 19:10 pgosm-flex-north-america-us-district-of-columbia-default-2021-11-03.sql
+```
+
+This `.sql` file can be loaded into a PostGIS enabled database. The following example
+creates an empty `myosm` database to load the processed OpenStreetMap data into.
+
+
+```bash
+psql -d postgres -c "CREATE DATABASE myosm;"
+psql -d myosm -c "CREATE EXTENSION postgis;"
+
+psql -d myosm \
+    -f ~/pgosm-data/pgosm-flex-north-america-us-district-of-columbia-default-2021-11-03.sql
+```
+
+
+> See [more in docs/DOCKER-RUN.md](docs/DOCKER-RUN.md) about other ways to customize how PgOSM Flex runs.
 
 
 ## Layer Sets
@@ -193,11 +190,10 @@ See [docs/LAYERSETS.md](docs/LAYERSETS.md) for details.
 
 If you use QGIS to visualize OpenStreetMap, there are a few basic
 styles using the `public.layer_styles` table created by QGIS.
+This data is loaded by default and can be excluded with `--data-only`.
 
 See [the QGIS Style README.md](https://github.com/rustprooflabs/pgosm-flex/blob/main/db/qgis-style/README.md)
 for more information.
-
-This data is loaded by default and can be excluded with `--data-only`.
 
 
 ## Explore data loaded
