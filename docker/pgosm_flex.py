@@ -496,15 +496,15 @@ def dump_database(input_file, out_path, pg_dump, data_only, schema_name):
     data_only : bool
     schema_name : str
     """
-    if not pg_dump:
-        logging.getLogger('pgosm-flex').info('Skipping pg_dump')
-    else:
+    if pg_dump:
         export_filename = get_export_filename(input_file)
         export_path = get_export_full_path(out_path, export_filename)
 
         db.run_pg_dump(export_path=export_path,
                        data_only=data_only,
                        schema_name=schema_name)
+    else:
+        logging.getLogger('pgosm-flex').info('Skipping pg_dump')
 
 
 def check_replication_exists():
