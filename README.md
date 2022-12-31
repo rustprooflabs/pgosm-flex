@@ -5,9 +5,10 @@ PgOSM Flex provides high quality OpenStreetMap datasets in PostGIS using the
 This project provides a curated set of Lua and SQL scripts to clean and organize
 the most commonly used OpenStreetMap data, such as roads, buildings, and points of interest (POIs).
 
-The easiest way to use PgOSM Flex is via [the Docker image](docs/DOCKER-RUN.md).
-For ultimate control and customization,
-there are [instructions for installing and running manually](docs/MANUAL-STEPS-RUN.md).
+The recommended way to use PgOSM Flex is via the PgOSM Docker image
+[hosted on Docker Hub](https://hub.docker.com/repository/docker/rustprooflabs/pgosm-flex).
+Basic usage instructions are included in this README.md file, full Docker
+usage instructions are available in [docs/DOCKER-RUN.md](docs/DOCKER-RUN.md).
 
 
 ## Project decisions
@@ -17,13 +18,14 @@ A few decisions made in this project:
 * ID column is `osm_id`
 * Geometry stored in SRID 3857 (customizable)
 * Geometry column named `geom`
-* Default to same units as OpenStreetMap (e.g. km/hr, meters)
-* Data not deemed worthy of a dedicated column goes in side table `osm.tags`. Raw key/value data stored in `JSONB` column
+* Defaults to same units as OpenStreetMap (e.g. km/hr, meters)
+* Data not included in a dedicated column goes into the `osm.tags` table's `JSONB` column
 * Points, Lines, and Polygons are not mixed in a single table
 * Tracks latest Postgres, PostGIS, and osm2pgsql versions
 
 This project's approach is to do as much processing in the Lua styles
-passed along to osm2pgsql, with post-processing steps creating indexes, constraints and comments.
+passed along to osm2pgsql, with post-processing steps creating indexes,
+constraints and comments.
 
 
 
@@ -66,9 +68,9 @@ The PBF/MD5 source files are archived by date on your local storage
 with the ability to easily reload them at a later date.
 
 
-### Basic Docker usage
+### Docker usage
 
-This section outlines the basic operations for using Docker to run PgOSM-Flex.
+This section outlines a typical import using Docker to run PgOSM-Flex.
 See [the full Docker instructions in docs/DOCKER-RUN.md](docs/DOCKER-RUN.md).
 
 Create directory for the `.osm.pbf` file, output `.sql` file, log output, and
@@ -264,8 +266,8 @@ For example queries with data loaded by PgOSM-Flex see
 
 ## Points of Interest (POIs)
 
-
-Loads an range of tags into a materialized view (`osm.poi_all`) for easy searching POIs.
+PgOSM Flex loads an range of tags into a materialized view (`osm.poi_all`) for
+easily searching POIs.
 Line and polygon data is forced to point geometry using
 `ST_Centroid()`.  This layer duplicates a bunch of other more specific layers
 (shop, amenity, etc.) to provide a single place for simplified POI searches.
@@ -330,10 +332,10 @@ SELECT geom_type, COUNT(*)
 ## One table to rule them all
 
 From the perspective of database design, the `osm.unitable` option is the **worst**!
-This violates all sorts of best practices established in this project
+This table violates all sorts of best practices established in this project
 by shoving all features into a single unstructured table.
 
-> This style included in PgOSM-Flex is intended to be used for troubleshooting and quality control.  It is not intended to be used for real production workloads! This table is helpful for exploring the full data set when you don't really know what you are looking for, but you know **where** you are looking.
+> This style included in PgOSM Flex is intended to be used for troubleshooting and quality control.  It is not intended to be used for real production workloads! This table is helpful for exploring the full data set when you don't really know what you are looking for, but you know **where** you are looking.
 
 Unitable is loaded with the `everything` layerset.  Feel free to create your own
 customized layerset if needed.
@@ -355,24 +357,19 @@ docker exec -it \
 
 ## JSONB support
 
-PgOSM-Flex uses `JSONB` in Postgres to store the raw OpenSteetMap
+PgOSM-Flex uses `JSONB` in Postgres to store the raw OpenStreetMap
 key/value data (`tags` column) and relation members (`member_ids`).
+The `tags` column only exists in the `osm.tags` and `osm.unitable` tables.
+The `member_ids` column is included in:
 
-Current `JSONB` columns:
+* `osm.place_polygon`
+* `osm.poi_polygon`
+* `osm.public_transport_line`
+* `osm.public_transport_polygon`
+* `osm.road_line`
+* `osm.road_major`
+* `osm.road_polygon`
 
-* `osm.tags.tags`
-* `osm.unitable.tags`
-* `osm.place_polygon.member_ids`
-* `osm.vplace_polygon.member_ids`
-* `osm.poi_polygon.member_ids`
-
-
-
-## On-server import
-
-Don't want to use the Docker process?
-See [docs/MANUAL-STEPS-RUN.md](docs/MANUAL-STEPS-RUN.md) for prereqs and steps
-for running without Docker.
 
 
 

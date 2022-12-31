@@ -1,4 +1,8 @@
-# PgOSM Flex Standard Import
+# PgOSM Flex Manual Import
+
+> These manual procedures (outside of Docker) are not regularly tested or reviewed. The recommended way to use PgOSM Flex is through the Docker image.  The Docker image is capable of adjusting for regions of any size so this manual process no longer serves a necessary purpose.
+
+----
 
 These instructions show how to manually run the PgOSM-Flex process.
 This is the best option for scaling to larger regions (North America, Europe, etc.)

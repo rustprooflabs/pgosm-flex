@@ -1,7 +1,9 @@
 # PgOSM Flex Update Mode
 
 Running in experimental Update mode enables using osm2pgsql's `--append`
-option.  Not to be confused with the `--append` option in PgOSM Flex prior to 0.7.0...
+option.
+
+> Note: This is **not** the `--append` option that existed in PgOSM Flex 0.6.3 and prior.
 
 
 ## Testing steps
