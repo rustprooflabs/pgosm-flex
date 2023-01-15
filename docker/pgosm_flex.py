@@ -22,21 +22,6 @@ import helpers
 from import_mode import ImportMode
 
 
-APPEND_REMOVED_MSG = """-----  ERROR -----
-
-The --append option was removed in PgOSM Flex v0.7.0; use --replication.
-
-Details: https://github.com/rustprooflabs/pgosm-flex/issues/275
-"""
-
-SKIP_DUMP_REMOVED_MSG = """-----  ERROR -----
-
-The --skip-dump option was replaced in PgOSM Flex v0.7.0 by --pg-dump.
-
-Details: https://github.com/rustprooflabs/pgosm-flex/issues/266
-"""
-
-
 @click.command()
 # Required and most common options first
 @click.option('--ram', required=True,
@@ -47,10 +32,6 @@ Details: https://github.com/rustprooflabs/pgosm-flex/issues/266
 @click.option('--subregion', required=False,
               help='Sub-region name matching the filename for data sourced from Geofabrik. e.g. district-of-columbia')
 # Remainder of options in alphabetical order
-@click.option('--append',
-              default=False,
-              is_flag=True,
-              help=APPEND_REMOVED_MSG)
 @click.option('--data-only',
               default=False,
               is_flag=True,
@@ -82,8 +63,6 @@ Details: https://github.com/rustprooflabs/pgosm-flex/issues/266
 @click.option('--schema-name', required=False,
               default='osm',
               help="Change the final schema name, defaults to 'osm'.")
-@click.option('--skip-dump', default=False, is_flag=True,
-              help=SKIP_DUMP_REMOVED_MSG)
 @click.option('--skip-nested',
               default=False,
               is_flag=True,
@@ -95,7 +74,7 @@ Details: https://github.com/rustprooflabs/pgosm-flex/issues/266
               help='When set, builds SP-GIST indexes on geom column instead of the default GIST indexes.')
 @click.option('--update', default=None,
               type=click.Choice(['append', 'create'], case_sensitive=True),
-              help='EXPERIMENTAL - Options:  create / append.  Using to wrap around osm2pgsql create v. append modes, without using osm2pgsql-replication.')
+              help='EXPERIMENTAL - Wrap around osm2pgsql create v. append modes, without using osm2pgsql-replication.')
 def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
                     input_file, layerset, layerset_path, language, pg_dump,
                     pgosm_date, replication, schema_name, skip_dump, skip_nested,
@@ -108,11 +87,6 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
     logger.info('PgOSM Flex starting...')
 
     # Input validation
-    if append:
-        sys.exit(APPEND_REMOVED_MSG)
-    if skip_dump:
-        sys.exit(SKIP_DUMP_REMOVED_MSG)
-
     if schema_name != 'osm' and replication:
         err_msg = 'Replication mode with custom schema name currently not supported'
         logger.error(err_msg)
