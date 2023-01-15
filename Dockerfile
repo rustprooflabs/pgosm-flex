@@ -5,6 +5,7 @@ LABEL maintainer="PgOSM Flex - https://github.com/rustprooflabs/pgosm-flex"
 ARG OSM2PGSQL_BRANCH=master
 
 RUN apt-get update \
+    && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
         sqitch wget ca-certificates \
         git make cmake g++ \

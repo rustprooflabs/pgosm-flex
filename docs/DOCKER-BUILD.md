@@ -74,3 +74,17 @@ Push to Docker Hub.
 docker push rustprooflabs/pgosm-flex:latest
 docker push rustprooflabs/pgosm-flex:0.6.2
 ```
+
+
+### Ensure updates
+
+To be certain the latest images are being used and latest
+software is installed, pull the latest PostGIS image and build
+the PgOSM Flex image using `--no-cache`.
+
+
+```bash
+docker pull postgis/postgis:15-3.3
+docker build --no-cache -t rustprooflabs/pgosm-flex:dev .
+```
+

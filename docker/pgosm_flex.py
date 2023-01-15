@@ -19,6 +19,7 @@ import osm2pgsql_recommendation as rec
 import db
 import geofabrik
 import helpers
+from import_mode import ImportMode
 
 
 @click.command()
@@ -31,10 +32,6 @@ import helpers
 @click.option('--subregion', required=False,
               help='Sub-region name matching the filename for data sourced from Geofabrik. e.g. district-of-columbia')
 # Remainder of options in alphabetical order
-@click.option('--append',
-              default=False,
-              is_flag=True,
-              help='Deprecated! Use --replication. --append will be removed in 0.7.0 Details: https://github.com/rustprooflabs/pgosm-flex/issues/275')
 @click.option('--data-only',
               default=False,
               is_flag=True,
@@ -53,6 +50,8 @@ import helpers
 @click.option('--language', default=None,
               envvar="PGOSM_LANGUAGE",
               help="Set default language in loaded OpenStreetMap data when available.  e.g. 'en' or 'kn'.")
+@click.option('--pg-dump', default=False, is_flag=True,
+              help='Uses pg_dump after processing is completed to enable easily load OpenStreetMap data into a different database')
 @click.option('--pgosm-date', required=False,
               default=helpers.get_today(),
               envvar="PGOSM_DATE",
@@ -64,8 +63,6 @@ import helpers
 @click.option('--schema-name', required=False,
               default='osm',
               help="Change the final schema name, defaults to 'osm'.")
-@click.option('--skip-dump', default=False, is_flag=True,
-              help='Skips the final pg_dump at the end. Useful for local testing when not loading into more permanent instance.')
 @click.option('--skip-nested',
               default=False,
               is_flag=True,
@@ -75,10 +72,13 @@ import helpers
               help="SRID for data loaded by osm2pgsql to PostGIS. Defaults to 3857")
 @click.option('--sp-gist', default=False, is_flag=True,
               help='When set, builds SP-GIST indexes on geom column instead of the default GIST indexes.')
-def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
-                    input_file, layerset, layerset_path, language, pgosm_date,
-                    replication,
-                    schema_name, skip_dump, skip_nested, srid, sp_gist):
+@click.option('--update', default=None,
+              type=click.Choice(['append', 'create'], case_sensitive=True),
+              help='EXPERIMENTAL - Wrap around osm2pgsql create v. append modes, without using osm2pgsql-replication.')
+def run_pgosm_flex(ram, region, subregion, data_only, debug,
+                    input_file, layerset, layerset_path, language, pg_dump,
+                    pgosm_date, replication, schema_name, skip_nested,
+                    srid, sp_gist, update):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
     """
     paths = get_paths()
@@ -86,53 +86,62 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
     logger = logging.getLogger('pgosm-flex')
     logger.info('PgOSM Flex starting...')
 
-    # Starting to address issues identified in
-    # https://github.com/rustprooflabs/pgosm-flex/issues/275
-    if append:
-        logger.warning('--append mode is deprecated. Use --replication instead.')
-        replication = True
-
-    validate_region_inputs(region, subregion, input_file)
-
+    # Input validation
     if schema_name != 'osm' and replication:
         err_msg = 'Replication mode with custom schema name currently not supported'
         logger.error(err_msg)
         sys.exit(err_msg)
 
+    if replication and (update is not None):
+        err_msg = 'The --replication and --update features are mutually exclusive. Use one or the other.'
+        logger.error(err_msg)
+        sys.exit(err_msg)
+    # End of input validation
+
+    validate_region_inputs(region, subregion, input_file)
     if region is None and input_file:
         region = input_file
 
     helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
                          layerset, layerset_path, sp_gist)
     db.wait_for_postgres()
-    db.prepare_pgosm_db(data_only=data_only,
-                        db_path=paths['db_path'],
-                        replication=replication)
 
     if replication:
         replication_update = check_replication_exists()
     else:
         replication_update = False
 
-    if replication_update:
+    logger.debug(f'UPDATE setting:  {update}')
+    # Warning: Reusing the module's name here as import_mode...
+    import_mode = ImportMode(replication=replication,
+                             replication_update=replication_update,
+                             update=update)
+    logger.debug(f'IMPORT MODE {import_mode}')
+
+    db.prepare_pgosm_db(data_only=data_only,
+                        db_path=paths['db_path'],
+                        import_mode=import_mode)
+
+    if import_mode.replication_update:
+        logger.info('Running osm2pgsql-replication in update mode')
         logger.warning('Replication mode is Experimental (getting closer!)')
         success = run_replication_update(skip_nested=skip_nested,
                                          flex_path=paths['flex_path'])
     else:
-        logger.info('Running osm2pgsql without osm2pgsql-replication')
+        logger.info('Running osm2pgsql')
         success = run_osm2pgsql_standard(input_file=input_file,
                                          out_path=paths['out_path'],
                                          flex_path=paths['flex_path'],
                                          ram=ram,
                                          skip_nested=skip_nested,
-                                         replication=replication)
+                                         import_mode=import_mode)
 
     if schema_name != 'osm':
         db.rename_schema(schema_name)
 
     dump_database(input_file=input_file,
                   out_path=paths['out_path'],
-                  skip_dump=skip_dump,
+                  pg_dump=pg_dump,
                   data_only=data_only,
                   schema_name=schema_name)
 
@@ -143,7 +152,7 @@ def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
 
 
 def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
-                           replication):
+                           import_mode):
     """Runs standard osm2pgsql command and optionally inits for replication
     (osm2pgsql-replication) mode.
 
@@ -154,7 +163,7 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
     flex_path : str
     ram : float
     skip_nested : boolean
-    replication : boolean
+    import_mode : import_mode.ImportMode
 
     Returns
     ---------------------------
@@ -172,7 +181,7 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
     osm2pgsql_command = rec.osm2pgsql_recommendation(ram=ram,
                                                      pbf_filename=pbf_filename,
                                                      out_path=out_path,
-                                                     replication=replication)
+                                                     import_mode=import_mode)
 
     run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, flex_path=flex_path)
 
@@ -180,9 +189,10 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
         skip_nested = check_layerset_places(flex_path)
 
     post_processing = run_post_processing(flex_path=flex_path,
-                                          skip_nested=skip_nested)
+                                          skip_nested=skip_nested,
+                                          import_mode=import_mode)
 
-    if replication:
+    if import_mode.replication:
         run_osm2pgsql_replication_init(pbf_path=out_path,
                                        pbf_filename=pbf_filename)
     else:
@@ -316,7 +326,7 @@ def get_export_filename(input_file):
     ----------------------
     filename : str
     """
-    # region is always set internally, even with --input-file and no --region
+    # always set internally, even with --input-file and no --region
     region = os.environ.get('PGOSM_REGION').replace('/', '-')
     subregion = os.environ.get('PGOSM_SUBREGION')
     layerset = os.environ.get('PGOSM_LAYERSET')
@@ -415,7 +425,7 @@ def check_layerset_places(flex_path):
     return True
 
 
-def run_post_processing(flex_path, skip_nested):
+def run_post_processing(flex_path, skip_nested, import_mode):
     """Runs steps following osm2pgsql import.
 
     Post-processing SQL scripts and (optionally) calculate nested admin polgyons
@@ -424,13 +434,20 @@ def run_post_processing(flex_path, skip_nested):
     ----------------------
     flex_path : str
     skip_nested : bool
+    import_mode : import_mode.ImportMode
 
     Returns
     ----------------------
     status : bool
     """
-    post_processing_sql = db.pgosm_after_import(flex_path)
     logger = logging.getLogger('pgosm-flex')
+
+    if not import_mode.run_post_sql:
+        logger.info('Running with --update append: Skipping post-processing SQL')
+        return True
+
+    post_processing_sql = db.pgosm_after_import(flex_path)
+
     if skip_nested:
         logger.info('Skipping calculating nested polygons')
     else:
@@ -442,26 +459,26 @@ def run_post_processing(flex_path, skip_nested):
     return True
 
 
-def dump_database(input_file, out_path, skip_dump, data_only, schema_name):
+def dump_database(input_file, out_path, pg_dump, data_only, schema_name):
     """Runs pg_dump when necessary to export the processed OpenStreetMap data.
 
     Parameters
     -----------------------
     input_file : str
     out_path : str
-    skip_dump : bool
+    pg_dump : bool
     data_only : bool
     schema_name : str
     """
-    if skip_dump:
-        logging.getLogger('pgosm-flex').info('Skipping pg_dump')
-    else:
+    if pg_dump:
         export_filename = get_export_filename(input_file)
         export_path = get_export_full_path(out_path, export_filename)
 
         db.run_pg_dump(export_path=export_path,
                        data_only=data_only,
                        schema_name=schema_name)
+    else:
+        logging.getLogger('pgosm-flex').info('Skipping pg_dump')
 
 
 def check_replication_exists():

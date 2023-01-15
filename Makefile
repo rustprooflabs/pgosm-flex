@@ -83,7 +83,8 @@ docker-exec-default: build-run-docker
 		--layerset=everything \
 		--ram=$(RAM) \
 		--region=north-america/us \
-		--subregion=district-of-columbia
+		--subregion=district-of-columbia \
+		--pg-dump # pg_dump is not part of the default. Added here to ensure this usage is tested
 
 
 .PHONE: docker-exec-input-file
@@ -110,7 +111,7 @@ docker-exec-input-file: build-run-docker
 		--layerset=minimal \
 		--ram=$(RAM) \
 		--input-file=/app/output/$(INPUT_FILE_NAME) \
-		--data-only --skip-dump --skip-nested # Make this test run faster
+		--data-only --skip-nested # Make this test run faster
 
 
 
@@ -149,7 +150,7 @@ docker-exec-replication-w-input-file: build-run-docker
 		--ram=$(RAM) \
 		--replication \
 		--input-file=/app/output/$(INPUT_FILE_NAME) \
-		--data-only --skip-dump --skip-nested # Make this test run faster
+		--data-only --skip-nested # Make this test run faster
 
 
 .PHONE: docker-exec-region
@@ -179,7 +180,7 @@ docker-exec-region: build-run-docker
 		--layerset=minimal \
 		--ram=$(RAM) \
 		--region=$(REGION_FILE_NAME) \
-		--data-only --skip-dump --skip-nested # Make this test run faster
+		--data-only --skip-nested # Make this test run faster
 
 
 .PHONY: unit-tests
