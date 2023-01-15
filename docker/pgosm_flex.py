@@ -75,9 +75,9 @@ from import_mode import ImportMode
 @click.option('--update', default=None,
               type=click.Choice(['append', 'create'], case_sensitive=True),
               help='EXPERIMENTAL - Wrap around osm2pgsql create v. append modes, without using osm2pgsql-replication.')
-def run_pgosm_flex(ram, region, subregion, append, data_only, debug,
+def run_pgosm_flex(ram, region, subregion, data_only, debug,
                     input_file, layerset, layerset_path, language, pg_dump,
-                    pgosm_date, replication, schema_name, skip_dump, skip_nested,
+                    pgosm_date, replication, schema_name, skip_nested,
                     srid, sp_gist, update):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
     """
