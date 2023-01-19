@@ -123,6 +123,10 @@ def run_pgosm_flex(ram, region, subregion, data_only, debug,
                         import_mode=import_mode)
 
     if import_mode.replication_update:
+        # If replication_update, a manual date is not valid.
+        # Always setting this here is an easy way to enforce.
+        pgosm_date = helpers.get_today()
+        os.environ['PGOSM_DATE'] = pgosm_date
         logger.info('Running osm2pgsql-replication in update mode')
         logger.warning('Replication mode is Experimental (getting closer!)')
         success = run_replication_update(skip_nested=skip_nested,
