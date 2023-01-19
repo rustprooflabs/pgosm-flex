@@ -375,8 +375,8 @@ docker exec -it \
     --ram=8 \
     --region=north-america/us \
     --subregion=district-of-columbia \
-    --pgosm-date 2022-02-22 \
-    --replication --skip-dump
+    --pgosm-date 2022-12-30 \
+    --replication
 ```
 
 Running the above command a second time will detect that the target database
