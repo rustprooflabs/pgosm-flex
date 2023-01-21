@@ -82,7 +82,16 @@ Prepare the database and permissions as described in
 [POSTGRES-PERMISSIONS.md](POSTGRES-PERMISSIONS.md).
 
 
-Set environment variables to define the connection.
+Set environment variables to define the connection.  Create a file with the
+configuration options.
+
+```bash
+touch ~/.pgosm-db-myproject
+chmod 0700 ~/.pgosm-db-myproject
+nano ~/.pgosm-db-myproject
+```
+
+Put in the contents.
 
 ```bash
 export POSTGRES_USER=your_login_role
@@ -90,6 +99,12 @@ export POSTGRES_PASSWORD=mysecretpassword
 export POSTGRES_HOST=your-host-or-ip
 export POSTGRES_DB=your_db_name
 export POSTGRES_PORT=5432
+```
+
+Env vars can be loaded using.
+
+```bash
+source ~/.pgosm-db-myproject
 ```
 
 ----
@@ -143,7 +158,7 @@ This mode of operation results in larger database as the intermediate osm2pgsql
 tables (`--slim`) must be left in the database (no `--drop`).
 
 
-> Important:  The original `--append` option is now under `--replication`. The `--append` option was removed in PgOSM Flex 0.7.0.  See [the conversation](https://github.com/rustprooflabs/pgosm-flex/issues/275#issuecomment-1340362190) for context.
+> Important:  The original `--append` option is now under `--replication`. The `--append` option was removed in PgOSM Flex 0.7.0.  See [#275](https://github.com/rustprooflabs/pgosm-flex/issues/275) for context.
 
 
 When using replication you need to pin your process to a specific PgOSM Flex version
@@ -459,6 +474,21 @@ time docker exec -it \
     --subregion=colorado \
     --layerset=basic \
     --pgosm-date=2021-10-08
+```
+
+
+## Monitoring the import
+
+You can track the query activity in the database being loaded using the
+`pg_stat_activity` view from `pg_catalog`.  Database connections use
+`application_name = 'pgosm_flex'`.
+
+
+```sql
+SELECT *
+    FROM pg_catalog.pg_stat_activity
+    WHERE application_name = 'pgosm-flex'
+;
 ```
 
 

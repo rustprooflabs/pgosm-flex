@@ -173,17 +173,18 @@ again in the future, either with the same version of PgOSM Flex or the latest ve
 to load these historic files.
 
 
-If the optional `--pg-dump` option is used, the output `.sql` is also saved in
+If `--pg-dump` option is used the output `.sql` is also saved in
 the `~/pgosm-data` directory.
-This `.sql` file can be loaded into a PostGIS enabled database.
+This `.sql` file can be loaded into any other database with PostGIS and the proper
+permissions.
 
 
 ```bash
 ls -alh ~/pgosm-data/
 
--rw-r--r--  1 root        root         17M Nov  2 19:57 district-of-columbia-2021-11-03.osm.pbf
--rw-r--r--  1 root        root          70 Nov  2 19:59 district-of-columbia-2021-11-03.osm.pbf.md5
--rw-r--r--  1 root        root        156M Nov  3 19:10 pgosm-flex-north-america-us-district-of-columbia-default-2021-11-03.sql
+-rw-r--r-- 1 root     root      18M Jan 21 03:45 district-of-columbia-2023-01-21.osm.pbf
+-rw-r--r-- 1 root     root       70 Jan 21 04:39 district-of-columbia-2023-01-21.osm.pbf.md5
+-rw-r--r-- 1 root     root     163M Jan 21 16:14 north-america-us-district-of-columbia-default-2023-01-21.sql
 ```
 
 
