@@ -27,6 +27,28 @@ This project's approach is to do as much processing in the Lua styles
 passed along to osm2pgsql, with post-processing steps creating indexes,
 constraints and comments.
 
+## Quick start
+
+See the [Docker Usage](#docker-usage) section below for an explanation of
+these commands.
+
+```bash
+mkdir ~/pgosm-data
+export POSTGRES_USER=postgres
+export POSTGRES_PASSWORD=mysecretpassword
+
+docker run --name pgosm -d --rm \
+    -v ~/pgosm-data:/app/output \
+    -v /etc/localtime:/etc/localtime:ro \
+    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+    -p 5433:5432 -d rustprooflabs/pgosm-flex
+
+docker exec -it \
+    pgosm python3 docker/pgosm_flex.py \
+    --ram=8 \
+    --region=north-america/us \
+    --subregion=district-of-columbia
+```
 
 
 ## Versions Supported
@@ -57,21 +79,24 @@ package used to determine the best osm2pgsql command assumes fast SSDs.
 
 ## PgOSM via Docker
 
-The easiest way to use PgOSM-Flex is with the
-[Docker image](https://hub.docker.com/r/rustprooflabs/pgosm-flex) hosted on
-Docker Hub.
-The image has all the pre-requisite software installed,
-handles downloading an OSM region (or subregion)
-from Geofabrik, and saves an output `.sql` file with the processed data
-ready to load into your database(s).
-The PBF/MD5 source files are archived by date on your local storage
-with the ability to easily reload them at a later date.
+The PgOSM Flex
+[Docker image](https://hub.docker.com/r/rustprooflabs/pgosm-flex)
+is hosted on Docker Hub.
+The image includes all the pre-requisite software and handles all of the options,
+logic, an post-processing steps required.  Features include:
+
+* Automatic data download from Geofabrik and validation against checksum
+* Custom Flex layers built in Lua
+* Mix and match layers using Layersets
+* Loads to Docker-internal Postgres, or externally defined Postgres
+* Supports `osm2pgsql-replication` and `osm2pgsql --append` mode
+* Export processed data via `pg_dump` for loading into additional databases
 
 
 ### Docker usage
 
-This section outlines a typical import using Docker to run PgOSM-Flex.
-See [the full Docker instructions in docs/DOCKER-RUN.md](docs/DOCKER-RUN.md).
+This section outlines a typical import using Docker to run PgOSM Flex.
+See the full Docker instructions in [docs/DOCKER-RUN.md](docs/DOCKER-RUN.md).
 
 Create directory for the `.osm.pbf` file, output `.sql` file, log output, and
 the osm2pgsql command ran.
@@ -90,7 +115,7 @@ export POSTGRES_USER=postgres
 export POSTGRES_PASSWORD=mysecretpassword
 ```
 
-Start the `pgosm` Docker container. At this point, PostgreSQL / PostGIS
+Start the `pgosm` Docker container. At this point, Postgres / PostGIS
 is available on port `5433`.
 
 ```bash
@@ -110,7 +135,6 @@ along with a region/subregion.
 * Sub-region (`district-of-columbia`) (Optional)
 
 
-
 ```bash
 docker exec -it \
     pgosm python3 docker/pgosm_flex.py \
@@ -127,7 +151,6 @@ it takes to download the 17 MB PBF file + ~ 1 minute processing.
 
 
 ### After processing
-
 
 The processed OpenStreetMap data is also available in the Docker container on port `5433`.
 You can connect and query directly in the Docker container.
@@ -152,6 +175,7 @@ to load these historic files.
 
 If the optional `--pg-dump` option is used, the output `.sql` is also saved in
 the `~/pgosm-data` directory.
+This `.sql` file can be loaded into a PostGIS enabled database.
 
 
 ```bash
@@ -161,21 +185,6 @@ ls -alh ~/pgosm-data/
 -rw-r--r--  1 root        root          70 Nov  2 19:59 district-of-columbia-2021-11-03.osm.pbf.md5
 -rw-r--r--  1 root        root        156M Nov  3 19:10 pgosm-flex-north-america-us-district-of-columbia-default-2021-11-03.sql
 ```
-
-This `.sql` file can be loaded into a PostGIS enabled database. The following example
-creates an empty `myosm` database to load the processed OpenStreetMap data into.
-
-
-```bash
-psql -d postgres -c "CREATE DATABASE myosm;"
-psql -d myosm -c "CREATE EXTENSION postgis;"
-
-psql -d myosm \
-    -f ~/pgosm-data/pgosm-flex-north-america-us-district-of-columbia-default-2021-11-03.sql
-```
-
-
-> See [more in docs/DOCKER-RUN.md](docs/DOCKER-RUN.md) about other ways to customize how PgOSM Flex runs.
 
 
 ## Layer Sets

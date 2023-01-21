@@ -1,6 +1,6 @@
-# Using PgOSM Flex within Docker
+# Using PgOSM Flex
 
-This README provides details about running PgOSM-Flex using the image defined
+This README provides details about running PgOSM Flex using the image defined
 in `Dockerfile` and the script loaded from `docker/pgosm_flex.py`.
 
 
@@ -8,25 +8,32 @@ in `Dockerfile` and the script loaded from `docker/pgosm_flex.py`.
 
 Create directory for the `.osm.pbf` file and the output `.sql` file. The PBF and MD5 files
 downloaded from Geofabrik are stored in this directory.
+This directory location is assumed in subsequent `docker run` commands.
+If you change the data file path be sure to adjust `-v ~/pgosm-data:/app/output`
+appropriately to link your path.
 
 ```bash
 mkdir ~/pgosm-data
 ```
 
-Changing this directory location requires updating the `docker run` command.
-Update the line `-v ~/pgosm-data:/app/output` to link the appropriate path.
 
 
-## Run Container
-
+## Run PgOSM Flex Container
 
 
 Set environment variables for the temporary Postgres connection in Docker.
+
+
+### Internal Postgres instance
+
+The Postgres username and password are the minimum required parameters to use
+the internal Postgres database instance.
 
 ```bash
 export POSTGRES_USER=postgres
 export POSTGRES_PASSWORD=mysecretpassword
 ```
+
 
 Start the `pgosm` Docker container to make PostgreSQL/PostGIS available.
 This command exposes Postgres inside Docker on port 5433 and establishes links
@@ -53,6 +60,148 @@ docker ps -a | grep pgosm
 ```
 
 > The most common reason the Docker container fails to run is not setting the `$POSTGRES_PASSWORD` env var.
+
+Run the processing with `docker exec`.
+
+```bash
+docker exec -it \
+    pgosm python3 docker/pgosm_flex.py \
+    --ram=8 \
+    --region=north-america/us \
+    --subregion=district-of-columbia
+```
+
+
+
+### External Postgres instance
+
+The PgOSM Flex Docker image can be used with Postgres instance outside the
+Docker container.
+
+Prepare the database and permissions as described in
+[POSTGRES-PERMISSIONS.md](POSTGRES-PERMISSIONS.md).
+
+
+Set environment variables to define the connection.
+
+```bash
+export POSTGRES_USER=your_login_role
+export POSTGRES_PASSWORD=mysecretpassword
+export POSTGRES_HOST=your-host-or-ip
+export POSTGRES_DB=your_db_name
+export POSTGRES_PORT=5432
+```
+
+----
+
+Note: The `POSTGRES_HOST` value is in relation to the Docker container.
+Using `localhost` refers to the Docker container and will use the Postgres instance
+within the Docker container, not your host running the Docker container.
+Use `ip addr` to find your local host's IP address and provide that.
+
+----
+
+Run the container with the additional environment variables.
+
+```bash
+docker run --name pgosm -d --rm \
+    -v ~/pgosm-data:/app/output \
+    -v /etc/localtime:/etc/localtime:ro \
+    -e POSTGRES_USER=$POSTGRES_USER \
+    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+    -e POSTGRES_HOST=$POSTGRES_HOST \
+    -e POSTGRES_DB=$POSTGRES_DB \
+    -e POSTGRES_PORT=$POSTGRES_PORT \
+    -p 5433:5432 -d rustprooflabs/pgosm-flex
+```
+
+> Note: Setting `POSTGRES_HOST` to anything but `localhost` disables the drop/create database step. This means the target database must be created prior to running PgOSM Flex.
+
+
+The `docker exec` command is the same as when using the internal Postgres instance.
+
+```bash
+docker exec -it \
+    pgosm python3 docker/pgosm_flex.py \
+    --ram=8 \
+    --region=north-america/us \
+    --subregion=district-of-columbia
+```
+
+
+## Use `--replication` to keep data fresh
+
+> The `--replication` mode seems to be stable as of 0.7.0.  It was added as an experimental feature in 0.4. (originally under the --append option).
+
+
+PgOSM Flex's `--replication` mode wraps around the `osm2pgsql-replication` package
+included with `osm2pgsql`.  The first time running an import with `--replication`
+mode runs osm2pgsql normally, with `--slim` mode and without `--drop`.
+After osm2pgsql completes, `osm2pgsql-replication init ...` is ran to setup
+the DB for updates.
+This mode of operation results in larger database as the intermediate osm2pgsql
+tables (`--slim`) must be left in the database (no `--drop`).
+
+
+> Important:  The original `--append` option is now under `--replication`. The `--append` option was removed in PgOSM Flex 0.7.0.  See [the conversation](https://github.com/rustprooflabs/pgosm-flex/issues/275#issuecomment-1340362190) for context.
+
+
+When using replication you need to pin your process to a specific PgOSM Flex version
+in the `docker run` command.  When upgrading to new versions,
+be sure to check the release notes for manual upgrade steps for `--replication`.  
+The release notes for
+[PgOSM Flex 0.6.1](https://github.com/rustprooflabs/pgosm-flex/releases/tag/0.6.1)
+are one example.
+The notes discussed in the release notes have reference SQL scripts
+under `db/data-migration` folder.  
+
+----
+
+**WARNING - Due to the ability to configure custom layersets these data-migration
+scripts need manual review, and possibly manual adjustments for
+your specific database and process.**
+
+----
+
+
+The other important change when using replication is to increase Postgres' `max_connections`.
+See [this discussion on osm2pgsql](https://github.com/openstreetmap/osm2pgsql/discussions/1650)
+for why this is necessary.
+
+If using the Docker-internal Postgres instance this is done with `-c max_connections=300`
+in the `docker run` command.  External database connections must update this
+in the appropriate `postgresql.conf` file.
+
+
+```bash
+docker run --name pgosm -d --rm \
+    -v ~/pgosm-data:/app/output \
+    -v /etc/localtime:/etc/localtime:ro \
+    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+    -p 5433:5432 \
+    -d rustprooflabs/pgosm-flex:0.7.0 \
+        -c max_connections=300
+```
+
+
+Run the `docker exec` step with `--replication`.
+
+```bash
+docker exec -it \
+    pgosm python3 docker/pgosm_flex.py \
+    --ram=8 \
+    --region=north-america/us \
+    --subregion=district-of-columbia \
+    --pgosm-date 2022-12-30 \
+    --replication
+```
+
+Running the above command a second time will detect that the target database
+has `osm2pgsql-replication` setup and load data via the defined replication
+service.
+
+> Note:  The `--pgosm-date` parameter is ignored during subsequent imports using `--replication`.
+
 
 
 ## Run PgOSM-Flex
@@ -188,7 +337,7 @@ docker exec -it \
     --language="en" \
     --srid="4326" \
     --data-only \
-    --skip-dump \
+    --pg-dump \
     --skip-nested \
     --sp-gist \
     --debug
@@ -229,20 +378,49 @@ docker exec -it \
 ```
 
 
-## Skip nested polygon calculation
+## Skip nested place polygons
+
+The nested place polygon calculation
+([explained in this post](https://blog.rustprooflabs.com/2021/01/pgosm-flex-improved-openstreetmap-places-postgis))
+adds minimal overhead to smaller regions, e.g. Colorado with a 225 MB PBF input file.
+Larger regions, such as North America (12 GB PBF),
+are impacted more severely as a difference in processing time.
+Calculating nested place polygons for Colorado adds less than 30 seconds on an 8 minute process,
+taking about 5% longer.
+A larger region, such as North America, can take 33% longer adding more than
+an hour and a half to the total processing time.
+See [docs/PERFORMANCE.md](PERFORMANCE.md) for more details.
+
 
 Use `--skip-nested` to bypass the calculation of nested admin polygons.
-The nested polygon process can take considerable time on larger regions or may
-be otherwise unwanted.
-
-## Skip data export
-
-By default the `.sql` file is created with `pg_dump` for easy loading into one or
-more Postgres databases.  If this file is not needed use `--skip-dump`. This saves
-time and reduces disk space consumed by the process.
 
 
-## Configure Postgres in Docker
+## Use `--pg-dump` to export data
+
+> The `--pg-dump` option was added in 0.7.0.  Prior versions defaulted to using `pg_dump` and provided a `--skip-dump` option to override.  The default now is to only use `pg_dump` when requested.  See [#266](https://github.com/rustprooflabs/pgosm-flex/issues/266) for more.
+
+
+A `.sql` file can be created using `pg_dump` as part of the processing
+for easy loading into one or more external Postgres databases.
+Add `--pg-dump` to the `docker exec` command to enable this feature.
+
+The following example
+creates an empty `myosm` database to load the processed and dumped OpenStreetMap
+data.
+
+
+```bash
+psql -d postgres -c "CREATE DATABASE myosm;"
+psql -d myosm -c "CREATE EXTENSION postgis;"
+
+psql -d myosm \
+    -f ~/pgosm-data/pgosm-flex-north-america-us-district-of-columbia-default-2023-01-21.sql
+```
+
+> The above assumes a database user with `superuser` permissions is used. See [docs/POSTGRES-PERMISSIONS.md](POSTGRES-PERMISSIONS.md) for a more granular approach to permissions.
+
+
+## Configure Postgres inside Docker
 
 Add customizations with the `-c` switch, e.g. `-c shared_buffers=1GB`,
 to customize Postgres' configuration at run-time in Docker.
@@ -282,105 +460,5 @@ time docker exec -it \
     --layerset=basic \
     --pgosm-date=2021-10-08
 ```
-
-
-## Use external Postgres connection
-
-The PgOSM Flex Docker image can be used with an external Postgres
-database instead of using the in-Docker Postgres database.
-
-Prepare the database and permissions as described in
-[POSTGRES-PERMISSIONS.md](POSTGRES-PERMISSIONS.md).
-
-
-Set environment variables to define the connection.
-
-```bash
-export POSTGRES_USER=your_login_role
-export POSTGRES_PASSWORD=mysecretpassword
-export POSTGRES_HOST=your-host-or-ip
-export POSTGRES_DB=your_db_name
-export POSTGRES_PORT=5432
-```
-
-Run the container with the additional environment variables.
-
-```bash
-docker run --name pgosm -d --rm \
-    -v ~/pgosm-data:/app/output \
-    -v /etc/localtime:/etc/localtime:ro \
-    -e POSTGRES_USER=$POSTGRES_USER \
-    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
-    -e POSTGRES_HOST=$POSTGRES_HOST \
-    -e POSTGRES_DB=$POSTGRES_DB \
-    -e POSTGRES_PORT=$POSTGRES_PORT \
-    -p 5433:5432 -d rustprooflabs/pgosm-flex
-```
-
-> Note: Setting `POSTGRES_HOST` to anything but `localhost` disables the drop/create database step. This means the target database must be created prior to running PgOSM Flex.
-
-
-The `docker exec` command can be used as normal. The following
-example adds `--skip-dump` to remove the overhead of that final step.
-
-
-```bash
-docker exec -it \
-    pgosm python3 docker/pgosm_flex.py \
-    --ram=8 \
-    --region=north-america/us \
-    --subregion=district-of-columbia \
-    --skip-dump
-```
-
-
-## Use `--replication` for updates
-
-> Added as **Experimental** feature in 0.4.6.  As of 0.6.2 it's nearly ready for common use.
-
-PgOSM Flex's `--replication` mode wraps around the `osm2pgsql-replication` package
-included with `osm2pgsql`.  The first time running an import with `--replication`
-mode runs osm2pgsql normally, with `--slim` mode and without `--drop`.
-After osm2pgsql completes, `osm2pgsql-replication init ...` is ran to setup
-the DB for updates.
-
-> Important:  The original `--append` option is now under `--replication`. The `--append` option will be removed in PgOSM Flex 0.7.0.  See [the conversation](https://github.com/rustprooflabs/pgosm-flex/issues/275#issuecomment-1340362190) for context.
-
-
-
-Need to pin the PgOSM Flex version. Also need to increase Postgres' `max_connections`, see
-[this discussion on osm2pgsql](https://github.com/openstreetmap/osm2pgsql/discussions/1650).
-
-
-```bash
-docker run --name pgosm -d --rm \
-    -v ~/pgosm-data:/app/output \
-    -v /etc/localtime:/etc/localtime:ro \
-    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
-    -p 5433:5432 \
-    -d rustprooflabs/pgosm-flex:0.6.3 \
-        -c max_connections=300
-```
-
-> Note: The instructions for `--replication` use a specific tagged version of the PgOSM Flex Docker image. Upgrading PgOSM Flex versions with replication mode is possible with manual DDL scripts.  Caution and testing is strongly recommended before proceeding on production. See the release notes, along with the scripts under `pgosm-flex/db/data-migration/`.
-
-
-Run the `docker exec` step with `--replication` and `--skip-dump`. This results in
-a larger database as the intermediate osm2pgsql tables must be left
-in the database.
-
-```bash
-docker exec -it \
-    pgosm python3 docker/pgosm_flex.py \
-    --ram=8 \
-    --region=north-america/us \
-    --subregion=district-of-columbia \
-    --pgosm-date 2022-12-30 \
-    --replication
-```
-
-Running the above command a second time will detect that the target database
-has `osm2pgsql-replication` setup and load data via the defined replication
-service.
 
 
