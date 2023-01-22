@@ -8,10 +8,21 @@ on running PgOSM Flex w/out Docker.
 
 
 ```bash
-osm2pgsql --slim --drop \
-	--output=flex --style=./run-road-place.lua \
-	-d $PGOSM_CONN \
-	~/pgosm-data/district-of-columbia-2021-01-13.osm.pbf
+cd ~/pgosm-data
+
+wget https://github.com/rustprooflabs/pgosm-flex/raw/main/tests/data/district-of-columbia-2021-01-13.osm.pbf
+wget https://github.com/rustprooflabs/pgosm-flex/raw/main/tests/data/district-of-columbia-2021-01-13.osm.pbf.md5
+```
+
+Loaded using `docker exec` command below for specific date.
+
+```bash
+docker exec -it \
+    pgosm python3 docker/pgosm_flex.py \
+    --ram=8 \
+    --region=north-america/us \
+    --subregion=district-of-columbia \
+    --pgosm-date=2021-01-13
 ```
 
 
@@ -21,28 +32,63 @@ Create the `pgrouting` extension.
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS pgrouting;
+CREATE SCHEMA IF NOT EXISTS routing;
 ```
 
 Prepare roads for routing using pgrouting functions.
 
 ```sql
-SELECT pgr_nodeNetwork('osm.road_line', .1, 'osm_id', 'geom');
-SELECT pgr_createTopology('osm.road_line_noded', 0.1, 'geom');
-SELECT pgr_analyzeGraph('osm.road_line_noded', 0.1, 'geom');
+CREATE TABLE routing.road_line AS
+WITH a AS (
+SELECT osm_id, osm_type, maxspeed, oneway, layer,
+        route_foot, route_cycle, route_motor, access,
+        ST_LineMerge(geom) AS geom
+    FROM osm.road_line
+), extra_cleanup AS (
+SELECT osm_id, osm_type, maxspeed, oneway, layer,
+        route_foot, route_cycle, route_motor, access,
+        (ST_Dump(geom)).geom AS geom
+    FROM a 
+    WHERE ST_GeometryType(geom) = 'ST_MultiLineString'
+), combined AS (
+SELECT osm_id, osm_type, maxspeed, oneway, layer,
+        route_foot, route_cycle, route_motor, access,
+        geom
+    FROM a
+    WHERE ST_GeometryType(geom) != 'ST_MultiLineString'
+UNION
+SELECT osm_id, osm_type, maxspeed, oneway, layer,
+        route_foot, route_cycle, route_motor, access,
+        geom
+    FROM extra_cleanup
+    WHERE ST_GeometryType(geom) != 'ST_MultiLineString'
+)
+SELECT ROW_NUMBER() OVER (ORDER BY geom) AS id, *
+    FROM combined
+    ORDER BY geom
+;
+
+```
+
+
+```sql
+SELECT pgr_nodeNetwork('routing.road_line', .1, 'id', 'geom');
+SELECT pgr_createTopology('routing.road_line_noded', 0.1, 'geom');
+SELECT pgr_analyzeGraph('routing.road_line_noded', 0.1, 'geom');
 ```
 
 These commands create two (2) new tables usable by pgrouting.
 
-* `osm.road_line_noded`
-* `osm.road_line_noded_vertices_pgr`
+* `routing.road_line_noded`
+* `routing.road_line_noded_vertices_pgr`
 
-Add simple `cost_length` column to the `osm.road_line_noded` table
+Add simple `cost_length` column to the `routing.road_line_noded` table
 as a generated column to use for routing costs.
 
 
 
 ```sql
-ALTER TABLE osm.road_line_noded
+ALTER TABLE routing.road_line_noded
     ADD cost_length DOUBLE PRECISION NOT NULL
     GENERATED ALWAYS AS (ST_Length(geom))
     STORED; 
@@ -58,6 +104,7 @@ of road that is tagged as `highway=residential` and `access=private`.
 This was picked to illustrate how the calculated access control columns, `route_motor`, `route_cycle` and `route_foot`,
 can influence route selection.
 
+> Note:  The vertex IDs in my test database will not necessary match the vertex IDs in your database!
 
 ```bash
 Name    |Value                 |
@@ -88,11 +135,11 @@ SELECT d.*, n.the_geom AS node_geom, e.geom AS edge_geom
     FROM pgr_dijkstra(
         'SELECT id, source, target, cost_length AS cost,
                 geom
-            FROM osm.road_line_noded',
+            FROM routing.road_line_noded',
                      11322, 7653, directed := False
         ) d
-    INNER JOIN osm.road_line_noded_vertices_pgr n ON d.node = n.id
-    LEFT JOIN osm.road_line_noded e ON d.edge = e.id
+    INNER JOIN routing.road_line_noded_vertices_pgr n ON d.node = n.id
+    LEFT JOIN routing.road_line_noded e ON d.edge = e.id
 ;
 ```
 
@@ -112,14 +159,14 @@ SELECT d.*, n.the_geom AS node_geom, e.geom AS edge_geom
     FROM pgr_dijkstra(
         'SELECT n.id, n.source, n.target, n.cost_length AS cost,
                 n.geom
-            FROM osm.road_line_noded n
+            FROM routing.road_line_noded n
             INNER JOIN osm.road_line r
             	ON n.old_id = r.osm_id
             		AND route_motor',
                      11322, 7653, directed := False
         ) d
-    INNER JOIN osm.road_line_noded_vertices_pgr n ON d.node = n.id
-    LEFT JOIN osm.road_line_noded e ON d.edge = e.id
+    INNER JOIN routing.road_line_noded_vertices_pgr n ON d.node = n.id
+    LEFT JOIN routing.road_line_noded e ON d.edge = e.id
 ;
 ```
 
@@ -142,11 +189,11 @@ Valid values are:
 Assuming a noded roads table routing table, bring over the `oneway` detail
 
 ```sql
-ALTER TABLE osm.road_line_noded
+ALTER TABLE routing.road_line_noded
     ADD oneway INT2 NULL
 ;
 
-UPDATE osm.road_line_noded rn
+UPDATE routing.road_line_noded rn
     SET oneway = r.oneway
     FROM osm.road_line r
     WHERE rn.old_id = r.osm_id AND rn.oneway IS NULL
@@ -157,7 +204,7 @@ Calculate forward cost.
 
 ```sql
 -- Cost with oneway considerations
-ALTER TABLE osm.road_line_noded
+ALTER TABLE routing.road_line_noded
     ADD cost_length NUMERIC
     GENERATED ALWAYS AS (
         CASE WHEN oneway IN (0, 1)
@@ -174,7 +221,7 @@ Reverse cost.
 
 ```sql
 -- Reverse cost with oneway considerations
-ALTER TABLE osm.road_line_noded
+ALTER TABLE routing.road_line_noded
     ADD cost_length_reverse NUMERIC
     GENERATED ALWAYS AS (
         CASE WHEN oneway IN (0, -1)
@@ -195,7 +242,7 @@ SELECT d.*, n.the_geom AS node_geom, e.geom AS edge_geom
         'SELECT n.id, n.source, n.target, n.cost_length AS cost,
                 n.cost_length_reverse AS reverse_cost,
                 n.geom
-            FROM osm.road_line_noded n
+            FROM routing.road_line_noded n
             INNER JOIN osm.road_line r
                 ON n.old_id = r.osm_id
                     AND route_motor
@@ -204,7 +251,7 @@ SELECT d.*, n.the_geom AS node_geom, e.geom AS edge_geom
           39877, 8227,
           directed := True
         ) d
-    INNER JOIN osm.road_line_noded_vertices_pgr n ON d.node = n.id
-    LEFT JOIN osm.road_line_noded e ON d.edge = e.id
+    INNER JOIN routing.road_line_noded_vertices_pgr n ON d.node = n.id
+    LEFT JOIN routing.road_line_noded e ON d.edge = e.id
 ;
 ```
