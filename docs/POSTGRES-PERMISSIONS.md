@@ -1,17 +1,15 @@
 # Postgres permissions for PgOSM Flex
 
-These instructions show an example of setting up a database
-for use with PgOSM Flex.  This should work for both
-[MANUAL-STEPS-RUN.md](MANUAL-STEPS-RUN.md) and
-[DOCKER-RUN.md](DOCKER-RUN.md) instructions.
+These instructions show an example of setting up a Postgres database
+for use with PgOSM Flex as an external database connection
+described in [DOCKER-RUN.md](DOCKER-RUN.md).
 
 ## Create database and PostGIS
 
 These first steps require elevated permissions within Postgres.
-`CREATE DATABASE` requires the `CREATEDB` permission, however
-creating the PostGIS extension requires
+`CREATE DATABASE` requires the `CREATEDB` permission.
+Creating the PostGIS extension requires
 [Postgres superuser permissions](https://blog.rustprooflabs.com/2021/12/postgis-permissions-required).
-
 
 In the target Postgres instance, create your database.
 
@@ -57,7 +55,7 @@ These permissions should allow the full PgOSM Flex process to run.
 
 `GRANT CREATE` gives the `pgosm_flex` role far more permissions than
 it really needs in many cases. 
-Running `docker exec` with `--data-only` skips these steps and would make the `GRANT CREATE` permission unnessecary for the `pgosm_flex` role.
+Running `docker exec` with `--data-only` skips these steps and would make the `GRANT CREATE` permission unnecessary for the `pgosm_flex` role.
 
 It also is often desired to not make
 a login role the owner of database objects. This example reduces the
