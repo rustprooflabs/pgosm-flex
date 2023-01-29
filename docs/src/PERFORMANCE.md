@@ -1,6 +1,6 @@
-# PgOSM Flex Performance
+# Processing Time
 
-This page provides timings for how long PgOSM-Flex runs for various region sizes.
+This page provides timings for how long PgOSM Flex runs for various region sizes.
 The server used to host these tests has 8 vCPU and 64 GB RAM to match the target
 server size [outlined in the osm2pgsql manual](https://osm2pgsql.org/doc/manual.html#preparing-the-database).
 
@@ -9,6 +9,9 @@ server size [outlined in the osm2pgsql manual](https://osm2pgsql.org/doc/manual.
 
 Versions used for testing: PgOSM Flex 0.4.7 Docker image, based on the official
 PostGIS image with Postgres 14 / PostGIS 3.2.
+
+Note: Postgres 15 [made GIST indexes faster](https://osm2pgsql.org/news/2023/01/22/faster-with-postgresql15.html)
+to create.  These timings will be updated in the future with the latest versions.
 
 
 ## Layerset:  Minimal
