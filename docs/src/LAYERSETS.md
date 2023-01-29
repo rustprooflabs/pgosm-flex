@@ -13,7 +13,8 @@ Layersets are defined in `.ini` files.
 
 ## Included layersets
 
-PgOSM Flex includes a few layersets.  These are defined under `flex-config/layerset/`.
+PgOSM Flex includes a few layersets to get started as examples.
+These layersets are defined under `flex-config/layerset/`.
 If the `--layerset` is not defined, the `default` layerset is used.
 
 * `basic`
@@ -21,8 +22,9 @@ If the `--layerset` is not defined, the `default` layerset is used.
 * `everything`
 * `minimal`
 
-Using a built-in layerset other than `default` is done with
-wih the `--layerset` option. 
+Using a built-in layerset other than `default` is done by defining
+the `--layerset` option.  The following example uses the `minimal` layerset,
+including the `place`, `poi`, and `road_major` layers.
 
 
 ```bash
@@ -33,6 +35,15 @@ docker exec -it \
     --region=north-america/us \
     --subregion=district-of-columbia
 ```
+
+The output from running PgOSM Flex indicates which layers are being loaded.
+
+```
+2023-01-29 08:47:12,191:INFO:pgosm-flex:helpers:Including place
+2023-01-29 08:47:12,192:INFO:pgosm-flex:helpers:Including poi
+2023-01-29 08:47:12,192:INFO:pgosm-flex:helpers:Including road_major
+```
+
 
 
 ## Custom layerset

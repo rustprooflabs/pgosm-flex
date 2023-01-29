@@ -53,10 +53,11 @@ docker exec -it \
 The automatic Geofabrik download can be overridden by providing PgOSM Flex
 with the path to a valid `.osm.pbf` file using `--input-file`.
 This option overrides the default file handling, archiving, and MD5
-checksum validation.
+checksum validation.  With `--input-file` you can use a custom `osm.pbf`
+you created, or use it to simply remove the need for an internet connection
+from the instance running the processing.
 
-The `--region` option is still required, the `--subregion` option can be used
-if desired.
+> Note: The `--region` option is always required, the `--subregion` option can be used with `--input-file` to put the information in the `subregion` column of `osm.pgosm_flex`.
 
 
 ## Customize load to PostGIS

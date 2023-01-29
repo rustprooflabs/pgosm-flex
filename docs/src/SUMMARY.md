@@ -6,7 +6,7 @@
 
 - [Quick Start](./QUICK-START.md)
 - [Common Customizations](./COMMON-CUSTOMIZATION.md)
-- [Custom Layersets](./LAYERSETS.md)
+- [Customize Layersets](./LAYERSETS.md)
 - [One Big Guide of Docker - Being replaced with more targeted pages](./DOCKER-RUN.md)
 - [Processing Time](./PERFORMANCE.md)
 - [Query examples](./QUERY.md)
@@ -25,6 +25,7 @@
 # Developers
 
 - [Build and Push Docker Images](./DOCKER-BUILD.md)
+- [Testing PgOSM Flex](./TESTS.md)
 
 
 # PgOSM Flex w/out Docker

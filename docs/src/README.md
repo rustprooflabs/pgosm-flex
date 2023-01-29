@@ -5,12 +5,21 @@ PgOSM Flex provides high quality OpenStreetMap datasets in PostGIS using the
 This project provides a curated set of Lua and SQL scripts to clean and organize
 the most commonly used OpenStreetMap data, such as roads, buildings, and points of interest (POIs).
 
-The recommended way to use PgOSM Flex is via the PgOSM Docker image
+Running PgOSM Flex is easy via the PgOSM Docker image
 [hosted on Docker Hub](https://hub.docker.com/repository/docker/rustprooflabs/pgosm-flex).
-Basic usage instructions are included in this README.md file, full Docker
-usage instructions are available in [docs/DOCKER-RUN.md](docs/DOCKER-RUN.md).
 
 
+1. The [quick start](QUICK-START.md) shows how easy it is to get started
+1. Change how PgOSM Flex runs with [common customizations](COMMON-CUSTOMIZATION.md)
+1. [Customize layersets](LAYERSETS.md) to change what data you load
+
+
+## Project goals
+
+* High quality spatial data
+* Reliable
+* Easy to customize
+* Easy to use
 
 
 ## Project decisions
