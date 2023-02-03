@@ -18,5 +18,5 @@ Checklist for adding new feature layers:
 * Update `flex-config/run-no-tags.lua`
 * Update `flex-config/run-no-tags.sql`
 * Update `db/qc/features_not_in_run_all.sql`
-* Add relevent `tests/sql/<feature_queries>.sql`
-* Add relevent `tests/expected/<feature_queries>.out`
+* Add relevant `tests/sql/<feature_queries>.sql`
+* Add relevant `tests/expected/<feature_queries>.out`
