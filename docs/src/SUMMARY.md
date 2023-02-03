@@ -20,12 +20,13 @@
 - [Postgres Permissions](./POSTGRES-PERMISSIONS.md)
 - [Stay Updated with Replication](./REPLICATION.md)
 - [Using Update Mode](./UPDATE-MODE.md)
-
+- [QGIS Styles](./QGIS-STYLES.md)
 
 # Developers
 
 - [Build and Push Docker Images](./DOCKER-BUILD.md)
 - [Testing PgOSM Flex](./TESTS.md)
+- [Developing QGIS Styles](./QGIS-STYLES-DEV.md)
 
 
 # PgOSM Flex w/out Docker

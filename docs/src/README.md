@@ -1,6 +1,7 @@
 # PgOSM Flex
 
-PgOSM Flex provides high quality OpenStreetMap datasets in PostGIS using the
+PgOSM Flex ([GitHub](https://github.com/rustprooflabs/pgosm-flex))
+provides high quality OpenStreetMap datasets in PostGIS using the
 [osm2pgsql Flex output](https://osm2pgsql.org/doc/manual.html#the-flex-output).
 This project provides a curated set of Lua and SQL scripts to clean and organize
 the most commonly used OpenStreetMap data, such as roads, buildings, and points of interest (POIs).

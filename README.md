@@ -1,23 +1,11 @@
 # PgOSM Flex
 
-> DOCUMENTATION BEING REMOVED FROM HERE as it's moved into the doc book.  The final version on this page will be greatly simplified.
-
-## Layer Sets
-
-
-PgOSM Flex includes a few layersets and makes it easy to customize your own.
-See [docs/LAYERSETS.md](docs/LAYERSETS.md) for details.
+PgOSM Flex provides high quality OpenStreetMap datasets in PostGIS using the
+osm2pgsql Flex output.
+See [https://pgosm-flex.com/](https://pgosm-flex.com/) for the main project
+documentation.
 
 
-
-## QGIS Layer Styles
-
-If you use QGIS to visualize OpenStreetMap, there are a few basic
-styles using the `public.layer_styles` table created by QGIS.
-This data is loaded by default and can be excluded with `--data-only`.
-
-See [the QGIS Style README.md](https://github.com/rustprooflabs/pgosm-flex/blob/main/db/qgis-style/README.md)
-for more information.
 
 
 ## Explore data loaded
