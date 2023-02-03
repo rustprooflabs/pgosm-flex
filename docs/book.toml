@@ -1,0 +1,15 @@
+[book]
+authors = ["Ryan Lambert", "PgOSM Flex Contributors"]
+language = "en"
+multilingual = false
+src = "src"
+title = "PgOSM Flex User Guide"
+description = "PgOSM Flex provides high quality OpenStreetMap datasets in PostGIS using the osm2pgsql Flex output"
+
+[output.html]
+default-theme = "rust"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/rustprooflabs/pgosm-flex"
+git-repository-icon = "fa-github"
+edit-url-template = "https://github.com/rustprooflabs/pgosm-flex/edit/main/docs/{path}"
+
