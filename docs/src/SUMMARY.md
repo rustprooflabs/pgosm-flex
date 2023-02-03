@@ -1,6 +1,8 @@
 # Summary
 
 [About PgOSM Flex](README.md)
+[Code of Conduct](./CODE_OF_CONDUCT.md)
+[Contributing to PgOSM Flex](./CONTRIBUTING.md)
 
 # User Guide
 
