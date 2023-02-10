@@ -7,9 +7,10 @@
 # User Guide
 
 - [Quick Start](./QUICK-START.md)
-- [Common Customizations](./COMMON-CUSTOMIZATION.md)
-- [Customize Layersets](./LAYERSETS.md)
-- [One Big Guide of Docker - Being replaced with more targeted pages](./DOCKER-RUN.md)
+- [Customize PgOSM Flex](./CUSTOMIZATIONS.md)
+    - [Common Customizations](./COMMON-CUSTOMIZATION.md)
+    - [Layersets](./LAYERSETS.md)
+    - [Configure Postgres](./CONFIGURE-POSTGRES.md)
 - [Processing Time](./PERFORMANCE.md)
 - [Query examples](./QUERY.md)
 - [Routing](./ROUTING.md)

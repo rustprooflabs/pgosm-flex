@@ -25,7 +25,8 @@ Which branch is best for you depends on how you use the data from PgOSM Flex.
 
 ### When to use tagged (`x.x.x`) release
 
-If you're using `--append` mode, tagged releases are the most stable option.
+Tagged releases are the most stable option and are recommended if you are
+using `--replication` or `--update` mode.
 Tagged releases are built with the latest versions of all key software, e.g. Postgres,
 PostGIS and osm2pgsql, and their dependencies.  These tagged images (e.g. `0.6.2`)
 are typically built at the time the tag is added to GitHub, and are (typically)
@@ -37,8 +38,8 @@ are coming out as activity happens in the project.
 
 ### When to use `latest`
 
-If you run PgOSM Flex without `--append` mode this image is generally stable and
-includes the latest features.
+If you run PgOSM Flex without `--replication` or `--update` mode this image is
+generally stable and includes the latest features.
 
 
 The `latest` Docker image could include changes that
