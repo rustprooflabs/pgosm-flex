@@ -12,6 +12,14 @@ else
     error('ENV VAR PGOSM_CONN must be set.')
 end
 
+local pgosm_replication_env = os.getenv("PGOSM_REPLICATION")
+
+if pgosm_replication_env then
+    pgosm_replication = pgosm_replication_env
+else
+    error('ENV VAR PGOSM_REPLICATION must be set')
+end
+
 
 local tables = {}
 
@@ -28,16 +36,22 @@ CREATE TABLE IF NOT EXISTS osm.pgosm_flex (
     osm2pgsql_version text NOT NULL,
     "language" text NOT NULL,
     osm2pgsql_mode TEXT NOT NULL DEFAULT 'create',
+    osm2pgsql_replication BOOLEAN NOT NULL DEFAULT False,
     CONSTRAINT pk_osm_pgosm_flex PRIMARY KEY (id)
 );
 ]=]
 
--- Ensures tables created by pgosm flex 0.4.0 and earlier do not break
+-- Ensures tables created by earlier pgosm flex versions do not break
 sql_ensure_osm2pgsql_mode_column = [=[
 ALTER TABLE osm.pgosm_flex
     ADD COLUMN IF NOT EXISTS osm2pgsql_mode
     TEXT NOT NULL DEFAULT 'create';
+
+ALTER TABLE osm.pgosm_flex
+    ADD COLUMN IF NOT EXISTS osm2pgsql_replication
+    BOOLEAN NOT NULL DEFAULT False;
 ]=]
+
 
 function pgosm_get_commit_hash()
     local cmd = 'git rev-parse --short HEAD'
@@ -86,7 +100,7 @@ end
 
 local sql_insert = [[ INSERT INTO osm.pgosm_flex (osm_date, default_date, region,
         pgosm_flex_version, srid, project_url, osm2pgsql_version, "language",
-        osm2pgsql_mode) ]] ..
+        osm2pgsql_mode, osm2pgsql_replication) ]] ..
  [[ VALUES (']] ..
  con:escape(pgosm_date) .. [[', ]] ..
  default_date_str .. [[ , ']] .. -- special handling for boolean
@@ -96,7 +110,8 @@ local sql_insert = [[ INSERT INTO osm.pgosm_flex (osm_date, default_date, region
  con:escape(project_url) .. [[', ']] ..
  con:escape(osm2pgsql_version) .. [[', ']] ..
  con:escape(pgosm_language) .. [[', ']] ..
- con:escape(osm2pgsql_mode) .. [[' );]]
+ con:escape(osm2pgsql_mode) .. [[', ]] ..
+ pgosm_replication .. [[ );]]
 
 
 -- simple query to verify connection
