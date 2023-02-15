@@ -20,6 +20,7 @@ else
     error('ENV VAR PGOSM_REPLICATION must be set')
 end
 
+local import_uuid = os.getenv("PGOSM_IMPORT_UUID")
 
 local tables = {}
 
@@ -37,6 +38,8 @@ CREATE TABLE IF NOT EXISTS osm.pgosm_flex (
     "language" text NOT NULL,
     osm2pgsql_mode TEXT NOT NULL DEFAULT 'create',
     osm2pgsql_replication BOOLEAN NOT NULL DEFAULT False,
+    import_uuid TEXT NULL,
+    import_status TEXT NULL,
     CONSTRAINT pk_osm_pgosm_flex PRIMARY KEY (id)
 );
 ]=]
@@ -50,6 +53,12 @@ ALTER TABLE osm.pgosm_flex
 ALTER TABLE osm.pgosm_flex
     ADD COLUMN IF NOT EXISTS osm2pgsql_replication
     BOOLEAN NOT NULL DEFAULT False;
+
+ALTER TABLE osm.pgosm_flex
+    ADD COLUMN IF NOT EXISTS import_uuid TEXT NULL;
+
+ALTER TABLE osm.pgosm_flex
+    ADD COLUMN IF NOT EXISTS import_status TEXT;
 ]=]
 
 
@@ -100,7 +109,7 @@ end
 
 local sql_insert = [[ INSERT INTO osm.pgosm_flex (osm_date, default_date, region,
         pgosm_flex_version, srid, project_url, osm2pgsql_version, "language",
-        osm2pgsql_mode, osm2pgsql_replication) ]] ..
+        osm2pgsql_mode, osm2pgsql_replication, import_uuid) ]] ..
  [[ VALUES (']] ..
  con:escape(pgosm_date) .. [[', ]] ..
  default_date_str .. [[ , ']] .. -- special handling for boolean
@@ -111,7 +120,8 @@ local sql_insert = [[ INSERT INTO osm.pgosm_flex (osm_date, default_date, region
  con:escape(osm2pgsql_version) .. [[', ']] ..
  con:escape(pgosm_language) .. [[', ']] ..
  con:escape(osm2pgsql_mode) .. [[', ]] ..
- pgosm_replication .. [[ );]]
+ pgosm_replication .. [[ , ']] ..
+ con:escape(import_uuid) .. [[' );]]
 
 
 -- simple query to verify connection

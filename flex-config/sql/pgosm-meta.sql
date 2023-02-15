@@ -12,7 +12,8 @@ COMMENT ON COLUMN osm.pgosm_flex.region IS 'Region specified at run time via env
 COMMENT ON COLUMN osm.pgosm_flex.language IS 'Preferred language specified at run time via env var PGOSM_LANGUAGE.  Empty string when not defined.';
 COMMENT ON COLUMN osm.pgosm_flex.osm2pgsql_mode IS 'Indicates which osm2pgsql mode was used, create or append.';
 COMMENT ON COLUMN osm.pgosm_flex.osm2pgsql_replication IS 'True indicates when osm2pgsql-replication was used for the import.';
-
+COMMENT ON COLUMN osm.pgosm_flex.import_uuid IS 'Used during import to set import_status on failure.';
+COMMENT ON COLUMN osm.pgosm_flex.import_status IS 'Set when import failure is detected.';
 
 -- Helper Procedures for allowing updates via osm2pgsql-replication or similar
 

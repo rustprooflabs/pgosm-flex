@@ -82,7 +82,7 @@ def verify_checksum(md5_file, path):
 
 
 def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
-                 layerset_path, sp_gist, replication):
+                 layerset_path, sp_gist, replication, import_uuid):
     """Sets environment variables needed by PgOSM Flex.
 
     See /docs/MANUAL-STEPS-RUN.md for usage examples of environment variables.
@@ -101,6 +101,8 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
         When `True` uses SP-GIST index instead of GIST for spatial indexes.
     replication : bool
         Indicates when osm2pgsql-replication is used
+    import_uuid : uuid
+        Required to track import failures in Postgres between Python and Lua
     """
     logger = logging.getLogger('pgosm-flex')
     logger.debug('Ensuring env vars are not set from prior run')
@@ -108,6 +110,7 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
     logger.debug('Setting environment variables')
 
     os.environ['PGOSM_REGION'] = region
+    os.environ['PGOSM_IMPORT_UUID'] = str(import_uuid)
 
     if subregion is None:
         pgosm_region = f'{region}'
@@ -149,6 +152,7 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
         os.environ['PGOSM_REPLICATION'] = 'false'
 
 
+
 def unset_env_vars():
     """Unsets environment variables used by PgOSM Flex.
 
@@ -166,3 +170,4 @@ def unset_env_vars():
     os.environ.pop('PGOSM_CONN_PG', None)
     os.environ.pop('PGOSM_GIST_TYPE', None)
     os.environ.pop('PGOSM_REPLICATION', None)
+    os.environ.pop('PGOSM_IMPORT_UUID', None)
