@@ -103,7 +103,7 @@ def run_pgosm_flex(ram, region, subregion, data_only, debug,
         region = input_file
 
     helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
-                         layerset, layerset_path, sp_gist)
+                         layerset, layerset_path, sp_gist, replication)
     db.wait_for_postgres()
 
     if replication:

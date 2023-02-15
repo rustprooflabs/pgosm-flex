@@ -47,6 +47,9 @@ in the appropriate `postgresql.conf` file.
 
 
 ```bash
+export POSTGRES_USER=postgres
+export POSTGRES_PASSWORD=mysecretpassword
+
 docker run --name pgosm -d --rm \
     -v ~/pgosm-data:/app/output \
     -v /etc/localtime:/etc/localtime:ro \
