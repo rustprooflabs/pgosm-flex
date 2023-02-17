@@ -14,6 +14,7 @@ from pathlib import Path
 import sys
 
 import click
+import uuid
 
 import osm2pgsql_recommendation as rec
 import db
@@ -102,8 +103,10 @@ def run_pgosm_flex(ram, region, subregion, data_only, debug,
     if region is None and input_file:
         region = input_file
 
+    import_uuid = uuid.uuid4()
     helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
-                         layerset, layerset_path, sp_gist, replication)
+                         layerset, layerset_path, sp_gist, replication,
+                         import_uuid)
     db.wait_for_postgres()
 
     if replication:
@@ -140,6 +143,12 @@ def run_pgosm_flex(ram, region, subregion, data_only, debug,
                                          skip_nested=skip_nested,
                                          import_mode=import_mode)
 
+    if not success:
+        msg = 'PgOSM Flex completed with errors. Details in output'
+        db.log_import_message(import_uuid=import_uuid, msg='Import failed')
+        logger.warning(msg)
+        sys.exit(msg)
+
     if schema_name != 'osm':
         db.rename_schema(schema_name)
 
@@ -149,10 +158,7 @@ def run_pgosm_flex(ram, region, subregion, data_only, debug,
                   data_only=data_only,
                   schema_name=schema_name)
 
-    if success:
-        logger.info('PgOSM Flex complete!')
-    else:
-        logger.warning('PgOSM Flex completed with errors. Details in output')
+    logger.info('PgOSM Flex complete!')
 
 
 def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,

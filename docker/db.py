@@ -616,3 +616,24 @@ def fix_pg_dump_create_public(export_path):
            export_path)
     LOGGER.debug('Completed replacement to not fail when public schema exists')
     LOGGER.debug(result)
+
+
+def log_import_message(import_uuid, msg):
+    """Logs msg to database in osm.pgosm_flex for import_uuid.
+
+    Parameters
+    -------------------------------
+    import_uuid : uuid
+    msg : str
+    """
+    sql_raw = """
+UPDATE osm.pgosm_flex
+    SET import_status = %(msg)s
+    WHERE import_uuid = %(import_uuid)s
+;
+"""
+    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
+        params = {'import_uuid': str(import_uuid), 'msg': msg}
+        cur = conn.cursor()
+        cur.execute(sql_raw, params=params)
+
