@@ -107,7 +107,7 @@ Calculating nested place polygons for Colorado adds less than 30 seconds on an 8
 taking about 5% longer.
 A larger region, such as North America, can take 33% longer adding more than
 an hour and a half to the total processing time.
-See [docs/PERFORMANCE.md](PERFORMANCE.md) for more details.
+See the [performance section](performance.md) for more details.
 
 
 Use `--skip-nested` to bypass the calculation of nested admin polygons.
@@ -135,7 +135,7 @@ psql -d myosm \
     -f ~/pgosm-data/pgosm-flex-north-america-us-district-of-columbia-default-2023-01-21.sql
 ```
 
-> The above assumes a database user with `superuser` permissions is used. See [docs/POSTGRES-PERMISSIONS.md](POSTGRES-PERMISSIONS.md) for a more granular approach to permissions.
+> The above assumes a database user with `superuser` permissions is used. See the [Postgres Permissions](postgres-permissions.md) section for a more granular approach to permissions.
 
 
 

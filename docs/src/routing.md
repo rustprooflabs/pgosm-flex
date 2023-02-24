@@ -3,9 +3,6 @@
 This page provides a simple example of using OpenStreetMap roads
 loaded with PgOSM Flex for routing.
 The example uses the D.C. PBF included under `tests/data/`.
-See [MANUAL-STEPS-RUN.md](MANUAL-STEPS-RUN.md) for more details
-on running PgOSM Flex w/out Docker.
-
 
 ```bash
 cd ~/pgosm-data

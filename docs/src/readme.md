@@ -10,9 +10,9 @@ Running PgOSM Flex is easy via the PgOSM Docker image
 [hosted on Docker Hub](https://hub.docker.com/repository/docker/rustprooflabs/pgosm-flex).
 
 
-1. The [quick start](QUICK-START.md) shows how easy it is to get started
-1. Change how PgOSM Flex runs with [common customizations](COMMON-CUSTOMIZATION.md)
-1. [Customize layersets](LAYERSETS.md) to change what data you load
+1. The [quick start](quick-start.md) shows how easy it is to get started
+1. Change how PgOSM Flex runs with [common customizations](common-customization.md)
+1. [Customize layersets](layersets.md) to change what data you load
 
 
 ## Project goals

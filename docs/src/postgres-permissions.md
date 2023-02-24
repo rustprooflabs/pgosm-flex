@@ -1,8 +1,18 @@
 # Postgres permissions for PgOSM Flex
 
-These instructions show an example of setting up a Postgres database
-for use with PgOSM Flex as an external database connection
-described in [DOCKER-RUN.md](DOCKER-RUN.md).
+The [quick start](quick-start.md) section showed how to get up and
+running using the Postgres instance within the PgOSM Flex docker image.
+Many production usage cases of PgOSM Flex prefer to connect the
+PgOSM Flex processing within Docker directly to an already running
+Postgres instances.
+
+
+The first step to using PgOSM Flex with your own Postgres instance
+is to have a database already created, and a login role with
+proper permissions.
+The steps in this page prepare for the steps outlined
+in the [Using External Postgres Connection](postgres-external.md)
+section.
 
 ## Create database and PostGIS
 
@@ -17,12 +27,15 @@ In the target Postgres instance, create your database.
 CREATE DATABASE your_db_name;
 ```
 
-In `your_db_name` create the PostGIS extension.
+Connect to `your_db_name` and create the PostGIS extension.
+This is done along with the `CREATE DATABASE` since both steps
+require the superuser role. 
 
 
 ```sql
 CREATE EXTENSION postgis;
 ```
+
 
 
 ## Runtime permissions

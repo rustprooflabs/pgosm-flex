@@ -18,9 +18,8 @@
 
 # Production usages
 
-
-- [Using External Postgres Connection](./postgres-external.md)
 - [Postgres Permissions](./postgres-permissions.md)
+- [Using External Postgres Connection](./postgres-external.md)
 - [Stay Updated with Replication](./replication.md)
 - [Using Update Mode](./update-mode.md)
 - [QGIS Styles](./qgis-styles.md)

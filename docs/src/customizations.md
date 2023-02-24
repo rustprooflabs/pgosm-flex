@@ -1,6 +1,6 @@
 # Customize PgOSM Flex
 
 
-- [Common Customizations](./COMMON-CUSTOMIZATION.md)
-- [Layersets](./LAYERSETS.md)
-- [Configure Postgres](./CONFIGURE-POSTGRES.md)
+- [Common Customizations](./common-customization.md)
+- [Layersets](./layersets.md)
+- [Configure Postgres](./configure-postgres.md)

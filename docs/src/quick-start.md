@@ -47,7 +47,6 @@ logic, an post-processing steps required.  Features include:
 ## Docker usage
 
 This section outlines a typical import using Docker to run PgOSM Flex.
-See the full Docker instructions in [docs/DOCKER-RUN.md](docs/DOCKER-RUN.md).
 
 Create directory for the `.osm.pbf` file, output `.sql` file, log output, and
 the osm2pgsql command ran.
