@@ -111,7 +111,8 @@ The topic of POIs is subject and likely is not inclusive of everything that prob
 a POI. If there are POIs missing
 from this table please submit a [new issue](https://github.com/rustprooflabs/pgosm-flex/issues/new)
 with sufficient details about what is missing.
-Pull requests also welcome! [See CONTRIBUTING.md](CONTRIBUTING.md).
+Pull requests also welcome! See [the contributing section](contributing.md)
+for more information.
 
 
 Counts of POIs by `osm_type`.

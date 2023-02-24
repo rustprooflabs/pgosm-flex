@@ -1,11 +1,9 @@
 # Using External Postgres Connection
 
 
-The PgOSM Flex Docker image can be used with Postgres instance outside the
-Docker container.
 
 Prepare the database and permissions as described in
-[Postgres Permissions](POSTGRES-PERMISSIONS.md).
+[Postgres Permissions](postgres-permissions.md).
 
 
 Set environment variables to define the connection.  Create a file with the
