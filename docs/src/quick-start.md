@@ -10,6 +10,9 @@ mkdir ~/pgosm-data
 export POSTGRES_USER=postgres
 export POSTGRES_PASSWORD=mysecretpassword
 
+# Ensure you have the latest Docker image
+docker pull rustprooflabs/pgosm-flex
+
 docker run --name pgosm -d --rm \
     -v ~/pgosm-data:/app/output \
     -v /etc/localtime:/etc/localtime:ro \

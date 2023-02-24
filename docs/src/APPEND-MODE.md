@@ -1,1 +1,0 @@
-The contents of this file have moved to [MANUAL-STEPS-REPLICATION.md](MANUAL-STEPS-REPLICATION.md).
