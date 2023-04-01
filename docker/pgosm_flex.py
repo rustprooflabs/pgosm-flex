@@ -123,7 +123,8 @@ def run_pgosm_flex(ram, region, subregion, data_only, debug,
 
     db.prepare_pgosm_db(data_only=data_only,
                         db_path=paths['db_path'],
-                        import_mode=import_mode)
+                        import_mode=import_mode,
+                        schema_name=schema_name)
 
     if import_mode.replication_update:
         # If replication_update, a manual date is not valid.

@@ -182,7 +182,7 @@ def pg_isready():
     return True
 
 
-def prepare_pgosm_db(data_only, db_path, import_mode):
+def prepare_pgosm_db(data_only, db_path, import_mode, schema_name):
     """Runs through series of steps to prepare database for PgOSM.
 
     Parameters
@@ -190,6 +190,7 @@ def prepare_pgosm_db(data_only, db_path, import_mode):
     data_only : bool
     db_path : str
     import_mode : import_mode.ImportMode
+    schema_name : str
     """
     if pg_conn_parts()['pg_host'] == 'localhost':
         drop_it = True
@@ -218,7 +219,8 @@ def prepare_pgosm_db(data_only, db_path, import_mode):
         LOGGER.info('Loading extras via Sqitch plus QGIS styles.')
         run_sqitch_prep(db_path)
         qgis_styles.load_qgis_styles(db_path=db_path,
-                                     db_name=pg_conn_parts()['pg_db'])
+                                     db_name=pg_conn_parts()['pg_db'],
+                                     schema_name=schema_name)
     else:
         LOGGER.info('Data only mode enabled, no Sqitch or QGIS styles.')
 
