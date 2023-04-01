@@ -29,4 +29,5 @@
 - [Build and Push Docker Images](./docker-build.md)
 - [Testing PgOSM Flex](./tests.md)
 - [Developing QGIS Styles](./qgis-styles-dev.md)
+- [Troubleshoot errors in osm2pgsql processing](./troubleshooting.md)
 

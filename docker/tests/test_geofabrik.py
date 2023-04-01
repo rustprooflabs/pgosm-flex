@@ -1,5 +1,7 @@
 """ Unit tests to cover the Geofabrik module."""
 import unittest
+import uuid
+
 import geofabrik, helpers
 
 REGION_US = 'north-america/us'
@@ -7,6 +9,7 @@ SUBREGION_DC = 'district-of-columbia'
 LAYERSET = 'default'
 PGOSM_DATE = '2021-12-02'
 
+IMPORT_UUID = uuid.uuid4()
 
 class GeofabrikTests(unittest.TestCase):
 
@@ -18,7 +21,9 @@ class GeofabrikTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=LAYERSET,
                              layerset_path=None,
-                             sp_gist=False)
+                             sp_gist=False,
+                             replication=False,
+                             import_uuid=IMPORT_UUID)
 
 
     def tearDown(self):
@@ -39,7 +44,9 @@ class GeofabrikTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=LAYERSET,
                              layerset_path=None,
-                             sp_gist=False)
+                             sp_gist=False,
+                             replication=False,
+                             import_uuid=IMPORT_UUID)
 
         result = geofabrik.get_region_filename()
         expected = f'{REGION_US}-latest.osm.pbf'
