@@ -1,1 +1,1 @@
-Documentation moved to https://pgosm-flex.com
+Documentation moved to https://pgosm-flex.com/qgis-styles.html
