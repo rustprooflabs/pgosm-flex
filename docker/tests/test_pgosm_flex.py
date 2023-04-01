@@ -1,12 +1,15 @@
 """ Unit tests to cover the DB module."""
 import unittest
+import uuid
+
 import pgosm_flex, helpers
+
 
 REGION_US = 'north-america/us'
 SUBREGION_DC = 'district-of-columbia'
 LAYERSET = 'default'
 PGOSM_DATE = '2021-12-02'
-
+IMPORT_UUID = uuid.uuid4()
 
 class PgOSMFlexTests(unittest.TestCase):
 
@@ -18,7 +21,9 @@ class PgOSMFlexTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=LAYERSET,
                              layerset_path=None,
-                             sp_gist=False)
+                             sp_gist=False,
+                             replication=False,
+                             import_uuid=IMPORT_UUID)
 
 
     def tearDown(self):
@@ -89,7 +94,9 @@ class PgOSMFlexTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=LAYERSET,
                              layerset_path=None,
-                             sp_gist=False)
+                             sp_gist=False,
+                             replication=False,
+                             import_uuid=IMPORT_UUID)
 
         input_file = None
         result = pgosm_flex.get_export_filename(input_file)

@@ -141,7 +141,8 @@ def run_pgosm_flex(ram, region, subregion, data_only, debug,
                                          flex_path=paths['flex_path'],
                                          ram=ram,
                                          skip_nested=skip_nested,
-                                         import_mode=import_mode)
+                                         import_mode=import_mode,
+                                         debug=debug)
 
     if not success:
         msg = 'PgOSM Flex completed with errors. Details in output'
@@ -162,7 +163,7 @@ def run_pgosm_flex(ram, region, subregion, data_only, debug,
 
 
 def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
-                           import_mode):
+                           import_mode, debug):
     """Runs standard osm2pgsql command and optionally inits for replication
     (osm2pgsql-replication) mode.
 
@@ -174,6 +175,7 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
     ram : float
     skip_nested : boolean
     import_mode : import_mode.ImportMode
+    debug : boolean
 
     Returns
     ---------------------------
@@ -193,7 +195,8 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
                                                      out_path=out_path,
                                                      import_mode=import_mode)
 
-    run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, flex_path=flex_path)
+    run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, flex_path=flex_path,
+                  debug=debug)
 
     if not skip_nested:
         skip_nested = check_layerset_places(flex_path)
@@ -377,17 +380,23 @@ def get_export_full_path(out_path, export_filename):
     return export_path
 
 
-def run_osm2pgsql(osm2pgsql_command, flex_path):
+def run_osm2pgsql(osm2pgsql_command, flex_path, debug):
     """Runs the provided osm2pgsql command.
 
     Parameters
     ----------------------
     osm2pgsql_command : str
     flex_path : str
+    debug : boolean
     """
     logger = logging.getLogger('pgosm-flex')
     logger.info('Running osm2pgsql')
 
+    if debug:
+        print()
+        print(osm2pgsql_command)
+        print()
+        
     returncode = helpers.run_command_via_subprocess(cmd=osm2pgsql_command.split(),
                                                     cwd=flex_path)
 

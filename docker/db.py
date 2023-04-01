@@ -8,6 +8,7 @@ import time
 import psycopg
 import sh
 
+import qgis_styles
 
 LOGGER = logging.getLogger('pgosm-flex')
 
@@ -216,7 +217,8 @@ def prepare_pgosm_db(data_only, db_path, import_mode):
     if not data_only:
         LOGGER.info('Loading extras via Sqitch plus QGIS styles.')
         run_sqitch_prep(db_path)
-        load_qgis_styles(db_path)
+        qgis_styles.load_qgis_styles(db_path=db_path,
+                                     db_name=pg_conn_parts()['pg_db'])
     else:
         LOGGER.info('Data only mode enabled, no Sqitch or QGIS styles.')
 
@@ -365,58 +367,6 @@ def run_sqitch_prep(db_path):
     LOGGER.info('Sqitch deployment complete')
     return True
 
-
-def load_qgis_styles(db_path):
-    """Loads QGIS style data for easy formatting of most common layers.
-
-    Parameters
-    -------------------------
-    db_path : str
-    """
-    LOGGER.info('Load QGIS styles...')
-    # These two paths can easily be ran via psycopg
-    create_path = os.path.join(db_path,
-                               'qgis-style',
-                               'create_layer_styles.sql')
-    load_path = os.path.join(db_path,
-                             'qgis-style',
-                             '_load_layer_styles.sql')
-
-    with open(create_path, 'r') as file_in:
-        create_sql = file_in.read()
-
-    with open(load_path, 'r') as file_in:
-        load_sql = file_in.read()
-
-    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
-        cur = conn.cursor()
-        cur.execute(create_sql)
-    LOGGER.debug('QGIS Style table created')
-
-    # Loading layer_styles data is done from files created by pg_dump, using
-    # psql to reload is easiest
-    conn_string = os.environ['PGOSM_CONN']
-    cmds_populate = ['psql', '-d', conn_string,
-                     '-f', 'qgis-style/layer_styles.sql']
-
-    output = subprocess.run(cmds_populate,
-                            text=True,
-                            capture_output=True,
-                            cwd=db_path,
-                            check=False)
-
-    LOGGER.debug(f'Output from loading QGIS style data: {output.stdout}')
-
-    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
-        cur = conn.cursor()
-        cur.execute(load_sql)
-    LOGGER.info('QGIS Style table populated')
-
-    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
-        sql_clean = 'DELETE FROM public.layer_styles_staging;'
-        cur = conn.cursor()
-        cur.execute(sql_clean)
-        LOGGER.debug('QGIS Style staging table cleaned')
 
 
 def sqitch_db_string():
