@@ -33,7 +33,6 @@ CREATE TABLE IF NOT EXISTS osm.pgosm_flex (
     region text NOT NULL,
     pgosm_flex_version text NOT NULL,
     srid text NOT NULL,
-    project_url text NOT NULL,
     osm2pgsql_version text NOT NULL,
     "language" text NOT NULL,
     osm2pgsql_mode TEXT NOT NULL DEFAULT 'create',
@@ -59,6 +58,8 @@ ALTER TABLE osm.pgosm_flex
 
 ALTER TABLE osm.pgosm_flex
     ADD COLUMN IF NOT EXISTS import_status TEXT;
+
+ALTER TABLE osm.pgosm_flex DROP COLUMN IF EXISTS project_url;
 ]=]
 
 
@@ -91,7 +92,6 @@ local osm2pgsql_version = osm2pgsql.version
 local osm2pgsql_mode = osm2pgsql.mode
 
 local pgosm_flex_version = git_tag .. '-' .. commit_hash
-local project_url = 'https://github.com/rustprooflabs/pgosm-flex'
 
 
 -- Establish connection to Postgres
@@ -108,7 +108,7 @@ else
 end
 
 local sql_insert = [[ INSERT INTO osm.pgosm_flex (osm_date, default_date, region,
-        pgosm_flex_version, srid, project_url, osm2pgsql_version, "language",
+        pgosm_flex_version, srid, osm2pgsql_version, "language",
         osm2pgsql_mode, osm2pgsql_replication, import_uuid) ]] ..
  [[ VALUES (']] ..
  con:escape(pgosm_date) .. [[', ]] ..
@@ -116,7 +116,6 @@ local sql_insert = [[ INSERT INTO osm.pgosm_flex (osm_date, default_date, region
  con:escape(pgosm_region_combined) .. [[', ']] ..
  con:escape(pgosm_flex_version) .. [[', ']] ..
  con:escape(srid) .. [[', ']] ..
- con:escape(project_url) .. [[', ']] ..
  con:escape(osm2pgsql_version) .. [[', ']] ..
  con:escape(pgosm_language) .. [[', ']] ..
  con:escape(osm2pgsql_mode) .. [[', ]] ..
