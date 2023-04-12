@@ -55,13 +55,15 @@ CREATE ROLE pgosm_flex WITH LOGIN PASSWORD 'mysecretpassword';
 CREATE SCHEMA osm AUTHORIZATION pgosm_flex;
 GRANT CREATE ON DATABASE your_db_name
     TO pgosm_flex;
+GRANT CREATE ON SCHEMA public
+    TO pgosm_flex;
 ```
 
 These permissions should allow the full PgOSM Flex process to run.
 
+`GRANT CREATE ON DATABASE` is required to allow the sqitch process to run and create the `pgosm` schema.
 
-`GRANT CREATE` is required to allow the sqitch process to run and create the `pgosm` schema.
-
+`GRANT CREATE ON SCHEMA public` is required for Postgres 15 and newer.
 
 
 ## Reduced permissions
