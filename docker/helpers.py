@@ -83,9 +83,8 @@ def verify_checksum(md5_file, path):
 
 def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
                  layerset_path, sp_gist, replication, import_uuid):
-    """Sets environment variables needed by PgOSM Flex.
-
-    See /docs/MANUAL-STEPS-RUN.md for usage examples of environment variables.
+    """Sets environment variables needed by PgOSM Flex. Also creates DB
+    record in `osm.pgosm_flex` table.
 
     Parameters
     ------------------------
@@ -112,15 +111,6 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
     os.environ['PGOSM_REGION'] = region
     os.environ['PGOSM_IMPORT_UUID'] = str(import_uuid)
 
-    if subregion is None:
-        pgosm_region = f'{region}'
-    else:
-        os.environ['PGOSM_SUBREGION'] = subregion
-        pgosm_region = f'{region}-{subregion}'
-
-    # Used by helpers.lua
-    logger.debug(f'PGOSM_REGION_COMBINED: {pgosm_region}')
-    os.environ['PGOSM_REGION_COMBINED'] = pgosm_region
 
     if srid != DEFAULT_SRID:
         logger.info(f'SRID set: {srid}')
@@ -151,6 +141,30 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
     else:
         os.environ['PGOSM_REPLICATION'] = 'false'
 
+    pgosm_region = get_region_combined(region, subregion)
+    logger.debug(f'PGOSM_REGION_COMBINED: {pgosm_region}')
+
+
+
+def get_region_combined(region, subregion):
+    """Returns combined region with optional subregion.
+
+    Parameters
+    ------------------------
+    region : str
+    subregion : str (or None)
+
+    Returns
+    -------------------------
+    pgosm_region : str
+    """
+    if subregion is None:
+        pgosm_region = f'{region}'
+    else:
+        os.environ['PGOSM_SUBREGION'] = subregion
+        pgosm_region = f'{region}-{subregion}'
+
+    return pgosm_region
 
 
 def unset_env_vars():
@@ -160,7 +174,6 @@ def unset_env_vars():
     """
     os.environ.pop('PGOSM_REGION', None)
     os.environ.pop('PGOSM_SUBREGION', None)
-    os.environ.pop('PGOSM_COMBINED', None)
     os.environ.pop('PGOSM_SRID', None)
     os.environ.pop('PGOSM_LANGUAGE', None)
     os.environ.pop('PGOSM_LAYERSET_PATH', None)

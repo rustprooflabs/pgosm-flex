@@ -215,14 +215,44 @@ def prepare_pgosm_db(data_only, db_path, import_mode, schema_name):
 
     prepare_pgosm_schema()
 
+    # Now always running sqitch. Moving more database structures into proper
+    # management instead of being managed by Lua or Python.
+    run_sqitch_prep(db_path)
+
     if not data_only:
-        LOGGER.info('Loading extras via Sqitch plus QGIS styles.')
-        run_sqitch_prep(db_path)
+        LOGGER.info('Loading QGIS styles.')
         qgis_styles.load_qgis_styles(db_path=db_path,
                                      db_name=pg_conn_parts()['pg_db'],
                                      schema_name=schema_name)
     else:
-        LOGGER.info('Data only mode enabled, no Sqitch or QGIS styles.')
+        LOGGER.info('Data only mode enabled, not loading QGIS styles.')
+
+
+def start_import(pgosm_region, pgosm_date, srid, language, layerset):
+    """Creates record in osm.pgosm_flex table.
+    """
+    params = {'pgosm_region': pgosm_region, 'pgosm_date': pgosm_date,
+              'srid': srid, 'language': language, 'layerset': layerset}
+    sql_raw = """
+INSERT INTO osm.pgosm_flex
+    (osm_date, region, pgosm_flex_version, srid,
+        osm2pgsql_version, "language", osm2pgsql_mode, osm2pgsql_replication,
+        layerset)
+    VALUES(%(pgosm_date)s, %(pgosm_region)s, 'ZZ Fix Me', %(srid)s,
+        'ZZZ Fix Me',
+        COALESCE(%(language)s, ''), 'ZZZ Fix e', false, %(layerset)s
+        )
+    RETURNING id
+;
+"""
+    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
+        cur = conn.cursor()
+        cur.execute(sql_raw, params=params)
+        import_id = cur.fetchone()[0]
+
+    return import_id
+
+
 
 
 def pg_version_check():

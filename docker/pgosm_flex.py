@@ -103,6 +103,7 @@ def run_pgosm_flex(ram, region, subregion, data_only, debug,
     if region is None and input_file:
         region = input_file
 
+
     import_uuid = uuid.uuid4()
     helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
                          layerset, layerset_path, sp_gist, replication,
@@ -125,6 +126,14 @@ def run_pgosm_flex(ram, region, subregion, data_only, debug,
                         db_path=paths['db_path'],
                         import_mode=import_mode,
                         schema_name=schema_name)
+
+    import_id = db.start_import(pgosm_region=helpers.get_region_combined(region, subregion),
+                                pgosm_date=pgosm_date,
+                                srid=srid,
+                                language=language,
+                                layerset=layerset)
+
+    logger.info(f'Started import id {import_id}')
 
     if import_mode.replication_update:
         # If replication_update, a manual date is not valid.
