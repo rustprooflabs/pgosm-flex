@@ -13,6 +13,7 @@ Running PgOSM Flex is easy via the PgOSM Docker image
 1. The [quick start](quick-start.md) shows how easy it is to get started
 1. Change how PgOSM Flex runs with [common customizations](common-customization.md)
 1. [Customize layersets](layersets.md) to change what data you load
+1. Configure [connection to external](postgres-external.md) database, and use [replication](replication.md)
 
 
 ## Project goals
