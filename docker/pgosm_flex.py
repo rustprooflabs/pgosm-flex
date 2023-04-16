@@ -118,8 +118,9 @@ def run_pgosm_flex(ram, region, subregion, debug,
     # Setting pgosm_date when replication is updating isn't an option
     if replication_update:
         if pgosm_date != helpers.get_today():
-            logger.info('Overriding --pgosm-date due to replication update mode')
+            logger.warning('Overriding --pgosm-date due to replication update mode, setting to today')
             pgosm_date = helpers.get_today()
+            os.environ['PGOSM_DATE'] = pgosm_date
 
     logger.debug(f'UPDATE setting:  {update}')
     # Warning: Reusing the module's name here as import_mode...
@@ -152,10 +153,6 @@ def run_pgosm_flex(ram, region, subregion, debug,
     logger.info(f'Started import id {import_id}')
 
     if import_mode.replication_update:
-        # If replication_update, a manual date is not valid.
-        # Always setting this here is an easy way to enforce.
-        pgosm_date = helpers.get_today()
-        os.environ['PGOSM_DATE'] = pgosm_date
         logger.info('Running osm2pgsql-replication in update mode')
         success = run_replication_update(skip_nested=skip_nested,
                                          flex_path=paths['flex_path'])
