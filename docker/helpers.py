@@ -7,6 +7,8 @@ import os
 import sys
 from time import sleep
 
+import git
+
 import db
 
 
@@ -24,7 +26,7 @@ def get_today():
     return today
 
 
-def run_command_via_subprocess(cmd, cwd):
+def run_command_via_subprocess(cmd, cwd, output_lines=[]):
     """Wraps around subprocess.Popen to run commands outside of Python. Prints
     output as it goes, returns the status code from the command.
 
@@ -34,6 +36,8 @@ def run_command_via_subprocess(cmd, cwd):
         Parts of the command to run.
     cwd : str or None
         Set the working directory, or to None.
+    output_lines : list
+        Pass in a list to return the output details.
 
     Returns
     -----------------------
@@ -50,7 +54,9 @@ def run_command_via_subprocess(cmd, cwd):
                 break
 
             if output:
-                logger.info(output.strip().decode('utf-8'))
+                ln = output.strip().decode('utf-8')
+                output_lines.append(ln)
+                logger.info(ln)
             else:
                 # Only sleep when there wasn't output
                 sleep(1)
@@ -165,6 +171,30 @@ def get_region_combined(region, subregion):
         pgosm_region = f'{region}-{subregion}'
 
     return pgosm_region
+
+
+def get_git_info():
+    """Provides git info in the form of the latest tag and most recent short sha
+
+    Sends info to logger and returns string.
+
+    Returns
+    ----------------------
+    git_info : str
+    """
+    logger = logging.getLogger('pgosm-flex')
+    repo = git.Repo()
+    try:
+        sha = repo.head.object.hexsha
+        short_sha = repo.git.rev_parse(sha, short=True)
+        latest_tag = repo.git.describe('--abbrev=0', tags=True)
+        git_info = f'{latest_tag}-{short_sha}'
+    except ValueError:
+        git_info = 'Git info unavailable'
+        logger.error('Unable to get git information.')
+
+    logger.info(f'PgOSM Flex version:  {git_info}')
+    return git_info
 
 
 def unset_env_vars():

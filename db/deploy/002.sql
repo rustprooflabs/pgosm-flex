@@ -13,19 +13,20 @@ CREATE TABLE IF NOT EXISTS osm.pgosm_flex (
     pgosm_flex_version text NOT NULL,
     osm2pgsql_version text NOT NULL,
     "language" text NOT NULL,
-    osm2pgsql_mode TEXT NOT NULL DEFAULT 'create',
-    osm2pgsql_replication BOOLEAN NOT NULL DEFAULT False,
+    import_mode JSONB NOT NULL,
     import_status TEXT NOT NULL DEFAULT 'Initializing',
     CONSTRAINT pk_osm_pgosm_flex PRIMARY KEY (id)
 );
 
 ALTER TABLE osm.pgosm_flex
-    ADD COLUMN IF NOT EXISTS osm2pgsql_mode
-    TEXT NOT NULL DEFAULT 'create';
+    DROP COLUMN IF EXISTS osm2pgsql_mode
+;
 
 ALTER TABLE osm.pgosm_flex
-    ADD COLUMN IF NOT EXISTS osm2pgsql_replication
-    BOOLEAN NOT NULL DEFAULT False;
+    DROP COLUMN IF EXISTS osm2pgsql_replication;
+
+ALTER TABLE osm.pgosm_flex
+    ADD COLUMN IF NOT EXISTS import_mode JSONB NOT NULL;
 
 ALTER TABLE osm.pgosm_flex
     DROP COLUMN IF EXISTS import_uuid;
@@ -50,12 +51,8 @@ COMMENT ON COLUMN osm.pgosm_flex.pgosm_flex_version IS 'Version of PgOSM-Flex us
 COMMENT ON COLUMN osm.pgosm_flex.osm2pgsql_version IS 'Version of osm2pgsql used to load data.';
 COMMENT ON COLUMN osm.pgosm_flex.region IS 'Region specified at run time via env var PGOSM_REGION.';
 COMMENT ON COLUMN osm.pgosm_flex.language IS 'Preferred language specified at run time via env var PGOSM_LANGUAGE.  Empty string when not defined.';
-COMMENT ON COLUMN osm.pgosm_flex.osm2pgsql_mode IS 'Indicates which osm2pgsql mode was used, create or append.';
-COMMENT ON COLUMN osm.pgosm_flex.osm2pgsql_replication IS 'True indicates when osm2pgsql-replication was used for the import.';
 COMMENT ON COLUMN osm.pgosm_flex.layerset IS 'PgOSM Flex layerset used for the import style.';
 COMMENT ON COLUMN osm.pgosm_flex.import_status IS 'Status of the import. Starts as initialized, tracks status during imports and final success/failure.';
-
-
 
 
 

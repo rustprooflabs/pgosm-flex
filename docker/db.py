@@ -195,7 +195,7 @@ def prepare_pgosm_db(data_only, db_path, import_mode, schema_name):
     if pg_conn_parts()['pg_host'] == 'localhost':
         drop_it = True
         LOGGER.debug('Running standard database prep for in-Docker operation. Includes DROP/CREATE DATABASE')
-        LOGGER.debug(f'import_mode: {import_mode}')
+        LOGGER.debug(f'import_mode: {import_mode.as_json()}')
         if import_mode.slim_no_drop:
             if not import_mode.append_first_run:
                 drop_it = False
@@ -228,19 +228,23 @@ def prepare_pgosm_db(data_only, db_path, import_mode, schema_name):
         LOGGER.info('Data only mode enabled, not loading QGIS styles.')
 
 
-def start_import(pgosm_region, pgosm_date, srid, language, layerset):
+def start_import(pgosm_region, pgosm_date, srid, language, layerset, git_info,
+                 osm2pgsql_version, import_mode):
     """Creates record in osm.pgosm_flex table.
     """
     params = {'pgosm_region': pgosm_region, 'pgosm_date': pgosm_date,
-              'srid': srid, 'language': language, 'layerset': layerset}
+              'srid': srid, 'language': language, 'layerset': layerset,
+              'git_info': git_info, 'osm2pgsql_version': osm2pgsql_version,
+              'import_mode': import_mode.as_json()}
+
     sql_raw = """
 INSERT INTO osm.pgosm_flex
     (osm_date, region, pgosm_flex_version, srid,
-        osm2pgsql_version, "language", osm2pgsql_mode, osm2pgsql_replication,
+        osm2pgsql_version, "language", import_mode,
         layerset)
-    VALUES(%(pgosm_date)s, %(pgosm_region)s, 'ZZ Fix Me', %(srid)s,
-        'ZZZ Fix Me',
-        COALESCE(%(language)s, ''), 'ZZZ Fix e', false, %(layerset)s
+    VALUES(%(pgosm_date)s, %(pgosm_region)s, %(git_info)s, %(srid)s,
+        %(osm2pgsql_version)s,
+        COALESCE(%(language)s, ''), %(import_mode)s, %(layerset)s
         )
     RETURNING id
 ;
@@ -600,22 +604,22 @@ def fix_pg_dump_create_public(export_path):
     LOGGER.debug(result)
 
 
-def log_import_message(import_uuid, msg):
+def log_import_message(import_id, msg):
     """Logs msg to database in osm.pgosm_flex for import_uuid.
 
     Parameters
     -------------------------------
-    import_uuid : uuid
+    import_id : int
     msg : str
     """
     sql_raw = """
 UPDATE osm.pgosm_flex
     SET import_status = %(msg)s
-    WHERE import_uuid = %(import_uuid)s
+    WHERE id = %(import_id)s
 ;
 """
     with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
-        params = {'import_uuid': str(import_uuid), 'msg': msg}
+        params = {'import_id': import_id, 'msg': msg}
         cur = conn.cursor()
         cur.execute(sql_raw, params=params)
 

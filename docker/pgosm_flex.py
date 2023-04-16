@@ -120,18 +120,28 @@ def run_pgosm_flex(ram, region, subregion, data_only, debug,
     import_mode = ImportMode(replication=replication,
                              replication_update=replication_update,
                              update=update)
-    logger.debug(f'IMPORT MODE {import_mode}')
 
     db.prepare_pgosm_db(data_only=data_only,
                         db_path=paths['db_path'],
                         import_mode=import_mode,
                         schema_name=schema_name)
 
+    # There's probably a better way to get this data out, but this worked right
+    # away and I'm moving on.  I'm breaking enough other things that this seemed
+    # to be a good compromise today.
+    vers_lines = []
+    helpers.run_command_via_subprocess(cmd=['osm2pgsql', '--version'],
+                                       cwd='/usr/bin/',
+                                       output_lines=vers_lines)
+
     import_id = db.start_import(pgosm_region=helpers.get_region_combined(region, subregion),
                                 pgosm_date=pgosm_date,
                                 srid=srid,
                                 language=language,
-                                layerset=layerset)
+                                layerset=layerset,
+                                git_info=helpers.get_git_info(),
+                                osm2pgsql_version=vers_lines,
+                                import_mode=import_mode)
 
     logger.info(f'Started import id {import_id}')
 
@@ -156,9 +166,11 @@ def run_pgosm_flex(ram, region, subregion, data_only, debug,
 
     if not success:
         msg = 'PgOSM Flex completed with errors. Details in output'
-        db.log_import_message(import_uuid=import_uuid, msg='Import failed')
+        db.log_import_message(import_id=import_id, msg='Failed')
         logger.warning(msg)
         sys.exit(msg)
+
+    db.log_import_message(import_id=import_id, msg='Completed')
 
     if schema_name != 'osm':
         db.rename_schema(schema_name)

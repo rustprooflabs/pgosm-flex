@@ -22,7 +22,7 @@ def osm2pgsql_recommendation(ram, pbf_filename, out_path, import_mode):
         Total system RAM available in GB
     pbf_filename : str
     out_path : str
-    import_mode : dict
+    import_mode : import_mode.ImportMode
 
     Returns
     ----------------------
@@ -53,7 +53,7 @@ def get_recommended_script(system_ram_gb, osm_pbf_gb, import_mode, pbf_filename,
     -------------------------------
     system_ram_gb : float
     osm_pbf_gb : float
-    import_mode : dict
+    import_mode : import_mode.ImportMode
     pbf_filename : str
         Can be filename or absolute path.
     output_path : str
