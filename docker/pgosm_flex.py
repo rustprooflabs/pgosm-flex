@@ -56,7 +56,7 @@ from import_mode import ImportMode
 @click.option('--replication',
               default=False,
               is_flag=True,
-              help='EXPERIMENTAL - Replication mode enables updates via osm2pgsql-replication.')
+              help='Replication mode enables updates via osm2pgsql-replication.')
 @click.option('--schema-name', required=False,
               default='osm',
               help="Change the final schema name, defaults to 'osm'.")
@@ -115,6 +115,12 @@ def run_pgosm_flex(ram, region, subregion, debug,
     else:
         replication_update = False
 
+    # Setting pgosm_date when replication is updating isn't an option
+    if replication_update:
+        if pgosm_date != helpers.get_today():
+            logger.info('Overriding --pgosm-date due to replication update mode')
+            pgosm_date = helpers.get_today()
+
     logger.debug(f'UPDATE setting:  {update}')
     # Warning: Reusing the module's name here as import_mode...
     import_mode = ImportMode(replication=replication,
@@ -151,7 +157,6 @@ def run_pgosm_flex(ram, region, subregion, debug,
         pgosm_date = helpers.get_today()
         os.environ['PGOSM_DATE'] = pgosm_date
         logger.info('Running osm2pgsql-replication in update mode')
-        logger.warning('Replication mode is Experimental (getting closer!)')
         success = run_replication_update(skip_nested=skip_nested,
                                          flex_path=paths['flex_path'])
     else:
