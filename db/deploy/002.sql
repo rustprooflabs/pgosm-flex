@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS osm.pgosm_flex (
     pgosm_flex_version text NOT NULL,
     osm2pgsql_version text NOT NULL,
     "language" text NOT NULL,
-    import_mode JSONB NOT NULL,
+    import_mode JSONB NULL,
     import_status TEXT NOT NULL DEFAULT 'Initializing',
     CONSTRAINT pk_osm_pgosm_flex PRIMARY KEY (id)
 );
@@ -30,7 +30,7 @@ ALTER TABLE osm.pgosm_flex
     DROP COLUMN IF EXISTS osm2pgsql_replication;
 
 ALTER TABLE osm.pgosm_flex
-    ADD COLUMN IF NOT EXISTS import_mode JSONB NOT NULL;
+    ADD COLUMN IF NOT EXISTS import_mode JSONB NULL;
 
 ALTER TABLE osm.pgosm_flex
     DROP COLUMN IF EXISTS import_uuid;
@@ -39,7 +39,7 @@ ALTER TABLE osm.pgosm_flex
     ADD COLUMN IF NOT EXISTS import_status TEXT NOT NULL DEFAULT 'Initializing';
 
 ALTER TABLE osm.pgosm_flex
-    ADD COLUMN IF NOT EXISTS layerset TEXT;
+    ADD COLUMN IF NOT EXISTS layerset TEXT NULL;
 
 
 ALTER TABLE osm.pgosm_flex DROP COLUMN IF EXISTS project_url;
