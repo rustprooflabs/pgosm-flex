@@ -2,9 +2,6 @@
 require "layerset"
 
 
-require "style.pgosm-meta"
-
-
 if conf['layerset']['amenity'] then
     print('Including amenity')
     require "style.amenity"

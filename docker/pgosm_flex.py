@@ -33,10 +33,6 @@ from import_mode import ImportMode
 @click.option('--subregion', required=False,
               help='Sub-region name matching the filename for data sourced from Geofabrik. e.g. district-of-columbia')
 # Remainder of options in alphabetical order
-@click.option('--data-only',
-              default=False,
-              is_flag=True,
-              help="When set, skips running Sqitch and importing QGIS Styles.")
 @click.option('--debug', is_flag=True,
               help='Enables additional log output')
 @click.option('--input-file',
@@ -60,7 +56,7 @@ from import_mode import ImportMode
 @click.option('--replication',
               default=False,
               is_flag=True,
-              help='EXPERIMENTAL - Replication mode enables updates via osm2pgsql-replication.')
+              help='Replication mode enables updates via osm2pgsql-replication.')
 @click.option('--schema-name', required=False,
               default='osm',
               help="Change the final schema name, defaults to 'osm'.")
@@ -68,6 +64,10 @@ from import_mode import ImportMode
               default=False,
               is_flag=True,
               help='When set, skips calculating nested admin polygons. Can be time consuming on large regions.')
+@click.option('--skip-qgis-style',
+              default=False,
+              is_flag=True,
+              help="When set, skips running importing QGIS Styles.")
 @click.option('--srid', required=False, default=helpers.DEFAULT_SRID,
               envvar="PGOSM_SRID",
               help="SRID for data loaded by osm2pgsql to PostGIS. Defaults to 3857")
@@ -76,10 +76,10 @@ from import_mode import ImportMode
 @click.option('--update', default=None,
               type=click.Choice(['append', 'create'], case_sensitive=True),
               help='EXPERIMENTAL - Wrap around osm2pgsql create v. append modes, without using osm2pgsql-replication.')
-def run_pgosm_flex(ram, region, subregion, data_only, debug,
+def run_pgosm_flex(ram, region, subregion, debug,
                     input_file, layerset, layerset_path, language, pg_dump,
                     pgosm_date, replication, schema_name, skip_nested,
-                    srid, sp_gist, update):
+                    skip_qgis_style, srid, sp_gist, update):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
     """
     paths = get_paths()
@@ -103,6 +103,7 @@ def run_pgosm_flex(ram, region, subregion, data_only, debug,
     if region is None and input_file:
         region = input_file
 
+
     import_uuid = uuid.uuid4()
     helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
                          layerset, layerset_path, sp_gist, replication,
@@ -114,25 +115,45 @@ def run_pgosm_flex(ram, region, subregion, data_only, debug,
     else:
         replication_update = False
 
+    # Setting pgosm_date when replication is updating isn't an option
+    if replication_update:
+        if pgosm_date != helpers.get_today():
+            logger.warning('Overriding --pgosm-date due to replication update mode, setting to today')
+            pgosm_date = helpers.get_today()
+            os.environ['PGOSM_DATE'] = pgosm_date
+
     logger.debug(f'UPDATE setting:  {update}')
     # Warning: Reusing the module's name here as import_mode...
     import_mode = ImportMode(replication=replication,
                              replication_update=replication_update,
                              update=update)
-    logger.debug(f'IMPORT MODE {import_mode}')
 
-    db.prepare_pgosm_db(data_only=data_only,
+    db.prepare_pgosm_db(skip_qgis_style=skip_qgis_style,
                         db_path=paths['db_path'],
                         import_mode=import_mode,
                         schema_name=schema_name)
 
+    # There's probably a better way to get this data out, but this worked right
+    # away and I'm moving on.  I'm breaking enough other things that this seemed
+    # to be a good compromise today.
+    vers_lines = []
+    helpers.run_command_via_subprocess(cmd=['osm2pgsql', '--version'],
+                                       cwd='/usr/bin/',
+                                       output_lines=vers_lines)
+
+    import_id = db.start_import(pgosm_region=helpers.get_region_combined(region, subregion),
+                                pgosm_date=pgosm_date,
+                                srid=srid,
+                                language=language,
+                                layerset=layerset,
+                                git_info=helpers.get_git_info(),
+                                osm2pgsql_version=vers_lines,
+                                import_mode=import_mode)
+
+    logger.info(f'Started import id {import_id}')
+
     if import_mode.replication_update:
-        # If replication_update, a manual date is not valid.
-        # Always setting this here is an easy way to enforce.
-        pgosm_date = helpers.get_today()
-        os.environ['PGOSM_DATE'] = pgosm_date
         logger.info('Running osm2pgsql-replication in update mode')
-        logger.warning('Replication mode is Experimental (getting closer!)')
         success = run_replication_update(skip_nested=skip_nested,
                                          flex_path=paths['flex_path'])
     else:
@@ -147,9 +168,11 @@ def run_pgosm_flex(ram, region, subregion, data_only, debug,
 
     if not success:
         msg = 'PgOSM Flex completed with errors. Details in output'
-        db.log_import_message(import_uuid=import_uuid, msg='Import failed')
+        db.log_import_message(import_id=import_id, msg='Failed')
         logger.warning(msg)
         sys.exit(msg)
+
+    db.log_import_message(import_id=import_id, msg='Completed')
 
     if schema_name != 'osm':
         db.rename_schema(schema_name)
@@ -157,7 +180,7 @@ def run_pgosm_flex(ram, region, subregion, data_only, debug,
     dump_database(input_file=input_file,
                   out_path=paths['out_path'],
                   pg_dump=pg_dump,
-                  data_only=data_only,
+                  skip_qgis_style=skip_qgis_style,
                   schema_name=schema_name)
 
     logger.info('PgOSM Flex complete!')
@@ -244,7 +267,8 @@ osm2pgsql-replication update -d $PGOSM_CONN \
 """
     update_cmd = update_cmd.replace('-d $PGOSM_CONN', f'-d {conn_string}')
     returncode = helpers.run_command_via_subprocess(cmd=update_cmd.split(),
-                                                    cwd=flex_path)
+                                                    cwd=flex_path,
+                                                    print=True)
 
     if returncode != 0:
         err_msg = f'Failure. Return code: {returncode}'
@@ -399,7 +423,8 @@ def run_osm2pgsql(osm2pgsql_command, flex_path, debug):
         print()
         
     returncode = helpers.run_command_via_subprocess(cmd=osm2pgsql_command.split(),
-                                                    cwd=flex_path)
+                                                    cwd=flex_path,
+                                                    print=True)
 
     if returncode != 0:
         err_msg = f'Failed to run osm2pgsql. Return code: {returncode}'
@@ -479,7 +504,7 @@ def run_post_processing(flex_path, skip_nested, import_mode):
     return True
 
 
-def dump_database(input_file, out_path, pg_dump, data_only, schema_name):
+def dump_database(input_file, out_path, pg_dump, skip_qgis_style, schema_name):
     """Runs pg_dump when necessary to export the processed OpenStreetMap data.
 
     Parameters
@@ -487,7 +512,7 @@ def dump_database(input_file, out_path, pg_dump, data_only, schema_name):
     input_file : str
     out_path : str
     pg_dump : bool
-    data_only : bool
+    skip_qgis_style : bool
     schema_name : str
     """
     if pg_dump:
@@ -495,7 +520,7 @@ def dump_database(input_file, out_path, pg_dump, data_only, schema_name):
         export_path = get_export_full_path(out_path, export_filename)
 
         db.run_pg_dump(export_path=export_path,
-                       data_only=data_only,
+                       skip_qgis_style=skip_qgis_style,
                        schema_name=schema_name)
     else:
         logging.getLogger('pgosm-flex').info('Skipping pg_dump')
@@ -543,7 +568,8 @@ def run_osm2pgsql_replication_init(pbf_path, pbf_filename):
     init_cmd = init_cmd.replace('-d $PGOSM_CONN', f'-d {conn_string}')
 
     returncode = helpers.run_command_via_subprocess(cmd=init_cmd.split(),
-                                                    cwd=None)
+                                                    cwd=None,
+                                                    print=True)
 
     if returncode != 0:
         err_msg = f'Failed to run osm2pgsql-replication. Return code: {returncode}'

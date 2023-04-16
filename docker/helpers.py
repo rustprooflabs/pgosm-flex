@@ -6,6 +6,7 @@ import subprocess
 import os
 import sys
 from time import sleep
+import git
 
 import db
 
@@ -24,7 +25,7 @@ def get_today():
     return today
 
 
-def run_command_via_subprocess(cmd, cwd):
+def run_command_via_subprocess(cmd, cwd, output_lines=[], print=False):
     """Wraps around subprocess.Popen to run commands outside of Python. Prints
     output as it goes, returns the status code from the command.
 
@@ -34,6 +35,10 @@ def run_command_via_subprocess(cmd, cwd):
         Parts of the command to run.
     cwd : str or None
         Set the working directory, or to None.
+    output_lines : list
+        Pass in a list to return the output details.
+    print : bool
+        Default False.  Set to true to also print to logger
 
     Returns
     -----------------------
@@ -50,7 +55,10 @@ def run_command_via_subprocess(cmd, cwd):
                 break
 
             if output:
-                logger.info(output.strip().decode('utf-8'))
+                ln = output.strip().decode('utf-8')
+                output_lines.append(ln)
+                if print:
+                    logger.info(ln)
             else:
                 # Only sleep when there wasn't output
                 sleep(1)
@@ -83,9 +91,8 @@ def verify_checksum(md5_file, path):
 
 def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
                  layerset_path, sp_gist, replication, import_uuid):
-    """Sets environment variables needed by PgOSM Flex.
-
-    See /docs/MANUAL-STEPS-RUN.md for usage examples of environment variables.
+    """Sets environment variables needed by PgOSM Flex. Also creates DB
+    record in `osm.pgosm_flex` table.
 
     Parameters
     ------------------------
@@ -112,15 +119,6 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
     os.environ['PGOSM_REGION'] = region
     os.environ['PGOSM_IMPORT_UUID'] = str(import_uuid)
 
-    if subregion is None:
-        pgosm_region = f'{region}'
-    else:
-        os.environ['PGOSM_SUBREGION'] = subregion
-        pgosm_region = f'{region}-{subregion}'
-
-    # Used by helpers.lua
-    logger.debug(f'PGOSM_REGION_COMBINED: {pgosm_region}')
-    os.environ['PGOSM_REGION_COMBINED'] = pgosm_region
 
     if srid != DEFAULT_SRID:
         logger.info(f'SRID set: {srid}')
@@ -151,6 +149,54 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
     else:
         os.environ['PGOSM_REPLICATION'] = 'false'
 
+    pgosm_region = get_region_combined(region, subregion)
+    logger.debug(f'PGOSM_REGION_COMBINED: {pgosm_region}')
+
+
+
+def get_region_combined(region, subregion):
+    """Returns combined region with optional subregion.
+
+    Parameters
+    ------------------------
+    region : str
+    subregion : str (or None)
+
+    Returns
+    -------------------------
+    pgosm_region : str
+    """
+    if subregion is None:
+        pgosm_region = f'{region}'
+    else:
+        os.environ['PGOSM_SUBREGION'] = subregion
+        pgosm_region = f'{region}-{subregion}'
+
+    return pgosm_region
+
+
+def get_git_info():
+    """Provides git info in the form of the latest tag and most recent short sha
+
+    Sends info to logger and returns string.
+
+    Returns
+    ----------------------
+    git_info : str
+    """
+    logger = logging.getLogger('pgosm-flex')
+    repo = git.Repo()
+    try:
+        sha = repo.head.object.hexsha
+        short_sha = repo.git.rev_parse(sha, short=True)
+        latest_tag = repo.git.describe('--abbrev=0', tags=True)
+        git_info = f'{latest_tag}-{short_sha}'
+    except ValueError:
+        git_info = 'Git info unavailable'
+        logger.error('Unable to get git information.')
+
+    logger.info(f'PgOSM Flex version:  {git_info}')
+    return git_info
 
 
 def unset_env_vars():
@@ -160,7 +206,6 @@ def unset_env_vars():
     """
     os.environ.pop('PGOSM_REGION', None)
     os.environ.pop('PGOSM_SUBREGION', None)
-    os.environ.pop('PGOSM_COMBINED', None)
     os.environ.pop('PGOSM_SRID', None)
     os.environ.pop('PGOSM_LANGUAGE', None)
     os.environ.pop('PGOSM_LAYERSET_PATH', None)

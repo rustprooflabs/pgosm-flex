@@ -53,10 +53,6 @@ end
 
 local errors = 0
 
-if not post_processing('pgosm-meta') then
-    errors = errors + 1
-end
-
 for ix, layer in ipairs(layers) do
     if conf['layerset'][layer] then
         if not post_processing(layer) then

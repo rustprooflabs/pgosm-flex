@@ -111,7 +111,7 @@ docker-exec-input-file: build-run-docker
 		--layerset=minimal \
 		--ram=$(RAM) \
 		--input-file=/app/output/$(INPUT_FILE_NAME) \
-		--data-only --skip-nested # Make this test run faster
+		--skip-qgis-style --skip-nested # Make this test run faster
 
 
 
@@ -150,7 +150,7 @@ docker-exec-replication-w-input-file: build-run-docker
 		--ram=$(RAM) \
 		--replication \
 		--input-file=/app/output/$(INPUT_FILE_NAME) \
-		--data-only --skip-nested # Make this test run faster
+		--skip-qgis-style --skip-nested # Make this test run faster
 
 
 .PHONE: docker-exec-region
@@ -180,7 +180,7 @@ docker-exec-region: build-run-docker
 		--layerset=minimal \
 		--ram=$(RAM) \
 		--region=$(REGION_FILE_NAME) \
-		--data-only --skip-nested # Make this test run faster
+		--skip-qgis-style --skip-nested # Make this test run faster
 
 
 .PHONY: unit-tests

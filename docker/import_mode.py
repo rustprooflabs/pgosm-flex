@@ -1,6 +1,7 @@
 """Import Mode provides class to ease logic related to various import modes.
 """
 import logging
+import json
 
 
 class ImportMode():
@@ -79,4 +80,15 @@ class ImportMode():
         if self.update is not None:
             if self.update == 'append':
                 self.run_post_sql = False
+
+    def as_json(self):
+        """Returns key details as a dictionary.
+        """
+        self_as_dict = {'update': self.update,
+                'replication': self.replication,
+                'replication_update': self.replication_update,
+                'append_first_run': self.append_first_run,
+                'slim_no_drop': self.slim_no_drop,
+                'run_post_sql': self.run_post_sql}
+        return json.dumps(self_as_dict)
 

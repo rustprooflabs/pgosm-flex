@@ -3,3 +3,4 @@
 %uri=https://github.com/rustprooflabs/pgosm-flex
 
 001 2021-01-07T23:50:19Z Ryan Lambert <ryan@rustprooflabs.com> # Initial structure for road lookup
+002 [001] 2023-04-15T21:19:56Z Ryan Lambert <ryan@rustprooflabs.com> # Move pgosm_flex meta table management out of Lua scripts

@@ -182,12 +182,12 @@ def pg_isready():
     return True
 
 
-def prepare_pgosm_db(data_only, db_path, import_mode, schema_name):
+def prepare_pgosm_db(skip_qgis_style, db_path, import_mode, schema_name):
     """Runs through series of steps to prepare database for PgOSM.
 
     Parameters
     --------------------------
-    data_only : bool
+    skip_qgis_style : bool
     db_path : str
     import_mode : import_mode.ImportMode
     schema_name : str
@@ -195,7 +195,7 @@ def prepare_pgosm_db(data_only, db_path, import_mode, schema_name):
     if pg_conn_parts()['pg_host'] == 'localhost':
         drop_it = True
         LOGGER.debug('Running standard database prep for in-Docker operation. Includes DROP/CREATE DATABASE')
-        LOGGER.debug(f'import_mode: {import_mode}')
+        LOGGER.debug(f'import_mode: {import_mode.as_json()}')
         if import_mode.slim_no_drop:
             if not import_mode.append_first_run:
                 drop_it = False
@@ -215,14 +215,63 @@ def prepare_pgosm_db(data_only, db_path, import_mode, schema_name):
 
     prepare_pgosm_schema()
 
-    if not data_only:
-        LOGGER.info('Loading extras via Sqitch plus QGIS styles.')
-        run_sqitch_prep(db_path)
+    # Now always running sqitch. Moving more database structures into proper
+    # management instead of being managed by Lua or Python.
+    run_sqitch_prep(db_path)
+
+    if skip_qgis_style:
+        LOGGER.info('Skipping QGIS styles')
+    else:
+        LOGGER.info('Loading QGIS styles')
         qgis_styles.load_qgis_styles(db_path=db_path,
                                      db_name=pg_conn_parts()['pg_db'],
                                      schema_name=schema_name)
-    else:
-        LOGGER.info('Data only mode enabled, no Sqitch or QGIS styles.')
+        
+
+
+def start_import(pgosm_region, pgosm_date, srid, language, layerset, git_info,
+                 osm2pgsql_version, import_mode):
+    """Creates record in osm.pgosm_flex table.
+
+    Parameters
+    ---------------------------
+    pgosm_region : str
+    pgosm_date : str (ish?)
+    srid : int
+    language : str
+    layerset : str
+    git_info : str
+    osm2pgsql_version : str
+    import_mode : import_mode.ImportMode
+
+    Returns
+    ----------------------------
+    import_id : int
+        Value from the `id` column in `osm.pgosm_flex`.
+    """
+    params = {'pgosm_region': pgosm_region, 'pgosm_date': pgosm_date,
+              'srid': srid, 'language': language, 'layerset': layerset,
+              'git_info': git_info, 'osm2pgsql_version': osm2pgsql_version,
+              'import_mode': import_mode.as_json()}
+
+    sql_raw = """
+INSERT INTO osm.pgosm_flex
+    (osm_date, region, pgosm_flex_version, srid,
+        osm2pgsql_version, "language", import_mode,
+        layerset)
+    VALUES(%(pgosm_date)s, %(pgosm_region)s, %(git_info)s, %(srid)s,
+        %(osm2pgsql_version)s,
+        COALESCE(%(language)s, ''), %(import_mode)s, %(layerset)s
+        )
+    RETURNING id
+;
+"""
+    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
+        cur = conn.cursor()
+        cur.execute(sql_raw, params=params)
+        import_id = cur.fetchone()[0]
+
+    return import_id
 
 
 def pg_version_check():
@@ -519,20 +568,20 @@ def rename_schema(schema_name):
         cur.execute(sql_raw)
 
 
-def run_pg_dump(export_path, data_only, schema_name):
+def run_pg_dump(export_path, skip_qgis_style, schema_name):
     """Runs pg_dump to save processed data to load into other PostGIS DBs.
 
     Parameters
     ---------------------------
     export_path : str
         Absolute path to output .sql file
-    data_only : bool
+    skip_qgis_style : bool
     schema_name : str
     """
     logger = logging.getLogger('pgosm-flex')
     conn_string = os.environ['PGOSM_CONN']
 
-    if data_only:
+    if skip_qgis_style:
         logger.info(f'Running pg_dump (only {schema_name} schema)')
         cmds = ['pg_dump', '-d', conn_string,
                 f'--schema={schema_name}',
@@ -570,22 +619,22 @@ def fix_pg_dump_create_public(export_path):
     LOGGER.debug(result)
 
 
-def log_import_message(import_uuid, msg):
+def log_import_message(import_id, msg):
     """Logs msg to database in osm.pgosm_flex for import_uuid.
 
     Parameters
     -------------------------------
-    import_uuid : uuid
+    import_id : int
     msg : str
     """
     sql_raw = """
 UPDATE osm.pgosm_flex
     SET import_status = %(msg)s
-    WHERE import_uuid = %(import_uuid)s
+    WHERE id = %(import_id)s
 ;
 """
     with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
-        params = {'import_uuid': str(import_uuid), 'msg': msg}
+        params = {'import_id': import_id, 'msg': msg}
         cur = conn.cursor()
         cur.execute(sql_raw, params=params)
 
