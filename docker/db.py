@@ -232,6 +232,22 @@ def prepare_pgosm_db(skip_qgis_style, db_path, import_mode, schema_name):
 def start_import(pgosm_region, pgosm_date, srid, language, layerset, git_info,
                  osm2pgsql_version, import_mode):
     """Creates record in osm.pgosm_flex table.
+
+    Parameters
+    ---------------------------
+    pgosm_region : str
+    pgosm_date : str (ish?)
+    srid : int
+    language : str
+    layerset : str
+    git_info : str
+    osm2pgsql_version : str
+    import_mode : import_mode.ImportMode
+
+    Returns
+    ----------------------------
+    import_id : int
+        Value from the `id` column in `osm.pgosm_flex`.
     """
     params = {'pgosm_region': pgosm_region, 'pgosm_date': pgosm_date,
               'srid': srid, 'language': language, 'layerset': layerset,
@@ -256,8 +272,6 @@ INSERT INTO osm.pgosm_flex
         import_id = cur.fetchone()[0]
 
     return import_id
-
-
 
 
 def pg_version_check():

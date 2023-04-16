@@ -6,7 +6,6 @@ import subprocess
 import os
 import sys
 from time import sleep
-
 import git
 
 import db
@@ -26,7 +25,7 @@ def get_today():
     return today
 
 
-def run_command_via_subprocess(cmd, cwd, output_lines=[]):
+def run_command_via_subprocess(cmd, cwd, output_lines=[], print=False):
     """Wraps around subprocess.Popen to run commands outside of Python. Prints
     output as it goes, returns the status code from the command.
 
@@ -38,6 +37,8 @@ def run_command_via_subprocess(cmd, cwd, output_lines=[]):
         Set the working directory, or to None.
     output_lines : list
         Pass in a list to return the output details.
+    print : bool
+        Default False.  Set to true to also print to logger
 
     Returns
     -----------------------
@@ -56,7 +57,8 @@ def run_command_via_subprocess(cmd, cwd, output_lines=[]):
             if output:
                 ln = output.strip().decode('utf-8')
                 output_lines.append(ln)
-                logger.info(ln)
+                if print:
+                    logger.info(ln)
             else:
                 # Only sleep when there wasn't output
                 sleep(1)
