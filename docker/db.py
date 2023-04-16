@@ -182,12 +182,12 @@ def pg_isready():
     return True
 
 
-def prepare_pgosm_db(data_only, db_path, import_mode, schema_name):
+def prepare_pgosm_db(skip_qgis_style, db_path, import_mode, schema_name):
     """Runs through series of steps to prepare database for PgOSM.
 
     Parameters
     --------------------------
-    data_only : bool
+    skip_qgis_style : bool
     db_path : str
     import_mode : import_mode.ImportMode
     schema_name : str
@@ -219,13 +219,14 @@ def prepare_pgosm_db(data_only, db_path, import_mode, schema_name):
     # management instead of being managed by Lua or Python.
     run_sqitch_prep(db_path)
 
-    if not data_only:
-        LOGGER.info('Loading QGIS styles.')
+    if skip_qgis_style:
+        LOGGER.info('Skipping QGIS styles')
+    else:
+        LOGGER.info('Loading QGIS styles')
         qgis_styles.load_qgis_styles(db_path=db_path,
                                      db_name=pg_conn_parts()['pg_db'],
                                      schema_name=schema_name)
-    else:
-        LOGGER.info('Data only mode enabled, not loading QGIS styles.')
+        
 
 
 def start_import(pgosm_region, pgosm_date, srid, language, layerset, git_info,
@@ -553,20 +554,20 @@ def rename_schema(schema_name):
         cur.execute(sql_raw)
 
 
-def run_pg_dump(export_path, data_only, schema_name):
+def run_pg_dump(export_path, skip_qgis_style, schema_name):
     """Runs pg_dump to save processed data to load into other PostGIS DBs.
 
     Parameters
     ---------------------------
     export_path : str
         Absolute path to output .sql file
-    data_only : bool
+    skip_qgis_style : bool
     schema_name : str
     """
     logger = logging.getLogger('pgosm-flex')
     conn_string = os.environ['PGOSM_CONN']
 
-    if data_only:
+    if skip_qgis_style:
         logger.info(f'Running pg_dump (only {schema_name} schema)')
         cmds = ['pg_dump', '-d', conn_string,
                 f'--schema={schema_name}',

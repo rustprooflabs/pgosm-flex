@@ -33,10 +33,6 @@ from import_mode import ImportMode
 @click.option('--subregion', required=False,
               help='Sub-region name matching the filename for data sourced from Geofabrik. e.g. district-of-columbia')
 # Remainder of options in alphabetical order
-@click.option('--data-only',
-              default=False,
-              is_flag=True,
-              help="When set, skips running Sqitch and importing QGIS Styles.")
 @click.option('--debug', is_flag=True,
               help='Enables additional log output')
 @click.option('--input-file',
@@ -68,6 +64,10 @@ from import_mode import ImportMode
               default=False,
               is_flag=True,
               help='When set, skips calculating nested admin polygons. Can be time consuming on large regions.')
+@click.option('--skip-qgis-style',
+              default=False,
+              is_flag=True,
+              help="When set, skips running importing QGIS Styles.")
 @click.option('--srid', required=False, default=helpers.DEFAULT_SRID,
               envvar="PGOSM_SRID",
               help="SRID for data loaded by osm2pgsql to PostGIS. Defaults to 3857")
@@ -76,10 +76,10 @@ from import_mode import ImportMode
 @click.option('--update', default=None,
               type=click.Choice(['append', 'create'], case_sensitive=True),
               help='EXPERIMENTAL - Wrap around osm2pgsql create v. append modes, without using osm2pgsql-replication.')
-def run_pgosm_flex(ram, region, subregion, data_only, debug,
+def run_pgosm_flex(ram, region, subregion, debug,
                     input_file, layerset, layerset_path, language, pg_dump,
                     pgosm_date, replication, schema_name, skip_nested,
-                    srid, sp_gist, update):
+                    skip_qgis_style, srid, sp_gist, update):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
     """
     paths = get_paths()
@@ -121,7 +121,7 @@ def run_pgosm_flex(ram, region, subregion, data_only, debug,
                              replication_update=replication_update,
                              update=update)
 
-    db.prepare_pgosm_db(data_only=data_only,
+    db.prepare_pgosm_db(skip_qgis_style=skip_qgis_style,
                         db_path=paths['db_path'],
                         import_mode=import_mode,
                         schema_name=schema_name)
@@ -178,7 +178,7 @@ def run_pgosm_flex(ram, region, subregion, data_only, debug,
     dump_database(input_file=input_file,
                   out_path=paths['out_path'],
                   pg_dump=pg_dump,
-                  data_only=data_only,
+                  skip_qgis_style=skip_qgis_style,
                   schema_name=schema_name)
 
     logger.info('PgOSM Flex complete!')
@@ -500,7 +500,7 @@ def run_post_processing(flex_path, skip_nested, import_mode):
     return True
 
 
-def dump_database(input_file, out_path, pg_dump, data_only, schema_name):
+def dump_database(input_file, out_path, pg_dump, skip_qgis_style, schema_name):
     """Runs pg_dump when necessary to export the processed OpenStreetMap data.
 
     Parameters
@@ -508,7 +508,7 @@ def dump_database(input_file, out_path, pg_dump, data_only, schema_name):
     input_file : str
     out_path : str
     pg_dump : bool
-    data_only : bool
+    skip_qgis_style : bool
     schema_name : str
     """
     if pg_dump:
@@ -516,7 +516,7 @@ def dump_database(input_file, out_path, pg_dump, data_only, schema_name):
         export_path = get_export_full_path(out_path, export_filename)
 
         db.run_pg_dump(export_path=export_path,
-                       data_only=data_only,
+                       skip_qgis_style=skip_qgis_style,
                        schema_name=schema_name)
     else:
         logging.getLogger('pgosm-flex').info('Skipping pg_dump')
