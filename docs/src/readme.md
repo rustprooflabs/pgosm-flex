@@ -46,13 +46,12 @@ Minimum versions supported:
 
 * Postgres 12
 * PostGIS 3.0
-* osm2pgsql 1.8.0
-
-Defining [Postgres indexes in the Lua styles](https://osm2pgsql.org/doc/manual.html#defining-indexes)
-bumps osm2pgsql minimum requirement to 1.8.0.
 
 This project will attempt, but not guarantee, to support PostgreSQL 12 until it
 reaches it EOL support.
+
+The osm2pgsql version requirement is no longer relevant.  Users of the Docker image
+naturally use the latest version of osm2pgsql at the time the Docker image was created.
 
 
 ## Minimum Hardware
