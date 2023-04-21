@@ -60,6 +60,35 @@ from the instance running the processing.
 > Note: The `--region` option is always required, the `--subregion` option can be used with `--input-file` to put the information in the `subregion` column of `osm.pgosm_flex`.
 
 
+### Small area / custom extract
+
+Some of the smallest subregions provided by Geofabrik are quite large compared
+to the area of interest for a project.
+The `osmium` tool makes it quick and easy to
+[extract a bounding box](https://docs.osmcode.org/osmium/latest/osmium-extract.html).
+The following example extracts an area roughly around Denver, Colorado.
+It takes about 3 seconds to extract the 3.2 MB `denver.osm.pbf` output from
+the 239 MB input.
+
+```bash
+osmium extract --bbox=-105.0193,39.7663,-104.9687,39.7323 \
+    -o denver.osm.pbf \
+    colorado-2023-04-18.osm.pbf
+```
+
+The PgOSM Flex procesing time for the smaller Denver region takes less than 20 seconds on a
+typical laptop, versus 11 minutes for all of Colorado.
+
+```bash
+docker exec -it \
+    pgosm python3 docker/pgosm_flex.py \
+    --ram=8 \
+    --region=custom \
+    --subregion=denver \
+    --input-file=denver.osm.pbf \
+    --layerset=everything
+```
+
 ## Customize load to PostGIS
 
 There are a few ways to customize exactly how data is loaded to PostGIS / Postgres.
