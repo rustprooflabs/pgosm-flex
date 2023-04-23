@@ -57,9 +57,6 @@ from import_mode import ImportMode
               default=False,
               is_flag=True,
               help='Replication mode enables updates via osm2pgsql-replication.')
-@click.option('--schema-name', required=False,
-              default='osm',
-              help="Change the final schema name, defaults to 'osm'.")
 @click.option('--skip-nested',
               default=False,
               is_flag=True,
@@ -78,7 +75,7 @@ from import_mode import ImportMode
               help='EXPERIMENTAL - Wrap around osm2pgsql create v. append modes, without using osm2pgsql-replication.')
 def run_pgosm_flex(ram, region, subregion, debug,
                     input_file, layerset, layerset_path, language, pg_dump,
-                    pgosm_date, replication, schema_name, skip_nested,
+                    pgosm_date, replication, skip_nested,
                     skip_qgis_style, srid, sp_gist, update):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
     """
@@ -86,12 +83,6 @@ def run_pgosm_flex(ram, region, subregion, debug,
     setup_logger(debug)
     logger = logging.getLogger('pgosm-flex')
     logger.info('PgOSM Flex starting...')
-
-    # Input validation
-    if schema_name != 'osm' and replication:
-        err_msg = 'Replication mode with custom schema name currently not supported'
-        logger.error(err_msg)
-        sys.exit(err_msg)
 
     if replication and (update is not None):
         err_msg = 'The --replication and --update features are mutually exclusive. Use one or the other.'
@@ -130,8 +121,7 @@ def run_pgosm_flex(ram, region, subregion, debug,
 
     db.prepare_pgosm_db(skip_qgis_style=skip_qgis_style,
                         db_path=paths['db_path'],
-                        import_mode=import_mode,
-                        schema_name=schema_name)
+                        import_mode=import_mode)
 
     # There's probably a better way to get this data out, but this worked right
     # away and I'm moving on.  I'm breaking enough other things that this seemed
@@ -174,14 +164,10 @@ def run_pgosm_flex(ram, region, subregion, debug,
 
     db.log_import_message(import_id=import_id, msg='Completed')
 
-    if schema_name != 'osm':
-        db.rename_schema(schema_name)
-
     dump_database(input_file=input_file,
                   out_path=paths['out_path'],
                   pg_dump=pg_dump,
-                  skip_qgis_style=skip_qgis_style,
-                  schema_name=schema_name)
+                  skip_qgis_style=skip_qgis_style)
 
     logger.info('PgOSM Flex complete!')
 
@@ -504,7 +490,7 @@ def run_post_processing(flex_path, skip_nested, import_mode):
     return True
 
 
-def dump_database(input_file, out_path, pg_dump, skip_qgis_style, schema_name):
+def dump_database(input_file, out_path, pg_dump, skip_qgis_style):
     """Runs pg_dump when necessary to export the processed OpenStreetMap data.
 
     Parameters
@@ -513,15 +499,13 @@ def dump_database(input_file, out_path, pg_dump, skip_qgis_style, schema_name):
     out_path : str
     pg_dump : bool
     skip_qgis_style : bool
-    schema_name : str
     """
     if pg_dump:
         export_filename = get_export_filename(input_file)
         export_path = get_export_full_path(out_path, export_filename)
 
         db.run_pg_dump(export_path=export_path,
-                       skip_qgis_style=skip_qgis_style,
-                       schema_name=schema_name)
+                       skip_qgis_style=skip_qgis_style)
     else:
         logging.getLogger('pgosm-flex').info('Skipping pg_dump')
 

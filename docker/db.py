@@ -182,7 +182,7 @@ def pg_isready():
     return True
 
 
-def prepare_pgosm_db(skip_qgis_style, db_path, import_mode, schema_name):
+def prepare_pgosm_db(skip_qgis_style, db_path, import_mode):
     """Runs through series of steps to prepare database for PgOSM.
 
     Parameters
@@ -190,7 +190,6 @@ def prepare_pgosm_db(skip_qgis_style, db_path, import_mode, schema_name):
     skip_qgis_style : bool
     db_path : str
     import_mode : import_mode.ImportMode
-    schema_name : str
     """
     if pg_conn_parts()['pg_host'] == 'localhost':
         drop_it = True
@@ -224,8 +223,7 @@ def prepare_pgosm_db(skip_qgis_style, db_path, import_mode, schema_name):
     else:
         LOGGER.info('Loading QGIS styles')
         qgis_styles.load_qgis_styles(db_path=db_path,
-                                     db_name=pg_conn_parts()['pg_db'],
-                                     schema_name=schema_name)
+                                     db_name=pg_conn_parts()['pg_db'])
         
 
 
@@ -553,22 +551,7 @@ def osm2pgsql_replication_finish(skip_nested):
         sys.exit(f'{err_msg} - Check the log output for details.')
 
 
-def rename_schema(schema_name):
-    """Renames default schema name "osm" to `schema_name`
-
-    Returns
-    ----------------------------
-    schema_name : str
-    """
-    LOGGER.info(f'Renaming schema from osm to {schema_name}')
-    sql_raw = f'ALTER SCHEMA osm RENAME TO {schema_name} ;'
-
-    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
-        cur = conn.cursor()
-        cur.execute(sql_raw)
-
-
-def run_pg_dump(export_path, skip_qgis_style, schema_name):
+def run_pg_dump(export_path, skip_qgis_style):
     """Runs pg_dump to save processed data to load into other PostGIS DBs.
 
     Parameters
@@ -576,10 +559,10 @@ def run_pg_dump(export_path, skip_qgis_style, schema_name):
     export_path : str
         Absolute path to output .sql file
     skip_qgis_style : bool
-    schema_name : str
     """
     logger = logging.getLogger('pgosm-flex')
     conn_string = os.environ['PGOSM_CONN']
+    schema_name = 'osm'
 
     if skip_qgis_style:
         logger.info(f'Running pg_dump (only {schema_name} schema)')
