@@ -15,6 +15,7 @@ RUN apt-get update \
         python3 python3-distutils \
         postgresql-server-dev-15 \
         curl unzip \
+        postgresql-15-pgrouting \
     && rm -rf /var/lib/apt/lists/*
 
 RUN wget https://luarocks.org/releases/luarocks-3.9.1.tar.gz \
