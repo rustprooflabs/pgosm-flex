@@ -26,6 +26,7 @@
 
 # Developers
 
+- [Projects using PgOSM Flex](./projects.md)
 - [Build and Push Docker Images](./docker-build.md)
 - [Testing PgOSM Flex](./tests.md)
 - [Developing QGIS Styles](./qgis-styles-dev.md)
