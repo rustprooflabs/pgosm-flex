@@ -1,11 +1,12 @@
 # PgOSM Flex layersets
 
 
-A layerset defines one or more layers, where each layer includes
-one or more tables and/or views.
-Layers are defined by a matched pair of Lua and SQL scripts.  For example,
+A layerset defines one or more layers, where each layer
+includes one or more tables and/or views.
+See [layers](layers.md) for more details.
+Layer groups are defined by a matched pair of Lua and SQL scripts.  For example,
 the road layer is defined by `flex-config/style/road.lua` and
-`flex-config/sql/road.sql`.
+`flex-config/sql/road.sql`, and creates four (4) tables.
 
 
 Layersets are defined in `.ini` files.

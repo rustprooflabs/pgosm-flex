@@ -55,7 +55,7 @@ docker run --name pgosm -d --rm \
     -v /etc/localtime:/etc/localtime:ro \
     -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
     -p 5433:5432 \
-    -d rustprooflabs/pgosm-flex:0.7.0 \
+    -d rustprooflabs/pgosm-flex:{{ pgosm_flex_version }} \
         -c max_connections=300
 ```
 
