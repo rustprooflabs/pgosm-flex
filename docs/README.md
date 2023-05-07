@@ -6,6 +6,7 @@ Install mdbook.
 
 ```bash
 cargo install mdbook
+cargo install mdbook-variables
 ```
 
 Serve the book locally and open your default browser.
