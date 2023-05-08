@@ -212,19 +212,12 @@ def prepare_pgosm_db(skip_qgis_style, db_path, import_mode):
     else:
         LOGGER.info('Using external database. Ensure the target database is setup properly with proper permissions.')
 
-    prepare_pgosm_schema()
+    prepare_osm_schema(db_path, skip_qgis_style)
 
     # Now always running sqitch. Moving more database structures into proper
     # management instead of being managed by Lua or Python.
-    run_sqitch_prep(db_path)
+    #run_sqitch_prep(db_path)
 
-    if skip_qgis_style:
-        LOGGER.info('Skipping QGIS styles')
-    else:
-        LOGGER.info('Loading QGIS styles')
-        qgis_styles.load_qgis_styles(db_path=db_path,
-                                     db_name=pg_conn_parts()['pg_db'])
-        
 
 
 def start_import(pgosm_region, pgosm_date, srid, language, layerset, git_info,
@@ -356,18 +349,56 @@ def create_pgosm_db():
     return True
 
 
-def prepare_pgosm_schema():
-    """Prepares the database with PostGIS and osm schema
+def prepare_osm_schema(db_path, skip_qgis_style):
+    """Runs deploy scripts to prepare the PgOSM Flex database.
+
+    This function's code could be simplified, but currently I like the verbosity
+    of it. It doesn't need to stay like this forever, but for now... it's fine.
+
+    Parameters
+    ---------------------------
+    db_path : str
+        Path to folder with SQL scripts.
+    skip_qgis_style : bool
     """
-    sql_create_postgis = "CREATE EXTENSION IF NOT EXISTS postgis;"
-    sql_create_schema = "CREATE SCHEMA IF NOT EXISTS osm;"
+    create_osm_file = 'osm.sql'
+    create_osm_pgosm_flex_file = 'osm_pgosm_flex.sql'
+    create_pgosm_road_file = 'pgosm_road.sql'
+    create_replication_functions = 'replication_functions.sql'
+
+    run_deploy_file(db_path=db_path, sql_filename=create_osm_file)
+    run_deploy_file(db_path=db_path, sql_filename=create_osm_pgosm_flex_file)
+    run_deploy_file(db_path=db_path, sql_filename=create_pgosm_road_file)
+    run_deploy_file(db_path=db_path, sql_filename=create_replication_functions)
+
+    if skip_qgis_style:
+        LOGGER.info('Skipping QGIS styles')
+    else:
+        LOGGER.info('Loading QGIS styles')
+        qgis_styles.load_qgis_styles(db_path=db_path,
+                                     db_name=pg_conn_parts()['pg_db'])
+
+
+def run_deploy_file(db_path, sql_filename):
+    """Run a SQL script under the deploy path.  Used to setup PgOSM Flex DB.
+
+    Parameters
+    ---------------------------
+    db_path : str
+        Path to folder with SQL scripts.
+    sql_filename : sql_filename
+    """
+    full_path = os.path.join(db_path, 'deploy', sql_filename)
+    LOGGER.info(f'Deploying {full_path}')
+
+    with open(full_path) as f:
+        deploy_sql = f.read()
 
     with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
         cur = conn.cursor()
-        cur.execute(sql_create_postgis)
-        LOGGER.debug('Installed PostGIS extension')
-        cur.execute(sql_create_schema)
-        LOGGER.debug('Created osm schema')
+        cur.execute(deploy_sql)
+        LOGGER.debug(f'Ran SQL in {sql_filename}')
+        LOGGER.debug(f'SQL:\n{deploy_sql}')
 
 
 def run_sqitch_prep(db_path):

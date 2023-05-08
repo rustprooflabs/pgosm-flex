@@ -1,10 +1,5 @@
--- Deploy pgosm-flex:002 to pg
--- requires: 001
 
 BEGIN;
-
-CREATE SCHEMA IF NOT EXISTS osm;
-COMMENT ON SCHEMA osm IS 'Schema populated by PgOSM Flex.  SELECT * FROM osm.pgosm_flex; for details.';
 
 
 CREATE TABLE IF NOT EXISTS osm.pgosm_flex (
@@ -41,10 +36,8 @@ ALTER TABLE osm.pgosm_flex
 ALTER TABLE osm.pgosm_flex
     ADD COLUMN IF NOT EXISTS layerset TEXT NULL;
 
-
 ALTER TABLE osm.pgosm_flex DROP COLUMN IF EXISTS project_url;
 ALTER TABLE osm.pgosm_flex DROP COLUMN IF EXISTS default_date;
-
 
 COMMENT ON TABLE osm.pgosm_flex IS 'Provides meta information on the PgOSM-Flex project including version and SRID used during the import. One row per import.';
 
@@ -57,45 +50,6 @@ COMMENT ON COLUMN osm.pgosm_flex.region IS 'Region specified at run time via env
 COMMENT ON COLUMN osm.pgosm_flex.language IS 'Preferred language specified at run time via env var PGOSM_LANGUAGE.  Empty string when not defined.';
 COMMENT ON COLUMN osm.pgosm_flex.layerset IS 'PgOSM Flex layerset used for the import style.';
 COMMENT ON COLUMN osm.pgosm_flex.import_status IS 'Status of the import. Starts as initialized, tracks status during imports and final success/failure.';
-
-
-
-CREATE OR REPLACE PROCEDURE osm.append_data_start()
- LANGUAGE plpgsql
- AS $$
-
- BEGIN
-
-    RAISE NOTICE 'Truncating table osm.place_polygon_nested;';
-    TRUNCATE TABLE osm.place_polygon_nested;
-
-END $$;
-
-
-CREATE OR REPLACE PROCEDURE osm.append_data_finish(skip_nested BOOLEAN = False)
- LANGUAGE plpgsql
- AS $$
- BEGIN
-
-    REFRESH MATERIALIZED VIEW osm.vplace_polygon_subdivide;
-    REFRESH MATERIALIZED VIEW osm.vpoi_all;
-
-    IF $1 = False THEN
-        RAISE NOTICE 'Populating nested place table';
-        CALL osm.populate_place_polygon_nested();
-        RAISE NOTICE 'Calculating nesting of place polygons';
-        CALL osm.build_nested_admin_polygons();
-
-    END IF;
-
-
-END $$;
-
-
-COMMENT ON PROCEDURE osm.append_data_start() IS 'Prepares PgOSM Flex database for running osm2pgsql in append mode.  Removes records from place_polygon_nested if they existed.';
-COMMENT ON PROCEDURE osm.append_data_finish(BOOLEAN) IS 'Finalizes PgOSM Flex after osm2pgsql-replication.  Refreshes materialized view and (optionally) processes the place_polygon_nested data.';
-
-
 
 
 COMMIT;
