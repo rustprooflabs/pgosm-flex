@@ -398,7 +398,6 @@ def run_deploy_file(db_path, sql_filename):
         cur = conn.cursor()
         cur.execute(deploy_sql)
         LOGGER.debug(f'Ran SQL in {sql_filename}')
-        LOGGER.debug(f'SQL:\n{deploy_sql}')
 
 
 def run_sqitch_prep(db_path):
