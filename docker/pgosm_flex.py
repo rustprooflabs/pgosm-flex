@@ -14,7 +14,6 @@ from pathlib import Path
 import sys
 
 import click
-import uuid
 
 import osm2pgsql_recommendation as rec
 import db
@@ -94,11 +93,8 @@ def run_pgosm_flex(ram, region, subregion, debug,
     if region is None and input_file:
         region = input_file
 
-
-    import_uuid = uuid.uuid4()
     helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
-                         layerset, layerset_path, sp_gist, replication,
-                         import_uuid)
+                         layerset, layerset_path, sp_gist, replication)
     db.wait_for_postgres()
 
     if replication:
