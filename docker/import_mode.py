@@ -11,7 +11,8 @@ class ImportMode():
     are used to determine when to drop the local DB.  Be careful with any
     changes to these values.
     """
-    def __init__(self, replication, replication_update, update):
+    def __init__(self, replication: bool, replication_update: bool,
+                 update: str, force: bool):
         """Computes two variables, slim_no_drop and append_first_run
         based on inputs.
 
@@ -22,6 +23,7 @@ class ImportMode():
         update : str or None
             Valid options are 'create' or 'append', lining up with osm2pgsql's
             `--create` and `--append` modes.
+        force : bool
         """
         self.logger = logging.getLogger('pgosm-flex')
         self.replication = replication
@@ -34,10 +36,49 @@ class ImportMode():
             raise ValueError(f'Invalid option for --update. Valid options: {valid_update_options}')
 
         self.update = update
+        self.force = force
+
         self.set_slim_no_drop()
         self.set_append_first_run()
         self.set_run_post_sql()
 
+
+    def okay_to_run(self, prior_import: dict) -> bool:
+        """Decides if it is okay to run PgOSM Flex or not.
+
+        This logic added with the addition of the `--force` option to make it
+        less likely to accidentally lose data with improper PgOSM Flex
+        options.
+
+        Parameters
+        -------------------
+        prior_import : dict
+            Details about the latest import from osm.pgosm_flex table.
+        """
+        self.logger.debug(f'Checking if it is okay to run...')
+        # If no prior imports, do not require force
+        if self.force:
+            self.logger.warn(f'Using --force, kiss existing data goodbye')
+            return True
+
+        if len(prior_import) == 0:
+            self.logger.debug(f'No prior import found, okay to proceed.')
+            return True
+
+        prior_replication = prior_import['replication']
+
+        if self.replication:
+            if not prior_replication:
+                self.logger.error('Running w/ replication but prior import did not.  Requires --force to proceed.')
+                return False
+            self.logger.debug('Okay to proceed with replication')
+            return True
+
+        msg = 'A prior import exists.'
+        if prior_replication:
+            msg += ' Use --replication or --force'
+        self.logger.warn(msg)
+        return False
 
     def set_append_first_run(self):
         """Uses `replication_update` and `update` to determine value for
