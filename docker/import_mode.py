@@ -44,16 +44,28 @@ class ImportMode():
 
 
     def okay_to_run(self, prior_import: dict) -> bool:
-        """Decides if it is okay to run PgOSM Flex or not.
+        """Determines if it is okay to run PgOSM Flex without fear of data loss.
 
-        This logic added with the addition of the `--force` option to make it
+        This logic was along with the `--force` option to make it
         less likely to accidentally lose data with improper PgOSM Flex
         options.
+
+        Remember, this is free and open source software and there is
+        no warranty!
+        This does not imply a guarantee that you **cannot** lose data,
+        only that we want to make it **less likely** something bad will happen.
+        If you find a way bad things can happen that could be detected here,
+        please open an issue:
+
+            https://github.com/rustprooflabs/pgosm-flex/issues/new?assignees=&labels=&projects=&template=bug_report.md&title=Data%20Safety%20Idea
 
         Parameters
         -------------------
         prior_import : dict
             Details about the latest import from osm.pgosm_flex table.
+
+            An empty dictionary (len==0) indicates no prior import.
+            Only the replication key is specifically used
         """
         self.logger.debug(f'Checking if it is okay to run...')
         # If no prior imports, do not require force
@@ -75,8 +87,6 @@ class ImportMode():
             return True
 
         msg = 'A prior import exists.'
-        if prior_replication:
-            msg += ' Use --replication or --force'
         self.logger.warn(msg)
         return False
 
