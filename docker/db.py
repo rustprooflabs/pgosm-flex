@@ -62,7 +62,7 @@ def connection_string(admin=False):
     return conn_string
 
 
-def pg_conn_parts():
+def pg_conn_parts() -> dict:
     """Retrieves username/password from environment variables if they exist.
 
     Returns

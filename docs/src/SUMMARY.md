@@ -12,10 +12,9 @@
     - [Layersets](./layersets.md)
     - [Layers](./layers.md)
     - [Configure Postgres](./configure-postgres.md)
-- [Processing Time](./performance.md)
 - [Query examples](./query.md)
 - [Routing](./routing.md)
-
+- [Processing Time](./performance.md)
 
 # Production usages
 
@@ -23,6 +22,7 @@
 - [Using External Postgres Connection](./postgres-external.md)
 - [Stay Updated with Replication](./replication.md)
 - [Using Update Mode](./update-mode.md)
+- [Force Load](./force-load.md)
 - [QGIS Styles](./qgis-styles.md)
 
 # Developers
