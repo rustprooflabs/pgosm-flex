@@ -34,6 +34,8 @@ from import_mode import ImportMode
 # Remainder of options in alphabetical order
 @click.option('--debug', is_flag=True,
               help='Enables additional log output')
+@click.option('--force', is_flag=True,
+              help='Danger!  Forces PgOSM Flex to load the data even if this will overwrite pre-existing data.  This only impacts usage when connecting to an external Postgres connection, not when using the internal-Docker Postgres instances.')
 @click.option('--input-file',
               required=False,
               default=None,
@@ -72,7 +74,7 @@ from import_mode import ImportMode
 @click.option('--update', default=None,
               type=click.Choice(['append', 'create'], case_sensitive=True),
               help='EXPERIMENTAL - Wrap around osm2pgsql create v. append modes, without using osm2pgsql-replication.')
-def run_pgosm_flex(ram, region, subregion, debug,
+def run_pgosm_flex(ram, region, subregion, debug, force,
                     input_file, layerset, layerset_path, language, pg_dump,
                     pgosm_date, replication, skip_nested,
                     skip_qgis_style, srid, sp_gist, update):
@@ -96,6 +98,8 @@ def run_pgosm_flex(ram, region, subregion, debug,
     helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
                          layerset, layerset_path, sp_gist, replication)
     db.wait_for_postgres()
+    if force and db.pg_conn_parts()['pg_host'] == 'localhost':
+        logger.warning('Using --force with the built-in database is unnecessary.')
 
     if replication:
         replication_update = check_replication_exists()
@@ -113,11 +117,18 @@ def run_pgosm_flex(ram, region, subregion, debug,
     # Warning: Reusing the module's name here as import_mode...
     import_mode = ImportMode(replication=replication,
                              replication_update=replication_update,
-                             update=update)
+                             update=update,
+                             force=force)
 
     db.prepare_pgosm_db(skip_qgis_style=skip_qgis_style,
                         db_path=paths['db_path'],
                         import_mode=import_mode)
+
+    prior_import = db.get_prior_import()
+
+    if not import_mode.okay_to_run(prior_import):
+        msg = 'Not okay to run PgOSM Flex. Exiting'
+        sys.exit(msg)
 
     # There's probably a better way to get this data out, but this worked right
     # away and I'm moving on.  I'm breaking enough other things that this seemed

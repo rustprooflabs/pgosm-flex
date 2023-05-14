@@ -62,7 +62,7 @@ def connection_string(admin=False):
     return conn_string
 
 
-def pg_conn_parts():
+def pg_conn_parts() -> dict:
     """Retrieves username/password from environment variables if they exist.
 
     Returns
@@ -651,3 +651,31 @@ UPDATE osm.pgosm_flex
         cur = conn.cursor()
         cur.execute(sql_raw, params=params)
 
+
+def get_prior_import() -> dict:
+    """Gets the latest import details from osm.pgosm_flex.
+
+    Returns
+    --------------------
+    results : dict
+    """
+    sql_raw = """
+SELECT id, osm_date, region, layerset, import_status,
+        import_mode ->> 'replication' AS replication,
+        import_mode ->> 'update' AS use_update,
+        import_mode
+    FROM osm.pgosm_flex
+    ORDER BY imported DESC
+    LIMIT 1
+;
+"""
+    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
+        cur = conn.cursor(row_factory=psycopg.rows.dict_row)
+        results = cur.execute(sql_raw).fetchone()
+
+    if isinstance(results, type(None)):
+        results = {}
+
+    return results
+
+    

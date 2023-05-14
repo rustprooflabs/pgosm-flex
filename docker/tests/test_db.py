@@ -13,7 +13,8 @@ PG_USER_ONLY = {'POSTGRES_USER': POSTGRES_USER,
                 'POSTGRES_PASSWORD': ''}
 PG_USER_AND_PW = {'POSTGRES_USER': POSTGRES_USER,
                   'POSTGRES_PASSWORD': POSTGRES_PASSWORD,
-                  'PGOSM_CONN_PG': db.connection_string(admin=True)}
+                  'PGOSM_CONN_PG': db.connection_string(admin=True),
+                  'PGOSM_CONN': db.connection_string()}
 POSTGRES_HOST_NON_LOCAL = {'POSTGRES_HOST': POSTGRES_HOST_EXTERNAL,
                            'POSTGRES_USER': POSTGRES_USER,
                            'POSTGRES_PASSWORD': POSTGRES_PASSWORD}
@@ -89,4 +90,12 @@ class DBTests(unittest.TestCase):
         expected = int
         result = db.pg_version_check()
         self.assertEqual(expected, type(result))
+
+
+    @mock.patch.dict(os.environ, PG_USER_AND_PW)
+    def test_get_prior_import_returns_expected_type(self):
+        result = db.get_prior_import()
+        actual = type(result)
+        expected = dict
+        self.assertEqual(expected, actual)
 

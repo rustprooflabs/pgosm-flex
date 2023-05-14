@@ -20,7 +20,8 @@ class Osm2pgsqlRecommendationTests(unittest.TestCase):
         osm_pbf_gb = 10
         im = ImportMode(replication=False,
                         replication_update=False,
-                        update=None)
+                        update=None,
+                        force=False)
         pbf_filename = 'This-is-a-test.osm.pbf'
         output_path = 'this-is-a-test'
         result = osm2pgsql_recommendation.get_recommended_script(system_ram_gb=system_ram_gb,
@@ -38,7 +39,8 @@ class Osm2pgsqlRecommendationTests(unittest.TestCase):
         osm_pbf_gb = 10
         im = ImportMode(replication=False,
                         replication_update=False,
-                        update=None)
+                        update=None,
+                        force=False)
         pbf_filename = 'This-is-a-test.osm.pbf'
         output_path = 'this-is-a-test'
         actual = osm2pgsql_recommendation.get_recommended_script(system_ram_gb=system_ram_gb,
@@ -54,7 +56,8 @@ class Osm2pgsqlRecommendationTests(unittest.TestCase):
         osm_pbf_gb = 10
         im = ImportMode(replication=False,
                         replication_update=False,
-                        update='create')
+                        update='create',
+                        force=False)
         pbf_filename = 'This-is-a-test.osm.pbf'
         output_path = 'this-is-a-test'
         actual = osm2pgsql_recommendation.get_recommended_script(system_ram_gb=system_ram_gb,
@@ -70,7 +73,8 @@ class Osm2pgsqlRecommendationTests(unittest.TestCase):
         osm_pbf_gb = 10
         im = ImportMode(replication=False,
                         replication_update=False,
-                        update='append')
+                        update='append',
+                        force=False)
         pbf_filename = 'This-is-a-test.osm.pbf'
         output_path = 'this-is-a-test'
         actual = osm2pgsql_recommendation.get_recommended_script(system_ram_gb=system_ram_gb,
@@ -91,7 +95,8 @@ class Osm2pgsqlRecommendationTests(unittest.TestCase):
         osm_pbf_gb = 10
         im = ImportMode(replication=True,
                         replication_update=False,
-                        update=None)
+                        update=None,
+                        force=False)
         pbf_filename = 'This-is-a-test.osm.pbf'
         output_path = 'this-is-a-test'
         actual = osm2pgsql_recommendation.get_recommended_script(system_ram_gb=system_ram_gb,
