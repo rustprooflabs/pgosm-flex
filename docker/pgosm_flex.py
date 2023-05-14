@@ -398,11 +398,6 @@ def run_osm2pgsql(osm2pgsql_command, flex_path, debug):
     """
     logger = logging.getLogger('pgosm-flex')
     logger.info('Running osm2pgsql')
-
-    if debug:
-        print()
-        print(osm2pgsql_command)
-        print()
         
     returncode = helpers.run_command_via_subprocess(cmd=osm2pgsql_command.split(),
                                                     cwd=flex_path,
