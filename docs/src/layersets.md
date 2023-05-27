@@ -16,18 +16,26 @@ road_major=true
 
 
 In the above example, `place`, `poi` and `road_major` are the included
-Layers.  To exclude layers from a layerset they can be simply omitted from the
-`.ini` file, or set explicitly such as `road_major=false`.
+Layers.  This results in nine (9) total tables being loaded.
+There is the standard
+[meta table `osm.pgosm_flex`](quick-start.md#meta-table), plus eight (8)
+tables for the three (3) layers.  The place layer has four tables,
+poi has three (3) and road major has one (1). 
 
 
-The available layers are determined by the `.lua` files available
-in the [`flex-config/style`](https://github.com/rustprooflabs/pgosm-flex/tree/main/flex-config/style)
-directory.  Each `.lua` file in the `style` folder has a matching `.sql`
-file in the [`flex-config/sql`](https://github.com/rustprooflabs/pgosm-flex/tree/main/flex-config/sql)
-directory. For example,
-the road layer is defined by `flex-config/style/road.lua` and
-`flex-config/sql/road.sql`, and creates three (3) tables ([see Tables section](layersets.md#tables)).
-
+    ┌────────┬──────────────────────┬───────┬───────────────────┐
+    │ s_name │        t_name        │ rows  │ size_plus_indexes │
+    ╞════════╪══════════════════════╪═══════╪═══════════════════╡
+    │ osm    │ pgosm_flex           │     1 │ 32 kB             │
+    │ osm    │ place_line           │   128 │ 168 kB            │
+    │ osm    │ place_point          │   124 │ 128 kB            │
+    │ osm    │ place_polygon        │   217 │ 496 kB            │
+    │ osm    │ place_polygon_nested │    22 │ 304 kB            │
+    │ osm    │ poi_line             │   255 │ 128 kB            │
+    │ osm    │ poi_point            │ 10876 │ 2360 kB           │
+    │ osm    │ poi_polygon          │ 12413 │ 6456 kB           │
+    │ osm    │ road_major           │  8097 │ 2504 kB           │
+    └────────┴──────────────────────┴───────┴───────────────────┘
 
 
 ## Included layersets
@@ -113,6 +121,12 @@ docker exec -it \
     --subregion=district-of-columbia
 ```
 
+## Excluding layers
+
+To exclude layers from a layerset they can be simply omitted from the
+`.ini` file.  They can also be set explicitly to `false`
+such as `road_major=false`.
+
 
 # Layers
 
@@ -129,6 +143,18 @@ commonly associated, so has three tables:
 
 The definitive answer to "what is in a layer" is defined by the
 associated Lua code under `flex-config/style/<layer group>.lua`
+
+## Layer definitions
+
+The layers are determined by the `.lua` files available
+in the [`flex-config/style`](https://github.com/rustprooflabs/pgosm-flex/tree/main/flex-config/style)
+directory.  Each `.lua` file in the `style` folder has a matching `.sql`
+file in the [`flex-config/sql`](https://github.com/rustprooflabs/pgosm-flex/tree/main/flex-config/sql)
+directory. For example,
+the road layer is defined by `flex-config/style/road.lua` and
+`flex-config/sql/road.sql`, and creates three (3) tables ([see Tables section](layersets.md#tables)).
+
+
 
 ## Tables
 
