@@ -10,7 +10,6 @@
 - [Customize PgOSM Flex](./customizations.md)
     - [Common Customizations](./common-customization.md)
     - [Layersets](./layersets.md)
-    - [Layers](./layers.md)
     - [Configure Postgres](./configure-postgres.md)
 - [Processing Time](./performance.md)
 - [Query examples](./query.md)
