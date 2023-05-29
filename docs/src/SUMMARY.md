@@ -20,13 +20,15 @@
 
 - [Postgres Permissions](./postgres-permissions.md)
 - [Using External Postgres Connection](./postgres-external.md)
-- [Stay Updated with Replication](./replication.md)
-- [Using Update Mode](./update-mode.md)
-- [Force Load](./force-load.md)
+- [Data updates](./data-updates.md)
+    - [Using Replication](./replication.md)
+    - [Relocate Data](./relocate-data.md)
+    - [Using Update Mode](./update-mode.md)
 - [QGIS Styles](./qgis-styles.md)
 
 # Developers
 
+- [Force Load](./force-load.md)
 - [Projects using PgOSM Flex](./projects.md)
 - [Build and Push Docker Images](./docker-build.md)
 - [Testing PgOSM Flex](./tests.md)
