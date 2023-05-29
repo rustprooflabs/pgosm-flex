@@ -1,10 +1,7 @@
-# Stay Updated with Replication
+# Using Replication
 
 The `--replication` option of PgOSM Flex enables `osm2pgsql-replication`
 to provide an easy and quick way to keep your OpenStreetMap data refreshed.
-
-
-> The `--replication` mode is stable as of 0.7.0.  It was added as an experimental feature in 0.4, originally under the `--append` option.
 
 
 PgOSM Flex's `--replication` mode wraps around the `osm2pgsql-replication` package
@@ -18,8 +15,9 @@ tables (`--slim`) must be left in the database (no `--drop`).
 
 > Important:  The original `--append` option is now under `--replication`. The `--append` option was removed in PgOSM Flex 0.7.0.  See [#275](https://github.com/rustprooflabs/pgosm-flex/issues/275) for context.
 
+## Use tagged version
 
-When using replication you need to pin your process to a specific PgOSM Flex version
+When using replication you should pin your process to a specific PgOSM Flex version
 in the `docker run` command.  When upgrading to new versions,
 be sure to check the release notes for manual upgrade steps for `--replication`.  
 The release notes for
@@ -36,6 +34,7 @@ your specific database and process.**
 
 ----
 
+## Max connections
 
 The other important change when using replication is to increase Postgres' `max_connections`.
 See [this discussion on osm2pgsql](https://github.com/openstreetmap/osm2pgsql/discussions/1650)
@@ -59,6 +58,8 @@ docker run --name pgosm -d --rm \
         -c max_connections=300
 ```
 
+## Using `--replication`
+
 
 Run the `docker exec` step with `--replication`.
 
@@ -68,7 +69,6 @@ docker exec -it \
     --ram=8 \
     --region=north-america/us \
     --subregion=district-of-columbia \
-    --pgosm-date 2022-12-30 \
     --replication
 ```
 
@@ -76,5 +76,5 @@ Running the above command a second time will detect that the target database
 has `osm2pgsql-replication` setup and load data via the defined replication
 service.
 
-> Note:  The `--pgosm-date` parameter is ignored during subsequent imports using `--replication`.
+
 

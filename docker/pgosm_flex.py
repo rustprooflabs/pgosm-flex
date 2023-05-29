@@ -35,7 +35,7 @@ from import_mode import ImportMode
 @click.option('--debug', is_flag=True,
               help='Enables additional log output')
 @click.option('--force', is_flag=True,
-              help='Danger!  Forces PgOSM Flex to load the data even if this will overwrite pre-existing data.  This only impacts usage when connecting to an external Postgres connection, not when using the internal-Docker Postgres instances.')
+              help='Danger!  Forces PgOSM Flex to load the data even if this will overwrite pre-existing data. See https://pgosm-flex.com/force-load.html for more.')
 @click.option('--input-file',
               required=False,
               default=None,
@@ -99,7 +99,10 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
                          layerset, layerset_path, sp_gist, replication)
     db.wait_for_postgres()
     if force and db.pg_conn_parts()['pg_host'] == 'localhost':
-        logger.warning('Using --force with the built-in database is unnecessary.')
+        msg = 'Using --force with the built-in database is unnecessary.'
+        msg += ' The pgosm database is always dropped and recreated when'
+        msg += ' running on localhost (in Docker).'
+        logger.warning(msg)
 
     if replication:
         replication_update = check_replication_exists()
@@ -128,6 +131,7 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
 
     if not import_mode.okay_to_run(prior_import):
         msg = 'Not okay to run PgOSM Flex. Exiting'
+        logger.error(msg)
         sys.exit(msg)
 
     # There's probably a better way to get this data out, but this worked right

@@ -68,11 +68,11 @@ class ImportMode():
             Only the replication key is specifically used
         """
         self.logger.debug(f'Checking if it is okay to run...')
-        # If no prior imports, do not require force
         if self.force:
             self.logger.warn(f'Using --force, kiss existing data goodbye')
             return True
 
+        # If no prior imports, do not require force
         if len(prior_import) == 0:
             self.logger.debug(f'No prior import found, okay to proceed.')
             return True
@@ -86,8 +86,8 @@ class ImportMode():
             self.logger.debug('Okay to proceed with replication')
             return True
 
-        msg = 'A prior import exists.'
-        self.logger.warn(msg)
+        msg = 'Prior data exists in the osm schema and --force was not used.'
+        self.logger.error(msg)
         return False
 
     def set_append_first_run(self):
