@@ -1,4 +1,4 @@
-# PgOSM Flex Update Mode
+# Using Update Mode
 
 Running in experimental Update mode enables using osm2pgsql's `--append`
 option.

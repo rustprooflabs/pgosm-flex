@@ -15,7 +15,8 @@ class ImportModeTests(unittest.TestCase):
         expected = True
         im = import_mode.ImportMode(replication=replication,
                                     replication_update=replication_update,
-                                    update=update)
+                                    update=update,
+                                    force=False)
 
         actual = im.append_first_run
         self.assertEqual(expected, actual)
@@ -28,7 +29,8 @@ class ImportModeTests(unittest.TestCase):
         expected = False
         im = import_mode.ImportMode(replication=replication,
                                     replication_update=replication_update,
-                                    update=update)
+                                    update=update,
+                                    force=False)
 
         actual = im.append_first_run
         self.assertEqual(expected, actual)
@@ -41,7 +43,8 @@ class ImportModeTests(unittest.TestCase):
         expected = True
         im = import_mode.ImportMode(replication=replication,
                                     replication_update=replication_update,
-                                    update=update)
+                                    update=update,
+                                    force=False)
 
         actual = im.append_first_run
         self.assertEqual(expected, actual)
@@ -54,7 +57,8 @@ class ImportModeTests(unittest.TestCase):
         expected = False
         im = import_mode.ImportMode(replication=replication,
                                     replication_update=replication_update,
-                                    update=update)
+                                    update=update,
+                                    force=False)
 
         actual = im.append_first_run
         self.assertEqual(expected, actual)
@@ -67,7 +71,8 @@ class ImportModeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             import_mode.ImportMode(replication=replication,
                                    replication_update=replication_update,
-                                   update=update)
+                                   update=update,
+                                   force=False)
 
 
 
@@ -78,7 +83,8 @@ class ImportModeTests(unittest.TestCase):
         expected = True
         im = import_mode.ImportMode(replication=replication,
                                     replication_update=replication_update,
-                                    update=update)
+                                    update=update,
+                                    force=False)
 
         actual = im.run_post_sql
         self.assertEqual(expected, actual)
@@ -91,8 +97,153 @@ class ImportModeTests(unittest.TestCase):
         expected = False
         im = import_mode.ImportMode(replication=replication,
                                     replication_update=replication_update,
-                                    update=update)
+                                    update=update,
+                                    force=False)
 
         actual = im.run_post_sql
         self.assertEqual(expected, actual)
 
+    def test_import_mode_okay_to_run_returns_expected_type(self):
+        replication = False
+        replication_update = False
+        update = None
+        force = True
+
+        im = import_mode.ImportMode(replication=replication,
+                                    replication_update=replication_update,
+                                    update=update,
+                                    force=force)
+
+        expected = bool
+        prior_import = {'replication': False}
+        results = im.okay_to_run(prior_import=prior_import)
+        actual = type(results)
+        self.assertEqual(expected, actual)
+
+
+    def test_import_mode_okay_to_run_returns_true_when_force(self):
+        replication = False
+        replication_update = False
+        update = None
+        force = True
+
+        im = import_mode.ImportMode(replication=replication,
+                                    replication_update=replication_update,
+                                    update=update,
+                                    force=force)
+
+        expected = True
+        prior_import = {'replication': False}
+        actual = im.okay_to_run(prior_import=prior_import)
+        self.assertEqual(expected, actual)
+
+
+    def test_import_mode_okay_to_run_returns_false_when_prior_record_not_replication(self):
+        """This tests the scenario when replication is True (e.g. --replication)
+        but the DB returns a record saying the prior import did not use
+        --replication. 
+
+        This should return False to avoid overwriting data.
+        """
+        replication = True
+        prior_import = {'replication': False}
+        replication_update = False
+        update = None
+        force = False
+
+        im = import_mode.ImportMode(replication=replication,
+                                    replication_update=replication_update,
+                                    update=update,
+                                    force=force)
+
+        expected = False
+
+        actual = im.okay_to_run(prior_import=prior_import)
+        self.assertEqual(expected, actual)
+
+
+    def test_import_mode_okay_to_run_returns_true_when_replication_prior_record_replication(self):
+        """This tests the scenario when replication is True (e.g. --replication)
+        and the DB returns a record saying the prior import used
+        --replication. 
+
+        This should return True to allow replication to updated
+        """
+        replication = True
+        prior_import = {'replication': True}
+        replication_update = False
+        update = None
+        force = False
+
+        im = import_mode.ImportMode(replication=replication,
+                                    replication_update=replication_update,
+                                    update=update,
+                                    force=force)
+
+        expected = True
+
+        actual = im.okay_to_run(prior_import=prior_import)
+        self.assertEqual(expected, actual)
+
+
+    def test_import_mode_okay_to_run_returns_false_when_prior_import(self):
+        """This tests the scenario when the DB returns a record saying a
+        prior import exists.
+
+        This should return False to protect the data.
+        """
+        replication = False
+        prior_import = {'replication': False}
+        replication_update = False
+        update = None
+        force = False
+
+        im = import_mode.ImportMode(replication=replication,
+                                    replication_update=replication_update,
+                                    update=update,
+                                    force=force)
+
+        expected = False
+
+        actual = im.okay_to_run(prior_import=prior_import)
+        self.assertEqual(expected, actual)
+
+    def test_import_mode_okay_to_run_returns_true_no_prior_import(self):
+        """This tests the scenario when the DB returns a record saying no
+        prior import exists.
+
+        This should return True.
+        """
+        replication = False
+        prior_import = {}
+        replication_update = False
+        update = None
+        force = False
+
+        im = import_mode.ImportMode(replication=replication,
+                                    replication_update=replication_update,
+                                    update=update,
+                                    force=force)
+
+        expected = True
+
+        actual = im.okay_to_run(prior_import=prior_import)
+        self.assertEqual(expected, actual)
+
+
+
+    def test_import_mode_as_json_expected_type(self):
+        replication = False
+        replication_update = False
+        update = None
+        force = True
+
+        im = import_mode.ImportMode(replication=replication,
+                                    replication_update=replication_update,
+                                    update=update,
+                                    force=force)
+
+        expected = str
+        results = im.as_json()
+        actual = type(results)
+        self.assertEqual(expected, actual)
