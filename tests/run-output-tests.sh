@@ -34,6 +34,7 @@ for filename in sql/*.sql; do
 
     if [ -s tmp/${file_base}.diff ]; then
         echo "FAILED TEST: ${filename} - See ${diff_file}"
+        echo "  docker exec -it pgosm /bin/bash -c \"cat /app/tests/${diff_file} \" "
         failed=true
     else
         # no reason to keep empty files around

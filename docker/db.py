@@ -212,12 +212,8 @@ def prepare_pgosm_db(skip_qgis_style, db_path, import_mode):
     else:
         LOGGER.info('Using external database. Ensure the target database is setup properly with proper permissions.')
 
-    prepare_osm_schema(db_path, skip_qgis_style)
-
-    # Now always running sqitch. Moving more database structures into proper
-    # management instead of being managed by Lua or Python.
-    #run_sqitch_prep(db_path)
-
+    prepare_osm_schema(db_path=db_path, skip_qgis_style=skip_qgis_style)
+    run_insert_pgosm_road(db_path=db_path)
 
 
 def start_import(pgosm_region, pgosm_date, srid, language, layerset, git_info,
@@ -349,7 +345,7 @@ def create_pgosm_db():
     return True
 
 
-def prepare_osm_schema(db_path, skip_qgis_style):
+def prepare_osm_schema(db_path: str, skip_qgis_style: bool):
     """Runs deploy scripts to prepare the PgOSM Flex database.
 
     This function's code could be simplified, but currently I like the verbosity
@@ -361,6 +357,7 @@ def prepare_osm_schema(db_path, skip_qgis_style):
         Path to folder with SQL scripts.
     skip_qgis_style : bool
     """
+    LOGGER.info('Preparing database schema')
     create_osm_file = 'osm.sql'
     create_osm_pgosm_flex_file = 'osm_pgosm_flex.sql'
     create_pgosm_road_file = 'pgosm_road.sql'
@@ -379,7 +376,19 @@ def prepare_osm_schema(db_path, skip_qgis_style):
                                      db_name=pg_conn_parts()['pg_db'])
 
 
-def run_deploy_file(db_path, sql_filename):
+def run_insert_pgosm_road(db_path: str):
+    """Runs script to load data to pgosm.road table.
+
+    Parameters
+    ------------------------
+    db_path : str
+    """
+    sql_filename = 'roads-us.sql'
+    run_deploy_file(db_path=db_path, sql_filename=sql_filename,
+                    subfolder='data')
+
+
+def run_deploy_file(db_path: str, sql_filename: str, subfolder: str='deploy'):
     """Run a SQL script under the deploy path.  Used to setup PgOSM Flex DB.
 
     Parameters
@@ -387,8 +396,11 @@ def run_deploy_file(db_path, sql_filename):
     db_path : str
         Path to folder with SQL scripts.
     sql_filename : sql_filename
+    subfolder : str
+        Set subfolder under db_path.
+        Default: deploy
     """
-    full_path = os.path.join(db_path, 'deploy', sql_filename)
+    full_path = os.path.join(db_path, subfolder, sql_filename)
     LOGGER.info(f'Deploying {full_path}')
 
     with open(full_path) as f:
@@ -398,65 +410,6 @@ def run_deploy_file(db_path, sql_filename):
         cur = conn.cursor()
         cur.execute(deploy_sql)
         LOGGER.debug(f'Ran SQL in {sql_filename}')
-
-
-def run_sqitch_prep(db_path):
-    """Runs Sqitch to create DB structure and populate helper data.
-
-    Intentionally hard coded to `pgosm` database for in-Docker use only.
-
-    Parameters
-    -------------------------
-    db_path : str
-
-    Returns
-    -------------------------
-    success : bool
-    """
-    LOGGER.info('Deploy schema via Sqitch')
-
-    conn_string = os.environ['PGOSM_CONN']
-    conn_string_sqitch = sqitch_db_string()
-
-    cmds_sqitch = ['sqitch', 'deploy', conn_string_sqitch]
-    cmds_roads = ['psql', '-d', conn_string, '-f', 'data/roads-us.sql']
-    output = subprocess.run(cmds_sqitch,
-                            text=True,
-                            capture_output=True,
-                            cwd=db_path,
-                            check=False)
-    if output.returncode > 0:
-        LOGGER.error('Loading Sqitch schema failed. pgosm schema will not be included in output.')
-        LOGGER.error(output.stderr)
-        return False
-
-    LOGGER.debug(f'Output from Sqitch: {output.stdout}')
-    LOGGER.info('Loading US Roads helper data')
-    output = subprocess.run(cmds_roads,
-                            text=True,
-                            capture_output=True,
-                            cwd=db_path,
-                            check=False)
-    if output.returncode > 0:
-        LOGGER.error('Loading roads helper data failed. Check output')
-        LOGGER.error(output.stderr)
-        return False
-
-    LOGGER.debug(f'Output from loading roads: {output.stdout}')
-    LOGGER.info('Sqitch deployment complete')
-    return True
-
-
-
-def sqitch_db_string():
-    """Returns DB string used for Sqitch.
-
-    Returns
-    -----------------------
-    conn_string : str
-    """
-    conn_string = f'db:{connection_string()}'
-    return conn_string
 
 
 def get_db_conn(conn_string):

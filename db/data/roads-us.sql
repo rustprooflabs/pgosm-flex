@@ -26,4 +26,6 @@ INSERT INTO pgosm.road (region, osm_type, route_motor, route_foot, route_cycle, 
         ('United States', 'social_path', False, True, False, 3),
         ('United States', 'steps', False, True, False, 2),
         ('United States', 'trailhead', False, True, True, 3)
+    -- Doing nothing allows users to safely customize this table
+    ON CONFLICT DO NOTHING
 ;
