@@ -133,6 +133,7 @@ def wait_for_postgres():
     """
     logger = logging.getLogger('pgosm-flex')
     logger.info('Checking for Postgres service to be available')
+    log_pg_details()
 
     required_checks = 2
     found = 0
@@ -180,6 +181,20 @@ def pg_isready():
     if result is None:
         return False
     return True
+
+
+def log_pg_details():
+    """Logs non-sensitive Postgres connection details.
+    """
+    conn_parts = pg_conn_parts()
+    pg_host = conn_parts['pg_host']
+    pg_port = conn_parts['pg_port']
+    db_name = conn_parts['pg_db']
+    pg_user = conn_parts['pg_user']
+    msg = f'Connecting to Postgres using role "{pg_user}" on host '
+    msg += f' "{pg_host}:{pg_port}"'
+    msg += f'  in database "{db_name}"'
+    LOGGER.info(msg)
 
 
 def prepare_pgosm_db(skip_qgis_style, db_path, import_mode):
