@@ -12,6 +12,12 @@ if conf['layerset']['building'] then
     require "style.building"
 end
 
+
+if conf['layerset']['building_combined_point'] then
+    print('Including building_combined_point')
+    require "style.building_combined_point"
+end
+
 if conf['layerset']['indoor'] then
     print('Including indoor')
     require "style.indoor"

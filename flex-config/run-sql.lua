@@ -13,8 +13,8 @@ else
     error('ENV VAR PGOSM_CONN must be set.')
 end
 
-layers = {'amenity', 'building', 'indoor', 'infrastructure', 'landuse'
-          , 'leisure'
+layers = {'amenity', 'building', 'building_combined_point', 'indoor'
+          , 'infrastructure', 'landuse', 'leisure'
           , 'natural', 'place', 'poi', 'public_transport'
           , 'road', 'road_major', 'shop', 'tags'
           , 'traffic', 'unitable', 'water'}
