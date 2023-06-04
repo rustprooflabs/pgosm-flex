@@ -1,4 +1,9 @@
 
+ALTER TABLE osm.building_combined_point
+    ADD CONSTRAINT pk_osm_building_combined_point_osm_id_geom_type
+    PRIMARY KEY (osm_id, geom_type)
+;
+
 
 COMMENT ON TABLE osm.building_combined_point IS 'Combined point and polygon buildings with polygons converted to pointss with centroid() in osm2pgsql Lua style.';
 COMMENT ON COLUMN osm.building_combined_point.address IS 'Address combined from address parts in helpers.get_address().';
@@ -14,3 +19,9 @@ COMMENT ON COLUMN osm.building_combined_point.operator IS 'Entity in charge of o
 
 COMMENT ON COLUMN osm.building_combined_point.osm_type IS 'Values: building, building_part, office or address. All but address described in osm_subtype.  Value is address if addr:* tags exist with no other major keys to group it in a more specific layer.  See address_only_building() in building.lua';
 COMMENT ON COLUMN osm.building_combined_point.osm_subtype IS 'Further describes osm_type for building, building_part, and office.';
+
+COMMENT ON COLUMN osm.building_point.housenumber IS 'Value from addr:housenumber tag';
+COMMENT ON COLUMN osm.building_point.street IS 'Value from addr:street tag';
+COMMENT ON COLUMN osm.building_point.city IS 'Value from addr:city tag';
+COMMENT ON COLUMN osm.building_point.state IS 'Value from addr:state tag';
+COMMENT ON COLUMN osm.building_point.postcode IS 'Value from addr:postcode tag';

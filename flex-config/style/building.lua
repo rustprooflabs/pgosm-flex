@@ -1,5 +1,5 @@
 require "helpers"
-require "building_helpers"
+require "style.building_helpers"
 
 local tables = {}
 
