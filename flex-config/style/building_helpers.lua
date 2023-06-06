@@ -35,7 +35,7 @@ end
 
 
 
-function get_osm_type_subtype(object)
+function get_osm_type_subtype_building(object)
     local osm_type_table = {}
     local address_only = address_only_building(object.tags)
 

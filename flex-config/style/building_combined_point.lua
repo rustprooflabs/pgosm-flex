@@ -42,7 +42,7 @@ function building_combined_point_process_node(object)
         return
     end
 
-    local osm_types = get_osm_type_subtype(object)
+    local osm_types = get_osm_type_subtype_building(object)
 
     local name = get_name(object.tags)
     local housenumber  = object.tags['addr:housenumber']
@@ -89,7 +89,7 @@ function building_combined_point_process_way(object)
     if not object.is_closed then
         return
     end
-    local osm_types = get_osm_type_subtype(object)
+    local osm_types = get_osm_type_subtype_building(object)
 
     local name = get_name(object.tags)
     local housenumber  = object.tags['addr:housenumber']
@@ -134,7 +134,7 @@ function building_combined_point_process_relation(object)
         return
     end
 
-    local osm_types = get_osm_type_subtype(object)
+    local osm_types = get_osm_type_subtype_building(object)
 
     local name = get_name(object.tags)
     local housenumber  = object.tags['addr:housenumber']

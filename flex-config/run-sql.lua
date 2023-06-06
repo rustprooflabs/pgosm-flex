@@ -16,7 +16,7 @@ end
 layers = {'amenity', 'building', 'building_combined_point', 'indoor'
           , 'infrastructure', 'landuse', 'leisure'
           , 'natural', 'place', 'poi', 'public_transport'
-          , 'road', 'road_major', 'shop', 'tags'
+          , 'road', 'road_major', 'shop', 'shop_combined_point', 'tags'
           , 'traffic', 'unitable', 'water'}
 
 
