@@ -138,7 +138,8 @@ psql --no-psqlrc -tA  \
 
 Ensure the data tests work and are reported if values change via `make`.
 The best way to ensure the test is working is manually change one value in the
-generated `.out` file which should cause the message:
+generated `.out` file which should cause the following error message.
+Setting the `.out` data back to right should return the message back to successful.
 
 ```bash
 FAILED TEST: sql/shop_polygon_osm_type_subtype_count.sql - See tmp/shop_polygon_osm_type_subtype_count.diff
