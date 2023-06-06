@@ -98,8 +98,8 @@ function shop_process_way_combined_point(object)
     local osm_types = get_osm_type_subtype_shop(object)
 
     tables.shop_combined_point:insert({
-        osm_type = osm_type,
-        osm_subtype = osm_subtype,
+        osm_type = osm_types.osm_type,
+        osm_subtype = osm_types.osm_subtype,
         name = name,
         housenumber = housenumber,
         street = street,

@@ -126,11 +126,10 @@ function shop_process_way(object)
 
     local osm_types = get_osm_type_subtype_shop(object)
 
-
     if object.is_closed then
         tables.shop_polygon:insert({
-            osm_type = osm_type,
-            osm_subtype = osm_subtype,
+            osm_type = osm_types.osm_type,
+            osm_subtype = osm_types.osm_subtype,
             name = name,
             housenumber = housenumber,
             street = street,
