@@ -80,7 +80,7 @@ local function natural_poi(object)
 end
 
 
-function second_level_tag_check(object)
+function second_level_tag_check_poi(object)
     if (object.tags.natural and not natural_poi(object)) then
         return false
     end
