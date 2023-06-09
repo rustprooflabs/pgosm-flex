@@ -92,7 +92,7 @@ function poi_process_way_combined(object)
     local operator  = object:grab_tag('operator')
 
     if object.is_closed then
-
+        print(osm_types.osm_type)
         tables.poi_combined_point:insert({
             osm_type = osm_types.osm_type,
             osm_subtype = osm_types.osm_subtype,
@@ -104,7 +104,7 @@ function poi_process_way_combined(object)
             postcode = postcode,
             address = address,
             operator = operator,
-            geom = object:as_polygon()::centroid()
+            geom = object:as_polygon():centroid()
         })
     else
         tables.poi_combined_point:insert({
@@ -118,7 +118,7 @@ function poi_process_way_combined(object)
             postcode = postcode,
             address = address,
             operator = operator,
-            geom = object:as_multilinestring()::centroid()
+            geom = object:as_linestring():centroid()
         })
     end
 
@@ -164,7 +164,7 @@ function poi_process_relation_combined(object)
             address = address,
             operator = operator,
             member_ids = member_ids,
-            geom = object:as_multipolygon()::centroid()
+            geom = object:as_multipolygon():centroid()
         })
     end
 

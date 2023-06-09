@@ -52,6 +52,11 @@ if conf['layerset']['poi'] then
     require "style.poi"
 end
 
+if conf['layerset']['poi_combined_point'] then
+    print('Including poi_combined_point')
+    require "style.poi_combined_point"
+end
+
 if conf['layerset']['public_transport'] then
     print('Including public_transport')
     require "style.public_transport"
