@@ -7,7 +7,7 @@ local tables = {}
 tables.poi_combined_point = osm2pgsql.define_table({
     name = 'poi_combined_point',
     schema = schema_name,
-    ids = { type = 'node', id_column = 'osm_id' },
+    ids = { type = 'any', id_column = 'osm_id', type_column = 'geom_type' },
     columns = {
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'osm_subtype', type = 'text', not_null = true },
@@ -92,7 +92,6 @@ function poi_process_way_combined(object)
     local operator  = object:grab_tag('operator')
 
     if object.is_closed then
-        print(osm_types.osm_type)
         tables.poi_combined_point:insert({
             osm_type = osm_types.osm_type,
             osm_subtype = osm_types.osm_subtype,
