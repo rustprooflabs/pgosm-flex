@@ -1,13 +1,14 @@
 require "helpers"
 require "style.building_helpers"
 
+
 local tables = {}
 
 
-tables.building_point = osm2pgsql.define_table({
-    name = 'building_point',
+tables.building_combined_point = osm2pgsql.define_table({
+    name = 'building_combined_point',
     schema = schema_name,
-    ids = { type = 'node', id_column = 'osm_id' },
+    ids = { type = 'any', id_column = 'osm_id', type_column = 'geom_type' },
     columns = {
         { column = 'osm_type', type = 'text' , not_null = true},
         { column = 'osm_subtype', type = 'text'},
@@ -32,38 +33,7 @@ tables.building_point = osm2pgsql.define_table({
     }
 })
 
-
-tables.building_polygon = osm2pgsql.define_table({
-    name = 'building_polygon',
-    schema = schema_name,
-    ids = { type = 'way', id_column = 'osm_id' },
-    columns = {
-        { column = 'osm_type', type = 'text', not_null = true},
-        { column = 'osm_subtype', type = 'text'},
-        { column = 'name', type = 'text' },
-        { column = 'levels', type = 'int'},
-        { column = 'height', sql_type = 'numeric'},
-        { column = 'housenumber', type = 'text'},
-        { column = 'street', type = 'text' },
-        { column = 'city', type = 'text' },
-        { column = 'state', type = 'text'},
-        { column = 'postcode', type = 'text'},
-        { column = 'address', type = 'text', not_null = true},
-        { column = 'wheelchair', type = 'text'},
-        { column = 'wheelchair_desc', type = 'text'},
-        { column = 'operator', type = 'text'},
-        { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
-    },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-        { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL' },
-    }
-})
-
-
-
-function building_process_node(object)
+function building_combined_point_process_node(object)
     local address_only = address_only_building(object.tags)
 
     if not is_first_level_building(object.tags)
@@ -87,7 +57,7 @@ function building_process_node(object)
     local height = parse_to_meters(object.tags['height'])
     local operator  = object.tags.operator
 
-    tables.building_point:insert({
+    tables.building_combined_point:insert({
         osm_type = osm_types.osm_type,
         osm_subtype = osm_types.osm_subtype,
         name = name,
@@ -104,11 +74,10 @@ function building_process_node(object)
         operator = operator,
         geom = object:as_point()
     })
-
 end
 
 
-function building_process_way(object)
+function building_combined_point_process_way(object)
     local address_only = address_only_building(object.tags)
 
     if not is_first_level_building(object.tags)
@@ -135,7 +104,7 @@ function building_process_way(object)
     local height = parse_to_meters(object.tags['height'])
     local operator  = object.tags.operator
 
-    tables.building_polygon:insert({
+    tables.building_combined_point:insert({
         osm_type = osm_types.osm_type,
         osm_subtype = osm_types.osm_subtype,
         name = name,
@@ -150,14 +119,13 @@ function building_process_way(object)
         levels = levels,
         height = height,
         operator = operator,
-        geom = object:as_polygon()
+        geom = object:as_polygon():centroid()
     })
 
 end
 
 
-
-function building_process_relation(object)
+function building_combined_point_process_relation(object)
     local address_only = address_only_building(object.tags)
 
     if not is_first_level_building(object.tags)
@@ -182,7 +150,7 @@ function building_process_relation(object)
     local operator  = object.tags.operator
 
     if object.tags.type == 'multipolygon' or object.tags.type == 'boundary' then
-        tables.building_polygon:insert({
+        tables.building_combined_point:insert({
             osm_type = osm_types.osm_type,
             osm_subtype = osm_types.osm_subtype,
             name = name,
@@ -197,7 +165,7 @@ function building_process_relation(object)
             levels = levels,
             height = height,
             operator = operator,
-            geom = object:as_multipolygon()
+            geom = object:as_multipolygon():centroid()
         })
     end
 
@@ -205,35 +173,35 @@ end
 
 
 if osm2pgsql.process_way == nil then
-    osm2pgsql.process_way = building_process_way
+    osm2pgsql.process_way = building_combined_point_process_way
 else
     local nested = osm2pgsql.process_way
     osm2pgsql.process_way = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        building_process_way(object_copy)
+        building_combined_point_process_way(object_copy)
     end
 end
 
 
 if osm2pgsql.process_node == nil then
-    osm2pgsql.process_node = building_process_node
+    osm2pgsql.process_node = building_combined_point_process_node
 else
     local nested = osm2pgsql.process_node
     osm2pgsql.process_node = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        building_process_node(object_copy)
+        building_combined_point_process_node(object_copy)
     end
 end
 
 if osm2pgsql.process_relation == nil then
-    osm2pgsql.process_relation = building_process_relation
+    osm2pgsql.process_relation = building_combined_point_process_relation
 else
     local nested = osm2pgsql.process_relation
     osm2pgsql.process_relation = function(object)
         local object_copy = deep_copy(object)
         nested(object)
-        building_process_relation(object_copy)
+        building_combined_point_process_relation(object_copy)
     end
 end
