@@ -13,6 +13,7 @@ COMMENT ON COLUMN osm.building_combined_point.name IS 'Best name option determin
 COMMENT ON COLUMN osm.building_combined_point.levels IS 'Number (#) of levels in the building.';
 COMMENT ON COLUMN osm.building_combined_point.height IS 'Object height.  Should be in meters (m) but is not enforced.  Please fix data in OpenStreetMap.org if incorrect values are discovered.';
 COMMENT ON COLUMN osm.building_combined_point.wheelchair IS 'Indicates if building is wheelchair accessible.';
+COMMENT ON COLUMN osm.building_combined_point.wheelchair_desc IS 'Value from wheelchair:description Per https://wiki.openstreetmap.org/wiki/Key:wheelchair:description';
 COMMENT ON COLUMN osm.building_combined_point.geom_type IS 'Type of geometry. N(ode), W(ay) or R(elation).  Unique along with osm_id';
 COMMENT ON COLUMN osm.building_combined_point.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.building_combined_point.operator IS 'Entity in charge of operations. https://wiki.openstreetmap.org/wiki/Key:operator';

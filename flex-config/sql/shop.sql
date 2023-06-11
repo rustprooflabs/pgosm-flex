@@ -10,6 +10,10 @@ COMMENT ON COLUMN osm.shop_polygon.geom IS 'Geometry loaded by osm2pgsql.';
 
 COMMENT ON COLUMN osm.shop_point.wheelchair IS 'Indicates if feature is wheelchair accessible. Values:  yes, no, limited.  Per https://wiki.openstreetmap.org/wiki/Key:wheelchair';
 COMMENT ON COLUMN osm.shop_polygon.wheelchair IS 'Indicates if feature is wheelchair accessible. Values:  yes, no, limited.  Per https://wiki.openstreetmap.org/wiki/Key:wheelchair';
+COMMENT ON COLUMN osm.shop_point.wheelchair_desc IS 'Value from wheelchair:description Per https://wiki.openstreetmap.org/wiki/Key:wheelchair:description';
+COMMENT ON COLUMN osm.shop_polygon.wheelchair_desc IS 'Value from wheelchair:description Per https://wiki.openstreetmap.org/wiki/Key:wheelchair:description';
+
+
 COMMENT ON COLUMN osm.shop_point.operator IS 'Entity in charge of operations. https://wiki.openstreetmap.org/wiki/Key:operator';
 COMMENT ON COLUMN osm.shop_polygon.operator IS 'Entity in charge of operations. https://wiki.openstreetmap.org/wiki/Key:operator';
 
