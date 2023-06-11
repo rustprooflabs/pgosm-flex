@@ -12,6 +12,11 @@ if conf['layerset']['building'] then
     require "style.building"
 end
 
+if conf['layerset']['building_combined_point'] then
+    print('Including building_combined_point')
+    require "style.building_combined_point"
+end
+
 if conf['layerset']['indoor'] then
     print('Including indoor')
     require "style.indoor"
@@ -47,6 +52,11 @@ if conf['layerset']['poi'] then
     require "style.poi"
 end
 
+if conf['layerset']['poi_combined_point'] then
+    print('Including poi_combined_point')
+    require "style.poi_combined_point"
+end
+
 if conf['layerset']['public_transport'] then
     print('Including public_transport')
     require "style.public_transport"
@@ -65,6 +75,11 @@ end
 if conf['layerset']['shop'] then
     print('Including shop')
     require "style.shop"
+end
+
+if conf['layerset']['shop_combined_point'] then
+    print('Including shop_combined_point')
+    require "style.shop_combined_point"
 end
 
 if conf['layerset']['tags'] then

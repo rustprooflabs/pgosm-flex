@@ -62,34 +62,3 @@ COMMENT ON COLUMN osm.poi_line.address IS 'Address combined from address parts i
 COMMENT ON COLUMN osm.poi_polygon.address IS 'Address combined from address parts in helpers.get_address().';
 
 COMMENT ON COLUMN osm.poi_polygon.member_ids IS 'Member IDs making up the full relation.  NULL if not a relation.';
-
-CREATE MATERIALIZED VIEW osm.vpoi_all AS
-SELECT osm_id, 'N' AS geom_type, osm_type, osm_subtype, name, address, operator, geom
-    FROM osm.poi_point
-UNION
-SELECT osm_id, 'L' AS geom_type, osm_type, osm_subtype, name, address, operator,
-        ST_Centroid(geom) AS geom
-    FROM osm.poi_line
-UNION
-SELECT osm_id, 'W' AS geom_type, osm_type, osm_subtype, name, address, operator,
-        ST_Centroid(geom) AS geom
-    FROM osm.poi_polygon
-;
-
-
-CREATE UNIQUE INDEX uix_osm_vpoi_all_osm_id_geom_type
-    ON osm.vpoi_all (osm_id, geom_type);
-CREATE INDEX gix_osm_vpoi_all
-    ON osm.vpoi_all USING GIST (geom);
-
-CREATE INDEX ix_osm_vpoi_all_osm_type ON osm.vpoi_all (osm_type);
-
-
-
-COMMENT ON MATERIALIZED VIEW osm.vpoi_all IS 'Cobmined POI view. Converts lines and polygons to point with ST_Centroid(), stacks using UNION';
-
-COMMENT ON COLUMN osm.vpoi_all.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer. Value from key stored in osm_subtype.';
-COMMENT ON COLUMN osm.vpoi_all.address IS 'Address combined from address parts in helpers.get_address(). See base tables for individual address parts';
-COMMENT ON COLUMN osm.vpoi_all.geom_type IS 'Indicates source table, N (point) L (line) W (polygon).  Using L for line differs from how osm2pgsql classifies lines ("W") in order to provide a direct link to which table the data comes from.';
-COMMENT ON COLUMN osm.vpoi_all.osm_subtype IS 'Value detail describing the key (osm_type).';
-

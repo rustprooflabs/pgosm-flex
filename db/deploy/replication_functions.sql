@@ -1,5 +1,3 @@
--- Deploy pgosm-flex:002 to pg
--- requires: 001
 
 BEGIN;
 
@@ -22,7 +20,6 @@ CREATE OR REPLACE PROCEDURE osm.append_data_finish(skip_nested BOOLEAN = False)
  BEGIN
 
     REFRESH MATERIALIZED VIEW osm.vplace_polygon_subdivide;
-    REFRESH MATERIALIZED VIEW osm.vpoi_all;
 
     IF $1 = False THEN
         RAISE NOTICE 'Populating nested place table';

@@ -47,8 +47,9 @@ RUN git clone --depth 1 --branch $OSM2PGSQL_BRANCH https://github.com/openstreet
     && apt autoremove -y \
     && cd /tmp && rm -r /tmp/osm2pgsql
 
-
-COPY ./sqitch.conf /etc/sqitch/sqitch.conf
+RUN wget https://github.com/rustprooflabs/pgdd/releases/download/0.5.0/pgdd_0.5.0_postgis_pg15_amd64.deb \
+    && dpkg -i ./pgdd_0.5.0_postgis_pg15_amd64.deb \
+    && rm ./pgdd_0.5.0_postgis_pg15_amd64.deb
 
 WORKDIR /app
 COPY . ./
