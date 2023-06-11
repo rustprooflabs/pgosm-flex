@@ -1,5 +1,5 @@
 
-COMMENT ON TABLE osm.shop_combined_point IS 'Converts polygon shops to point with ST_Centroid(), combines with source points using UNION.';
+COMMENT ON TABLE osm.shop_combined_point IS 'Combines point and polygon shops as points.  Polygons are converted to point in osm2pgsql with centroid().';
 
 COMMENT ON COLUMN osm.shop_combined_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.shop_combined_point.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer. Value from key stored in osm_subtype.';
