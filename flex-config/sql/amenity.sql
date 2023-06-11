@@ -58,3 +58,11 @@ COMMENT ON COLUMN osm.amenity_polygon.address IS 'Address combined from address 
 COMMENT ON COLUMN osm.amenity_point.osm_subtype IS 'Further describes osm_type for amenities.';
 COMMENT ON COLUMN osm.amenity_line.osm_subtype IS 'Further describes osm_type for amenities.';
 COMMENT ON COLUMN osm.amenity_polygon.osm_subtype IS 'Further describes osm_type for amenities.';
+
+COMMENT ON COLUMN osm.amenity_point.wheelchair IS 'Indicates if feature is wheelchair accessible. Values:  yes, no, limited.  Per https://wiki.openstreetmap.org/wiki/Key:wheelchair';
+COMMENT ON COLUMN osm.amenity_line.wheelchair IS 'Indicates if feature is wheelchair accessible. Values:  yes, no, limited.  Per https://wiki.openstreetmap.org/wiki/Key:wheelchair';
+COMMENT ON COLUMN osm.amenity_polygon.wheelchair IS 'Indicates if feature is wheelchair accessible. Values:  yes, no, limited.  Per https://wiki.openstreetmap.org/wiki/Key:wheelchair';
+
+COMMENT ON COLUMN osm.amenity_point.wheelchair_desc IS 'Value from wheelchair:description Per https://wiki.openstreetmap.org/wiki/Key:wheelchair:description';
+COMMENT ON COLUMN osm.amenity_line.wheelchair_desc IS 'Value from wheelchair:description Per https://wiki.openstreetmap.org/wiki/Key:wheelchair:description';
+COMMENT ON COLUMN osm.amenity_polygon.wheelchair_desc IS 'Value from wheelchair:description Per https://wiki.openstreetmap.org/wiki/Key:wheelchair:description';

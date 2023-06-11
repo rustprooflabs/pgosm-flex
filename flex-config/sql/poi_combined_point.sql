@@ -7,7 +7,7 @@ CREATE INDEX ix_osm_poi_combined_point_osm_type ON osm.poi_combined_point (osm_t
 
 
 
-COMMENT ON TABLE osm.poi_combined_point IS 'Combined POI data. Lines and polygons converted to point with centroid() in osm2pgsql.';
+COMMENT ON TABLE osm.poi_combined_point IS 'Combined POI data as points. Lines and polygons converted to point in osm2pgsql with centroid().';
 
 COMMENT ON COLUMN osm.poi_combined_point.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer. Value from key stored in osm_subtype.';
 COMMENT ON COLUMN osm.poi_combined_point.address IS 'Address combined from address parts in helpers.get_address(). See base tables for individual address parts';
