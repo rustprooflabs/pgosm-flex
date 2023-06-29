@@ -1,5 +1,81 @@
 require "helpers"
 
+
+local inifile = require('inifile')
+local layerset_file = 'indexes/place.ini'
+print('Loading config: ' .. layerset_file)
+local index_config = inifile.parse(layerset_file)
+
+
+-------------------------------------------------
+-- Parse through index options
+-------------------------------------------------
+local gist_type_spgist = index_config['indexes']['gist_type_spgist']
+if gist_type_spgist == nil then
+    gist_type_spgist = false
+end
+
+local gist_type = 'gist'
+if gist_type_spgist then
+    gist_type = 'spgist'
+end
+
+
+local index_osm_type = index_config['indexes']['index_osm_type']
+if index_osm_type == nil then
+    index_osm_type = true
+end
+
+local index_name = index_config['indexes']['index_name']
+if index_name == nil then
+    index_name = true
+end
+
+local index_boundary = index_config['indexes']['index_boundary']
+if index_boundary == nil then
+    index_boundary = true
+end
+
+local index_admin_level = index_config['indexes']['index_admin_level']
+if index_admin_level == nil then
+    index_admin_level = true
+end
+
+
+-- Geom index always created
+local indexes = {
+    { column = 'geom', method = gist_type }
+}
+
+-- Table created with index 1 as geom. Next records start with 2
+local next_index_id = 2
+
+if index_osm_type then
+    indexes[next_index_id] = {column = 'osm_type', method = 'btree' }
+    next_index_id = next_index_id + 1
+end
+
+if index_name then
+    indexes[next_index_id] = { column = 'name', method = 'btree', where = 'name IS NOT NULL ' }
+    next_index_id = next_index_id + 1
+end
+
+if index_boundary then
+    indexes[next_index_id] = { column = 'boundary', method = 'btree', where = 'boundary IS NOT NULL ' }
+    next_index_id = next_index_id + 1
+end
+
+if index_admin_level then
+    indexes[next_index_id] = { column = 'admin_level', method = 'btree', where = 'admin_level IS NOT NULL ' }
+    next_index_id = next_index_id + 1
+end
+
+
+-------------------------------------------------
+-- End of indexes
+-------------------------------------------------
+
+
 local tables = {}
 
 
@@ -14,13 +90,7 @@ tables.place_point = osm2pgsql.define_table({
         { column = 'name', type = 'text' },
         { column = 'geom', type = 'point', projection = srid, not_null = true},
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-        { column = 'boundary', method = 'btree', where = 'boundary IS NOT NULL ' },
-        { column = 'admin_level', method = 'btree', where = 'admin_level IS NOT NULL ' },
-        { column = 'name', method = 'btree', where = 'name IS NOT NULL ' },
-    }
+    indexes = indexes
 })
 
 tables.place_line = osm2pgsql.define_table({
@@ -34,13 +104,7 @@ tables.place_line = osm2pgsql.define_table({
         { column = 'name', type = 'text' },
         { column = 'geom', type = 'linestring', projection = srid, not_null = true},
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-        { column = 'boundary', method = 'btree', where = 'boundary IS NOT NULL ' },
-        { column = 'admin_level', method = 'btree', where = 'admin_level IS NOT NULL ' },
-        { column = 'name', method = 'btree', where = 'name IS NOT NULL ' },
-    }
+    indexes = indexes
 })
 
 
@@ -56,13 +120,7 @@ tables.place_polygon = osm2pgsql.define_table({
         { column = 'member_ids', type = 'jsonb'},
         { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-        { column = 'boundary', method = 'btree', where = 'boundary IS NOT NULL ' },
-        { column = 'admin_level', method = 'btree', where = 'admin_level IS NOT NULL ' },
-        { column = 'name', method = 'btree', where = 'name IS NOT NULL ' },
-    }
+    indexes = indexes
 })
 
 
