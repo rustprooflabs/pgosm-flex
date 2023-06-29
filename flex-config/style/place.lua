@@ -10,16 +10,10 @@ local index_config = inifile.parse(layerset_file)
 -------------------------------------------------
 -- Parse through index options
 -------------------------------------------------
-local gist_type_spgist = index_config['indexes']['gist_type_spgist']
-if gist_type_spgist == nil then
-    gist_type_spgist = false
+local gist_type = index_config['indexes']['gist_type']
+if gist_type == nil then
+    gist_type = 'gist'
 end
-
-local gist_type = 'gist'
-if gist_type_spgist then
-    gist_type = 'spgist'
-end
-
 
 local index_osm_type = index_config['indexes']['index_osm_type']
 if index_osm_type == nil then
