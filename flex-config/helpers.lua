@@ -488,6 +488,11 @@ function get_indexes_from_spec(index_spec_file)
         index_admin_level = false
     end
 
+    local index_ref = index_config['indexes']['index_ref']
+    if index_ref == nil then
+        index_ref = false
+    end
+
 
     -------------------------------------------------
     -- Build indexes table
@@ -522,6 +527,11 @@ function get_indexes_from_spec(index_spec_file)
 
     if index_admin_level then
         indexes[next_index_id] = { column = 'admin_level', method = 'btree', where = 'admin_level IS NOT NULL ' }
+        next_index_id = next_index_id + 1
+    end
+
+    if index_ref then
+        indexes[next_index_id] = { column = 'ref', method = 'btree'}
         next_index_id = next_index_id + 1
     end
 
