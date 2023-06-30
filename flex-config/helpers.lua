@@ -1,5 +1,6 @@
 -- helpers.lua provides commonly used functions 
 -- and sets customizable params, e.g. SRID and schema name.
+local inifile = require('inifile')
 
 local srid_env = os.getenv("PGOSM_SRID")
 if srid_env then
@@ -442,4 +443,87 @@ function get_address(tags)
 
     return address
 
+end
+
+
+function get_indexes_from_spec(index_spec_file)
+    print('Loading config: ' .. index_spec_file)
+    local index_config = inifile.parse(index_spec_file)
+
+    -------------------------------------------------
+    -- Parse through index options
+    -------------------------------------------------
+    local index_geom = index_config['indexes']['index_geom']
+    if index_geom == nil then
+        index_geom = false
+    end
+
+    local gist_type = index_config['indexes']['gist_type']
+    if gist_type == nil then
+        gist_type = 'gist'
+    end
+
+    local index_osm_type = index_config['indexes']['index_osm_type']
+    if index_osm_type == nil then
+        index_osm_type = false
+    end
+
+    local index_osm_subtype = index_config['indexes']['index_osm_subtype']
+    if index_osm_subtype == nil then
+        index_osm_subtype = false
+    end
+
+    local index_name = index_config['indexes']['index_name']
+    if index_name == nil then
+        index_name = false
+    end
+
+    local index_boundary = index_config['indexes']['index_boundary']
+    if index_boundary == nil then
+        index_boundary = false
+    end
+
+    local index_admin_level = index_config['indexes']['index_admin_level']
+    if index_admin_level == nil then
+        index_admin_level = false
+    end
+
+
+    -------------------------------------------------
+    -- Build indexes table
+    -------------------------------------------------
+    local indexes = {}
+    local next_index_id = 1
+
+    if index_geom then
+        indexes[next_index_id] = { column = 'geom', method = gist_type }
+        next_index_id = next_index_id + 1
+    end
+
+    if index_osm_type then
+        indexes[next_index_id] = {column = 'osm_type', method = 'btree' }
+        next_index_id = next_index_id + 1
+    end
+
+    if index_osm_subtype then
+        indexes[next_index_id] = {column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL ' }
+        next_index_id = next_index_id + 1
+    end
+
+    if index_name then
+        indexes[next_index_id] = { column = 'name', method = 'btree', where = 'name IS NOT NULL ' }
+        next_index_id = next_index_id + 1
+    end
+
+    if index_boundary then
+        indexes[next_index_id] = { column = 'boundary', method = 'btree', where = 'boundary IS NOT NULL ' }
+        next_index_id = next_index_id + 1
+    end
+
+    if index_admin_level then
+        indexes[next_index_id] = { column = 'admin_level', method = 'btree', where = 'admin_level IS NOT NULL ' }
+        next_index_id = next_index_id + 1
+    end
+
+    return indexes
 end
