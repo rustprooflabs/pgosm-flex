@@ -1,8 +1,9 @@
 require "helpers"
 
 local index_spec_file = 'indexes/place.ini'
-local indexes = get_indexes_from_spec(index_spec_file)
-
+local indexes_point = get_indexes_from_spec(index_spec_file, 'point')
+local indexes_line = get_indexes_from_spec(index_spec_file, 'line')
+local indexes_polygon = get_indexes_from_spec(index_spec_file, 'polygon')
 
 -------------------------------------------------
 -- End of indexes
@@ -23,7 +24,7 @@ tables.place_point = osm2pgsql.define_table({
         { column = 'name', type = 'text' },
         { column = 'geom', type = 'point', projection = srid, not_null = true},
     },
-    indexes = indexes
+    indexes = indexes_point
 })
 
 tables.place_line = osm2pgsql.define_table({
@@ -37,7 +38,7 @@ tables.place_line = osm2pgsql.define_table({
         { column = 'name', type = 'text' },
         { column = 'geom', type = 'linestring', projection = srid, not_null = true},
     },
-    indexes = indexes
+    indexes = indexes_line
 })
 
 
@@ -53,7 +54,7 @@ tables.place_polygon = osm2pgsql.define_table({
         { column = 'member_ids', type = 'jsonb'},
         { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
     },
-    indexes = indexes
+    indexes = indexes_polygon
 })
 
 

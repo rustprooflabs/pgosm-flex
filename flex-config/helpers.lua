@@ -446,49 +446,75 @@ function get_address(tags)
 end
 
 
-function get_indexes_from_spec(index_spec_file)
+function get_indexes_from_spec(index_spec_file, geom_type)
+    -- Each style can define 1 index_spec_file with multiple sections
+    -- geom_type must be point/line/polygon.
+    -- Sets each index setting first based on geom_type if exists, then
+    -- falls back to file definition if not. If not defined in file sets
+    -- default to false (no indexing)
     print('Loading config: ' .. index_spec_file)
     local index_config = inifile.parse(index_spec_file)
 
     -------------------------------------------------
-    -- Parse through index options
+    -- Parse through index options. Start with layer specific if exists,
+    -- defaults if not.  Set default fallback when not defined anywhere
     -------------------------------------------------
-    local index_geom = index_config['indexes']['index_geom']
+    print('Hello')
+    print(geom_type)
+
+    local index_geom = nil
+    if index_config[geom_type]['index_geom'] ~= nil then
+        index_geom = index_config[geom_type]['index_geom']
+    else
+        index_geom = index_config['all']['index_geom']
+    end
+
+    print(index_geom)
     if index_geom == nil then
         index_geom = false
     end
+    print(index_geom)
 
-    local gist_type = index_config['indexes']['gist_type']
+
+    local gist_type = nil
+    print(index_config[geom_type]['gist_type'])
+    if index_config[geom_type]['gist_type'] ~= nil then
+        gist_type = index_config[geom_type]['gist_type']
+    else
+        gist_type = index_config['all']['gist_type']
+    end
+    print(gist_type)
     if gist_type == nil then
         gist_type = 'gist'
     end
+    print(gist_type)
 
-    local index_osm_type = index_config['indexes']['index_osm_type']
+    local index_osm_type = index_config['all']['index_osm_type']
     if index_osm_type == nil then
         index_osm_type = false
     end
 
-    local index_osm_subtype = index_config['indexes']['index_osm_subtype']
+    local index_osm_subtype = index_config['all']['index_osm_subtype']
     if index_osm_subtype == nil then
         index_osm_subtype = false
     end
 
-    local index_name = index_config['indexes']['index_name']
+    local index_name = index_config['all']['index_name']
     if index_name == nil then
         index_name = false
     end
 
-    local index_boundary = index_config['indexes']['index_boundary']
+    local index_boundary = index_config['all']['index_boundary']
     if index_boundary == nil then
         index_boundary = false
     end
 
-    local index_admin_level = index_config['indexes']['index_admin_level']
+    local index_admin_level = index_config['all']['index_admin_level']
     if index_admin_level == nil then
         index_admin_level = false
     end
 
-    local index_ref = index_config['indexes']['index_ref']
+    local index_ref = index_config['all']['index_ref']
     if index_ref == nil then
         index_ref = false
     end

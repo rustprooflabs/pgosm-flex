@@ -10,6 +10,7 @@
 - [Customize PgOSM Flex](./customizations.md)
     - [Common Customizations](./common-customization.md)
     - [Layersets](./layersets.md)
+    - [Indexes](./custom-indexes.md)
     - [Configure Postgres](./configure-postgres.md)
 - [Query examples](./query.md)
 - [Routing](./routing.md)
