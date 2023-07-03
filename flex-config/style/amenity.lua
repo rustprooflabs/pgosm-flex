@@ -1,5 +1,10 @@
 require "helpers"
 
+local index_spec_file = 'indexes/amenity.ini'
+local indexes_point = get_indexes_from_spec(index_spec_file, 'point')
+local indexes_line = get_indexes_from_spec(index_spec_file, 'line')
+local indexes_polygon = get_indexes_from_spec(index_spec_file, 'polygon')
+
 local tables = {}
 
 tables.amenity_point = osm2pgsql.define_table({
@@ -20,11 +25,7 @@ tables.amenity_point = osm2pgsql.define_table({
         { column = 'wheelchair_desc', type = 'text'},
         { column = 'geom', type = 'point', projection = srid, not_null = true},
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-        { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL' },
-    }
+    indexes = indexes_point
 })
 
 tables.amenity_line = osm2pgsql.define_table({
@@ -45,11 +46,7 @@ tables.amenity_line = osm2pgsql.define_table({
         { column = 'wheelchair_desc', type = 'text'},
         { column = 'geom', type = 'linestring', projection = srid, not_null = true},
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-        { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL' },
-    }
+    indexes = indexes_line
 })
 
 
@@ -71,11 +68,7 @@ tables.amenity_polygon = osm2pgsql.define_table({
         { column = 'wheelchair_desc', type = 'text'},
         { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-        { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL' },
-    }
+    indexes = indexes_polygon
 })
 
 

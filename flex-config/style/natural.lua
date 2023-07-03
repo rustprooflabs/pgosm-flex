@@ -1,5 +1,11 @@
 require "helpers"
 
+local index_spec_file = 'indexes/natural.ini'
+local indexes_point = get_indexes_from_spec(index_spec_file, 'point')
+local indexes_line = get_indexes_from_spec(index_spec_file, 'line')
+local indexes_polygon = get_indexes_from_spec(index_spec_file, 'polygon')
+
+
 local tables = {}
 
 
@@ -13,10 +19,7 @@ tables.natural_point = osm2pgsql.define_table({
         { column = 'ele', type = 'int' },
         { column = 'geom', type = 'point', projection = srid, not_null = true},
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-    }
+    indexes = indexes_point
 })
 
 
@@ -30,10 +33,7 @@ tables.natural_line = osm2pgsql.define_table({
         { column = 'ele', type = 'int' },
         { column = 'geom', type = 'linestring' , projection = srid, not_null = true},
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-    }
+    indexes = indexes_line
 })
 
 
@@ -47,10 +47,7 @@ tables.natural_polygon = osm2pgsql.define_table({
         { column = 'ele', type = 'int' },
         { column = 'geom', type = 'multipolygon' , projection = srid, not_null = true},
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-    }
+    indexes = indexes_polygon
 })
 
 

@@ -25,3 +25,40 @@ column.
 
 [polygon]
 ```
+
+
+There are three (3) variables that can be configured for each column in the
+PgOSM Flex database.
+
+* `<name>`
+* `<name>_where`
+* `<name>_method`
+
+For example, the `admin_level` column can have a partial index created with
+`admin_level=true` and `admin_level_where=admin_level IS NOT NULL`.
+
+```ini
+[all]
+admin_level=true
+admin_level_where=admin_level IS NOT NULL
+```
+
+
+To change the polygon index from `GIST` to `SPGIST` use the `geom_method`
+option.
+
+
+```ini
+[polygon]
+geom_method=spgist
+```
+
+
+
+## Most columns can be indexed
+
+Defined in `flex_config/helpers.lua`.  See the definition of
+`local index_columns = {...}`.
+
+
+
