@@ -446,6 +446,74 @@ function get_address(tags)
 end
 
 
+local function should_i_create_index(index_spec_file, geom_type, index_column)
+    -- Checks INI file to determine if index_column should be indexed
+    -- returns bool
+    print('Loading config: ' .. index_spec_file)
+    local index_config = inifile.parse(index_spec_file)
+
+    local create_index = nil
+    if index_config[geom_type][index_column] ~= nil then
+        print('config from geom type')
+        create_index = index_config[geom_type][index_column]
+    else
+        print('config from all')
+        create_index = index_config['all'][index_column]
+    end
+    print(create_index)
+    if create_index == nil then
+        print('Not set - setting false')
+        create_index = false
+    end
+    print('Returning...')
+    return create_index
+end
+
+
+local function get_index_method(index_spec_file, geom_type, index_column)
+    local index_config = inifile.parse(index_spec_file)
+
+    -- Attempt to pull index method for column from config file
+    local index_method = nil
+    local index_column_def = index_column .. '_method'
+    print(index_column_def)
+    if index_config[geom_type][index_column_def] ~= nil then
+        index_method = index_config[geom_type][index_column_def]
+    else
+        index_method = index_config['all'][index_column_def]
+    end
+
+    -- If not set via config file, set basic defaults.
+    if index_method == nil then
+        if index_column == 'geom' then
+            index_method = 'gist'
+        else
+            index_method = 'btree'
+        end
+    end
+
+    return index_method
+end
+
+local function get_index_where(index_spec_file, geom_type, index_column)
+    -- Return optional WHERE clause to support partial indexes.
+    -- nil if not set
+    local index_config = inifile.parse(index_spec_file)
+
+    -- Attempt to pull index method for column from config file
+    local index_where = nil
+    local index_column_def = index_column .. '_where'
+    print(index_column_def)
+    if index_config[geom_type][index_column_def] ~= nil then
+        index_where = index_config[geom_type][index_column_def]
+    else
+        index_where = index_config['all'][index_column_def]
+    end
+
+    return index_where
+end
+
+
 function get_indexes_from_spec(index_spec_file, geom_type)
     -- Each style can define 1 index_spec_file with multiple sections
     -- geom_type must be point/line/polygon.
@@ -459,8 +527,39 @@ function get_indexes_from_spec(index_spec_file, geom_type)
     -- Parse through index options. Start with layer specific if exists,
     -- defaults if not.  Set default fallback when not defined anywhere
     -------------------------------------------------
-    print('Hello')
-    print(geom_type)
+
+    -- Column names to include in consideration for indexes
+    local index_columns = {'geom', 'osm_type', 'boundary', 'admin_level', 'ref',
+                           'name', 'osm_subtype', 'major', 'route_motor',
+                           'route_cycle', 'route_foot'}
+    -- indexes is built to be returned
+    local indexes = {}
+    -- Counter for index table
+    local next_index_id = 1
+
+    for k, index_column in pairs(index_columns) do
+        --print(index_column)
+        local create_index = should_i_create_index(index_spec_file, geom_type,
+                                                   index_column)
+
+        if create_index then
+            local index_method = get_index_method(index_spec_file, geom_type,
+                                                  index_column)
+            local index_where = get_index_where(index_spec_file, geom_type, index_column)
+            --print('Creating index on ' .. index_column .. ' using ' .. index_method)
+            if index_where ~= nil then
+                indexes[next_index_id] = { column = index_column,
+                                            method = index_method,
+                                            where = index_where }
+            else
+                indexes[next_index_id] = { column = index_column,
+                                            method = index_method }
+            end
+
+            next_index_id = next_index_id + 1
+        end
+
+    end
 
     local index_geom = nil
     if index_config[geom_type]['index_geom'] ~= nil then
@@ -469,97 +568,10 @@ function get_indexes_from_spec(index_spec_file, geom_type)
         index_geom = index_config['all']['index_geom']
     end
 
-    print(index_geom)
     if index_geom == nil then
         index_geom = false
-    end
-    print(index_geom)
-
-
-    local gist_type = nil
-    print(index_config[geom_type]['gist_type'])
-    if index_config[geom_type]['gist_type'] ~= nil then
-        gist_type = index_config[geom_type]['gist_type']
-    else
-        gist_type = index_config['all']['gist_type']
-    end
-    print(gist_type)
-    if gist_type == nil then
-        gist_type = 'gist'
-    end
-    print(gist_type)
-
-    local index_osm_type = index_config['all']['index_osm_type']
-    if index_osm_type == nil then
-        index_osm_type = false
-    end
-
-    local index_osm_subtype = index_config['all']['index_osm_subtype']
-    if index_osm_subtype == nil then
-        index_osm_subtype = false
-    end
-
-    local index_name = index_config['all']['index_name']
-    if index_name == nil then
-        index_name = false
-    end
-
-    local index_boundary = index_config['all']['index_boundary']
-    if index_boundary == nil then
-        index_boundary = false
-    end
-
-    local index_admin_level = index_config['all']['index_admin_level']
-    if index_admin_level == nil then
-        index_admin_level = false
-    end
-
-    local index_ref = index_config['all']['index_ref']
-    if index_ref == nil then
-        index_ref = false
-    end
-
-
-    -------------------------------------------------
-    -- Build indexes table
-    -------------------------------------------------
-    local indexes = {}
-    local next_index_id = 1
-
-    if index_geom then
-        indexes[next_index_id] = { column = 'geom', method = gist_type }
-        next_index_id = next_index_id + 1
-    end
-
-    if index_osm_type then
-        indexes[next_index_id] = {column = 'osm_type', method = 'btree' }
-        next_index_id = next_index_id + 1
-    end
-
-    if index_osm_subtype then
-        indexes[next_index_id] = {column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL ' }
-        next_index_id = next_index_id + 1
-    end
-
-    if index_name then
-        indexes[next_index_id] = { column = 'name', method = 'btree', where = 'name IS NOT NULL ' }
-        next_index_id = next_index_id + 1
-    end
-
-    if index_boundary then
-        indexes[next_index_id] = { column = 'boundary', method = 'btree', where = 'boundary IS NOT NULL ' }
-        next_index_id = next_index_id + 1
-    end
-
-    if index_admin_level then
-        indexes[next_index_id] = { column = 'admin_level', method = 'btree', where = 'admin_level IS NOT NULL ' }
-        next_index_id = next_index_id + 1
-    end
-
-    if index_ref then
-        indexes[next_index_id] = { column = 'ref', method = 'btree'}
-        next_index_id = next_index_id + 1
     end
 
     return indexes
 end
+

@@ -1,7 +1,8 @@
 require "helpers"
 
 local index_spec_file = 'indexes/road_major.ini'
-local indexes = get_indexes_from_spec(index_spec_file)
+local indexes_line = get_indexes_from_spec(index_spec_file, 'line')
+
 
 local tables = {}
 
@@ -21,7 +22,7 @@ tables.road_major = osm2pgsql.define_table({
         { column = 'member_ids', type = 'jsonb'},
         { column = 'geom', type = 'multilinestring', projection = srid, not_null = true },
     },
-    indexes = indexes
+    indexes = indexes_line
 })
 
 
