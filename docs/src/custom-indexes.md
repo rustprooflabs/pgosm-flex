@@ -2,6 +2,21 @@
 
 PgOSM Flex allows customizing all indexes, excluding the primary key.
 
+> Setting indexes is only relevant for the first import.  When using `--replication` these configurations do not have any impact on indexes in the database.
+
+
+Using custom indexes.
+
+
+```bash
+docker run --name pgosm -d --rm \
+    -v ~/pgosm-data:/app/output \
+    -v /etc/localtime:/etc/localtime:ro \
+    -v ~/git/pgosm-flex/flex-config/indexes/examples/noindexes:/app/flex-config/indexes \
+    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+    -p 5433:5432 -d rustprooflabs/pgosm-flex
+```
+
 ## INI files
 
 Each INI file under `flex-config/indexes/` should have 4 sections defined.
@@ -43,13 +58,17 @@ admin_level=true
 admin_level_where=admin_level IS NOT NULL
 ```
 
+## Spatial index method
 
 To change the polygon index from `GIST` to `SPGIST` use the `geom_method`
-option.
+option.  See Paul Ramsey's post
+[(The Many) Spatial Indexes of PostGIS](https://www.crunchydata.com/blog/the-many-spatial-indexes-of-postgis)
+for more information about when to choose `SPGIST`.
+
 
 
 ```ini
-[polygon]
+[point]
 geom_method=spgist
 ```
 
