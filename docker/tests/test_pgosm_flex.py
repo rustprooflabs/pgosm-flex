@@ -99,3 +99,98 @@ class PgOSMFlexTests(unittest.TestCase):
         expected = 'north-america-default-2021-12-02.sql'
         self.assertEqual(expected, result)
 
+    def test_layerset_include_place_returns_boolean(self):
+        helpers.unset_env_vars()
+        layerset_path = None
+        helpers.set_env_vars(region='north-america',
+                             subregion=None,
+                             srid=3857,
+                             language=None,
+                             pgosm_date=PGOSM_DATE,
+                             layerset=LAYERSET,
+                             layerset_path=layerset_path,
+                             sp_gist=False,
+                             replication=False)
+
+        paths = pgosm_flex.get_paths()
+        result = pgosm_flex.layerset_include_place(flex_path=paths['flex_path'])
+        expected = bool
+        actual = type(result)
+        self.assertEqual(expected, actual)
+
+    def test_layerset_include_place_returns_True_with_default_layerset(self):
+        helpers.unset_env_vars()
+        layerset_path = None
+        helpers.set_env_vars(region='north-america',
+                             subregion=None,
+                             srid=3857,
+                             language=None,
+                             pgosm_date=PGOSM_DATE,
+                             layerset=LAYERSET,
+                             layerset_path=layerset_path,
+                             sp_gist=False,
+                             replication=False)
+
+        paths = pgosm_flex.get_paths()
+        actual = pgosm_flex.layerset_include_place(flex_path=paths['flex_path'])
+        expected = True
+        self.assertEqual(expected, actual)
+
+    def test_layerset_include_place_returns_false_when_place_false_in_ini(self):
+        helpers.unset_env_vars()
+        layerset_path = '/app/docker/tests/layersets'
+        layerset = 'place_false'
+        helpers.set_env_vars(region='north-america',
+                             subregion=None,
+                             srid=3857,
+                             language=None,
+                             pgosm_date=PGOSM_DATE,
+                             layerset=layerset,
+                             layerset_path=layerset_path,
+                             sp_gist=False,
+                             replication=False)
+
+        paths = pgosm_flex.get_paths()
+        actual = pgosm_flex.layerset_include_place(flex_path=paths['flex_path'])
+        expected = False
+        self.assertEqual(expected, actual)
+
+    def test_layerset_include_place_returns_false_when_place_missing_in_ini(self):
+        helpers.unset_env_vars()
+        layerset_path = '/app/docker/tests/layersets'
+        layerset = 'place_missing'
+        helpers.set_env_vars(region='north-america',
+                             subregion=None,
+                             srid=3857,
+                             language=None,
+                             pgosm_date=PGOSM_DATE,
+                             layerset=layerset,
+                             layerset_path=layerset_path,
+                             sp_gist=False,
+                             replication=False)
+
+        paths = pgosm_flex.get_paths()
+        actual = pgosm_flex.layerset_include_place(flex_path=paths['flex_path'])
+        expected = False
+        self.assertEqual(expected, actual)
+
+    def test_layerset_include_place_returns_true_when_place_true_in_ini(self):
+        helpers.unset_env_vars()
+        layerset_path = '/app/docker/tests/layersets'
+        layerset = 'place_true'
+        helpers.set_env_vars(region='north-america',
+                             subregion=None,
+                             srid=3857,
+                             language=None,
+                             pgosm_date=PGOSM_DATE,
+                             layerset=layerset,
+                             layerset_path=layerset_path,
+                             sp_gist=False,
+                             replication=False)
+
+        paths = pgosm_flex.get_paths()
+        actual = pgosm_flex.layerset_include_place(flex_path=paths['flex_path'])
+        expected = True
+        self.assertEqual(expected, actual)
+
+

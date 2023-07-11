@@ -220,7 +220,8 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
                   debug=debug)
 
     if not skip_nested:
-        skip_nested = check_layerset_places(flex_path)
+        # Don't expect user to use --skip-nested when place isn't included
+        skip_nested = check_layerset_skip_nested_place(flex_path)
 
     post_processing = run_post_processing(flex_path=flex_path,
                                           skip_nested=skip_nested,
@@ -426,16 +427,48 @@ def run_osm2pgsql(osm2pgsql_command, flex_path, debug):
     logger.info('osm2pgsql completed')
 
 
-def check_layerset_places(flex_path):
+def check_layerset_skip_nested_place(flex_path: str) -> bool:
     """If `place` layer is not included `skip_nested` should be true.
 
     Parameters
     ------------------------
     flex_path : str
+        Path to the .ini file for the defined layerset defining which layers
+        to include.
 
     Returns
     ------------------------
     skip_nested : boolean
+        Return True to disable nested place polygon (post-import processing)
+    """
+    logger = logging.getLogger('pgosm-flex')
+
+    include_place = layerset_include_place(flex_path)
+
+    logger.debug('--------------------------------------------')
+    logger.debug(f'Place layer value: {type(include_place)}')
+    logger.debug(f'Place layer value: {include_place}')
+    logger.debug('--------------------------------------------')
+
+    if include_place:
+        logger.debug('Place layer is defined as true. Not setting skip_nested')
+        return False
+
+    logger.debug('Place layer not included')
+    return True
+
+
+def layerset_include_place(flex_path: str) -> bool:
+    """
+    Parameters
+    ---------------------
+    flex_path : str
+
+    Returns
+    ---------------------
+    place : bool
+        If true, the Place layer will be included and post-processing functions
+        should be called.
     """
     logger = logging.getLogger('pgosm-flex')
     layerset = os.environ.get('PGOSM_LAYERSET')
@@ -448,18 +481,22 @@ def check_layerset_places(flex_path):
     ini_file = os.path.join(layerset_path, f'{layerset}.ini')
     config = configparser.ConfigParser()
     config.read(ini_file)
+
     try:
-        place = config['layerset']['place']
+        # Gets the value from INI
+        # Comes through as str, convert to bool
+        include_place = config['layerset']['place']
+        logger.debug(f'Include place?  {include_place}')
+        if include_place.lower() == 'true':
+            place = True
+        else:
+            place = False
+        logger.debug(f'Include place?  {place}')
     except KeyError:
         logger.debug('Place layer not defined, setting skip_nested')
-        return True
+        place = False
 
-    if place:
-        logger.debug('Place layer is defined as true. Not setting skip_nested')
-        return False
-
-    logger.debug('Place set to false, setting skip_nested')
-    return True
+    return place
 
 
 def run_post_processing(flex_path, skip_nested, import_mode):
