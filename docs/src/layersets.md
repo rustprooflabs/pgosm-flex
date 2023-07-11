@@ -158,26 +158,26 @@ the road layer is defined by `flex-config/style/road.lua` and
 
 ## Tables
 
-Using `--layerset=everything` creates 42 tables, 2 views, and 2 
-materialized views.  The following table lists the groups of
+Using `--layerset=everything` creates 45 tables and one (1)
+materialized view.  The following table lists the groups of
 tables created with the types of layer it is.
 
 
 | Layer | Geometry Types |
 |-------------|-------------|
 | amenity | line, point, polygon |
-| building | point, polygon |
+| building | point, polygon, combined |
 | indoor | line, point, polygon |
 | infrastructure | line, point, polygon |
 | landuse | point, polygon |
 | leisure | point, polygon |
 | natural | line, point, polygon |
 | place | line, point, polygon, *polygon_nested* |
-| poi | line, point, polygon  |
+| poi | line, point, polygon, combined  |
 | public_transport | line, point, polygon |
 | road | line, point, polygon |
 | road_major | line (*table name is non-standard, `osm.road_major`*) |
-| shop | point, polygon |
+| shop | point, polygon, combined |
 | tags | *Provides full JSONB tags* |
 | traffic | line, point, polygon |
 | unitable | *generic `geometry`* |
