@@ -1,16 +1,23 @@
 # Indexes
 
-PgOSM Flex allows customizing all indexes using `.ini` files stored under
-`flex-config/indexes/`.  The default indexing strategy is baked into the Docker
-image, to use the defaults you can follow the instructions throughout the documentation
-without any adjustments.
+PgOSM Flex allows the indexes on the tables using `.ini` files. The default
+index configuration files are stored under `flex-config/indexes/`.
+The default indexing strategy is baked into the Docker
+image, to use the defaults you can follow the instructions throughout the
+documentation without any adjustments.
 
-To customize indexes map the path of your custom index definitions folder
+## Map Volume in `docker run`
+
+To customize indexes, map the path of your custom index definitions folder
 to the Docker container under `/app/flex-config/indexes`.  This overwrites the default
-indexing scheme with the custom folder.
+indexing scheme with the custom folder.  You must define an INI file for each of
+the layers included by your chosen `layerset`.  The easiest approach is to copy the
+existing directory with all of the index definitions, then customize those to
+your needs.
+
 The following command assumes you have the PgOSM Flex project cloned into the
 `~/git/pgosm-flex` folder.  The `noindexes` example creates the PgOSM Flex
-tables with indexes beyond the required `PRIMARY KEY`s.
+tables with only the required `PRIMARY KEY`s.
 
 ```bash
 docker run --name pgosm -d --rm \
@@ -21,18 +28,7 @@ docker run --name pgosm -d --rm \
     -p 5433:5432 -d rustprooflabs/pgosm-flex
 ```
 
-
-## Caveats
-
-
-Setting indexes is only relevant for the first import.  When using `--replication`
-these configurations only impact the initial import. Subsequent imports make no
-attempt to verify / adjust database indexes.
-
-The primary key cannot be omitted using this approach.  The primary keys on
-`osm_id` are created in post-processing SQL and is not able to be overridden
-using this approach.
-
+> The `lotsofexamples` folder under `flex-config/indexes/examples/` illustrates creating indexes on nearly all columns.
 
 ## INI files
 
@@ -50,15 +46,16 @@ under `flex-config/indexes/`.  Each `.ini` file should have 4 sections defined.
 [polygon]
 ```
 
+Index settings in the `[all]` section will apply to all tables in the layer
+unless specific tables override the setting.  Indexes in the `[point]`, `[line]`,
+and `[polygon]` sections apply to only those specific tables.
+The variables to use for indexes are described in the next section.
 
-The simplest index specification file is shown above by defining the four (4)
-empty sections define no indexes beyond the table's `PRIMARY KEY` on the `osm_id`
-column.
 
 ## Index variables
 
 There are three (3) variables that can be configured for each column in the
-PgOSM Flex database.
+PgOSM Flex database. `<name>` is the name of the column in the database.
 
 * `<name>`
 * `<name>_where`
@@ -84,14 +81,16 @@ admin_level=true
 admin_level_where=admin_level IS NOT NULL
 ```
 
-## Index method
+### Index method
 
 The `<name>_method` variable can be used to set the index method used by Postgres.
-One way to use this is to change a spatial column's index from 
-`GIST` to `SPGIST`, via `geom_method=spgist`.
+This value is passed to `osm2pgsql`'s [method option](https://osm2pgsql.org/doc/manual.html#defining-indexes), which appears to hand off to Postgres.  This should
+allow any [indexing method](https://www.postgresql.org/docs/current/indexes-types.html)
+supported by Postgres.
 
-
-
+One common way to use the `<name>_method` variable is to change a spatial
+column's index from  `GIST` to `SPGIST` using `geom_method=spgist`.
+`GEOMETRY` columns default to `GIST` and all other columns default to `BTREE`.
 
 ```ini
 [point]
@@ -114,8 +113,25 @@ admin_level_method=brin
 
 ## Most columns can be indexed
 
-Defined in `flex_config/helpers.lua`.  See the definition of
-`local index_columns = {...}`.
+The only limit to which columns can be indexed is the `index_columns` list
+defined in `flex_config/helpers.lua`.
 
+> If there are columns that you would like to index this way submit either a pull request or create an issue requesting the change.
+
+
+## Caveats
+
+
+Setting indexes is only relevant for the first import.  When using `--replication`
+these configurations only impact the initial import. Subsequent imports make no
+attempt to verify / adjust database indexes.
+
+The primary key cannot be omitted using this approach.  The primary keys on
+`osm_id` are created in post-processing SQL and is not able to be overridden
+using this approach.
+
+The simplest index specification file is shown above by defining the four (4)
+empty sections define no indexes beyond the table's `PRIMARY KEY` on the `osm_id`
+column.
 
 
