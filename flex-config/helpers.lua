@@ -1,5 +1,6 @@
 -- helpers.lua provides commonly used functions 
 -- and sets customizable params, e.g. SRID and schema name.
+local inifile = require('inifile')
 
 local srid_env = os.getenv("PGOSM_SRID")
 if srid_env then
@@ -32,19 +33,6 @@ else
     pgosm_language = ''
     print('INFO - Default language not set. Using OSM Wiki priority for name. Set PGOSM_LANGUAGE to customize.')
 end
-
-
-local gist_type_env = os.getenv("PGOSM_GIST_TYPE")
-if gist_type_env then
-    gist_type = gist_type_env
-else
-    gist_type = 'gist'
-end
-
-if gist_type ~= 'gist' and gist_type ~= 'spgist' then
-    error('Invalid PGOSM_GIST_TYPE.  Must be gist or spgist. Value: ' .. gist_type)
-end
-print('Spatial index type: ' .. gist_type)
 
 
 -- Best way to change schema name is post-processing.
@@ -443,3 +431,138 @@ function get_address(tags)
     return address
 
 end
+
+
+local function should_i_create_index(index_spec_file, geom_type, index_column)
+    -- Checks INI file to determine if index_column should be indexed
+    -- returns bool
+    local index_config = inifile.parse(index_spec_file)
+
+    local create_index = nil
+    if index_config[geom_type][index_column] ~= nil then
+        create_index = index_config[geom_type][index_column]
+    else
+        create_index = index_config['all'][index_column]
+    end
+    if create_index == nil then
+        create_index = false
+    end
+
+    return create_index
+end
+
+
+local function get_index_method(index_spec_file, geom_type, index_column)
+    local index_config = inifile.parse(index_spec_file)
+
+    -- Attempt to pull index method for column from config file
+    local index_method = nil
+    local index_column_def = index_column .. '_method'
+
+    if index_config[geom_type][index_column_def] ~= nil then
+        index_method = index_config[geom_type][index_column_def]
+    else
+        index_method = index_config['all'][index_column_def]
+    end
+
+    -- If not set via config file, set basic defaults.
+    if index_method == nil then
+        if index_column == 'geom' then
+            index_method = 'gist'
+        else
+            index_method = 'btree'
+        end
+    end
+
+    return index_method
+end
+
+local function get_index_where(index_spec_file, geom_type, index_column)
+    -- Return optional WHERE clause to support partial indexes.
+    -- nil if not set
+    local index_config = inifile.parse(index_spec_file)
+
+    -- Attempt to pull index method for column from config file
+    local index_where = nil
+    local index_column_def = index_column .. '_where'
+
+    if index_config[geom_type][index_column_def] ~= nil then
+        index_where = index_config[geom_type][index_column_def]
+    else
+        index_where = index_config['all'][index_column_def]
+    end
+
+    return index_where
+end
+
+
+function get_indexes_from_spec(index_spec_file, geom_type)
+    -- Each style can define 1 index_spec_file with multiple sections
+    -- geom_type must be point/line/polygon.
+    -- Sets each index setting first based on geom_type if exists, then
+    -- falls back to file definition if not. If not defined in file sets
+    -- default to false (no indexing)
+    --print('Loading config: ' .. index_spec_file)
+    local index_config = inifile.parse(index_spec_file)
+
+    -------------------------------------------------
+    -- Parse through index options. Start with layer specific if exists,
+    -- defaults if not.  Set default fallback when not defined anywhere
+    -------------------------------------------------
+
+    -- Column names to include in consideration for indexes
+    local index_columns = {'geom', 'osm_type', 'boundary', 'admin_level', 'ref'
+                           , 'name', 'osm_subtype', 'major', 'route_motor'
+                           , 'route_cycle', 'route_foot'
+                           , 'operator', 'layer', 'address', 'housenumber', 'wheelchair'
+                           , 'street', 'state', 'postcode', 'city'
+                           , 'member_ids', 'bridge', 'tunnel', 'ele'
+                           , 'height', 'level', 'lit', 'material'
+                           , 'maxspeed', 'entrance', 'door', 'capacity'
+                           , 'bus', 'public_transport', 'access'
+                           , 'room', 'shelter', 'boat', 'bench'
+                           , 'surface', 'brand', 'tags'
+                          }
+    -- indexes is built to be returned
+    local indexes = {}
+    -- Counter for index table
+    local next_index_id = 1
+
+    for k, index_column in pairs(index_columns) do
+        --print(index_column)
+        local create_index = should_i_create_index(index_spec_file, geom_type,
+                                                   index_column)
+
+        if create_index then
+            local index_method = get_index_method(index_spec_file, geom_type,
+                                                  index_column)
+            local index_where = get_index_where(index_spec_file, geom_type, index_column)
+            --print('Creating index on ' .. index_column .. ' using ' .. index_method)
+            if index_where ~= nil then
+                indexes[next_index_id] = { column = index_column,
+                                            method = index_method,
+                                            where = index_where }
+            else
+                indexes[next_index_id] = { column = index_column,
+                                            method = index_method }
+            end
+
+            next_index_id = next_index_id + 1
+        end
+
+    end
+
+    local index_geom = nil
+    if index_config[geom_type]['index_geom'] ~= nil then
+        index_geom = index_config[geom_type]['index_geom']
+    else
+        index_geom = index_config['all']['index_geom']
+    end
+
+    if index_geom == nil then
+        index_geom = false
+    end
+
+    return indexes
+end
+

@@ -1,5 +1,10 @@
 require "helpers"
 
+local index_spec_file = 'indexes/road.ini'
+local indexes_point = get_indexes_from_spec(index_spec_file, 'point')
+local indexes_line = get_indexes_from_spec(index_spec_file, 'line')
+local indexes_polygon = get_indexes_from_spec(index_spec_file, 'polygon')
+
 local tables = {}
 
 tables.road_point = osm2pgsql.define_table({
@@ -18,11 +23,7 @@ tables.road_point = osm2pgsql.define_table({
         { column = 'access', type = 'text' },
         { column = 'geom', type = 'point', projection = srid, not_null = true }
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-        { column = 'ref', method = 'btree' },
-    }
+    indexes = indexes_point
 })
 
 
@@ -48,12 +49,7 @@ tables.road_line = osm2pgsql.define_table({
         { column = 'member_ids', type = 'jsonb'},
         { column = 'geom', type = 'multilinestring', projection = srid, not_null = true }
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'major', method = 'btree', where = 'major' },
-        { column = 'osm_type', method = 'btree' },
-        { column = 'ref', method = 'btree' },
-    }
+    indexes = indexes_line
 })
 
 
@@ -77,12 +73,7 @@ tables.road_polygon = osm2pgsql.define_table({
         { column = 'member_ids', type = 'jsonb'},
         { column = 'geom', type = 'multipolygon', projection = srid, not_null = true }
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'major', method = 'btree', where = 'major' },
-        { column = 'osm_type', method = 'btree' },
-        { column = 'ref', method = 'btree' },
-    }
+    indexes = indexes_polygon
 })
 
 

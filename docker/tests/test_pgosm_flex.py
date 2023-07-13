@@ -19,7 +19,6 @@ class PgOSMFlexTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=LAYERSET,
                              layerset_path=None,
-                             sp_gist=False,
                              replication=False)
 
 
@@ -91,7 +90,6 @@ class PgOSMFlexTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=LAYERSET,
                              layerset_path=None,
-                             sp_gist=False,
                              replication=False)
 
         input_file = None
@@ -109,7 +107,6 @@ class PgOSMFlexTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=LAYERSET,
                              layerset_path=layerset_path,
-                             sp_gist=False,
                              replication=False)
 
         paths = pgosm_flex.get_paths()
@@ -128,7 +125,6 @@ class PgOSMFlexTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=LAYERSET,
                              layerset_path=layerset_path,
-                             sp_gist=False,
                              replication=False)
 
         paths = pgosm_flex.get_paths()
@@ -147,7 +143,6 @@ class PgOSMFlexTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=layerset,
                              layerset_path=layerset_path,
-                             sp_gist=False,
                              replication=False)
 
         paths = pgosm_flex.get_paths()
@@ -166,7 +161,6 @@ class PgOSMFlexTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=layerset,
                              layerset_path=layerset_path,
-                             sp_gist=False,
                              replication=False)
 
         paths = pgosm_flex.get_paths()
@@ -185,7 +179,6 @@ class PgOSMFlexTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=layerset,
                              layerset_path=layerset_path,
-                             sp_gist=False,
                              replication=False)
 
         paths = pgosm_flex.get_paths()

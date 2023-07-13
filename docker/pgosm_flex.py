@@ -69,15 +69,13 @@ from import_mode import ImportMode
 @click.option('--srid', required=False, default=helpers.DEFAULT_SRID,
               envvar="PGOSM_SRID",
               help="SRID for data loaded by osm2pgsql to PostGIS. Defaults to 3857")
-@click.option('--sp-gist', default=False, is_flag=True,
-              help='When set, builds SP-GIST indexes on geom column instead of the default GIST indexes.')
 @click.option('--update', default=None,
               type=click.Choice(['append', 'create'], case_sensitive=True),
               help='EXPERIMENTAL - Wrap around osm2pgsql create v. append modes, without using osm2pgsql-replication.')
 def run_pgosm_flex(ram, region, subregion, debug, force,
                     input_file, layerset, layerset_path, language, pg_dump,
                     pgosm_date, replication, skip_nested,
-                    skip_qgis_style, srid, sp_gist, update):
+                    skip_qgis_style, srid, update):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
     """
     paths = get_paths()
@@ -96,7 +94,7 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
         region = input_file
 
     helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
-                         layerset, layerset_path, sp_gist, replication)
+                         layerset, layerset_path, replication)
     db.wait_for_postgres()
     if force and db.pg_conn_parts()['pg_host'] == 'localhost':
         msg = 'Using --force with the built-in database is unnecessary.'

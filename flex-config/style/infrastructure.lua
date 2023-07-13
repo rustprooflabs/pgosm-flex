@@ -1,5 +1,11 @@
 require "helpers"
 
+local index_spec_file = 'indexes/infrastructure.ini'
+local indexes_point = get_indexes_from_spec(index_spec_file, 'point')
+local indexes_line = get_indexes_from_spec(index_spec_file, 'line')
+local indexes_polygon = get_indexes_from_spec(index_spec_file, 'polygon')
+
+
 local tables = {}
 
 -- Rows with any of the following keys will be treated as possible infrastructure
@@ -29,11 +35,7 @@ tables.infrastructure_point = osm2pgsql.define_table({
         { column = 'material', type = 'text'},
         { column = 'geom', type = 'point', projection = srid, not_null = true},
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-        { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL' },
-    }
+    indexes = indexes_point
 })
 
 tables.infrastructure_line = osm2pgsql.define_table({
@@ -50,11 +52,7 @@ tables.infrastructure_line = osm2pgsql.define_table({
         { column = 'material', type = 'text'},
         { column = 'geom', type = 'linestring', projection = srid, not_null = true},
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-        { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL' },
-    }
+    indexes = indexes_line
 })
 
 
@@ -72,11 +70,7 @@ tables.infrastructure_polygon = osm2pgsql.define_table({
         { column = 'material', type = 'text'},
         { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-        { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL' },
-    }
+    indexes = indexes_polygon
 })
 
 local function get_osm_type_subtype(tags)

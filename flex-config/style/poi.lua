@@ -1,6 +1,12 @@
 require "helpers"
 require "style.poi_helpers"
 
+
+local index_spec_file = 'indexes/poi.ini'
+local indexes_point = get_indexes_from_spec(index_spec_file, 'point')
+local indexes_line = get_indexes_from_spec(index_spec_file, 'line')
+local indexes_polygon = get_indexes_from_spec(index_spec_file, 'polygon')
+
 local tables = {}
 
 
@@ -21,11 +27,7 @@ tables.poi_point = osm2pgsql.define_table({
         { column = 'operator', type = 'text'},
         { column = 'geom', type = 'point', projection = srid, not_null = true},
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-        { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL ' },
-    }
+    indexes = indexes_point
 })
 
 
@@ -46,11 +48,7 @@ tables.poi_line = osm2pgsql.define_table({
         { column = 'operator', type = 'text'},
         { column = 'geom', type = 'linestring', projection = srid, not_null = true},
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-        { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL ' },
-    }
+    indexes = indexes_line
 })
 
 tables.poi_polygon = osm2pgsql.define_table({
@@ -71,11 +69,7 @@ tables.poi_polygon = osm2pgsql.define_table({
         { column = 'member_ids', type = 'jsonb'},
         { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-        { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL ' },
-    }
+    indexes = indexes_polygon
 })
 
 

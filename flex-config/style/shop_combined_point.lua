@@ -1,6 +1,9 @@
 require "helpers"
 require "style.shop_helpers"
 
+local index_spec_file = 'indexes/shop_combined_point.ini'
+local indexes_point = get_indexes_from_spec(index_spec_file, 'point')
+
 local tables = {}
 
 tables.shop_combined_point = osm2pgsql.define_table({
@@ -25,11 +28,7 @@ tables.shop_combined_point = osm2pgsql.define_table({
         { column = 'website', type = 'text'},
         { column = 'geom', type = 'point' , projection = srid, not_null = true },
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-        { column = 'osm_subtype', method = 'btree', where = 'osm_subtype IS NOT NULL' },
-    }
+    indexes = indexes_point
 })
 
 

@@ -1,5 +1,10 @@
 require "helpers"
 
+local index_spec_file = 'indexes/leisure.ini'
+local indexes_point = get_indexes_from_spec(index_spec_file, 'point')
+local indexes_polygon = get_indexes_from_spec(index_spec_file, 'polygon')
+
+
 local tables = {}
 
 
@@ -12,10 +17,7 @@ tables.leisure_point = osm2pgsql.define_table({
         { column = 'name', type = 'text' },
         { column = 'geom', type = 'point', projection = srid, not_null = true},
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-    }
+    indexes = indexes_point
 })
 
 
@@ -28,10 +30,7 @@ tables.leisure_polygon = osm2pgsql.define_table({
         { column = 'name', type = 'text' },
         { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-    }
+    indexes = indexes_polygon
 })
 
 

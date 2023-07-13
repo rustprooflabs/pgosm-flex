@@ -28,7 +28,7 @@ Running PgOSM Flex is easy via the PgOSM Docker image
 
 A few decisions made in this project:
 
-* ID column is `osm_id`
+* ID column is `osm_id` and is always `PRIMARY KEY`
 * Geometry column named `geom`
 * Defaults to same units as OpenStreetMap (e.g. km/hr, meters)
 * Data not included in a dedicated column is available from `osm.tags.tags` (`JSONB`)

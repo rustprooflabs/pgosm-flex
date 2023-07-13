@@ -19,7 +19,6 @@ class GeofabrikTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=LAYERSET,
                              layerset_path=None,
-                             sp_gist=False,
                              replication=False)
 
 
@@ -41,7 +40,6 @@ class GeofabrikTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=LAYERSET,
                              layerset_path=None,
-                             sp_gist=False,
                              replication=False)
 
         result = geofabrik.get_region_filename()

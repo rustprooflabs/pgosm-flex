@@ -90,7 +90,7 @@ def verify_checksum(md5_file, path):
 
 
 def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
-                 layerset_path, sp_gist, replication):
+                 layerset_path, replication):
     """Sets environment variables needed by PgOSM Flex. Also creates DB
     record in `osm.pgosm_flex` table.
 
@@ -104,8 +104,6 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
     layerset : str
     layerset_path : str
         str when set, or None
-    sp_gist : bool
-        When `True` uses SP-GIST index instead of GIST for spatial indexes.
     replication : bool
         Indicates when osm2pgsql-replication is used
     """
@@ -135,11 +133,6 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
     os.environ['PGOSM_CONN'] = db.connection_string()
     # Connection to DB for admin purposes, e.g. drop/create main database
     os.environ['PGOSM_CONN_PG'] = db.connection_string(admin=True)
-
-    if sp_gist:
-        os.environ['PGOSM_GIST_TYPE'] = 'spgist'
-    else:
-        os.environ['PGOSM_GIST_TYPE'] = 'gist'
 
     if replication:
         os.environ['PGOSM_REPLICATION'] = 'true'
@@ -210,5 +203,4 @@ def unset_env_vars():
     os.environ.pop('PGOSM_LAYERSET', None)
     os.environ.pop('PGOSM_CONN', None)
     os.environ.pop('PGOSM_CONN_PG', None)
-    os.environ.pop('PGOSM_GIST_TYPE', None)
     os.environ.pop('PGOSM_REPLICATION', None)

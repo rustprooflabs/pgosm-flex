@@ -1,5 +1,15 @@
 require "helpers"
 
+local index_spec_file = 'indexes/place.ini'
+local indexes_point = get_indexes_from_spec(index_spec_file, 'point')
+local indexes_line = get_indexes_from_spec(index_spec_file, 'line')
+local indexes_polygon = get_indexes_from_spec(index_spec_file, 'polygon')
+
+-------------------------------------------------
+-- End of indexes
+-------------------------------------------------
+
+
 local tables = {}
 
 
@@ -14,13 +24,7 @@ tables.place_point = osm2pgsql.define_table({
         { column = 'name', type = 'text' },
         { column = 'geom', type = 'point', projection = srid, not_null = true},
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-        { column = 'boundary', method = 'btree', where = 'boundary IS NOT NULL ' },
-        { column = 'admin_level', method = 'btree', where = 'admin_level IS NOT NULL ' },
-        { column = 'name', method = 'btree', where = 'name IS NOT NULL ' },
-    }
+    indexes = indexes_point
 })
 
 tables.place_line = osm2pgsql.define_table({
@@ -34,13 +38,7 @@ tables.place_line = osm2pgsql.define_table({
         { column = 'name', type = 'text' },
         { column = 'geom', type = 'linestring', projection = srid, not_null = true},
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-        { column = 'boundary', method = 'btree', where = 'boundary IS NOT NULL ' },
-        { column = 'admin_level', method = 'btree', where = 'admin_level IS NOT NULL ' },
-        { column = 'name', method = 'btree', where = 'name IS NOT NULL ' },
-    }
+    indexes = indexes_line
 })
 
 
@@ -56,13 +54,7 @@ tables.place_polygon = osm2pgsql.define_table({
         { column = 'member_ids', type = 'jsonb'},
         { column = 'geom', type = 'multipolygon', projection = srid, not_null = true},
     },
-    indexes = {
-        { column = 'geom', method = gist_type },
-        { column = 'osm_type', method = 'btree' },
-        { column = 'boundary', method = 'btree', where = 'boundary IS NOT NULL ' },
-        { column = 'admin_level', method = 'btree', where = 'admin_level IS NOT NULL ' },
-        { column = 'name', method = 'btree', where = 'name IS NOT NULL ' },
-    }
+    indexes = indexes_polygon
 })
 
 
