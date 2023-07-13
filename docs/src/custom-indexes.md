@@ -1,10 +1,12 @@
 # Indexes
 
-PgOSM Flex allows the indexes on the tables using `.ini` files. The default
+PgOSM Flex allows customizing the indexes on the tables using `.ini` files. The default
 index configuration files are stored under `flex-config/indexes/`.
 The default indexing strategy is baked into the Docker
 image, to use the defaults you can follow the instructions throughout the
 documentation without any adjustments.
+
+> Custom indexes added in PgOSM Flex 0.10.0.
 
 ## Map Volume in `docker run`
 
@@ -34,6 +36,7 @@ docker run --name pgosm -d --rm \
 
 Each Lua style (`flex-config/style/*.lua`) must have a matching INI file
 under `flex-config/indexes/`.  Each `.ini` file should have 4 sections defined.
+These sections can all be empty.
 
 
 ```ini
@@ -60,6 +63,8 @@ PgOSM Flex database. `<name>` is the name of the column in the database.
 * `<name>`
 * `<name>_where`
 * `<name>_method`
+
+> See the section [Most Columns can be Indexed](custom-indexes.md#most-columns-can-be-indexed) for details about which columns can be indexed.
 
 ### To index or not to index
 
