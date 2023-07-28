@@ -14,4 +14,4 @@ git-repository-icon = "fa-github"
 edit-url-template = "https://github.com/rustprooflabs/pgosm-flex/edit/main/docs/{path}"
 
 [preprocessor.variables.variables]
-pgosm_flex_version = "0.8.0"
+pgosm_flex_version = "0.10.0"
