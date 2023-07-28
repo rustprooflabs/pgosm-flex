@@ -29,9 +29,9 @@ COMMENT ON COLUMN osm.road_point.ref IS 'Reference number or code. Best ref opti
 COMMENT ON COLUMN osm.road_line.ref IS 'Reference number or code. Best ref option determined by helpers.get_ref(). https://wiki.openstreetmap.org/wiki/Key:ref';
 COMMENT ON COLUMN osm.road_polygon.ref IS 'Reference number or code. Best ref option determined by helpers.get_ref(). https://wiki.openstreetmap.org/wiki/Key:ref';
 
-COMMENT ON COLUMN osm.road_line.route_foot IS 'Best guess if the segment is routable for foot traffic. If access is no or private, set to false. WARNING: This does not indicte that this method of travel is safe OR allowed!';
-COMMENT ON COLUMN osm.road_line.route_cycle IS 'Best guess if the segment is routable for bicycle traffic. If access is no or private, set to false. WARNING: This does not indicte that this method of travel is safe OR allowed!';
-COMMENT ON COLUMN osm.road_line.route_motor IS 'Best guess if the segment is routable for motorized traffic. If access is no or private, set to false. WARNING: This does not indicte that this method of travel is safe OR allowed!';
+COMMENT ON COLUMN osm.road_line.route_foot IS 'Best guess if the segment is route-able for foot traffic. If access is no or private, set to false. WARNING: This does not indicate that this method of travel is safe OR allowed!';
+COMMENT ON COLUMN osm.road_line.route_cycle IS 'Best guess if the segment is route-able for bicycle traffic. If access is no or private, set to false. WARNING: This does not indicate that this method of travel is safe OR allowed!';
+COMMENT ON COLUMN osm.road_line.route_motor IS 'Best guess if the segment is route-able for motorized traffic. If access is no or private, set to false. WARNING: This does not indicate that this method of travel is safe OR allowed!';
 
 
 ALTER TABLE osm.road_point
