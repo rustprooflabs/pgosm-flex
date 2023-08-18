@@ -99,6 +99,20 @@ PgOSM Flex defaults to SRID 3857 matching the default osm2pgsql behavior.
 This can be customized using `--srid 4326` or any other SRID supported by
 osm2pgsql and PostGIS. 
 
+### Schema name
+
+
+> Experimental, added for v0.10.1.
+
+The `--schema-name` option allows customizing the schema name from the default
+of `osm`. The schema name option allows loading multiple source files into
+multiple regions.
+
+
+While schema name can be customized when using `--replication`, it
+[cannot be used to load multiple regions](/replication.md#one-replication-source)
+with replication.
+
 
 
 ### Language

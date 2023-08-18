@@ -77,4 +77,12 @@ has `osm2pgsql-replication` setup and load data via the defined replication
 service.
 
 
+## One replication source
+
+Replication with PgOSM Flex is limited to one data source per database.
+While it is possible to [load multiple regions](common-customization.html#schema-name),
+each into their own schema
+using `--schema-name`, replication via osm2pgsql-replication only supports
+a single source.  See [this issue](https://github.com/openstreetmap/osm2pgsql/pull/1769)
+for details.  Possibly this ability will be supported in the future.
 
