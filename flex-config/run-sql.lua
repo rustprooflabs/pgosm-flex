@@ -10,8 +10,18 @@ local pgosm_conn = nil
 if pgosm_conn_env then
     pgosm_conn = pgosm_conn_env
 else
-    error('ENV VAR PGOSM_CONN must be set.')
+    error('Environment variable PGOSM_CONN must be set.')
 end
+
+local schema_name_env = os.getenv("SCHEMA_NAME")
+local schema_name = nil
+
+if schema_name_env then
+    schema_name = schema_name_env
+else
+    error('Environment variable SCHEMA_NAME must be set.')
+end
+
 
 layers = {'amenity', 'building', 'building_combined_point', 'indoor'
           , 'infrastructure', 'landuse', 'leisure'
@@ -26,6 +36,7 @@ local function post_processing(layerset)
     local sql_file = io.open(filename, 'r')
     sql_raw = sql_file:read( '*all' )
     sql_file:close()
+    sql_raw = sql_raw:gsub('osm%.', schema_name .. '.')
     local result = con:execute(sql_raw)
 
     -- Returns 0 on success, nil on error.

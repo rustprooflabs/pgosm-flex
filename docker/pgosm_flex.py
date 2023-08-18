@@ -58,6 +58,9 @@ from import_mode import ImportMode
               default=False,
               is_flag=True,
               help='Replication mode enables updates via osm2pgsql-replication.')
+@click.option('--schema-name',
+              default='osm',
+              help='Schema name to load OpenStreetMap data into.')
 @click.option('--skip-nested',
               default=False,
               is_flag=True,
@@ -68,13 +71,13 @@ from import_mode import ImportMode
               help="When set, skips running importing QGIS Styles.")
 @click.option('--srid', required=False, default=helpers.DEFAULT_SRID,
               envvar="PGOSM_SRID",
-              help="SRID for data loaded by osm2pgsql to PostGIS. Defaults to 3857")
+              help="SRID for data loaded by osm2pgsql to PostGIS")
 @click.option('--update', default=None,
               type=click.Choice(['append', 'create'], case_sensitive=True),
               help='EXPERIMENTAL - Wrap around osm2pgsql create v. append modes, without using osm2pgsql-replication.')
 def run_pgosm_flex(ram, region, subregion, debug, force,
                     input_file, layerset, layerset_path, language, pg_dump,
-                    pgosm_date, replication, skip_nested,
+                    pgosm_date, replication, schema_name, skip_nested,
                     skip_qgis_style, srid, update):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
     """
@@ -94,7 +97,7 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
         region = input_file
 
     helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
-                         layerset, layerset_path, replication)
+                         layerset, layerset_path, replication, schema_name)
     db.wait_for_postgres()
     if force and db.pg_conn_parts()['pg_host'] == 'localhost':
         msg = 'Using --force with the built-in database is unnecessary.'
@@ -123,9 +126,10 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
 
     db.prepare_pgosm_db(skip_qgis_style=skip_qgis_style,
                         db_path=paths['db_path'],
-                        import_mode=import_mode)
+                        import_mode=import_mode,
+                        schema_name=schema_name)
 
-    prior_import = db.get_prior_import()
+    prior_import = db.get_prior_import(schema_name=schema_name)
 
     if not import_mode.okay_to_run(prior_import):
         msg = 'Not okay to run PgOSM Flex. Exiting'
@@ -147,7 +151,8 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
                                 layerset=layerset,
                                 git_info=helpers.get_git_info(),
                                 osm2pgsql_version=vers_lines,
-                                import_mode=import_mode)
+                                import_mode=import_mode,
+                                schema_name=schema_name)
 
     logger.info(f'Started import id {import_id}')
 
@@ -163,15 +168,18 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
                                          ram=ram,
                                          skip_nested=skip_nested,
                                          import_mode=import_mode,
-                                         debug=debug)
+                                         debug=debug,
+                                         schema_name=schema_name)
 
     if not success:
         msg = 'PgOSM Flex completed with errors. Details in output'
-        db.log_import_message(import_id=import_id, msg='Failed')
+        db.log_import_message(import_id=import_id, msg='Failed',
+                              schema_name=schema_name)
         logger.warning(msg)
         sys.exit(msg)
 
-    db.log_import_message(import_id=import_id, msg='Completed')
+    db.log_import_message(import_id=import_id, msg='Completed',
+                          schema_name=schema_name)
 
     dump_database(input_file=input_file,
                   out_path=paths['out_path'],
@@ -182,7 +190,7 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
 
 
 def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
-                           import_mode, debug):
+                           import_mode, debug, schema_name):
     """Runs standard osm2pgsql command and optionally inits for replication
     (osm2pgsql-replication) mode.
 
@@ -195,6 +203,7 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
     skip_nested : boolean
     import_mode : import_mode.ImportMode
     debug : boolean
+    schema_name : str
 
     Returns
     ---------------------------
@@ -223,7 +232,8 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
 
     post_processing = run_post_processing(flex_path=flex_path,
                                           skip_nested=skip_nested,
-                                          import_mode=import_mode)
+                                          import_mode=import_mode,
+                                          schema_name=schema_name)
 
     if import_mode.replication:
         run_osm2pgsql_replication_init(pbf_path=out_path,
@@ -497,16 +507,17 @@ def layerset_include_place(flex_path: str) -> bool:
     return place
 
 
-def run_post_processing(flex_path, skip_nested, import_mode):
+def run_post_processing(flex_path, skip_nested, import_mode, schema_name):
     """Runs steps following osm2pgsql import.
 
-    Post-processing SQL scripts and (optionally) calculate nested admin polgyons
+    Post-processing SQL scripts and (optionally) calculate nested admin polygons
 
     Parameters
     ----------------------
     flex_path : str
     skip_nested : bool
     import_mode : import_mode.ImportMode
+    schema_name : str
 
     Returns
     ----------------------
@@ -524,7 +535,7 @@ def run_post_processing(flex_path, skip_nested, import_mode):
         logger.info('Skipping calculating nested polygons')
     else:
         logger.info('Calculating nested polygons')
-        db.pgosm_nested_admin_polygons(flex_path)
+        db.pgosm_nested_admin_polygons(flex_path, schema_name)
 
     if not post_processing_sql:
         return False

@@ -7,5 +7,5 @@
         https://pgosm-flex.com/postgres-permissions.html
 */
 CREATE EXTENSION IF NOT EXISTS postgis;
-CREATE SCHEMA IF NOT EXISTS osm;
-COMMENT ON SCHEMA osm IS 'Schema populated by PgOSM Flex.  SELECT * FROM osm.pgosm_flex; for details.';
+CREATE SCHEMA IF NOT EXISTS {schema_name};
+COMMENT ON SCHEMA {schema_name} IS 'Schema populated by PgOSM Flex.  SELECT * FROM {schema_name}.pgosm_flex; for details.';
