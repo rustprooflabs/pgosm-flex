@@ -60,7 +60,7 @@ from import_mode import ImportMode
               help='Replication mode enables updates via osm2pgsql-replication.')
 @click.option('--schema-name',
               default='osm',
-              help='Schema name to load OpenStreetMap data into.')
+              help='Schema name to load OpenStreetMap data into.  Default osm')
 @click.option('--skip-nested',
               default=False,
               is_flag=True,
@@ -71,7 +71,7 @@ from import_mode import ImportMode
               help="When set, skips running importing QGIS Styles.")
 @click.option('--srid', required=False, default=helpers.DEFAULT_SRID,
               envvar="PGOSM_SRID",
-              help="SRID for data loaded by osm2pgsql to PostGIS")
+              help=f'SRID for data loaded by osm2pgsql to PostGIS. Defaults to SRID {helpers.DEFAULT_SRID}.')
 @click.option('--update', default=None,
               type=click.Choice(['append', 'create'], case_sensitive=True),
               help='EXPERIMENTAL - Wrap around osm2pgsql create v. append modes, without using osm2pgsql-replication.')
