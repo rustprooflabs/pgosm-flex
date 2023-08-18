@@ -66,6 +66,10 @@ class ImportMode():
 
             An empty dictionary (len==0) indicates no prior import.
             Only the replication key is specifically used
+
+        Returns
+        -------------------
+        okay_to_run : bool
         """
         self.logger.debug(f'Checking if it is okay to run...')
         if self.force:
@@ -132,8 +136,13 @@ class ImportMode():
             if self.update == 'append':
                 self.run_post_sql = False
 
-    def as_json(self):
-        """Returns key details as a dictionary.
+    def as_json(self) -> str:
+        """Packs key details as a dictionary passed through `json.dumps()`
+
+        Returns
+        ------------------------
+        json_text : str
+            Text representation of JSON object built using class attributes.
         """
         self_as_dict = {'update': self.update,
                 'replication': self.replication,

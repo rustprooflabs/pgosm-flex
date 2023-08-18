@@ -1,4 +1,4 @@
-"""This module handles the auto-file using Geofabrik's download service.
+"""This module handles the auto-file handling using Geofabrik's download service.
 """
 import logging
 import os
@@ -8,8 +8,9 @@ import subprocess
 import helpers
 
 
-def get_region_filename():
-    """Returns the filename needed to download/manage PBF files.
+def get_region_filename() -> str:
+    """Returns the filename needed to download/manage PBF files based on the
+    region/subregion.
 
     Returns
     ----------------------
@@ -27,7 +28,7 @@ def get_region_filename():
     return filename
 
 
-def prepare_data(out_path):
+def prepare_data(out_path: str) -> str:
     """Ensures the PBF file is available.
 
     Checks if it already exists locally, download if needed,
@@ -70,13 +71,15 @@ def prepare_data(out_path):
     return pbf_file
 
 
-def pbf_download_needed(pbf_file_with_date, md5_file_with_date, pgosm_date):
+def pbf_download_needed(pbf_file_with_date: str, md5_file_with_date: str,
+                        pgosm_date: str) -> bool:
     """Decides if the PBF/MD5 files need to be downloaded.
 
     Parameters
     -------------------------------
     pbf_file_with_date : str
     md5_file_with_date : str
+    pgosm_date : str
 
     Returns
     --------------------------
@@ -110,7 +113,7 @@ def pbf_download_needed(pbf_file_with_date, md5_file_with_date, pgosm_date):
     return download_needed
 
 
-def get_pbf_url(region, subregion):
+def get_pbf_url(region: str, subregion: str) -> str:
     """Returns the URL to the PBF for the region / subregion.
 
     Parameters
@@ -132,7 +135,7 @@ def get_pbf_url(region, subregion):
     return pbf_url
 
 
-def download_data(region, subregion, pbf_file, md5_file):
+def download_data(region: str, subregion: str, pbf_file: str, md5_file: str):
     """Downloads PBF and MD5 file using wget.
 
     Parameters
@@ -166,7 +169,8 @@ def download_data(region, subregion, pbf_file, md5_file):
     )
 
 
-def archive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date):
+def archive_data(pbf_file: str, md5_file: str, pbf_file_with_date: str,
+                 md5_file_with_date: str):
     """Copies `pbf_file` and `md5_file` to `pbf_file_with_date` and
     `md5_file_with_date`.
 
@@ -190,8 +194,8 @@ def archive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date):
         shutil.copy2(md5_file, md5_file_with_date)
 
 
-
-def unarchive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date):
+def unarchive_data(pbf_file: str, md5_file: str, pbf_file_with_date: str,
+                   md5_file_with_date: str):
     """Copies `pbf_file_with_date` and `md5_file_with_date`
     to `pbf_file` and `md5_file`.
 
@@ -218,7 +222,7 @@ def unarchive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date):
     shutil.copy2(md5_file_with_date, md5_file)
 
 
-def remove_latest_files(out_path):
+def remove_latest_files(out_path: str):
     """Removes the PBF and MD5 file with -latest in the name.
 
     Files are archived via prepare_data() before processing starts

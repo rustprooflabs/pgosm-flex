@@ -1,17 +1,19 @@
-"""Used by PgOSM-Flex Docker image to get osm2pgsql command to run from
-the osm2pgsql-tuner API.
+"""Determine the appropriate osm2pgsql command to run from the osm2pgsql-tuner
+project.
 """
 import logging
 import os
 import osm2pgsql_tuner as tuner
 
-import db
+import db, import_mode
 
 LOGGER = logging.getLogger('pgosm-flex')
 
 
-def osm2pgsql_recommendation(ram, pbf_filename, out_path, import_mode):
-    """Returns recommended osm2pgsql command.
+def osm2pgsql_recommendation(ram: float, pbf_filename: str, out_path: str,
+                             import_mode: import_mode.ImportMode) -> str:
+    """Returns recommended osm2pgsql command from the osm2pgsql-tuner
+    Python module: https://pypi.org/project/osm2pgsql-tuner/
 
     Recommendation from Python project.
     Public API available at https://osm2pgsql-tuner.com
@@ -45,8 +47,11 @@ def osm2pgsql_recommendation(ram, pbf_filename, out_path, import_mode):
                                            out_path)
     return osm2pgsql_cmd
 
-def get_recommended_script(system_ram_gb, osm_pbf_gb, import_mode, pbf_filename,
-                           output_path):
+def get_recommended_script(system_ram_gb: float,
+                           osm_pbf_gb: float,
+                           import_mode:import_mode.ImportMode,
+                           pbf_filename: str,
+                           output_path: str) -> str:
     """Generates recommended osm2pgsql command from osm2pgsql-tuner.
 
     Parameters
