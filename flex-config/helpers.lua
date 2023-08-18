@@ -35,9 +35,15 @@ else
 end
 
 
--- Best way to change schema name is post-processing.
--- Use ALTER SCHEMA osm RENAME TO your_schema;
-schema_name = 'osm'
+local schema_name_env = os.getenv("SCHEMA_NAME")
+schema_name = nil
+
+if schema_name_env then
+    schema_name = schema_name_env
+else
+    error('Environment variable SCHEMA_NAME must be set.')
+end
+
 
 
 -- deep_copy based on copy2: https://gist.github.com/tylerneylon/81333721109155b2d244

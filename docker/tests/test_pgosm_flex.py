@@ -19,7 +19,8 @@ class PgOSMFlexTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=LAYERSET,
                              layerset_path=None,
-                             replication=False)
+                             replication=False,
+                             schema_name='osm')
 
 
     def tearDown(self):
@@ -90,7 +91,8 @@ class PgOSMFlexTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=LAYERSET,
                              layerset_path=None,
-                             replication=False)
+                             replication=False,
+                             schema_name='osm')
 
         input_file = None
         result = pgosm_flex.get_export_filename(input_file)
@@ -107,7 +109,8 @@ class PgOSMFlexTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=LAYERSET,
                              layerset_path=layerset_path,
-                             replication=False)
+                             replication=False,
+                             schema_name='osm')
 
         paths = pgosm_flex.get_paths()
         result = pgosm_flex.layerset_include_place(flex_path=paths['flex_path'])
@@ -125,7 +128,8 @@ class PgOSMFlexTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=LAYERSET,
                              layerset_path=layerset_path,
-                             replication=False)
+                             replication=False,
+                             schema_name='osm')
 
         paths = pgosm_flex.get_paths()
         actual = pgosm_flex.layerset_include_place(flex_path=paths['flex_path'])
@@ -143,7 +147,8 @@ class PgOSMFlexTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=layerset,
                              layerset_path=layerset_path,
-                             replication=False)
+                             replication=False,
+                             schema_name='osm')
 
         paths = pgosm_flex.get_paths()
         actual = pgosm_flex.layerset_include_place(flex_path=paths['flex_path'])
@@ -161,7 +166,8 @@ class PgOSMFlexTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=layerset,
                              layerset_path=layerset_path,
-                             replication=False)
+                             replication=False,
+                             schema_name='osm')
 
         paths = pgosm_flex.get_paths()
         actual = pgosm_flex.layerset_include_place(flex_path=paths['flex_path'])
@@ -179,7 +185,8 @@ class PgOSMFlexTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=layerset,
                              layerset_path=layerset_path,
-                             replication=False)
+                             replication=False,
+                             schema_name='osm')
 
         paths = pgosm_flex.get_paths()
         actual = pgosm_flex.layerset_include_place(flex_path=paths['flex_path'])

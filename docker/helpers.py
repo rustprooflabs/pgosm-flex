@@ -90,7 +90,7 @@ def verify_checksum(md5_file, path):
 
 
 def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
-                 layerset_path, replication):
+                 layerset_path, replication, schema_name):
     """Sets environment variables needed by PgOSM Flex. Also creates DB
     record in `osm.pgosm_flex` table.
 
@@ -106,6 +106,7 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
         str when set, or None
     replication : bool
         Indicates when osm2pgsql-replication is used
+    schema_name : str
     """
     logger = logging.getLogger('pgosm-flex')
     logger.debug('Ensuring env vars are not set from prior run')
@@ -128,6 +129,7 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
 
     os.environ['PGOSM_DATE'] = pgosm_date
     os.environ['PGOSM_LAYERSET'] = layerset
+    os.environ['SCHEMA_NAME'] = schema_name
 
     # PGOSM_CONN is required to be set by the Lua styles used by osm2pgsql
     os.environ['PGOSM_CONN'] = db.connection_string()
@@ -204,3 +206,4 @@ def unset_env_vars():
     os.environ.pop('PGOSM_CONN', None)
     os.environ.pop('PGOSM_CONN_PG', None)
     os.environ.pop('PGOSM_REPLICATION', None)
+    os.environ.pop('SCHEMA_NAME', None)

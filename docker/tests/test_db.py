@@ -94,7 +94,7 @@ class DBTests(unittest.TestCase):
 
     @mock.patch.dict(os.environ, PG_USER_AND_PW)
     def test_get_prior_import_returns_expected_type(self):
-        result = db.get_prior_import()
+        result = db.get_prior_import(schema_name='osm')
         actual = type(result)
         expected = dict
         self.assertEqual(expected, actual)

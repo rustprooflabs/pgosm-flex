@@ -118,7 +118,7 @@ COMMENT ON COLUMN osm.place_polygon_nested.osm_id_path IS 'Array of osm_id for t
 COMMENT ON COLUMN osm.place_polygon_nested.admin_level_path IS 'Array of admin_level values for the current polygon (last) and all containing polygons.';
 COMMENT ON COLUMN osm.place_polygon_nested.name IS 'Best name option determined by helpers.get_name(). Keys with priority are: name, short_name, alt_name and loc_name.  See pgosm-flex/flex-config/helpers.lua for full logic of selection.';
 COMMENT ON COLUMN osm.place_polygon_nested.row_innermost IS 'Indicates if the osm_id is the most inner ID of the current row.  Used to calculated innermost after all nesting paths have been calculated.';
-COMMENT ON COLUMN osm.place_polygon_nested.innermost IS 'Indiciates this row is the innermost admin level of the current data set and does **not** itself contain another admin polygon.  Calculated by procedure osm.build_nested_admin_polygons() defined in pgosm-flex/flex-config/place.sql.';
+COMMENT ON COLUMN osm.place_polygon_nested.innermost IS 'Indicates this row is the innermost admin level of the current data set and does **not** itself contain another admin polygon.  Calculated by procedure osm.build_nested_admin_polygons() defined in pgosm-flex/flex-config/place.sql.';
 COMMENT ON COLUMN osm.place_polygon_nested.osm_type IS 'Values from place if a place tag exists.  If no place tag, values boundary or admin_level indicate the source of the feature.';
 
 COMMENT ON COLUMN osm.place_polygon_nested.geom IS 'Geometry loaded by osm2pgsql.';
