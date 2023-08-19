@@ -1,4 +1,4 @@
-"""Interacts with Postgres
+"""Module to interact with Postgres database.
 """
 import logging
 import os
@@ -13,7 +13,7 @@ import qgis_styles
 LOGGER = logging.getLogger('pgosm-flex')
 
 
-def connection_string(admin=False):
+def connection_string(admin: bool=False) -> str:
     """Returns connection string to `db_name`.
 
     Env vars for user/password defined by Postgres docker image.
@@ -63,7 +63,8 @@ def connection_string(admin=False):
 
 
 def pg_conn_parts() -> dict:
-    """Retrieves username/password from environment variables if they exist.
+    """Returns dictionary of connection parts based on environment variables
+    if they exist.
 
     Returns
     --------------------------
@@ -129,7 +130,8 @@ def wait_for_postgres():
     """Ensures Postgres service is reliably ready for use.
 
     Required b/c Postgres process in Docker gets restarted shortly
-    after starting.
+    after starting.  Calls `sys.exit()` after `max_loops` reached
+    indicating failure due to inability to connect.
     """
     logger = logging.getLogger('pgosm-flex')
     logger.info('Checking for Postgres service to be available')
@@ -161,7 +163,7 @@ def wait_for_postgres():
     logger.info('Postgres instance ready')
 
 
-def pg_isready():
+def pg_isready() -> bool:
     """Checks for Postgres to be available.
 
     Uses pg_version_check() for simple approach.
@@ -184,7 +186,7 @@ def pg_isready():
 
 
 def log_pg_details():
-    """Logs non-sensitive Postgres connection details.
+    """Logs non-sensitive Postgres connection details to LOGGER.
     """
     conn_parts = pg_conn_parts()
     pg_host = conn_parts['pg_host']
