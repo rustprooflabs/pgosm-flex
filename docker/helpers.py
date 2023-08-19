@@ -1,4 +1,4 @@
-"""Generic functions used in multiple modules.
+"""Generic functions and attributes used in multiple modules of PgOSM Flex.
 """
 import datetime
 import logging
@@ -14,10 +14,10 @@ import db
 DEFAULT_SRID = '3857'
 
 
-def get_today():
+def get_today() -> str:
     """Returns yyyy-mm-dd formatted string for today.
 
-    Retunrs
+    Returns
     -------------------------
     today : str
     """
@@ -25,8 +25,9 @@ def get_today():
     return today
 
 
-def run_command_via_subprocess(cmd, cwd, output_lines=[], print=False):
-    """Wraps around subprocess.Popen to run commands outside of Python. Prints
+def run_command_via_subprocess(cmd: list, cwd: str, output_lines: list=[],
+                               print: bool=False) -> int:
+    """Wraps around subprocess.Popen() to run commands outside of Python. Prints
     output as it goes, returns the status code from the command.
 
     Parameters
@@ -66,12 +67,15 @@ def run_command_via_subprocess(cmd, cwd, output_lines=[], print=False):
     return status
 
 
-def verify_checksum(md5_file, path):
-    """If verfication fails calls `sys.exit()`
+def verify_checksum(md5_file: str, path: str):
+    """Verifies checksum of osm pbf file.
+
+    If verification fails calls `sys.exit()`
 
     Parameters
     ---------------------
     md5_file : str
+        Filename of the MD5 file to verify the osm.pbf file.
     path : str
         Path to directory with `md5_file` to validate
     """
@@ -146,7 +150,7 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
 
 
 
-def get_region_combined(region, subregion):
+def get_region_combined(region: str, subregion: str) -> str:
     """Returns combined region with optional subregion.
 
     Parameters
@@ -167,7 +171,7 @@ def get_region_combined(region, subregion):
     return pgosm_region
 
 
-def get_git_info():
+def get_git_info() -> str:
     """Provides git info in the form of the latest tag and most recent short sha
 
     Sends info to logger and returns string.
