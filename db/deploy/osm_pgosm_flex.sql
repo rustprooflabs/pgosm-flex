@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS {schema_name}.pgosm_flex (
     "language" text NOT NULL,
     import_mode JSONB NULL,
     import_status TEXT NOT NULL DEFAULT 'Initializing',
+    input_file TEXT NULL,
     CONSTRAINT pk_osm_pgosm_flex PRIMARY KEY (id)
 );
 
@@ -36,6 +37,9 @@ ALTER TABLE {schema_name}.pgosm_flex
 ALTER TABLE {schema_name}.pgosm_flex
     ADD COLUMN IF NOT EXISTS layerset TEXT NULL;
 
+ALTER TABLE {schema_name}.pgosm_flex
+    ADD COLUMN IF NOT EXISTS input_file TEXT NULL;
+
 ALTER TABLE {schema_name}.pgosm_flex DROP COLUMN IF EXISTS project_url;
 ALTER TABLE {schema_name}.pgosm_flex DROP COLUMN IF EXISTS default_date;
 
@@ -46,10 +50,12 @@ COMMENT ON COLUMN {schema_name}.pgosm_flex.osm_date IS 'Indicates the date of th
 COMMENT ON COLUMN {schema_name}.pgosm_flex.srid IS 'SRID of imported data.';
 COMMENT ON COLUMN {schema_name}.pgosm_flex.pgosm_flex_version IS 'Version of PgOSM-Flex used to generate schema.';
 COMMENT ON COLUMN {schema_name}.pgosm_flex.osm2pgsql_version IS 'Version of osm2pgsql used to load data.';
-COMMENT ON COLUMN {schema_name}.pgosm_flex.region IS 'Region specified at run time via env var PGOSM_REGION.';
+COMMENT ON COLUMN {schema_name}.pgosm_flex.region IS 'Region specified at run time via --region and --subregion values.  When using --input-file without region/subregion, this defaults to the input filename.';
 COMMENT ON COLUMN {schema_name}.pgosm_flex.language IS 'Preferred language specified at run time via env var PGOSM_LANGUAGE.  Empty string when not defined.';
 COMMENT ON COLUMN {schema_name}.pgosm_flex.layerset IS 'PgOSM Flex layerset used for the import style.';
 COMMENT ON COLUMN {schema_name}.pgosm_flex.import_status IS 'Status of the import. Starts as initialized, tracks status during imports and final success/failure.';
+COMMENT ON COLUMN {schema_name}.pgosm_flex.input_file IS 'Tracks explicit file defined when --input-file is used.  NULL when --input-file not used.';
+
 
 
 COMMIT;
