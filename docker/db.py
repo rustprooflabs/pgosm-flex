@@ -237,7 +237,7 @@ def prepare_pgosm_db(skip_qgis_style, db_path, import_mode, schema_name):
 
 
 def start_import(pgosm_region, pgosm_date, srid, language, layerset, git_info,
-                 osm2pgsql_version, import_mode, schema_name):
+                 osm2pgsql_version, import_mode, schema_name, input_file):
     """Creates record in osm.pgosm_flex table.
 
     Parameters
@@ -251,6 +251,7 @@ def start_import(pgosm_region, pgosm_date, srid, language, layerset, git_info,
     osm2pgsql_version : str
     import_mode : import_mode.ImportMode
     schema_name : str
+    input_file : str
 
     Returns
     ----------------------------
@@ -260,16 +261,18 @@ def start_import(pgosm_region, pgosm_date, srid, language, layerset, git_info,
     params = {'pgosm_region': pgosm_region, 'pgosm_date': pgosm_date,
               'srid': srid, 'language': language, 'layerset': layerset,
               'git_info': git_info, 'osm2pgsql_version': osm2pgsql_version,
-              'import_mode': import_mode.as_json()}
+              'import_mode': import_mode.as_json(),
+              'input_file': input_file}
 
     sql_raw = """
 INSERT INTO {schema_name}.pgosm_flex
     (osm_date, region, pgosm_flex_version, srid,
         osm2pgsql_version, "language", import_mode,
-        layerset)
+        layerset, input_file)
     VALUES(%(pgosm_date)s, %(pgosm_region)s, %(git_info)s, %(srid)s,
         %(osm2pgsql_version)s,
-        COALESCE(%(language)s, ''), %(import_mode)s, %(layerset)s
+        COALESCE(%(language)s, ''), %(import_mode)s, %(layerset)s,
+        %(input_file)s
         )
     RETURNING id
 ;

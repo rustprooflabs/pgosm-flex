@@ -151,7 +151,8 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
                                 git_info=helpers.get_git_info(),
                                 osm2pgsql_version=vers_lines,
                                 import_mode=import_mode,
-                                schema_name=schema_name)
+                                schema_name=schema_name,
+                                input_file=input_file)
 
     logger.info(f'Started import id {import_id}')
 
