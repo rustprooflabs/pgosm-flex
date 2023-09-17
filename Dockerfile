@@ -1,4 +1,4 @@
-FROM postgis/postgis:15-3.3
+FROM postgis/postgis:16-3.4
 
 LABEL maintainer="PgOSM Flex - https://github.com/rustprooflabs/pgosm-flex"
 
@@ -14,15 +14,15 @@ RUN apt-get update \
         libboost-filesystem-dev libexpat1-dev zlib1g-dev \
         libbz2-dev libpq-dev libproj-dev lua5.4 liblua5.4-dev \
         python3 python3-distutils \
-        postgresql-server-dev-15 \
+        postgresql-server-dev-16 \
         curl unzip \
-        postgresql-15-pgrouting \
+        postgresql-16-pgrouting \
         nlohmann-json3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN wget https://luarocks.org/releases/luarocks-3.9.1.tar.gz \
-    && tar zxpf luarocks-3.9.1.tar.gz \
-    && cd luarocks-3.9.1 \
+RUN wget https://luarocks.org/releases/luarocks-3.9.2.tar.gz \
+    && tar zxpf luarocks-3.9.2.tar.gz \
+    && cd luarocks-3.9.2 \
     && ./configure && make && make install
 
 RUN curl -o /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py \
@@ -48,9 +48,9 @@ RUN git clone --depth 1 --branch $OSM2PGSQL_BRANCH https://github.com/openstreet
     && apt autoremove -y \
     && cd /tmp && rm -r /tmp/osm2pgsql
 
-RUN wget https://github.com/rustprooflabs/pgdd/releases/download/0.5.0/pgdd_0.5.0_postgis_pg15_amd64.deb \
-    && dpkg -i ./pgdd_0.5.0_postgis_pg15_amd64.deb \
-    && rm ./pgdd_0.5.0_postgis_pg15_amd64.deb
+RUN wget https://github.com/rustprooflabs/pgdd/releases/download/0.5.1/pgdd_0.5.1_postgis_pg16_amd64.deb \
+    && dpkg -i ./pgdd_0.5.1_postgis_pg16_amd64.deb \
+    && rm ./pgdd_0.5.1_postgis_pg16_amd64.deb
 
 WORKDIR /app
 COPY . ./
