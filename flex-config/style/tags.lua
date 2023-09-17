@@ -29,7 +29,7 @@ function process(object)
     if clean_tags(object.tags) then
         return
     end
-    tags_table:add_row({
+    tags_table:insert({
         tags = object.tags
     })
 end
