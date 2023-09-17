@@ -20,9 +20,9 @@ RUN apt-get update \
         nlohmann-json3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN wget https://luarocks.org/releases/luarocks-3.9.1.tar.gz \
-    && tar zxpf luarocks-3.9.1.tar.gz \
-    && cd luarocks-3.9.1 \
+RUN wget https://luarocks.org/releases/luarocks-3.9.2.tar.gz \
+    && tar zxpf luarocks-3.9.2.tar.gz \
+    && cd luarocks-3.9.2 \
     && ./configure && make && make install
 
 RUN curl -o /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py \
