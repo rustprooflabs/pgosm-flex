@@ -48,8 +48,8 @@ COMMENT ON COLUMN osm.building_point.address IS 'Address combined from address p
 COMMENT ON COLUMN osm.building_polygon.address IS 'Address combined from address parts in helpers.get_address().';
 
 
-COMMENT ON COLUMN osm.building_point.osm_type IS 'Values: building, building_part, office or address. All but address described in osm_subtype.  Value is address if addr:* tags exist with no other major keys to group it in a more specific layer.  See address_only_building() in building.lua';
-COMMENT ON COLUMN osm.building_polygon.osm_type IS 'Values: building, building_part, office or address. All but address described in osm_subtype.  Value is address if addr:* tags exist with no other major keys to group it in a more specific layer.  See address_only_building() in building.lua';
+COMMENT ON COLUMN osm.building_point.osm_type IS 'Values: building, building_part, office or address. All but address described in osm_subtype.  Value is address if addr:* tags exist with no other major keys to group it in a more specific layer.  See address_only_building() in building_helpers.lua';
+COMMENT ON COLUMN osm.building_polygon.osm_type IS 'Values: building, building_part, office or address. All but address described in osm_subtype.  Value is address if addr:* tags exist with no other major keys to group it in a more specific layer.  See address_only_building() in building_helpers.lua';
 
 COMMENT ON COLUMN osm.building_point.osm_subtype IS 'Further describes osm_type for building, building_part, and office.';
 COMMENT ON COLUMN osm.building_polygon.osm_subtype IS 'Further describes osm_type for building, building_part, and office.';
