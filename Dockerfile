@@ -50,7 +50,12 @@ RUN git clone --depth 1 --branch $OSM2PGSQL_BRANCH https://github.com/openstreet
 
 RUN wget https://github.com/rustprooflabs/pgdd/releases/download/0.5.1/pgdd_0.5.1_postgis_pg16_amd64.deb \
     && dpkg -i ./pgdd_0.5.1_postgis_pg16_amd64.deb \
-    && rm ./pgdd_0.5.1_postgis_pg16_amd64.deb
+    && rm ./pgdd_0.5.1_postgis_pg16_amd64.deb \
+    && wget https://github.com/rustprooflabs/convert/releases/download/0.0.3/convert_0.0.3_postgis_pg16_amd64.deb \
+    && dpkg -i ./convert_0.0.3_postgis_pg16_amd64.deb \
+    && rm ./convert_0.0.3_postgis_pg16_amd64.deb
+
+
 
 WORKDIR /app
 COPY . ./

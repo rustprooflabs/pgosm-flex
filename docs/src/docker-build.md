@@ -85,7 +85,7 @@ the PgOSM Flex image using `--no-cache`.
 
 
 ```bash
-docker pull postgis/postgis:15-3.3
+docker pull postgis/postgis:16-3.4
 docker build --no-cache -t rustprooflabs/pgosm-flex:dev .
 ```
 
