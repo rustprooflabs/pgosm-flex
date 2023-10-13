@@ -56,7 +56,7 @@ RUN wget https://github.com/rustprooflabs/pgdd/releases/download/0.5.1/pgdd_0.5.
     && rm ./convert_0.0.3_postgis_pg16_amd64.deb
 
 RUN pip install pgxnclient \
-    && pgxn install h3=4.1.2
+    && pgxn install h3
 
 WORKDIR /app
 COPY . ./
