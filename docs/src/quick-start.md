@@ -16,6 +16,7 @@ docker pull rustprooflabs/pgosm-flex
 docker run --name pgosm -d --rm \
     -v ~/pgosm-data:/app/output \
     -v /etc/localtime:/etc/localtime:ro \
+    -e POSTGRES_USER=$POSTGRES_USER \
     -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
     -p 5433:5432 -d rustprooflabs/pgosm-flex
 
