@@ -3,7 +3,7 @@ FROM postgis/postgis:16-3.4
 LABEL maintainer="PgOSM Flex - https://github.com/rustprooflabs/pgosm-flex"
 
 ARG OSM2PGSQL_BRANCH=master
-ARG BOUNCER_VERSION=1.17.0
+ARG BOUNCER_VERSION=1.21.0
 
 RUN apt-get update \
     # Removed upgrade per https://github.com/rustprooflabs/pgosm-flex/issues/322
