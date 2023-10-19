@@ -139,6 +139,8 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
     os.environ['PGOSM_CONN'] = db.connection_string()
     # Connection to DB for admin purposes, e.g. drop/create main database
     os.environ['PGOSM_CONN_PG'] = db.connection_string(admin=True)
+    # pgBouncer connection
+    os.environ['PGOSM_CONN_PGBOUNCER'] = db.connection_string(pgbouncer=True)
 
     pgosm_region = get_region_combined(region, subregion)
     logger.debug(f'PGOSM_REGION_COMBINED: {pgosm_region}')

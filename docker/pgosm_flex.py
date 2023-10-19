@@ -18,6 +18,7 @@ import osm2pgsql_recommendation as rec
 import db
 import geofabrik
 import helpers
+import pgbouncer
 from import_mode import ImportMode
 
 
@@ -97,6 +98,10 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
 
     helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
                          layerset, layerset_path, replication, schema_name)
+
+    pgbouncer.setup()
+    pgbouncer.run()
+
     db.wait_for_postgres()
     if force and db.pg_conn_parts()['pg_host'] == 'localhost':
         msg = 'Using --force with the built-in database is unnecessary.'

@@ -74,6 +74,11 @@ docker-exec-default: build-run-docker
 	docker exec -it pgosm \
 		chown $(CURRENT_UID):$(CURRENT_GID) /app/docker/
 
+	# Needed for pgbouncer
+	docker exec -it pgosm \
+		chown $(CURRENT_UID):$(CURRENT_GID) /etc/pgbouncer/
+
+
 	# run typical processing using built-in file handling
 	docker exec -it \
 		-e POSTGRES_PASSWORD=mysecretpassword \
@@ -167,11 +172,15 @@ docker-exec-region: build-run-docker
 	# Needed for unit-tests
 	docker exec -it pgosm \
 		chown $(CURRENT_UID):$(CURRENT_GID) /app/docker/
+	# Needed for pgbouncer
+	docker exec -it pgosm \
+		chown $(CURRENT_UID):$(CURRENT_GID) /etc/pgbouncer/
+
 
 	docker exec -it pgosm \
 		sed -i 's/district-of-columbia/$(REGION_FILE_NAME)/' /app/output/$(REGION_FILE_NAME)-$(TODAY).osm.pbf.md5
 
-	# process DC file, pretending its a region instead of subregion
+	# process DC file, pretending it's a region instead of subregion
 	docker exec -it \
 		-e POSTGRES_PASSWORD=mysecretpassword \
 		-e POSTGRES_USER=postgres \

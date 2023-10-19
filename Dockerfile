@@ -43,10 +43,7 @@ RUN   curl -o  /tmp/pgbouncer-$BOUNCER_VERSION.tar.gz -L https://pgbouncer.githu
   && make \
   && cp pgbouncer /usr/bin \
   && mkdir -p /etc/pgbouncer /var/log/pgbouncer /var/run/pgbouncer \
-  && cp etc/pgbouncer.ini /etc/pgbouncer/pgbouncer.ini.example \
-  && cp etc/userlist.txt /etc/pgbouncer/userlist.txt.example \
-  && touch /etc/pgbouncer/userlist.txt \
-  && chown -R postgres /var/run/pgbouncer /etc/pgbouncer
+  && chown -R postgres /var/run/pgbouncer /etc/pgbouncer /var/log/pgbouncer/
 
 WORKDIR /tmp
 RUN git clone --depth 1 --branch $OSM2PGSQL_BRANCH https://github.com/openstreetmap/osm2pgsql.git \

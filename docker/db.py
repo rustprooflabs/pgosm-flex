@@ -13,7 +13,7 @@ import qgis_styles
 LOGGER = logging.getLogger('pgosm-flex')
 
 
-def connection_string(admin: bool=False) -> str:
+def connection_string(admin: bool=False, pgbouncer: bool=False) -> str:
     """Returns connection string to `db_name`.
 
     Env vars for user/password defined by Postgres docker image.
@@ -30,6 +30,10 @@ def connection_string(admin: bool=False) -> str:
         Default False. Set to True to connect to admin database, currently
         hard-coded to `postgres`
 
+    pgbouncer : boolean
+        Default False.
+        FIXME:  SET DEFAULT TO TRUE???
+
     Returns
     --------------------------
     conn_string : str
@@ -39,9 +43,16 @@ def connection_string(admin: bool=False) -> str:
     pg_details = pg_conn_parts()
     pg_user = pg_details['pg_user']
     pg_pass = pg_details['pg_pass']
-    pg_host = pg_details['pg_host']
+
     pg_db = pg_details['pg_db']
-    pg_port = pg_details['pg_port']
+
+
+    if pgbouncer:
+        pg_host = pg_details['pg_host_pgbouncer']
+        pg_port = pg_details['pg_port_pgbouncer']
+    else:
+        pg_host = pg_details['pg_host']
+        pg_port = pg_details['pg_port']
 
     if admin:
         if pg_host == 'localhost':
@@ -121,7 +132,10 @@ def pg_conn_parts() -> dict:
                   'pg_pass': pg_pass,
                   'pg_host': pg_host,
                   'pg_port': pg_port,
-                  'pg_db': pg_db}
+                  'pg_db': pg_db,
+                  'pg_host_pgbouncer': 'localhost',
+                  'pg_port_pgbouncer': 6432
+                  }
 
     return pg_details
 
@@ -278,7 +292,7 @@ INSERT INTO {schema_name}.pgosm_flex
 ;
 """
     sql_raw = sql_raw.format(schema_name=schema_name)
-    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
+    with get_db_conn(conn_string=os.environ['PGOSM_CONN_PGBOUNCER']) as conn:
         cur = conn.cursor()
         cur.execute(sql_raw, params=params)
         import_id = cur.fetchone()[0]
@@ -439,7 +453,7 @@ def run_deploy_file(db_path: str, sql_filename: str, schema_name: str,
 
     deploy_sql = deploy_sql.format(schema_name=schema_name)
 
-    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
+    with get_db_conn(conn_string=os.environ['PGOSM_CONN_PGBOUNCER']) as conn:
         cur = conn.cursor()
         cur.execute(deploy_sql)
         LOGGER.debug(f'Ran SQL in {sql_filename}')
@@ -507,7 +521,7 @@ def pgosm_nested_admin_polygons(flex_path: str, schema_name: str):
     """
     sql_raw = f'CALL {schema_name}.build_nested_admin_polygons();'
 
-    conn_string = os.environ['PGOSM_CONN']
+    conn_string = os.environ['PGOSM_CONN_PGBOUNCER']
     cmds = ['psql', '-d', conn_string, '-c', sql_raw]
     LOGGER.info('Building nested polygons... (this can take a while)')
     output = subprocess.run(cmds,
@@ -552,7 +566,7 @@ def osm2pgsql_replication_finish(skip_nested):
         LOGGER.info('Finishing Replication, including nested polygons')
         sql_raw = 'CALL osm.append_data_finish(skip_nested := False );'
 
-    conn_string = os.environ['PGOSM_CONN']
+    conn_string = os.environ['PGOSM_CONN_PGBOUNCER']
     cmds = ['psql', '-d', conn_string, '-c', sql_raw]
     LOGGER.info('Finishing Replication')
     output = subprocess.run(cmds,
@@ -578,7 +592,7 @@ def run_pg_dump(export_path, skip_qgis_style):
     skip_qgis_style : bool
     """
     logger = logging.getLogger('pgosm-flex')
-    conn_string = os.environ['PGOSM_CONN']
+    conn_string = os.environ['PGOSM_CONN_PGBOUNCER']
     schema_name = 'osm'
 
     if skip_qgis_style:
@@ -635,7 +649,7 @@ UPDATE {schema_name}.pgosm_flex
 ;
 """
     sql_raw = sql_raw.format(schema_name=schema_name)
-    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
+    with get_db_conn(conn_string=os.environ['PGOSM_CONN_PGBOUNCER']) as conn:
         params = {'import_id': import_id, 'msg': msg}
         cur = conn.cursor()
         cur.execute(sql_raw, params=params)
@@ -664,7 +678,7 @@ SELECT id, osm_date, region, layerset, import_status,
 ;
 """
     sql_raw = sql_raw.format(schema_name=schema_name)
-    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
+    with get_db_conn(conn_string=os.environ['PGOSM_CONN_PGBOUNCER']) as conn:
         cur = conn.cursor(row_factory=psycopg.rows.dict_row)
         results = cur.execute(sql_raw).fetchone()
 
