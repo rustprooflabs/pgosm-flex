@@ -36,13 +36,14 @@ def setup():
     """
     print('Setting up pgBouncer configuration files')
     db_parts = db.pg_conn_parts()
+
     user_list = PGBOUNCER_USER_LIST_TEMPLATE.format(pg_user=db_parts['pg_user'],
                                                     pg_pass=db_parts['pg_pass']
                                                     )
 
+    print('WARNING: Saving password in plain text within the container for pgBouncer.')
     with open(PGBOUNCER_USER_LIST_PATH, "w") as user_file:
         user_file.write(user_list)
-
 
     pgbouncer_ini = PGBOUNCER_INI_TEMPLATE.format(pg_host=db_parts['pg_host'],
                                                   pg_port=db_parts['pg_port'],
