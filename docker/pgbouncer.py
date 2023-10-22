@@ -104,10 +104,17 @@ def stop():
     conn_string = db.connection_string(pgbouncer=True,
                                        pgbouncer_admin=True)
 
-    with db.get_db_conn(conn_string=conn_string) as conn:
-        conn.autocommit = True
-        try:
-            conn.execute(sql_raw)
-        except psycopg.OperationalError:
-            LOGGER.debug('Disconnected.  This is the expected result.')
+    # Writing this way instead of as with ... as conn b/c of how function returns
+    # false.
+    conn = db.get_db_conn(conn_string=conn_string)
+    if not conn:
+        LOGGER.warning('Unable to connect to pgbouncer to shutdown pgBouncer.  Probably not a problem.')
+        return
 
+    conn.autocommit = True
+    try:
+        conn.execute(sql_raw)
+    except psycopg.OperationalError:
+        LOGGER.debug('Disconnected.  This is the expected result.')
+
+        
