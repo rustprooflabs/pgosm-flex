@@ -3,7 +3,7 @@ import os
 import unittest
 from unittest import mock
 
-import db
+import db, helpers
 
 POSTGRES_USER = 'my_pg_user'
 POSTGRES_PASSWORD = 'here_for_fun'
@@ -19,8 +19,24 @@ POSTGRES_HOST_NON_LOCAL = {'POSTGRES_HOST': POSTGRES_HOST_EXTERNAL,
                            'POSTGRES_USER': POSTGRES_USER,
                            'POSTGRES_PASSWORD': POSTGRES_PASSWORD}
 
+REGION_US = 'north-america/us'
+SUBREGION_DC = 'district-of-columbia'
+LAYERSET = 'default'
+PGOSM_DATE = '2021-12-02'
+
 
 class DBTests(unittest.TestCase):
+    def setUp(self):
+        helpers.set_env_vars(region=REGION_US,
+                             subregion=SUBREGION_DC,
+                             srid=3857,
+                             language=None,
+                             pgosm_date=PGOSM_DATE,
+                             layerset=LAYERSET,
+                             layerset_path=None,
+                             replication=False,
+                             schema_name='osm',
+                             use_pgbouncer=False)
 
     @mock.patch.dict(os.environ, PG_USER_ONLY)
     def test_pg_conn_parts_user_only_returns_expected_values(self):
