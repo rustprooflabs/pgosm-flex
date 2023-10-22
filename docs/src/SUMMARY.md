@@ -20,6 +20,7 @@
 
 - [Postgres Permissions](./postgres-permissions.md)
 - [Using External Postgres Connection](./postgres-external.md)
+- [pgBouncer](./pgbouncer.md)
 - [Data updates](./data-updates.md)
     - [Using Replication](./replication.md)
     - [Relocate Data](./relocate-data.md)

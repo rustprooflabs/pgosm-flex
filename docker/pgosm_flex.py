@@ -48,8 +48,8 @@ from import_mode import ImportMode
 @click.option('--language', default=None,
               envvar="PGOSM_LANGUAGE",
               help="Set default language in loaded OpenStreetMap data when available.  e.g. 'en' or 'kn'.")
-@click.option('--use-pgbouncer', default=False, is_flag=True,
-              help='EXPERIMENTAL FEATURE - Setup and use pgbouncer to reduce connection load on target Postgres database.')
+@click.option('--pgbouncer-pool-size', default=-1, type=int, required=True,
+              help='EXPERIMENTAL FEATURE: When set to > 0 the internal pgBouncer is enabled and used for all non-admin database connections.  Setting to 10 is a reasonable starting place.')
 @click.option('--pg-dump', default=False, is_flag=True,
               help='Uses pg_dump after processing is completed to enable easily load OpenStreetMap data into a different database')
 @click.option('--pgosm-date', required=False,
@@ -79,7 +79,7 @@ from import_mode import ImportMode
               help='EXPERIMENTAL - Wrap around osm2pgsql create v. append modes, without using osm2pgsql-replication.')
 def run_pgosm_flex(ram, region, subregion, debug, force,
                     input_file, layerset, layerset_path, language,
-                    use_pgbouncer, pg_dump,
+                    pgbouncer_pool_size, pg_dump,
                     pgosm_date, replication, schema_name, skip_nested,
                     skip_qgis_style, srid, update):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
@@ -99,13 +99,21 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
     if region is None and input_file:
         region = input_file
 
+    if pgbouncer_pool_size > 0:
+        use_pgbouncer = True
+    else:
+        use_pgbouncer = False
+
     helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
                          layerset, layerset_path, replication, schema_name,
                          use_pgbouncer)
 
     if use_pgbouncer:
-        pgbouncer.setup()
+        pgbouncer.setup(pgbouncer_pool_size=pgbouncer_pool_size)
         pgbouncer.run()
+    else:
+        # Ensuring pgbouncer is not running if ran subsequent times.
+        pgbouncer.stop()
 
     db.wait_for_postgres()
     if force and db.pg_conn_parts()['pg_host'] == 'localhost':

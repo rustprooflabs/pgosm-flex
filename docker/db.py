@@ -13,7 +13,8 @@ import qgis_styles
 LOGGER = logging.getLogger('pgosm-flex')
 
 
-def connection_string(admin: bool=False, pgbouncer: bool=False) -> str:
+def connection_string(admin: bool=False, pgbouncer: bool=False,
+                      pgbouncer_admin: bool=False) -> str:
     """Returns connection string to `db_name`.
 
     Env vars for user/password defined by Postgres docker image.
@@ -34,6 +35,11 @@ def connection_string(admin: bool=False, pgbouncer: bool=False) -> str:
         Default False.
         FIXME:  SET DEFAULT TO TRUE???
 
+    pgbouncer_admin : boolean
+        Default False
+        Connects to pgbouncer database (must be pgbouncer connection) for admin
+        functionality, e.g. `SHUTDOWN;`
+
     Returns
     --------------------------
     conn_string : str
@@ -46,6 +52,8 @@ def connection_string(admin: bool=False, pgbouncer: bool=False) -> str:
 
     pg_db = pg_details['pg_db']
 
+    if pgbouncer_admin and not pgbouncer:
+        raise ValueError('Cannot connect to pgbouncer_admin on non-pgbouncer connection.')
 
     if pgbouncer:
         pg_host = pg_details['pg_host_pgbouncer']
@@ -53,6 +61,7 @@ def connection_string(admin: bool=False, pgbouncer: bool=False) -> str:
     else:
         pg_host = pg_details['pg_host']
         pg_port = pg_details['pg_port']
+
 
     if admin:
         if pg_host == 'localhost':
@@ -65,10 +74,31 @@ def connection_string(admin: bool=False, pgbouncer: bool=False) -> str:
     else:
         db_name = pg_db
 
+    # Just overwriting instead of working into above logic.  Probably a good
+    # sign this logic should be improved...
+    if pgbouncer_admin:
+        db_name = 'pgbouncer'
+
     if pg_pass is None:
         conn_string = f'postgresql://{pg_user}@{pg_host}:{pg_port}/{db_name}{app_str}'
     else:
         conn_string = f'postgresql://{pg_user}:{pg_pass}@{pg_host}:{pg_port}/{db_name}{app_str}'
+
+    return conn_string
+
+
+def get_db_conn_string() -> str:
+    """Returns non-admin database connection, either pgBouncer or not depending
+    on run-time configuration.
+
+    Returns
+    ----------------------------
+    conn_string : str
+    """
+    if os.environ['USE_PGBOUNCER'] == 'true':
+        conn_string = os.environ['PGOSM_CONN_PGBOUNCER']
+    else:
+        conn_string = os.environ['PGOSM_CONN']
 
     return conn_string
 
@@ -457,21 +487,6 @@ def run_deploy_file(db_path: str, sql_filename: str, schema_name: str,
         cur = conn.cursor()
         cur.execute(deploy_sql)
         LOGGER.debug(f'Ran SQL in {sql_filename}')
-
-def get_db_conn_string() -> str:
-    """Returns non-admin database connection, either pgBouncer or not depending
-    on run-time configuration.
-
-    Returns
-    ----------------------------
-    conn_string : str
-    """
-    if os.environ['USE_PGBOUNCER'] == 'true':
-        conn_string = os.environ['PGOSM_CONN_PGBOUNCER']
-    else:
-        conn_string = os.environ['PGOSM_CONN']
-
-    return conn_string
 
 
 def get_db_conn(conn_string):
