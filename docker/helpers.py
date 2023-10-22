@@ -94,7 +94,7 @@ def verify_checksum(md5_file: str, path: str):
 
 
 def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
-                 layerset_path, replication, schema_name):
+                 layerset_path, replication, schema_name, use_pgbouncer):
     """Sets environment variables needed by PgOSM Flex. Also creates DB
     record in `osm.pgosm_flex` table.
 
@@ -111,6 +111,8 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
     replication : bool
         Indicates when osm2pgsql-replication is used
     schema_name : str
+    use_pgbouncer : bool
+        Indicates if pgBouncer connection should be setup and used
     """
     logger = logging.getLogger('pgosm-flex')
     logger.debug('Ensuring env vars are not set from prior run')
@@ -145,6 +147,10 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
     pgosm_region = get_region_combined(region, subregion)
     logger.debug(f'PGOSM_REGION_COMBINED: {pgosm_region}')
 
+    if use_pgbouncer:
+        os.environ['USE_PGBOUNCER'] = 'true'
+    else:
+        os.environ['USE_PGBOUNCER'] = 'false'
 
 
 def get_region_combined(region: str, subregion: str) -> str:
@@ -225,3 +231,4 @@ def unset_env_vars():
     os.environ.pop('PGOSM_CONN', None)
     os.environ.pop('PGOSM_CONN_PG', None)
     os.environ.pop('SCHEMA_NAME', None)
+    os.environ.pop('USE_PGBOUNCER', None)

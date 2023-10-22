@@ -292,7 +292,7 @@ INSERT INTO {schema_name}.pgosm_flex
 ;
 """
     sql_raw = sql_raw.format(schema_name=schema_name)
-    with get_db_conn(conn_string=os.environ['PGOSM_CONN_PGBOUNCER']) as conn:
+    with get_db_conn(conn_string=get_db_conn_string()) as conn:
         cur = conn.cursor()
         cur.execute(sql_raw, params=params)
         import_id = cur.fetchone()[0]
@@ -453,10 +453,25 @@ def run_deploy_file(db_path: str, sql_filename: str, schema_name: str,
 
     deploy_sql = deploy_sql.format(schema_name=schema_name)
 
-    with get_db_conn(conn_string=os.environ['PGOSM_CONN_PGBOUNCER']) as conn:
+    with get_db_conn(conn_string=get_db_conn_string()) as conn:
         cur = conn.cursor()
         cur.execute(deploy_sql)
         LOGGER.debug(f'Ran SQL in {sql_filename}')
+
+def get_db_conn_string() -> str:
+    """Returns non-admin database connection, either pgBouncer or not depending
+    on run-time configuration.
+
+    Returns
+    ----------------------------
+    conn_string : str
+    """
+    if os.environ['USE_PGBOUNCER'] == 'true':
+        conn_string = os.environ['PGOSM_CONN_PGBOUNCER']
+    else:
+        conn_string = os.environ['PGOSM_CONN']
+
+    return conn_string
 
 
 def get_db_conn(conn_string):
@@ -521,7 +536,7 @@ def pgosm_nested_admin_polygons(flex_path: str, schema_name: str):
     """
     sql_raw = f'CALL {schema_name}.build_nested_admin_polygons();'
 
-    conn_string = os.environ['PGOSM_CONN_PGBOUNCER']
+    conn_string = get_db_conn_string()
     cmds = ['psql', '-d', conn_string, '-c', sql_raw]
     LOGGER.info('Building nested polygons... (this can take a while)')
     output = subprocess.run(cmds,
@@ -546,7 +561,7 @@ def osm2pgsql_replication_start():
     # This use of append applies to both osm2pgsql --append and osm2pgsq-replication, not renaming from "append"
     sql_raw = 'CALL osm.append_data_start();'
 
-    with get_db_conn(conn_string=connection_string()) as conn:
+    with get_db_conn(conn_string=get_db_conn_string()) as conn:
         cur = conn.cursor()
         cur.execute(sql_raw)
 
@@ -566,7 +581,7 @@ def osm2pgsql_replication_finish(skip_nested):
         LOGGER.info('Finishing Replication, including nested polygons')
         sql_raw = 'CALL osm.append_data_finish(skip_nested := False );'
 
-    conn_string = os.environ['PGOSM_CONN_PGBOUNCER']
+    conn_string = get_db_conn_string()
     cmds = ['psql', '-d', conn_string, '-c', sql_raw]
     LOGGER.info('Finishing Replication')
     output = subprocess.run(cmds,
@@ -592,7 +607,7 @@ def run_pg_dump(export_path, skip_qgis_style):
     skip_qgis_style : bool
     """
     logger = logging.getLogger('pgosm-flex')
-    conn_string = os.environ['PGOSM_CONN_PGBOUNCER']
+    conn_string = get_db_conn_string()
     schema_name = 'osm'
 
     if skip_qgis_style:
@@ -649,7 +664,7 @@ UPDATE {schema_name}.pgosm_flex
 ;
 """
     sql_raw = sql_raw.format(schema_name=schema_name)
-    with get_db_conn(conn_string=os.environ['PGOSM_CONN_PGBOUNCER']) as conn:
+    with get_db_conn(conn_string=get_db_conn_string()) as conn:
         params = {'import_id': import_id, 'msg': msg}
         cur = conn.cursor()
         cur.execute(sql_raw, params=params)
@@ -678,7 +693,7 @@ SELECT id, osm_date, region, layerset, import_status,
 ;
 """
     sql_raw = sql_raw.format(schema_name=schema_name)
-    with get_db_conn(conn_string=os.environ['PGOSM_CONN_PGBOUNCER']) as conn:
+    with get_db_conn(conn_string=get_db_conn_string()) as conn:
         cur = conn.cursor(row_factory=psycopg.rows.dict_row)
         results = cur.execute(sql_raw).fetchone()
 
