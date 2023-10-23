@@ -22,10 +22,11 @@ auth_type = md5
 auth_file = /etc/pgbouncer/userlist.txt
 logfile = /var/log/pgbouncer/pgbouncer.log
 pidfile = /var/run/pgbouncer/pgbouncer.pid
-admin_users = postgres
+admin_users = {pg_user}
 max_client_conn = 300
 default_pool_size = {pgbouncer_pool_size}
 max_prepared_statements = 500
+pool_mode = transaction
 """
 """str : Shell of pgbouncer.ini used to configure pgBouncer."""
 
@@ -59,6 +60,7 @@ def setup(pgbouncer_pool_size: int):
     pgbouncer_ini = PGBOUNCER_INI_TEMPLATE.format(pg_host=db_parts['pg_host'],
                                                   pg_port=db_parts['pg_port'],
                                                   pg_db=db_parts['pg_db'],
+                                                  pg_user=db_parts['pg_user'],
                                                   pgbouncer_pool_size=pgbouncer_pool_size
                                                   )
 

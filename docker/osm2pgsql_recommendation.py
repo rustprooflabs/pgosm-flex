@@ -88,7 +88,7 @@ def get_recommended_script(system_ram_gb: float,
     LOGGER.debug(f'Generic command to run: {osm2pgsql_cmd}')
 
     # Replace generic connection string with specific conn string
-    conn_string = db.connection_string()
+    conn_string = db.get_db_conn_string()
     osm2pgsql_cmd = osm2pgsql_cmd.replace('-d $PGOSM_CONN', f'-d {conn_string}')
     # Warning: Do not print() this string any more! Includes password
     return osm2pgsql_cmd

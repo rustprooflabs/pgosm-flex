@@ -96,8 +96,10 @@ def get_db_conn_string() -> str:
     conn_string : str
     """
     if os.environ['USE_PGBOUNCER'] == 'true':
+        LOGGER.debug('Using pgBouncer connection string')
         conn_string = os.environ['PGOSM_CONN_PGBOUNCER']
     else:
+        LOGGER.debug('Using direct to Postgres connection string (non-admin)')
         conn_string = os.environ['PGOSM_CONN']
 
     return conn_string
