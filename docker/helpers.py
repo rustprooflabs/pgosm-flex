@@ -140,11 +140,6 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
     # Connection to DB for admin purposes, e.g. drop/create main database
     os.environ['PGOSM_CONN_PG'] = db.connection_string(admin=True)
 
-    if replication:
-        os.environ['PGOSM_REPLICATION'] = 'true'
-    else:
-        os.environ['PGOSM_REPLICATION'] = 'false'
-
     pgosm_region = get_region_combined(region, subregion)
     logger.debug(f'PGOSM_REGION_COMBINED: {pgosm_region}')
 
@@ -209,5 +204,4 @@ def unset_env_vars():
     os.environ.pop('PGOSM_LAYERSET', None)
     os.environ.pop('PGOSM_CONN', None)
     os.environ.pop('PGOSM_CONN_PG', None)
-    os.environ.pop('PGOSM_REPLICATION', None)
     os.environ.pop('SCHEMA_NAME', None)
