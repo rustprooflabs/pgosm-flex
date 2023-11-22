@@ -656,7 +656,8 @@ def get_prior_import(schema_name: str) -> dict:
 SELECT id, osm_date, region, layerset, import_status,
         import_mode ->> 'replication' AS replication,
         import_mode ->> 'update' AS use_update,
-        import_mode
+        import_mode,
+        split_part(pgosm_flex_version, '-', 1) AS pgosm_flex_version_no_hash
     FROM {schema_name}.pgosm_flex
     ORDER BY imported DESC
     LIMIT 1

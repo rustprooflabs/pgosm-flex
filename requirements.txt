@@ -3,6 +3,7 @@ coverage>=6.4.1
 GitPython>=3.1.31
 osm2pgsql-tuner==0.0.6
 osmium>=3.4.1
+packaging>=23.0
 psycopg>=3.1
 psycopg-binary>=3.1
 sh>=1.14.2
