@@ -93,7 +93,7 @@ class ImportMode():
         if parse_version(git_tag) < parse_version(prior_import_version):
             msg = f'PgOSM Flex version ({git_tag}) is lower than latest import'
             msg += f' tracked in the pgosm_flex table ({prior_import_version}).'
-            msg += f' Use PgOSM Flex version {git_tag} or newer'
+            msg += f' Use PgOSM Flex version {prior_import_version} or newer'
             self.logger.error(msg)
             return False
         else:
