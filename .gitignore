@@ -4,3 +4,4 @@ output/
 **/__pycache__
 pgosm-data/*
 docs/book/*
+.vscode/*

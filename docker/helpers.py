@@ -166,27 +166,45 @@ def get_region_combined(region: str, subregion: str) -> str:
     return pgosm_region
 
 
-def get_git_info() -> str:
+def get_git_info(tag_only: bool=False) -> str:
     """Provides git info in the form of the latest tag and most recent short sha
 
     Sends info to logger and returns string.
+
+    Parameters
+    ----------------------
+    tag_only : bool
+        When true, omits the short sha portion, only returning the tag.
 
     Returns
     ----------------------
     git_info : str
     """
     logger = logging.getLogger('pgosm-flex')
-    repo = git.Repo()
+
+    try:
+        repo = git.Repo()
+    except git.exc.InvalidGitRepositoryError:
+        # This error happens when running via make for some reason...
+        # This appears to fix it.
+        repo = git.Repo('../')
+
     try:
         sha = repo.head.object.hexsha
         short_sha = repo.git.rev_parse(sha, short=True)
         latest_tag = repo.git.describe('--abbrev=0', tags=True)
-        git_info = f'{latest_tag}-{short_sha}'
     except ValueError:
         git_info = 'Git info unavailable'
         logger.error('Unable to get git information.')
+        return '-- (version unknown) --'
 
-    logger.info(f'PgOSM Flex version:  {git_info}')
+    if tag_only:
+        git_info = latest_tag
+    else:
+        git_info = f'{latest_tag}-{short_sha}'
+        # Logging only this full version, not the tag_only run
+        logger.info(f'PgOSM Flex version:  {git_info}')
+
     return git_info
 
 
