@@ -146,7 +146,9 @@ class ImportModeTests(unittest.TestCase):
         This should return False to avoid overwriting data.
         """
         replication = True
-        prior_import = {'replication': False}
+        prior_import = {'replication': False,
+                        'pgosm_flex_version_no_hash': '99.99.99'
+                        }
         replication_update = False
         update = None
         force = False
@@ -170,7 +172,9 @@ class ImportModeTests(unittest.TestCase):
         This should return True to allow replication to updated
         """
         replication = True
-        prior_import = {'replication': True}
+        prior_import = {'replication': True,
+                        'pgosm_flex_version_no_hash': '99.99.99'
+                        }
         replication_update = False
         update = None
         force = False
@@ -193,7 +197,9 @@ class ImportModeTests(unittest.TestCase):
         This should return False to protect the data.
         """
         replication = False
-        prior_import = {'replication': False}
+        prior_import = {'replication': False,
+                        'pgosm_flex_version_no_hash': '99.99.99'
+                        }
         replication_update = False
         update = None
         force = False

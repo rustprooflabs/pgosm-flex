@@ -181,7 +181,14 @@ def get_git_info(tag_only: bool=False) -> str:
     git_info : str
     """
     logger = logging.getLogger('pgosm-flex')
-    repo = git.Repo()
+
+    try:
+        repo = git.Repo()
+    except git.exc.InvalidGitRepositoryError:
+        # This error happens when running via make for some reason...
+        # This appears to fix it.
+        repo = git.Repo('../')
+
     try:
         sha = repo.head.object.hexsha
         short_sha = repo.git.rev_parse(sha, short=True)
@@ -189,6 +196,7 @@ def get_git_info(tag_only: bool=False) -> str:
     except ValueError:
         git_info = 'Git info unavailable'
         logger.error('Unable to get git information.')
+        return '-- (version unknown) --'
 
     if tag_only:
         git_info = latest_tag

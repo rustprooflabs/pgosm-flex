@@ -90,7 +90,12 @@ class ImportMode():
         # If current version is lower than prior version from latest import, stop.
         prior_import_version = prior_import['pgosm_flex_version_no_hash']
         git_tag = helpers.get_git_info(tag_only=True)
-        if parse_version(git_tag) < parse_version(prior_import_version):
+
+        if git_tag == '-- (version unknown) --':
+            msg = 'Unable to detect PgOSM Flex version from Git.'
+            msg += ' Not enforcing version check against prior version.'
+            self.logger.warning(msg)
+        elif parse_version(git_tag) < parse_version(prior_import_version):
             msg = f'PgOSM Flex version ({git_tag}) is lower than latest import'
             msg += f' tracked in the pgosm_flex table ({prior_import_version}).'
             msg += f' Use PgOSM Flex version {prior_import_version} or newer'
