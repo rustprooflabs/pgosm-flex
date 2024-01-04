@@ -75,14 +75,13 @@ def get_recommended_script(system_ram_gb: float,
     """
     LOGGER.debug('Generating recommended osm2pgsql command')
 
-    rec = tuner.recommendation(system_ram_gb=system_ram_gb,
+    rec = tuner.Recommendation(system_ram_gb=system_ram_gb,
                                osm_pbf_gb=osm_pbf_gb,
                                slim_no_drop=import_mode.slim_no_drop,
                                append_first_run=import_mode.append_first_run,
                                ssd=True)
 
-    osm2pgsql_cmd = rec.get_osm2pgsql_command(out_format='api',
-                                              pbf_path=pbf_filename)
+    osm2pgsql_cmd = rec.get_osm2pgsql_command(pbf_path=pbf_filename)
 
     osm2pgsql_cmd = osm2pgsql_cmd.replace('~/pgosm-data', output_path)
 
