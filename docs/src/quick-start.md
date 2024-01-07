@@ -49,13 +49,17 @@ logic, an post-processing steps required.  Features include:
 
 This section outlines a typical import using Docker to run PgOSM Flex.
 
-Create directory for the `.osm.pbf` file, output `.sql` file, log output, and
-the osm2pgsql command ran.
+### Prepare
+
+Create directory for the `.osm.pbf` file and output `.sql` file. These files
+are automatically created by PgOSM Flex.
 
 
 ```bash
 mkdir ~/pgosm-data
 ```
+
+### Run
 
 Set environment variables for the temporary Postgres connection in Docker.
 These are required for the Docker container to run.
@@ -76,6 +80,21 @@ docker run --name pgosm -d --rm \
     -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
     -p 5433:5432 -d rustprooflabs/pgosm-flex
 ```
+
+### Check Docker container running
+
+It is worth verifying the Docker container is successfully running with `docker ps -a`.
+Check for a `STATUS` similar to `Up 4 seconds` shown in the example output below.
+
+```bash
+$ docker ps -a
+
+CONTAINER ID   IMAGE                      COMMAND                  CREATED         STATUS         PORTS                                       NAMES
+e7f80926a823   rustprooflabs/pgosm-flex   "docker-entrypoint.s…"   5 seconds ago   Up 4 seconds   0.0.0.0:5433->5432/tcp, :::5433->5432/tcp   pgosm
+```
+
+
+### Execute PgOSM Flex
 
 Use `docker exec` to run the processing for the Washington D.C subregion.
 This example uses three (3) parameters to specify the total system RAM (8 GB)
