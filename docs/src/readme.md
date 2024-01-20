@@ -50,9 +50,10 @@ Minimum versions supported:
 This project will attempt, but not guarantee, to support PostgreSQL 12 until it
 reaches it EOL support.
 
-The osm2pgsql version requirement is no longer relevant.  Users of the Docker image
+The Docker image is pinned to osm2pgsql's `master` branch. Users of the Docker image
 naturally use the latest version of osm2pgsql at the time the Docker image was created.
 
+This project has not been officially tested on Windows.
 
 ## Minimum Hardware
 
@@ -67,3 +68,8 @@ SD, etc),
 however the [osm2pgsql-tuner](https://github.com/rustprooflabs/osm2pgsql-tuner)
 package used to determine the best osm2pgsql command assumes fast SSDs.
 
+## RustProof Labs project
+
+PgOSM Flex is a RustProof Labs project developed and maintained by Ryan Lambert.
+See the [RustProof Labs blog](https://blog.rustprooflabs.com/category/pgosm-flex)
+for more resources and examples of using PgOSM Flex.
