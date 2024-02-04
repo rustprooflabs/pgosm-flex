@@ -2,7 +2,11 @@ FROM postgis/postgis:16-3.4
 
 LABEL maintainer="PgOSM Flex - https://github.com/rustprooflabs/pgosm-flex"
 
-ARG OSM2PGSQL_BRANCH=master
+#ARG OSM2PGSQL_BRANCH=master
+ARG OSM2PGSQL_BRANCH=fewer-db-conns
+# ARG  OSM2PGSQL_REPO=https://github.com/openstreetmap/osm2pgsql.git
+ARG OSM2PGSQL_REPO=https://github.com/joto/osm2pgsql.git
+
 
 RUN apt-get update \
     # Removed upgrade per https://github.com/rustprooflabs/pgosm-flex/issues/322
@@ -34,7 +38,7 @@ RUN luarocks install luasql-postgres PGSQL_INCDIR=/usr/include/postgresql/
 
 
 WORKDIR /tmp
-RUN git clone --depth 1 --branch $OSM2PGSQL_BRANCH https://github.com/openstreetmap/osm2pgsql.git \
+RUN git clone --depth 1 --branch $OSM2PGSQL_BRANCH $OSM2PGSQL_REPO \
     && mkdir osm2pgsql/build \
     && cd osm2pgsql/build \
     && cmake .. -D USE_PROJ_LIB=6 \
