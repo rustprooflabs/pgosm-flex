@@ -3,7 +3,7 @@ FROM postgis/postgis:16-3.4
 LABEL maintainer="PgOSM Flex - https://github.com/rustprooflabs/pgosm-flex"
 
 ARG OSM2PGSQL_BRANCH=master
-ARG OSM2PGSQL_REPO=https://github.com/openstreetmap/osm2pgsql.git
+ARG OSM2PGSQL_REPO=https://github.com/osm2pgsql-dev/osm2pgsql.git
 
 
 RUN apt-get update \
