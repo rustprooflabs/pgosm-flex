@@ -268,9 +268,9 @@ def run_replication_update(skip_nested, flex_path):
 osm2pgsql-replication update -d $PGOSM_CONN \
     -- \
     --output=flex --style=./run.lua \
-    --slim \
-    -d $PGOSM_CONN
-"""
+    --slim
+    """
+
     update_cmd = update_cmd.replace('-d $PGOSM_CONN', f'-d {conn_string}')
     returncode = helpers.run_command_via_subprocess(cmd=update_cmd.split(),
                                                     cwd=flex_path,
@@ -422,7 +422,7 @@ def run_osm2pgsql(osm2pgsql_command, flex_path, debug):
     """
     logger = logging.getLogger('pgosm-flex')
     logger.info('Running osm2pgsql')
-        
+
     returncode = helpers.run_command_via_subprocess(cmd=osm2pgsql_command.split(),
                                                     cwd=flex_path,
                                                     print=True)
