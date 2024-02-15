@@ -1,9 +1,16 @@
 # Quick Start
 
+The bulk of the PgOSM Flex user guide is written for `*nix` users.
+The Quick Start, however, includes an additional section [Running on Windows](./windows.md)
+provides guidance for Windows users.  Windows users are advised to read
+this section before continuing to the Windows specific steps, as many concepts
+are not repeated in the Windows instructions.
 
 
-See the [Docker Usage](#docker-usage) section below for an explanation of
-these commands.
+## TLDR;
+
+The following code block shows the commands needed to run PgOSM Flex.
+The sections below provide explanations of these commands.
 
 ```bash
 mkdir ~/pgosm-data
@@ -35,7 +42,7 @@ The PgOSM Flex
 [Docker image](https://hub.docker.com/r/rustprooflabs/pgosm-flex)
 is hosted on Docker Hub.
 The image includes all the pre-requisite software and handles all of the options,
-logic, an post-processing steps required.  Features include:
+logic, and post-processing steps required.  Features include:
 
 * Automatic data download from Geofabrik and validation against checksum
 * Custom Flex layers built in Lua
@@ -244,7 +251,7 @@ docker exec -it \
 ```
 
 
-> The `unitable.lua` script include in in this project was [adapted from the unitable example from osm2pgsql](https://github.com/openstreetmap/osm2pgsql/blob/master/flex-config/unitable.lua). This version uses JSONB instead of HSTORE and takes advantage of `helpers.lua` to easily customize SRID.
+> The `unitable.lua` script included in this project was [adapted from the unitable example from osm2pgsql](https://github.com/openstreetmap/osm2pgsql/blob/master/flex-config/unitable.lua). This version uses `JSONB` instead of `HSTORE`, and takes advantage of `helpers.lua` to easily customize SRID.
 
 
 ## JSONB support
