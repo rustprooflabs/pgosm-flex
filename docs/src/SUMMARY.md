@@ -7,6 +7,7 @@
 # User Guide
 
 - [Quick Start](./quick-start.md)
+    - [Running on Windows](./windows.md)
 - [Customize PgOSM Flex](./customizations.md)
     - [Common Customizations](./common-customization.md)
     - [Layersets](./layersets.md)
