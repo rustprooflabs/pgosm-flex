@@ -58,13 +58,15 @@ This section outlines a typical import using Docker to run PgOSM Flex.
 
 ### Prepare
 
-Create directory for the `.osm.pbf` file and output `.sql` file. These files
-are automatically created by PgOSM Flex.
+Create a directory to use a common location to share with the Docker container.
+This is used to link to the internal path where the `.osm.pbf` file, `.md5` file,
+and (optional) output `.sql` files are saved.
 
 
 ```bash
 mkdir ~/pgosm-data
 ```
+
 
 ### Run
 
@@ -110,7 +112,6 @@ along with a region/subregion.
 * Total RAM for osm2pgsql, Postgres and OS (`8`)
 * Region (`north-america/us`)
 * Sub-region (`district-of-columbia`) (Optional)
-
 
 ```bash
 docker exec -it \

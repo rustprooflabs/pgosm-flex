@@ -53,7 +53,9 @@ reaches it EOL support.
 The Docker image is pinned to osm2pgsql's `master` branch. Users of the Docker image
 naturally use the latest version of osm2pgsql at the time the Docker image was created.
 
-This project has not been officially tested on Windows.
+This project runs entirely in Docker, optionally connecting to an external Postgres instance.
+It should work on any typical OS able to run Docker.
+
 
 ## Minimum Hardware
 
