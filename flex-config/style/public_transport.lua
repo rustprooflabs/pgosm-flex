@@ -10,7 +10,7 @@ local tables = {}
 tables.public_transport_point = osm2pgsql.define_table({
     name = 'public_transport_point',
     schema = schema_name,
-    ids = { type = 'node', id_column = 'osm_id' },
+    ids = { type = 'node', id_column = 'osm_id', create_index = 'unique' },
     columns = {
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'osm_subtype', type = 'text', not_null = false },
@@ -37,7 +37,7 @@ tables.public_transport_point = osm2pgsql.define_table({
 tables.public_transport_line = osm2pgsql.define_table({
     name = 'public_transport_line',
     schema = schema_name,
-    ids = { type = 'way', id_column = 'osm_id' },
+    ids = { type = 'way', id_column = 'osm_id', create_index = 'unique' },
     columns = {
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'osm_subtype', type = 'text', not_null = false },
@@ -64,7 +64,7 @@ tables.public_transport_line = osm2pgsql.define_table({
 tables.public_transport_polygon = osm2pgsql.define_table({
     name = 'public_transport_polygon',
     schema = schema_name,
-    ids = { type = 'area', id_column = 'osm_id' },
+    ids = { type = 'area', id_column = 'osm_id', create_index = 'unique' },
     columns = {
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'osm_subtype', type = 'text', not_null = false },

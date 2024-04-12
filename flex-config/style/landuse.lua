@@ -11,7 +11,7 @@ local tables = {}
 tables.landuse_point = osm2pgsql.define_table({
     name = 'landuse_point',
     schema = schema_name,
-    ids = { type = 'node', id_column = 'osm_id' },
+    ids = { type = 'node', id_column = 'osm_id', create_index = 'unique' },
     columns = {
         { column = 'osm_type', type = 'text' , not_null = true},
         { column = 'name', type = 'text' },
@@ -24,7 +24,7 @@ tables.landuse_point = osm2pgsql.define_table({
 tables.landuse_polygon = osm2pgsql.define_table({
     name = 'landuse_polygon',
     schema = schema_name,
-    ids = { type = 'way', id_column = 'osm_id' },
+    ids = { type = 'way', id_column = 'osm_id', create_index = 'unique' },
     columns = {
         { column = 'osm_type', type = 'text', not_null = true},
         { column = 'name', type = 'text' },

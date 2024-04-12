@@ -38,20 +38,6 @@ COMMENT ON COLUMN osm.water_point.boat IS 'Access details for boat travel.  http
 COMMENT ON COLUMN osm.water_line.boat IS 'Access details for boat travel.  https://wiki.openstreetmap.org/wiki/Key:boat';
 COMMENT ON COLUMN osm.water_polygon.boat IS 'Access details for boat travel.  https://wiki.openstreetmap.org/wiki/Key:boat';
 
-
-ALTER TABLE osm.water_point
-    ADD CONSTRAINT pk_osm_water_point_osm_id
-    PRIMARY KEY (osm_id)
-;
-ALTER TABLE osm.water_line
-    ADD CONSTRAINT pk_osm_water_line_osm_id
-    PRIMARY KEY (osm_id)
-;
-ALTER TABLE osm.water_polygon
-    ADD CONSTRAINT pk_osm_water_polygon_osm_id
-    PRIMARY KEY (osm_id)
-;
-
 ------------------------------------------------
 CREATE TEMP TABLE water_polygon_in_relations AS
 SELECT p_no_rel.osm_id

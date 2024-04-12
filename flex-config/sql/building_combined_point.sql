@@ -1,9 +1,4 @@
 
-ALTER TABLE osm.building_combined_point
-    ADD CONSTRAINT pk_osm_building_combined_point_osm_id_geom_type
-    PRIMARY KEY (osm_id, geom_type)
-;
-
 
 COMMENT ON TABLE osm.building_combined_point IS 'Combined building data as points.  Building polygons are converted in osm2pgsql to points with centroid().';
 COMMENT ON COLUMN osm.building_combined_point.address IS 'Address combined from address parts in helpers.get_address().';

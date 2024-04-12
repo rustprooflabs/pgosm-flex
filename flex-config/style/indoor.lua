@@ -11,7 +11,7 @@ local tables = {}
 tables.indoor_point = osm2pgsql.define_table({
     name = 'indoor_point',
     schema = schema_name,
-    ids = { type = 'node', id_column = 'osm_id' },
+    ids = { type = 'node', id_column = 'osm_id', create_index = 'unique'},
     columns = {
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'name', type = 'text' },
@@ -31,7 +31,7 @@ tables.indoor_point = osm2pgsql.define_table({
 tables.indoor_line = osm2pgsql.define_table({
     name = 'indoor_line',
     schema = schema_name,
-    ids = { type = 'way', id_column = 'osm_id' },
+    ids = { type = 'way', id_column = 'osm_id', create_index = 'unique' },
     columns = {
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'name', type = 'text' },
@@ -51,7 +51,7 @@ tables.indoor_line = osm2pgsql.define_table({
 tables.indoor_polygon = osm2pgsql.define_table({
     name = 'indoor_polygon',
     schema = schema_name,
-    ids = { type = 'way', id_column = 'osm_id' },
+    ids = { type = 'way', id_column = 'osm_id', create_index = 'unique' },
     columns = {
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'name', type = 'text' },

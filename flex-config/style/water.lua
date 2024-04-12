@@ -11,7 +11,7 @@ local tables = {}
 tables.water_point = osm2pgsql.define_table({
     name = 'water_point',
     schema = schema_name,
-    ids = { type = 'node', id_column = 'osm_id' },
+    ids = { type = 'node', id_column = 'osm_id', create_index = 'unique'},
     columns = {
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'osm_subtype', type = 'text', not_null = true },
@@ -29,7 +29,7 @@ tables.water_point = osm2pgsql.define_table({
 tables.water_line = osm2pgsql.define_table({
     name = 'water_line',
     schema = schema_name,
-    ids = { type = 'way', id_column = 'osm_id' },
+    ids = { type = 'way', id_column = 'osm_id', create_index = 'unique' },
     columns = {
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'osm_subtype', type = 'text', not_null = true },
@@ -48,7 +48,7 @@ tables.water_line = osm2pgsql.define_table({
 tables.water_polygon = osm2pgsql.define_table({
     name = 'water_polygon',
     schema = schema_name,
-    ids = { type = 'way', id_column = 'osm_id' },
+    ids = { type = 'way', id_column = 'osm_id', create_index = 'unique' },
     columns = {
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'osm_subtype', type = 'text', not_null = true },

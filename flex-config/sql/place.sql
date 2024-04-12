@@ -30,21 +30,6 @@ COMMENT ON COLUMN osm.place_polygon.boundary IS 'Value from boundary tag.  https
 
 
 
-ALTER TABLE osm.place_point
-    ADD CONSTRAINT pk_osm_place_point_osm_id
-    PRIMARY KEY (osm_id)
-;
-ALTER TABLE osm.place_line
-    ADD CONSTRAINT pk_osm_place_line_osm_id
-    PRIMARY KEY (osm_id)
-;
-ALTER TABLE osm.place_polygon
-    ADD CONSTRAINT pk_osm_place_polygon_osm_id
-    PRIMARY KEY (osm_id)
-;
-
-
-
 ------------------------------------------------
 CREATE TEMP TABLE place_polygon_in_relations AS
 SELECT p_no_rel.osm_id

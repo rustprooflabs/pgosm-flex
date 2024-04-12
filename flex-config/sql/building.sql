@@ -35,12 +35,6 @@ COMMENT ON COLUMN osm.building_polygon.operator IS 'Entity in charge of operatio
 
 
 
-ALTER TABLE osm.building_polygon
-    ADD CONSTRAINT pk_osm_building_polygon_osm_id
-    PRIMARY KEY (osm_id)
-;
-
-
 COMMENT ON COLUMN osm.building_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.building_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 

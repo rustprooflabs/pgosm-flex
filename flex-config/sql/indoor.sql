@@ -46,16 +46,3 @@ COMMENT ON COLUMN osm.indoor_point.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.indoor_line.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.indoor_polygon.geom IS 'Geometry loaded by osm2pgsql.';
 
-
-ALTER TABLE osm.indoor_point
-    ADD CONSTRAINT pk_osm_indoor_point_osm_id
-    PRIMARY KEY (osm_id)
-;
-ALTER TABLE osm.indoor_line
-    ADD CONSTRAINT pk_osm_indoor_line_osm_id
-    PRIMARY KEY (osm_id)
-;
-ALTER TABLE osm.indoor_polygon
-    ADD CONSTRAINT pk_osm_indoor_polygon_osm_id
-    PRIMARY KEY (osm_id)
-;

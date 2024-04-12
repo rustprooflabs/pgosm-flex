@@ -14,12 +14,6 @@ COMMENT ON COLUMN osm.road_major.geom IS 'Geometry loaded by osm2pgsql.';
 COMMENT ON COLUMN osm.road_major.ref IS 'Reference number or code. Best ref option determined by helpers.get_ref(). https://wiki.openstreetmap.org/wiki/Key:ref';
 
 
-ALTER TABLE osm.road_major
-	ADD CONSTRAINT pk_osm_road_major_osm_id
-    PRIMARY KEY (osm_id)
-;
-
-
 
 ------------------------------------------------
 
