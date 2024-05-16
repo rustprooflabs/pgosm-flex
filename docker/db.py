@@ -54,10 +54,18 @@ def connection_string(admin: bool=False) -> str:
     else:
         db_name = pg_db
 
-    if pg_pass is None:
-        conn_string = f'postgresql://{pg_user}@{pg_host}:{pg_port}/{db_name}{app_str}'
-    else:
-        conn_string = f'postgresql://{pg_user}:{pg_pass}@{pg_host}:{pg_port}/{db_name}{app_str}'
+    conn_kwargs = {
+        'dbname': db_name,
+        'user': pg_user,
+        'host': pg_host,
+        'port': pg_port,
+        'application_name': 'pgosm-flex'
+    }
+
+    if pg_pass is not None:
+        conn_kwargs['password'] = pg_pass
+
+    conn_string = psycopg.conninfo(**conn_kwargs)
 
     return conn_string
 
