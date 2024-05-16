@@ -65,7 +65,7 @@ def connection_string(admin: bool=False) -> str:
     if pg_pass is not None:
         conn_kwargs['password'] = pg_pass
 
-    conn_string = psycopg.conninfo(**conn_kwargs)
+    conn_string = psycopg.conninfo.make_conninfo(**conn_kwargs)
 
     return conn_string
 
