@@ -34,17 +34,6 @@ COMMENT ON COLUMN osm.road_line.route_cycle IS 'Best guess if the segment is rou
 COMMENT ON COLUMN osm.road_line.route_motor IS 'Best guess if the segment is route-able for motorized traffic. If access is no or private, set to false. WARNING: This does not indicate that this method of travel is safe OR allowed!';
 
 
-ALTER TABLE osm.road_point
-    ADD CONSTRAINT pk_osm_road_point_osm_id
-    PRIMARY KEY (osm_id)
-;
-
-ALTER TABLE osm.road_line
-    ADD CONSTRAINT pk_osm_road_line_osm_id
-    PRIMARY KEY (osm_id)
-;
-
-
 
 ------------------------------------------------
 CREATE TEMP TABLE road_polygon_in_relations AS

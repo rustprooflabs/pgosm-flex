@@ -11,7 +11,9 @@ local tables = {}
 tables.building_combined_point = osm2pgsql.define_table({
     name = 'building_combined_point',
     schema = schema_name,
-    ids = { type = 'any', id_column = 'osm_id', type_column = 'geom_type' },
+    ids = { type = 'any', id_column = 'osm_id', type_column = 'geom_type',
+            create_index = 'unique'
+    },
     columns = {
         { column = 'osm_type', type = 'text' , not_null = true},
         { column = 'osm_subtype', type = 'text'},

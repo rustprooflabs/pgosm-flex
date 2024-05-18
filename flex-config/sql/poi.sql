@@ -4,21 +4,6 @@ COMMENT ON TABLE osm.poi_polygon IS 'OpenStreetMap Points of Interest (POI) (pol
 
 
 
-
-ALTER TABLE osm.poi_point
-    ADD CONSTRAINT pk_osm_poi_point_osm_id
-    PRIMARY KEY (osm_id)
-;
-ALTER TABLE osm.poi_line
-    ADD CONSTRAINT pk_osm_poi_line_osm_id
-    PRIMARY KEY (osm_id)
-;
-ALTER TABLE osm.poi_polygon
-    ADD CONSTRAINT pk_osm_poi_polygon_osm_id
-    PRIMARY KEY (osm_id)
-;
-
-
 COMMENT ON COLUMN osm.poi_point.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer. Value from key stored in osm_subtype.';
 COMMENT ON COLUMN osm.poi_line.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer. Value from key stored in osm_subtype.';
 COMMENT ON COLUMN osm.poi_polygon.osm_type IS 'Stores the OpenStreetMap key that included this feature in the layer. Value from key stored in osm_subtype.';

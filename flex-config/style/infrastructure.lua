@@ -24,7 +24,7 @@ local is_infrastructure = make_check_in_list_func(infrastructure_keys)
 tables.infrastructure_point = osm2pgsql.define_table({
     name = 'infrastructure_point',
     schema = schema_name,
-    ids = { type = 'node', id_column = 'osm_id' },
+    ids = { type = 'node', id_column = 'osm_id', create_index = 'unique' },
     columns = {
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'osm_subtype', type = 'text'},
@@ -41,7 +41,7 @@ tables.infrastructure_point = osm2pgsql.define_table({
 tables.infrastructure_line = osm2pgsql.define_table({
     name = 'infrastructure_line',
     schema = schema_name,
-    ids = { type = 'way', id_column = 'osm_id' },
+    ids = { type = 'way', id_column = 'osm_id', create_index = 'unique' },
     columns = {
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'osm_subtype', type = 'text'},
@@ -59,7 +59,7 @@ tables.infrastructure_line = osm2pgsql.define_table({
 tables.infrastructure_polygon = osm2pgsql.define_table({
     name = 'infrastructure_polygon',
     schema = schema_name,
-    ids = { type = 'way', id_column = 'osm_id' },
+    ids = { type = 'way', id_column = 'osm_id', create_index = 'unique' },
     columns = {
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'osm_subtype', type = 'text'},

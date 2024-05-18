@@ -21,15 +21,6 @@ COMMENT ON COLUMN osm.shop_point.website IS 'Official website for the feature.  
 COMMENT ON COLUMN osm.shop_polygon.website IS 'Official website for the feature.  https://wiki.openstreetmap.org/wiki/Key:website';
 
 
-ALTER TABLE osm.shop_point
-    ADD CONSTRAINT pk_osm_shop_point_osm_id
-    PRIMARY KEY (osm_id)
-;
-ALTER TABLE osm.shop_polygon
-    ADD CONSTRAINT pk_osm_shop_polygon_osm_id
-    PRIMARY KEY (osm_id)
-;
-
 
 COMMENT ON COLUMN osm.shop_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.shop_polygon.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';

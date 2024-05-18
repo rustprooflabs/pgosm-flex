@@ -12,7 +12,7 @@ local tables = {}
 tables.traffic_point = osm2pgsql.define_table({
     name = 'traffic_point',
     schema = schema_name,
-    ids = { type = 'node', id_column = 'osm_id' },
+    ids = { type = 'node', id_column = 'osm_id', create_index = 'unique' },
     columns = {
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'osm_subtype', type = 'text' },
@@ -25,7 +25,7 @@ tables.traffic_point = osm2pgsql.define_table({
 tables.traffic_line = osm2pgsql.define_table({
     name = 'traffic_line',
     schema = schema_name,
-    ids = { type = 'way', id_column = 'osm_id' },
+    ids = { type = 'way', id_column = 'osm_id', create_index = 'unique' },
     columns = {
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'osm_subtype', type = 'text' },
@@ -38,7 +38,7 @@ tables.traffic_line = osm2pgsql.define_table({
 tables.traffic_polygon = osm2pgsql.define_table({
     name = 'traffic_polygon',
     schema = schema_name,
-    ids = { type = 'way', id_column = 'osm_id' },
+    ids = { type = 'way', id_column = 'osm_id', create_index = 'unique' },
     columns = {
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'osm_subtype', type = 'text' },

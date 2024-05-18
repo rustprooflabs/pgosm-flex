@@ -6,19 +6,6 @@ COMMENT ON COLUMN osm.natural_point.ele IS 'Elevation in meters';
 COMMENT ON COLUMN osm.natural_line.ele IS 'Elevation in meters';
 COMMENT ON COLUMN osm.natural_polygon.ele IS 'Elevation in meters';
 
-ALTER TABLE osm.natural_point
-    ADD CONSTRAINT pk_osm_natural_point_osm_id
-    PRIMARY KEY (osm_id)
-;
-ALTER TABLE osm.natural_line
-    ADD CONSTRAINT pk_osm_natural_line_osm_id
-    PRIMARY KEY (osm_id)
-;
-ALTER TABLE osm.natural_polygon
-    ADD CONSTRAINT pk_osm_natural_polygon_osm_id
-    PRIMARY KEY (osm_id)
-;
-
 
 COMMENT ON COLUMN osm.natural_point.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';
 COMMENT ON COLUMN osm.natural_line.osm_id IS 'OpenStreetMap ID. Unique along with geometry type.';

@@ -11,7 +11,7 @@ local tables = {}
 tables.shop_point = osm2pgsql.define_table({
     name = 'shop_point',
     schema = schema_name,
-    ids = { type = 'node', id_column = 'osm_id' },
+    ids = { type = 'node', id_column = 'osm_id', create_index = 'unique' },
     columns = {
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'osm_subtype', type = 'text', not_null = true },
@@ -37,7 +37,7 @@ tables.shop_point = osm2pgsql.define_table({
 tables.shop_polygon = osm2pgsql.define_table({
     name = 'shop_polygon',
     schema = schema_name,
-    ids = { type = 'way', id_column = 'osm_id' },
+    ids = { type = 'way', id_column = 'osm_id', create_index = 'unique' },
     columns = {
         { column = 'osm_type', type = 'text', not_null = true },
         { column = 'osm_subtype', type = 'text', not_null = true },
