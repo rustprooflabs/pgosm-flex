@@ -7,6 +7,7 @@ import subprocess
 import time
 import psycopg
 import sh
+from urllib import parse
 
 import qgis_styles
 
@@ -37,11 +38,14 @@ def connection_string(admin: bool=False) -> str:
     app_str = '?application_name=pgosm-flex'
 
     pg_details = pg_conn_parts()
-    pg_user = pg_details['pg_user']
-    pg_pass = pg_details['pg_pass']
-    pg_host = pg_details['pg_host']
-    pg_db = pg_details['pg_db']
-    pg_port = pg_details['pg_port']
+    pg_user = parse.quote(pg_details['pg_user'])
+    try:
+        pg_pass = parse.quote(pg_details['pg_pass'])
+    except TypeError:
+        pg_pass = None
+    pg_host = parse.quote(pg_details['pg_host'])
+    pg_db = parse.quote(pg_details['pg_db'])
+    pg_port = parse.quote(pg_details['pg_port'])
 
     if admin:
         if pg_host == 'localhost':
