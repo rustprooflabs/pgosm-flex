@@ -22,11 +22,11 @@ docker run --name pgosm -d --rm \
 
 
 
-If you have manually saved files in the path used by PgOSM Flex using `-latest`
-in the filename, they will be overwritten.
-
 There are two methods to override this default behavior: specify `--pgosm-date`
 or use `--input-file`.
+If you have manually saved files in the path used by PgOSM Flex using `-latest`
+in the filename, they **will be overwritten** if you are not using one of the
+methods described below.
 
 
 ## Specific date with `--pgosm-date`
