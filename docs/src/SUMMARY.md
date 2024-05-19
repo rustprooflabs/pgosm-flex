@@ -13,6 +13,7 @@
     - [Layersets](./layersets.md)
     - [Indexes](./custom-indexes.md)
     - [Configure Postgres](./configure-postgres.md)
+    - [Data Files](./data-files.md)
 - [Query examples](./query.md)
 - [Routing](./routing.md)
 - [Processing Time](./performance.md)
