@@ -634,7 +634,10 @@ def log_import_message(import_id, msg, schema_name):
     msg : str
     schema_name: str
     """
-    pbf_timestamp = os.environ['PBF_TIMESTAMP']
+    try:
+        pbf_timestamp = os.environ['PBF_TIMESTAMP']
+    except KeyError:
+        pbf_timestamp = os.environ['PGOSM_DATE']
     sql_raw = """
 UPDATE {schema_name}.pgosm_flex
     SET import_status = %(msg)s ,
