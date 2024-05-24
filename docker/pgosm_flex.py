@@ -18,7 +18,6 @@ import osm2pgsql_recommendation as rec
 import db
 import geofabrik
 import helpers
-from import_mode import ImportMode
 
 
 @click.command()
@@ -118,10 +117,10 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
 
     logger.debug(f'UPDATE setting:  {update}')
     # Warning: Reusing the module's name here as import_mode...
-    import_mode = ImportMode(replication=replication,
-                             replication_update=replication_update,
-                             update=update,
-                             force=force)
+    import_mode = helpers.ImportMode(replication=replication,
+                                     replication_update=replication_update,
+                                     update=update,
+                                     force=force)
 
     db.prepare_pgosm_db(skip_qgis_style=skip_qgis_style,
                         db_path=paths['db_path'],
@@ -201,7 +200,7 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
     flex_path : str
     ram : float
     skip_nested : boolean
-    import_mode : import_mode.ImportMode
+    import_mode : helpers.helpers.ImportMode
     debug : boolean
     schema_name : str
 
@@ -516,7 +515,7 @@ def run_post_processing(flex_path, skip_nested, import_mode, schema_name):
     ----------------------
     flex_path : str
     skip_nested : bool
-    import_mode : import_mode.ImportMode
+    import_mode : helpers.helpers.ImportMode
     schema_name : str
 
     Returns

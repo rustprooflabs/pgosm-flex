@@ -5,13 +5,13 @@ import logging
 import os
 import osm2pgsql_tuner as tuner
 
-import db, import_mode
+import db, helpers
 
 LOGGER = logging.getLogger('pgosm-flex')
 
 
 def osm2pgsql_recommendation(ram: float, pbf_filename: str, out_path: str,
-                             import_mode: import_mode.ImportMode) -> str:
+                             import_mode: helpers.ImportMode) -> str:
     """Returns recommended osm2pgsql command from the osm2pgsql-tuner
     Python module: https://pypi.org/project/osm2pgsql-tuner/
 
@@ -24,7 +24,7 @@ def osm2pgsql_recommendation(ram: float, pbf_filename: str, out_path: str,
         Total system RAM available in GB
     pbf_filename : str
     out_path : str
-    import_mode : import_mode.ImportMode
+    import_mode : helpers.ImportMode
 
     Returns
     ----------------------
@@ -49,7 +49,7 @@ def osm2pgsql_recommendation(ram: float, pbf_filename: str, out_path: str,
 
 def get_recommended_script(system_ram_gb: float,
                            osm_pbf_gb: float,
-                           import_mode:import_mode.ImportMode,
+                           import_mode:helpers.ImportMode,
                            pbf_filename: str,
                            output_path: str) -> str:
     """Generates recommended osm2pgsql command from osm2pgsql-tuner.
@@ -58,7 +58,7 @@ def get_recommended_script(system_ram_gb: float,
     -------------------------------
     system_ram_gb : float
     osm_pbf_gb : float
-    import_mode : import_mode.ImportMode
+    import_mode : helpers.ImportMode
     pbf_filename : str
         Can be filename or absolute path.
     output_path : str
