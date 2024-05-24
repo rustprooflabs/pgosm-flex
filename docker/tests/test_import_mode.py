@@ -2,7 +2,7 @@
 import os
 import unittest
 
-import import_mode
+import helpers
 
 
 class ImportModeTests(unittest.TestCase):
@@ -13,12 +13,12 @@ class ImportModeTests(unittest.TestCase):
         update = None
 
         expected = True
-        im = import_mode.ImportMode(replication=replication,
-                                    replication_update=replication_update,
-                                    update=update,
-                                    force=False)
+        input_mode = helpers.ImportMode(replication=replication,
+                                        replication_update=replication_update,
+                                        update=update,
+                                        force=False)
 
-        actual = im.append_first_run
+        actual = input_mode.append_first_run
         self.assertEqual(expected, actual)
 
     def test_import_mode_with_replication_update_returns_append_first_run_False(self):
@@ -27,12 +27,12 @@ class ImportModeTests(unittest.TestCase):
         update = None
 
         expected = False
-        im = import_mode.ImportMode(replication=replication,
-                                    replication_update=replication_update,
-                                    update=update,
-                                    force=False)
+        input_mode = helpers.ImportMode(replication=replication,
+                                        replication_update=replication_update,
+                                        update=update,
+                                        force=False)
 
-        actual = im.append_first_run
+        actual = input_mode.append_first_run
         self.assertEqual(expected, actual)
 
     def test_import_mode_with_update_eq_create_returns_True(self):
@@ -41,12 +41,12 @@ class ImportModeTests(unittest.TestCase):
         update = 'create'
 
         expected = True
-        im = import_mode.ImportMode(replication=replication,
-                                    replication_update=replication_update,
-                                    update=update,
-                                    force=False)
+        input_mode = helpers.ImportMode(replication=replication,
+                                        replication_update=replication_update,
+                                        update=update,
+                                        force=False)
 
-        actual = im.append_first_run
+        actual = input_mode.append_first_run
         self.assertEqual(expected, actual)
 
     def test_import_mode_with_update_eq_append_returns_False(self):
@@ -55,12 +55,12 @@ class ImportModeTests(unittest.TestCase):
         update = 'append'
 
         expected = False
-        im = import_mode.ImportMode(replication=replication,
-                                    replication_update=replication_update,
-                                    update=update,
-                                    force=False)
+        input_mode = helpers.ImportMode(replication=replication,
+                                        replication_update=replication_update,
+                                        update=update,
+                                        force=False)
 
-        actual = im.append_first_run
+        actual = input_mode.append_first_run
         self.assertEqual(expected, actual)
 
     def test_import_mode_invalid_update_value_raises_ValueError(self):
@@ -69,10 +69,10 @@ class ImportModeTests(unittest.TestCase):
         update = False # Boolean is invalid for this
 
         with self.assertRaises(ValueError):
-            import_mode.ImportMode(replication=replication,
-                                   replication_update=replication_update,
-                                   update=update,
-                                   force=False)
+            helpers.ImportMode(replication=replication,
+                               replication_update=replication_update,
+                               update=update,
+                               force=False)
 
 
 
@@ -81,12 +81,12 @@ class ImportModeTests(unittest.TestCase):
         replication_update = False
         update = 'create'
         expected = True
-        im = import_mode.ImportMode(replication=replication,
-                                    replication_update=replication_update,
-                                    update=update,
-                                    force=False)
+        input_mode = helpers.ImportMode(replication=replication,
+                                        replication_update=replication_update,
+                                        update=update,
+                                        force=False)
 
-        actual = im.run_post_sql
+        actual = input_mode.run_post_sql
         self.assertEqual(expected, actual)
 
 
@@ -95,12 +95,12 @@ class ImportModeTests(unittest.TestCase):
         replication_update = False
         update = 'append'
         expected = False
-        im = import_mode.ImportMode(replication=replication,
-                                    replication_update=replication_update,
-                                    update=update,
-                                    force=False)
+        input_mode = helpers.ImportMode(replication=replication,
+                                        replication_update=replication_update,
+                                        update=update,
+                                        force=False)
 
-        actual = im.run_post_sql
+        actual = input_mode.run_post_sql
         self.assertEqual(expected, actual)
 
     def test_import_mode_okay_to_run_returns_expected_type(self):
@@ -109,14 +109,14 @@ class ImportModeTests(unittest.TestCase):
         update = None
         force = True
 
-        im = import_mode.ImportMode(replication=replication,
-                                    replication_update=replication_update,
-                                    update=update,
-                                    force=force)
+        input_mode = helpers.ImportMode(replication=replication,
+                                        replication_update=replication_update,
+                                        update=update,
+                                        force=force)
 
         expected = bool
         prior_import = {'replication': False}
-        results = im.okay_to_run(prior_import=prior_import)
+        results = input_mode.okay_to_run(prior_import=prior_import)
         actual = type(results)
         self.assertEqual(expected, actual)
 
@@ -127,14 +127,14 @@ class ImportModeTests(unittest.TestCase):
         update = None
         force = True
 
-        im = import_mode.ImportMode(replication=replication,
-                                    replication_update=replication_update,
-                                    update=update,
-                                    force=force)
+        input_mode = helpers.ImportMode(replication=replication,
+                                        replication_update=replication_update,
+                                        update=update,
+                                        force=force)
 
         expected = True
         prior_import = {'replication': False}
-        actual = im.okay_to_run(prior_import=prior_import)
+        actual = input_mode.okay_to_run(prior_import=prior_import)
         self.assertEqual(expected, actual)
 
 
@@ -153,14 +153,14 @@ class ImportModeTests(unittest.TestCase):
         update = None
         force = False
 
-        im = import_mode.ImportMode(replication=replication,
-                                    replication_update=replication_update,
-                                    update=update,
-                                    force=force)
+        input_mode = helpers.ImportMode(replication=replication,
+                                        replication_update=replication_update,
+                                        update=update,
+                                        force=force)
 
         expected = False
 
-        actual = im.okay_to_run(prior_import=prior_import)
+        actual = input_mode.okay_to_run(prior_import=prior_import)
         self.assertEqual(expected, actual)
 
 
@@ -179,14 +179,14 @@ class ImportModeTests(unittest.TestCase):
         update = None
         force = False
 
-        im = import_mode.ImportMode(replication=replication,
-                                    replication_update=replication_update,
-                                    update=update,
-                                    force=force)
+        input_mode = helpers.ImportMode(replication=replication,
+                                        replication_update=replication_update,
+                                        update=update,
+                                        force=force)
 
         expected = True
 
-        actual = im.okay_to_run(prior_import=prior_import)
+        actual = input_mode.okay_to_run(prior_import=prior_import)
         self.assertEqual(expected, actual)
 
 
@@ -204,14 +204,14 @@ class ImportModeTests(unittest.TestCase):
         update = None
         force = False
 
-        im = import_mode.ImportMode(replication=replication,
-                                    replication_update=replication_update,
-                                    update=update,
-                                    force=force)
+        input_mode = helpers.ImportMode(replication=replication,
+                                        replication_update=replication_update,
+                                        update=update,
+                                        force=force)
 
         expected = False
 
-        actual = im.okay_to_run(prior_import=prior_import)
+        actual = input_mode.okay_to_run(prior_import=prior_import)
         self.assertEqual(expected, actual)
 
     def test_import_mode_okay_to_run_returns_true_no_prior_import(self):
@@ -226,14 +226,14 @@ class ImportModeTests(unittest.TestCase):
         update = None
         force = False
 
-        im = import_mode.ImportMode(replication=replication,
-                                    replication_update=replication_update,
-                                    update=update,
-                                    force=force)
+        input_mode = helpers.ImportMode(replication=replication,
+                                        replication_update=replication_update,
+                                        update=update,
+                                        force=force)
 
         expected = True
 
-        actual = im.okay_to_run(prior_import=prior_import)
+        actual = input_mode.okay_to_run(prior_import=prior_import)
         self.assertEqual(expected, actual)
 
 
@@ -244,12 +244,12 @@ class ImportModeTests(unittest.TestCase):
         update = None
         force = True
 
-        im = import_mode.ImportMode(replication=replication,
-                                    replication_update=replication_update,
-                                    update=update,
-                                    force=force)
+        input_mode = helpers.ImportMode(replication=replication,
+                                        replication_update=replication_update,
+                                        update=update,
+                                        force=force)
 
         expected = str
-        results = im.as_json()
+        results = input_mode.as_json()
         actual = type(results)
         self.assertEqual(expected, actual)
