@@ -20,6 +20,7 @@ RUN apt-get update \
         curl unzip \
         postgresql-16-pgrouting \
         nlohmann-json3-dev \
+        osmium-tool \
     && rm -rf /var/lib/apt/lists/*
 
 RUN wget https://luarocks.org/releases/luarocks-3.9.2.tar.gz \

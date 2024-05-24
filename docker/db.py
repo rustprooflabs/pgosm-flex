@@ -626,21 +626,27 @@ def fix_pg_dump_create_public(export_path):
 def log_import_message(import_id, msg, schema_name):
     """Logs msg to database in osm.pgosm_flex for import_uuid.
 
+    Overwrites `osm_date` IF `pbf_timestamp` is set.
+
     Parameters
     -------------------------------
     import_id : int
     msg : str
     schema_name: str
     """
+    pbf_timestamp = os.environ['PBF_TIMESTAMP']
     sql_raw = """
 UPDATE {schema_name}.pgosm_flex
-    SET import_status = %(msg)s
+    SET import_status = %(msg)s ,
+        osm_date = COALESCE( %(pbf_timestamp)s , osm_date)
     WHERE id = %(import_id)s
 ;
 """
     sql_raw = sql_raw.format(schema_name=schema_name)
     with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
-        params = {'import_id': import_id, 'msg': msg}
+        params = {'import_id': import_id,
+                  'msg': msg,
+                  'pbf_timestamp': pbf_timestamp}
         cur = conn.cursor()
         cur.execute(sql_raw, params=params)
 
