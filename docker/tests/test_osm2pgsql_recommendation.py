@@ -3,7 +3,7 @@ import os
 import unittest
 
 import osm2pgsql_recommendation
-from import_mode import ImportMode
+from helpers import ImportMode
 
 
 class Osm2pgsqlRecommendationTests(unittest.TestCase):
