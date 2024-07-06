@@ -86,3 +86,26 @@ using `--schema-name`, replication via osm2pgsql-replication only supports
 a single source.  See [this issue](https://github.com/openstreetmap/osm2pgsql/pull/1769)
 for details.  Possibly this ability will be supported in the future.
 
+
+## Resetting Replication
+
+> ⚠️ WARNING! ⚠️ This section is <strong>only suitable for DEVELOPMENT databases</strong>.
+> Do NOT USE on production databases!
+
+Replication with PgOSM Flex `--replication` is simply a wrapper around the
+`osm2pgsql-replication` tool. If you need to reload a <strong>development</strong>
+database after using `--replication` you must remove the data from the
+`public.osm2pgsql_properties` table.  If you do not remove this data,
+PgOSM Flex will detect the replication setup and attempt to update data, not
+load fresh.
+
+
+```sql
+DELETE FROM public.osm2pgsql_properties;
+```
+
+> WARNING: This process works as an okay hack when you are using the same layerset
+> in the new import as was previously used.  If you use a layerset with fewer
+> tables, the original tables from the original layerset will persist and can
+> cause confusion about what was loaded.
+

@@ -105,6 +105,12 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
 
     if replication:
         replication_update = check_replication_exists()
+        if replication_update and force:
+            err_msg = 'Using --force is invalid when --replication is running an update.'
+            err_msg += ' See https://pgosm-flex.com/replication.html#resetting-replication'
+            err_msg += ' for instructions around this on a development server.'
+            logger.error(err_msg)
+            sys.exit(f'ERROR: {err_msg}')
     else:
         replication_update = False
 
