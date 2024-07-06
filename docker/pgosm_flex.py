@@ -273,7 +273,7 @@ osm2pgsql-replication update -d $PGOSM_CONN \
     update_cmd = update_cmd.replace('-d $PGOSM_CONN', f'-d {conn_string}')
     returncode = helpers.run_command_via_subprocess(cmd=update_cmd.split(),
                                                     cwd=flex_path,
-                                                    print=True)
+                                                    print_to_log=True)
 
     if returncode != 0:
         err_msg = f'Failure. Return code: {returncode}'
@@ -424,7 +424,7 @@ def run_osm2pgsql(osm2pgsql_command, flex_path, debug):
 
     returncode = helpers.run_command_via_subprocess(cmd=osm2pgsql_command.split(),
                                                     cwd=flex_path,
-                                                    print=True)
+                                                    print_to_log=True)
 
     if returncode != 0:
         err_msg = f'Failed to run osm2pgsql. Return code: {returncode}'
@@ -586,7 +586,7 @@ def check_replication_exists():
     return True
 
 
-def run_osm2pgsql_replication_init(pbf_path, pbf_filename):
+def run_osm2pgsql_replication_init(pbf_path: str, pbf_filename: str):
     """Runs osm2pgsql-replication init to support replication mode.
 
     Parameters
@@ -604,7 +604,7 @@ def run_osm2pgsql_replication_init(pbf_path, pbf_filename):
 
     returncode = helpers.run_command_via_subprocess(cmd=init_cmd.split(),
                                                     cwd=None,
-                                                    print=True)
+                                                    print_to_log=True)
 
     if returncode != 0:
         err_msg = f'Failed to run osm2pgsql-replication. Return code: {returncode}'

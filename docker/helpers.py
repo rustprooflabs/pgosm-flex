@@ -27,8 +27,11 @@ def get_today() -> str:
     return today
 
 
-def run_command_via_subprocess(cmd: list, cwd: str, output_lines: list=[],
-                               print: bool=False) -> int:
+def run_command_via_subprocess(cmd: list,
+                               cwd: str,
+                               output_lines: list=[],
+                               print_to_log: bool=False
+                               ) -> int:
     """Wraps around subprocess.Popen() to run commands outside of Python. Prints
     output as it goes, returns the status code from the command.
 
@@ -40,7 +43,7 @@ def run_command_via_subprocess(cmd: list, cwd: str, output_lines: list=[],
         Set the working directory, or to None.
     output_lines : list
         Pass in a list to return the output details.
-    print : bool
+    print_to_log : bool
         Default False.  Set to true to also print to logger
 
     Returns
@@ -60,12 +63,23 @@ def run_command_via_subprocess(cmd: list, cwd: str, output_lines: list=[],
             if output:
                 ln = output.strip().decode('utf-8')
                 output_lines.append(ln)
-                if print:
+                if print_to_log:
                     logger.info(ln)
+
+                # Detects issue reported in https://github.com/rustprooflabs/pgosm-flex/issues/391
+                # Status code is incorrectly returned is 0, cannot detect
+                # problem using that method so forcing failure with custom
+                # status code.
+                if 'Error during diff download. Bailing out.' in ln:
+                    logger.error('Data in database is too far behind replication service.')
+                    return 999
+
             else:
                 # Only sleep when there wasn't output
                 sleep(1)
+
         status = process.poll()
+
     return status
 
 

@@ -88,7 +88,7 @@ def set_date_from_metadata(pbf_file: str):
     returncode = helpers.run_command_via_subprocess(cmd=osmium_cmd.split(),
                                                     cwd=None,
                                                     output_lines=output,
-                                                    print=False)
+                                                    print_to_log=False)
     if returncode != 0:
         logger.error(f'osmium fileinfo failed.  Output: {output}')
 
