@@ -1,6 +1,7 @@
 """This module handles the auto-file handling using Geofabrik's download service.
 """
 import logging
+import json
 import os
 import shutil
 import subprocess
@@ -67,8 +68,43 @@ def prepare_data(out_path: str) -> str:
                        md5_file_with_date)
 
     helpers.verify_checksum(md5_file, out_path)
+    set_date_from_metadata(pbf_file=pbf_file)
 
     return pbf_file
+
+
+def set_date_from_metadata(pbf_file: str):
+    """Use `osmium fileinfo` to set a more accurate date to represent when it was
+    extracted from OpenStreetMap.
+
+    Parameters
+    ---------------------
+    pbf_file : str
+        Full path to the `.osm.pbf` file.
+    """
+    logger = logging.getLogger('pgosm-flex')
+    osmium_cmd = f'osmium fileinfo {pbf_file} --json'
+    output = []
+    returncode = helpers.run_command_via_subprocess(cmd=osmium_cmd.split(),
+                                                    cwd=None,
+                                                    output_lines=output,
+                                                    print_to_log=False)
+    if returncode != 0:
+        logger.error(f'osmium fileinfo failed.  Output: {output}')
+
+    output_joined = json.loads(''.join(output))
+    meta_options = output_joined['header']['option']
+
+    try:
+        meta_timestamp = meta_options['timestamp']
+    except KeyError:
+        try:
+            meta_timestamp = meta_options['osmosis_replication_timestamp']
+        except KeyError:
+            meta_timestamp = None
+
+    logger.info(f'PBF Meta timestamp: {meta_timestamp}')
+    os.environ['PBF_TIMESTAMP'] = meta_timestamp
 
 
 def pbf_download_needed(pbf_file_with_date: str, md5_file_with_date: str,

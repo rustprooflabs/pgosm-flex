@@ -18,7 +18,6 @@ import osm2pgsql_recommendation as rec
 import db
 import geofabrik
 import helpers
-from import_mode import ImportMode
 
 
 @click.command()
@@ -106,6 +105,12 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
 
     if replication:
         replication_update = check_replication_exists()
+        if replication_update and force:
+            err_msg = 'Using --force is invalid when --replication is running an update.'
+            err_msg += ' See https://pgosm-flex.com/replication.html#resetting-replication'
+            err_msg += ' for instructions around this on a development server.'
+            logger.error(err_msg)
+            sys.exit(f'ERROR: {err_msg}')
     else:
         replication_update = False
 
@@ -118,10 +123,10 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
 
     logger.debug(f'UPDATE setting:  {update}')
     # Warning: Reusing the module's name here as import_mode...
-    import_mode = ImportMode(replication=replication,
-                             replication_update=replication_update,
-                             update=update,
-                             force=force)
+    import_mode = helpers.ImportMode(replication=replication,
+                                     replication_update=replication_update,
+                                     update=update,
+                                     force=force)
 
     db.prepare_pgosm_db(skip_qgis_style=skip_qgis_style,
                         db_path=paths['db_path'],
@@ -201,7 +206,7 @@ def run_osm2pgsql_standard(input_file, out_path, flex_path, ram, skip_nested,
     flex_path : str
     ram : float
     skip_nested : boolean
-    import_mode : import_mode.ImportMode
+    import_mode : helpers.helpers.ImportMode
     debug : boolean
     schema_name : str
 
@@ -274,7 +279,7 @@ osm2pgsql-replication update -d $PGOSM_CONN \
     update_cmd = update_cmd.replace('-d $PGOSM_CONN', f'-d {conn_string}')
     returncode = helpers.run_command_via_subprocess(cmd=update_cmd.split(),
                                                     cwd=flex_path,
-                                                    print=True)
+                                                    print_to_log=True)
 
     if returncode != 0:
         err_msg = f'Failure. Return code: {returncode}'
@@ -425,7 +430,7 @@ def run_osm2pgsql(osm2pgsql_command, flex_path, debug):
 
     returncode = helpers.run_command_via_subprocess(cmd=osm2pgsql_command.split(),
                                                     cwd=flex_path,
-                                                    print=True)
+                                                    print_to_log=True)
 
     if returncode != 0:
         err_msg = f'Failed to run osm2pgsql. Return code: {returncode}'
@@ -516,7 +521,7 @@ def run_post_processing(flex_path, skip_nested, import_mode, schema_name):
     ----------------------
     flex_path : str
     skip_nested : bool
-    import_mode : import_mode.ImportMode
+    import_mode : helpers.helpers.ImportMode
     schema_name : str
 
     Returns
@@ -587,7 +592,7 @@ def check_replication_exists():
     return True
 
 
-def run_osm2pgsql_replication_init(pbf_path, pbf_filename):
+def run_osm2pgsql_replication_init(pbf_path: str, pbf_filename: str):
     """Runs osm2pgsql-replication init to support replication mode.
 
     Parameters
@@ -605,7 +610,7 @@ def run_osm2pgsql_replication_init(pbf_path, pbf_filename):
 
     returncode = helpers.run_command_via_subprocess(cmd=init_cmd.split(),
                                                     cwd=None,
-                                                    print=True)
+                                                    print_to_log=True)
 
     if returncode != 0:
         err_msg = f'Failed to run osm2pgsql-replication. Return code: {returncode}'

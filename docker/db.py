@@ -1,4 +1,10 @@
 """Module to interact with Postgres database.
+
+Dynamic SQL is used in this module to allow customized schema names for storing
+data. At a glance, this is vulnerable to SQLi (SQL Injection) considering the
+``schema_name`` variable is technically "user input".  This is not considered
+a concern for this project because the user inputting the ``schema_name`` value
+is considered a trusted user.
 """
 import logging
 import os
@@ -607,7 +613,7 @@ def run_pg_dump(export_path, skip_qgis_style):
     fix_pg_dump_create_public(export_path)
 
 
-def fix_pg_dump_create_public(export_path):
+def fix_pg_dump_create_public(export_path: str):
     """Using pg_dump with `--schema=public` results in
     a .sql script containing `CREATE SCHEMA public;`, nearly always breaks
     in target DB.  Replaces with `CREATE SCHEMA IF NOT EXISTS public;`
@@ -623,8 +629,10 @@ def fix_pg_dump_create_public(export_path):
     LOGGER.debug(result)
 
 
-def log_import_message(import_id, msg, schema_name):
+def log_import_message(import_id: int, msg: str, schema_name: str):
     """Logs msg to database in osm.pgosm_flex for import_uuid.
+
+    Overwrites `osm_date` if `pbf_timestamp` is set.
 
     Parameters
     -------------------------------
@@ -632,15 +640,23 @@ def log_import_message(import_id, msg, schema_name):
     msg : str
     schema_name: str
     """
+    try:
+        pbf_timestamp = os.environ['PBF_TIMESTAMP']
+    except KeyError:
+        pbf_timestamp = os.environ['PGOSM_DATE']
+
     sql_raw = """
 UPDATE {schema_name}.pgosm_flex
-    SET import_status = %(msg)s
+    SET import_status = %(msg)s ,
+        osm_date = COALESCE( %(pbf_timestamp)s , osm_date)
     WHERE id = %(import_id)s
 ;
 """
     sql_raw = sql_raw.format(schema_name=schema_name)
     with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
-        params = {'import_id': import_id, 'msg': msg}
+        params = {'import_id': import_id,
+                  'msg': msg,
+                  'pbf_timestamp': pbf_timestamp}
         cur = conn.cursor()
         cur.execute(sql_raw, params=params)
 
