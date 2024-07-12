@@ -310,7 +310,7 @@ class ImportMode():
         """
         self.logger.debug(f'Checking if it is okay to run...')
         if self.force:
-            self.logger.warn(f'Using --force, kiss existing data goodbye')
+            self.logger.warning(f'Using --force, kiss existing data goodbye')
             return True
 
         # If no prior imports, do not require force
