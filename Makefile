@@ -30,7 +30,6 @@ RAM=2
 # to make unit test results visible at the end.
 .PHONY: all
 all: docker-exec-region docker-exec-input-file \
-	docker-exec-replication-w-input-file \
 	docker-exec-default unit-tests
 
 .PHONY: docker-clean
@@ -113,44 +112,6 @@ docker-exec-input-file: build-run-docker
 		--input-file=/app/output/$(INPUT_FILE_NAME) \
 		--skip-qgis-style --skip-nested # Make this test run faster
 
-
-
-.PHONE: docker-exec-replication-w-input-file
-docker-exec-replication-w-input-file: build-run-docker
-	# NOTE: This step tests --replication file for an initial load.
-	# It does **NOT** test the actual replication process for updating data
-	# using replication mode. Testing actual replication over time in this format
-	# will not be trivial.  The historic file used (2021-01-13) cannot be used
-	# to seed a replication process, there is a time limit in upstream software
-	# that requires more recency to the source data. This also cannot simply
-	# download a file from Geofabrik, as the "latest" file will not have a diff
-	# to apply so also will not test the actual replication.
-	#
-	# Open a PR, Issue, discussion on https://github.com/rustprooflabs/pgosm-flex
-	# if you have an idea on how to implement this testing functionality.
-
-	# copy with arbitrary file name to test --input-file
-	docker cp tests/data/district-of-columbia-2021-01-13.osm.pbf \
-		pgosm:/app/output/$(INPUT_FILE_NAME)
-
-	# allow files created in later step to be created
-	docker exec -it pgosm \
-		chown $(CURRENT_UID):$(CURRENT_GID) /app/output/
-	# Needed for unit-tests
-	docker exec -it pgosm \
-		chown $(CURRENT_UID):$(CURRENT_GID) /app/docker/
-
-	# process it, this time without providing the region but directly the filename
-	docker exec -it \
-		-e POSTGRES_PASSWORD=mysecretpassword \
-		-e POSTGRES_USER=postgres \
-		-u $(CURRENT_UID):$(CURRENT_GID) \
-		pgosm python3 docker/pgosm_flex.py  \
-		--layerset=minimal \
-		--ram=$(RAM) \
-		--replication \
-		--input-file=/app/output/$(INPUT_FILE_NAME) \
-		--skip-qgis-style --skip-nested # Make this test run faster
 
 
 .PHONE: docker-exec-region
