@@ -95,7 +95,8 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
         region = input_file
 
     helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
-                         layerset, layerset_path, replication, schema_name)
+                         layerset, layerset_path, schema_name,
+                         skip_nested)
     db.wait_for_postgres()
     if force and db.pg_conn_parts()['pg_host'] == 'localhost':
         msg = 'Using --force with the built-in database is unnecessary.'
@@ -534,7 +535,7 @@ def run_post_processing(flex_path, skip_nested, import_mode, schema_name):
         logger.info('Running with --update append: Skipping post-processing SQL')
         return True
 
-    post_processing_sql = db.pgosm_after_import(flex_path)
+    post_processing_sql = db.pgosm_after_import(flex_path=flex_path)
 
     if skip_nested:
         logger.info('Skipping calculating nested polygons')

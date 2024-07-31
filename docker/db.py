@@ -477,7 +477,7 @@ def get_db_conn(conn_string):
     return conn
 
 
-def pgosm_after_import(flex_path):
+def pgosm_after_import(flex_path: str) -> bool:
     """Runs post-processing SQL via Lua script.
 
     Layerset logic is established via environment variable, must happen
@@ -508,17 +508,38 @@ def pgosm_after_import(flex_path):
 
 
 def pgosm_nested_admin_polygons(flex_path: str, schema_name: str):
-    """Runs stored procedure to calculate nested admin polygons via psql.
+    """Runs two stored procedures to calculate nested admin polygons via psql.
 
     Parameters
     ----------------------
     flex_path : str
     schema_name : str
     """
-    sql_raw = f'CALL {schema_name}.build_nested_admin_polygons();'
+    # Populate the table
+    sql_raw_1 = f'CALL {schema_name}.populate_place_polygon_nested();'
 
     conn_string = os.environ['PGOSM_CONN']
-    cmds = ['psql', '-d', conn_string, '-c', sql_raw]
+    cmds = ['psql', '-d', conn_string, '-c', sql_raw_1]
+    LOGGER.info('Populating place_polygon_nested table (osm.populate_place_polygon_nested() )')
+    output = subprocess.run(cmds,
+                            text=True,
+                            cwd=flex_path,
+                            check=False,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+    LOGGER.info(f'Nested polygon output: \n {output.stdout}')
+
+    if output.returncode != 0:
+        err_msg = f'Failed to populate nested polygon data. Return code: {output.returncode}'
+        LOGGER.error(err_msg)
+        sys.exit(f'{err_msg} - Check the log output for details.')
+
+
+    # Build the data
+    sql_raw_2 = f' CALL {schema_name}.build_nested_admin_polygons();'
+
+    conn_string = os.environ['PGOSM_CONN']
+    cmds = ['psql', '-d', conn_string, '-c', sql_raw_2]
     LOGGER.info('Building nested polygons... (this can take a while)')
     output = subprocess.run(cmds,
                             text=True,

@@ -109,8 +109,9 @@ def verify_checksum(md5_file: str, path: str):
     logger.debug('md5sum validated')
 
 
-def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
-                 layerset_path, replication, schema_name):
+def set_env_vars(region: str, subregion: str, srid: str, language: str,
+                 pgosm_date: str, layerset: str,
+                 layerset_path: str, schema_name: str, skip_nested: bool):
     """Sets environment variables needed by PgOSM Flex. Also creates DB
     record in `osm.pgosm_flex` table.
 
@@ -122,11 +123,11 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
     language : str
     pgosm_date : str
     layerset : str
+        Name of layerset matching the INI filename.
     layerset_path : str
         str when set, or None
-    replication : bool
-        Indicates when osm2pgsql-replication is used
     schema_name : str
+    skip_nested : bool
     """
     logger = logging.getLogger('pgosm-flex')
     logger.debug('Ensuring env vars are not set from prior run')
@@ -159,6 +160,7 @@ def set_env_vars(region, subregion, srid, language, pgosm_date, layerset,
     pgosm_region = get_region_combined(region, subregion)
     logger.debug(f'PGOSM_REGION_COMBINED: {pgosm_region}')
 
+    os.environ['SKIP_NESTED'] = str(skip_nested)
 
 
 def get_region_combined(region: str, subregion: str) -> str:
@@ -225,7 +227,7 @@ def get_git_info(tag_only: bool=False) -> str:
 
 
 def unset_env_vars():
-    """Unsets environment variables used by PgOSM Flex.
+    """Unset environment variables used by PgOSM Flex.
 
     Does not pop POSTGRES_DB on purpose to allow non-Docker operation.
     """
@@ -239,6 +241,7 @@ def unset_env_vars():
     os.environ.pop('PGOSM_CONN', None)
     os.environ.pop('PGOSM_CONN_PG', None)
     os.environ.pop('SCHEMA_NAME', None)
+    os.environ.pop('SKIP_NESTED', None)
 
 
 class ImportMode():
