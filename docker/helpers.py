@@ -310,17 +310,17 @@ class ImportMode():
         """
         self.logger.debug(f'Checking if it is okay to run...')
         if self.force:
-            self.logger.warning(f'Using --force, kiss existing data goodbye')
+            self.logger.warning('Using --force, kiss existing data goodbye.')
             return True
 
         # If no prior imports, do not require force
         if len(prior_import) == 0:
-            self.logger.debug(f'No prior import found, okay to proceed.')
+            self.logger.debug('No prior import found, okay to proceed.')
             return True
 
         prior_replication = prior_import['replication']
 
-        # Check git version against latest.
+        # Check PgOSM version using Git tags
         # If current version is lower than prior version from latest import, stop.
         prior_import_version = prior_import['pgosm_flex_version_no_hash']
         git_tag = get_git_info(tag_only=True)
@@ -343,6 +343,9 @@ class ImportMode():
                 self.logger.error('Running w/ replication but prior import did not.  Requires --force to proceed.')
                 return False
             self.logger.debug('Okay to proceed with replication')
+            return True
+
+        if self.update == 'append':
             return True
 
         msg = 'Prior data exists in the osm schema and --force was not used.'

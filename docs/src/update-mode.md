@@ -5,48 +5,20 @@ option.
 
 > Note: This is **not** the `--append` option that existed in PgOSM Flex 0.6.3 and prior.
 
-
-## Testing steps
-
-Important -- Needs higher max connections!
-
-
+The following command uses `--update create` to load the `district-of-columbia`
+sub-region.
 
 ```bash
-docker stop pgosm && docker build -t rustprooflabs/pgosm-flex .
-docker run --name pgosm -d --rm \
-    -v ~/pgosm-data:/app/output \
-    -v /etc/localtime:/etc/localtime:ro \
-    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
-    -p 5433:5432 -d rustprooflabs/pgosm-flex \
-    -c max_connections=300
-```
-
-Run fresh import w/ D.C. using `--update create`. This ensures osm2pgsql
-uses `--slim` w/out `--drop`.  Tested from commit `672d9fd`.
-
-
-```bash
-time docker exec -it \
+docker exec -it \
     pgosm python3 docker/pgosm_flex.py \
     --ram=8 \
     --region=north-america/us \
     --subregion=district-of-columbia \
-    --skip-nested --skip-dump \
+    --skip-nested \
     --update create
-
-...
-
-2022-12-27 09:02:37,654:INFO:pgosm-flex:helpers:PgOSM-Flex version:	0.6.3	672d9fd
-
-...
-
-real	0m43.904s
-user	0m0.020s
-sys	0m0.012s
 ```
 
-Run with a second sub-region using `--update append`.
+The following loads a second sub-region (`new-hampshire`) using `--update append`.
 
 ```bash
 time docker exec -it \
