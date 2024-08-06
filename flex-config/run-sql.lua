@@ -23,6 +23,19 @@ else
 end
 
 
+local skip_nested_env = os.getenv("SKIP_NESTED")
+local skip_nested = nil
+
+print(string.format('SKIP_NESTED: %s', skip_nested_env))
+
+if skip_nested_env then
+    skip_nested = skip_nested_env
+else
+    error('Environment variable SKIP_NESTED must be set.')
+end
+
+
+
 layers = {'amenity', 'building', 'building_combined_point', 'indoor'
           , 'infrastructure', 'landuse', 'leisure'
           , 'natural', 'place', 'poi', 'public_transport'
@@ -63,6 +76,12 @@ while row do
 end
 
 local errors = 0
+
+if skip_nested then
+    if not post_processing("place_polygon_nested") then
+            errors = errors + 1
+    end
+end
 
 for ix, layer in ipairs(layers) do
     if conf['layerset'][layer] then

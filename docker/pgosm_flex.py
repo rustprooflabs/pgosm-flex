@@ -95,7 +95,8 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
         region = input_file
 
     helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
-                         layerset, layerset_path, replication, schema_name)
+                         layerset, layerset_path, schema_name,
+                         skip_nested)
     db.wait_for_postgres()
     if force and db.pg_conn_parts()['pg_host'] == 'localhost':
         msg = 'Using --force with the built-in database is unnecessary.'
@@ -267,7 +268,6 @@ def run_replication_update(skip_nested, flex_path):
     """
     logger = logging.getLogger('pgosm-flex')
     conn_string = db.connection_string()
-    db.osm2pgsql_replication_start()
 
     update_cmd = """
 osm2pgsql-replication update -d $PGOSM_CONN \
@@ -531,10 +531,13 @@ def run_post_processing(flex_path, skip_nested, import_mode, schema_name):
     logger = logging.getLogger('pgosm-flex')
 
     if not import_mode.run_post_sql:
-        logger.info('Running with --update append: Skipping post-processing SQL')
+        msg = 'Running with --update append: Skipping post-processing SQL.'
+        msg += ' Running osm2pgsql_replication_finish() instead.'
+        logger.info(msg)
+        db.osm2pgsql_replication_finish(skip_nested=skip_nested)
         return True
 
-    post_processing_sql = db.pgosm_after_import(flex_path)
+    post_processing_sql = db.pgosm_after_import(flex_path=flex_path)
 
     if skip_nested:
         logger.info('Skipping calculating nested polygons')
