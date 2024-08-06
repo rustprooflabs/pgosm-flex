@@ -210,7 +210,10 @@ def log_pg_details():
 
 
 def prepare_pgosm_db(skip_qgis_style, db_path, import_mode, schema_name):
-    """Runs through series of steps to prepare database for PgOSM.
+    """Runs through steps to prepare the target database for PgOSM Flex.
+
+    Includes additional preparation for using --replication and --updated=append
+    modes.
 
     Parameters
     --------------------------
@@ -244,6 +247,9 @@ def prepare_pgosm_db(skip_qgis_style, db_path, import_mode, schema_name):
     prepare_osm_schema(db_path=db_path, skip_qgis_style=skip_qgis_style,
                        schema_name=schema_name)
     run_insert_pgosm_road(db_path=db_path, schema_name=schema_name)
+
+    if import_mode.replication_update or import_mode.update == 'append':
+        osm2pgsql_replication_start()
 
 
 def start_import(pgosm_region, pgosm_date, srid, language, layerset, git_info,
@@ -558,9 +564,11 @@ def pgosm_nested_admin_polygons(flex_path: str, schema_name: str):
 
 def osm2pgsql_replication_start():
     """Runs pre-replication step to clean out FKs that would prevent updates.
+
+    This function is necessary for using `--replication (osm2pgsql-replication)
+    and `--update append` mode.
     """
     LOGGER.info('Prep database to allow data updates.')
-    # This use of append applies to both osm2pgsql --append and osm2pgsq-replication, not renaming from "append"
     sql_raw = 'CALL osm.append_data_start();'
 
     with get_db_conn(conn_string=connection_string()) as conn:
@@ -568,8 +576,11 @@ def osm2pgsql_replication_start():
         cur.execute(sql_raw)
 
 
-def osm2pgsql_replication_finish(skip_nested):
-    """Runs post-replication step to put FKs back and refresh materialied views.
+def osm2pgsql_replication_finish(skip_nested: bool):
+    """Runs post-replication step to refresh materialized views and rebuild
+    nested data when appropriate.
+
+    Only needed for `--replication`, not used for `--update append` mode.
 
     Parameters
     ---------------------

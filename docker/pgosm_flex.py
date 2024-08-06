@@ -268,7 +268,6 @@ def run_replication_update(skip_nested, flex_path):
     """
     logger = logging.getLogger('pgosm-flex')
     conn_string = db.connection_string()
-    db.osm2pgsql_replication_start()
 
     update_cmd = """
 osm2pgsql-replication update -d $PGOSM_CONN \
@@ -532,7 +531,10 @@ def run_post_processing(flex_path, skip_nested, import_mode, schema_name):
     logger = logging.getLogger('pgosm-flex')
 
     if not import_mode.run_post_sql:
-        logger.info('Running with --update append: Skipping post-processing SQL')
+        msg = 'Running with --update append: Skipping post-processing SQL.'
+        msg += ' Running osm2pgsql_replication_finish() instead.'
+        logger.info(msg)
+        db.osm2pgsql_replication_finish(skip_nested=skip_nested)
         return True
 
     post_processing_sql = db.pgosm_after_import(flex_path=flex_path)
