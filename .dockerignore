@@ -1,0 +1,9 @@
+tests/
+**/.coverage
+*.md
+.github
+.gitignore
+Makefile
+.dockerignore
+Dockerfile
+pgosm-data/
