@@ -89,3 +89,29 @@ docker pull postgis/postgis:16-3.4
 docker build --no-cache -t rustprooflabs/pgosm-flex:dev .
 ```
 
+
+## Building PgOSM Flex from an `osm2pgsql` feature branch
+
+There are times it is helpful to build the PgOSM Flex Docker image with a
+specific feature branch. To do this, change the `OSM2PGSQL_BRANCH` 
+and/or `OSM2PGSQL_REPO` arguments as necessary at the beginning of the Dockerfile.
+The production setup looks like the following example.
+
+
+```Dockerfile
+ARG OSM2PGSQL_BRANCH=master
+ARG OSM2PGSQL_REPO=https://github.com/osm2pgsql-dev/osm2pgsql.git
+```
+
+To test the feature branch associated with
+[osm2pgsql #2212](https://github.com/osm2pgsql-dev/osm2pgsql/pull/2212)
+the updated version was set like the following example.
+This changes the `OSM2PGSQL_BRANCH` to `check-date-on-replication-init`
+and changes the username in the `OSM2PGSQL_REPO` to `lonvia`.
+
+
+```Dockerfile
+ARG OSM2PGSQL_BRANCH=check-date-on-replication-init
+ARG OSM2PGSQL_REPO=https://github.com/lonvia/osm2pgsql.git
+```
+

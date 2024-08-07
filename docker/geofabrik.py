@@ -107,8 +107,10 @@ def set_date_from_metadata(pbf_file: str):
     os.environ['PBF_TIMESTAMP'] = meta_timestamp
 
 
-def pbf_download_needed(pbf_file_with_date: str, md5_file_with_date: str,
-                        pgosm_date: str) -> bool:
+def pbf_download_needed(pbf_file_with_date: str,
+                        md5_file_with_date: str,
+                        pgosm_date: str
+                        ) -> bool:
     """Decides if the PBF/MD5 files need to be downloaded.
 
     Parameters
@@ -123,6 +125,8 @@ def pbf_download_needed(pbf_file_with_date: str, md5_file_with_date: str,
     """
     logger = logging.getLogger('pgosm-flex')
     # If the PBF file exists, check for the MD5 file too.
+    logger.debug(f'Checking for PBF File: {pbf_file_with_date}')
+
     if os.path.exists(pbf_file_with_date):
         logger.info(f'PBF File exists {pbf_file_with_date}')
 

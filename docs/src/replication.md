@@ -34,6 +34,12 @@ your specific database and process.**
 
 ----
 
+## Not tested by `make`
+
+The function exposed by `--replication` is not tested via PgOSM's `Makefile`.
+
+
+
 ## Max connections
 
 The other important change when using replication is to increase Postgres' `max_connections`.

@@ -1,4 +1,9 @@
+/*
+    Creates functions used for maintaining data when --replication is used.
 
+    These functions are also used when using `--update append` mode of
+    PgOSM Flex.
+*/
 BEGIN;
 
 

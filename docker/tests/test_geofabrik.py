@@ -6,7 +6,10 @@ import geofabrik, helpers
 REGION_US = 'north-america/us'
 SUBREGION_DC = 'district-of-columbia'
 LAYERSET = 'default'
-PGOSM_DATE = '2021-12-02'
+PGOSM_DATE = '2021-01-13'
+
+PBF_FILE_WITH_DATE = f'/app/tests/data/district-of-columbia-{PGOSM_DATE}.osm.pbf'
+MD5_FILE_WITH_DATE = f'/app/tests/data/district-of-columbia-{PGOSM_DATE}.osm.pbf.md5'
 
 
 class GeofabrikTests(unittest.TestCase):
@@ -19,8 +22,8 @@ class GeofabrikTests(unittest.TestCase):
                              pgosm_date=PGOSM_DATE,
                              layerset=LAYERSET,
                              layerset_path=None,
-                             replication=False,
-                             schema_name='osm')
+                             schema_name='osm',
+                             skip_nested=True)
 
 
     def tearDown(self):
@@ -34,15 +37,15 @@ class GeofabrikTests(unittest.TestCase):
     def test_get_region_filename_returns_region_when_subregion_None(self):
         # Override Subregion to None
         helpers.unset_env_vars()
-        helpers.set_env_vars(region='north-america/us',
+        helpers.set_env_vars(region=REGION_US,
                              subregion=None,
                              srid=3857,
                              language=None,
                              pgosm_date=PGOSM_DATE,
                              layerset=LAYERSET,
                              layerset_path=None,
-                             replication=False,
-                             schema_name='osm')
+                             schema_name='osm',
+                             skip_nested=True)
 
         result = geofabrik.get_region_filename()
         expected = f'{REGION_US}-latest.osm.pbf'
@@ -64,7 +67,6 @@ class GeofabrikTests(unittest.TestCase):
 
     def test_pbf_download_needed_returns_boolean(self):
         pgosm_date = geofabrik.helpers.get_today()
-        region_filename = geofabrik.get_region_filename()
         expected = bool
         result = geofabrik.pbf_download_needed(pbf_file_with_date='does-not-matter',
                                                md5_file_with_date='not-a-file',
@@ -73,11 +75,9 @@ class GeofabrikTests(unittest.TestCase):
 
     def test_pbf_download_needed_returns_true_when_file_not_exists(self):
         pgosm_date = geofabrik.helpers.get_today()
-        region_filename = geofabrik.get_region_filename()
         expected = True
         result = geofabrik.pbf_download_needed(pbf_file_with_date='does-not-matter',
                                                md5_file_with_date='not-a-file',
                                                pgosm_date=pgosm_date)
         self.assertEqual(expected, result)
-
 
