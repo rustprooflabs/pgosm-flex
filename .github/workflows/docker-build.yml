@@ -1,4 +1,6 @@
 name: Publish PgOSM-Flex Docker image
+permissions:
+  contents: read
 on:
   push:
 jobs:
