@@ -1,5 +1,7 @@
 # Based on https://github.com/rust-lang/mdBook/wiki/Automated-Deployment%3A-GitHub-Actions
 name: Deploy mdbook
+permissions:
+  contents: write
 on:
   push:
     branches:
