@@ -1,7 +1,6 @@
 [book]
 authors = ["Ryan Lambert", "PgOSM Flex Contributors"]
 language = "en"
-multilingual = false
 src = "src"
 title = "PgOSM Flex User Guide"
 description = "PgOSM Flex provides high quality OpenStreetMap datasets in PostGIS using the osm2pgsql Flex output"
