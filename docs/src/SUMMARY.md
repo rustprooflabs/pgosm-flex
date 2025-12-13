@@ -16,6 +16,8 @@
     - [Data Files](./data-files.md)
 - [Query examples](./query.md)
 - [Routing](./routing.md)
+    - [pgRouting 3](./routing-3.md)
+    - [pgRouting 4](./routing-4.md)
 - [Processing Time](./performance.md)
 
 # Production usages
