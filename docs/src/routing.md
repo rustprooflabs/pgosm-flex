@@ -36,91 +36,30 @@ example.
 
 
 ```sql
-CREATE EXTENSION IF NOT EXISTS pgrouting;
+CREATE EXTENSION IF NOT EXISTS pgrouting SCHEMA public;
 CREATE SCHEMA IF NOT EXISTS routing;
 ```
 
-
-
-### Clean the data
-
-Prepare roads for routing using `pgrouting`` functions.  The bulk of
-the following code is removing multi-linestrings which cause errors
-with pgRouting.
-
-```sql
-CREATE TABLE routing.road_line AS
-WITH a AS (
--- Remove as many multi-linestrings as possible with ST_LineMerge() 
-SELECT osm_id, osm_type, maxspeed, oneway, layer,
-        route_foot, route_cycle, route_motor, access,
-        ST_LineMerge(geom) AS geom
-    FROM osm.road_line
-), extra_cleanup AS (
--- Pull out those that are still multi, use ST_Dump() to pull out parts
-SELECT osm_id, osm_type, maxspeed, oneway, layer,
-        route_foot, route_cycle, route_motor, access,
-        (ST_Dump(geom)).geom AS geom
-    FROM a 
-    WHERE ST_GeometryType(geom) = 'ST_MultiLineString'
-), combined AS (
--- Combine two sources
-SELECT osm_id, osm_type, maxspeed, oneway, layer,
-        route_foot, route_cycle, route_motor, access,
-        geom
-    FROM a
-    WHERE ST_GeometryType(geom) != 'ST_MultiLineString'
-UNION
-SELECT osm_id, osm_type, maxspeed, oneway, layer,
-        route_foot, route_cycle, route_motor, access,
-        geom
-    FROM extra_cleanup
-    -- Some data may be lost here if multi-linestring somehow
-    -- persists through the extra_cleanup query
-    WHERE ST_GeometryType(geom) != 'ST_MultiLineString'
-)
--- Calculate a new surrogate ID for key
-SELECT ROW_NUMBER() OVER (ORDER BY geom) AS id, *
-    FROM combined
-    ORDER BY geom
-;
-```
-
-The above query creates the `routing.road_line` table.  The next step
-adds some database best practices to the table:
-
-* Explain why a surrogate ID was added
-* Primary key on the `id` column
-* Index on `osm_id`
-
-
-```sql
-COMMENT ON COLUMN routing.road_line.id IS 'Surrogate ID, cannot rely on osm_id being unique after converting multi-linestrings to linestrings.';
-ALTER TABLE routing.road_line
-    ADD CONSTRAINT pk_routing_road_line PRIMARY KEY (id)
-;
-CREATE INDEX ix_routing_road_line_osm_id
-    ON routing.road_line (osm_id)
-;
-```
+> This command explicitly specifies the `public` schema to enforce the expected default
+> and avoid unexpected behavior with custom  `search_path` settings.
 
 ### Prepare data for routing
 
 The [pgRouting 4.0 release](https://github.com/pgRouting/pgrouting/releases/tag/v4.0.0)
-removed functions previously used for this step.
-The remainder of the instructions are scoped to which version of pgRouting you are
-using.
+removed functions previously used for data preparation in the original documentation.
 
-Check via:
+The routing setup instructions are now scoped to which version of pgRouting you are
+using. You can check your version with `pgr_version()`.
 
 ```sql
 SELECT * FROM pgr_version();
 ```
 
-The 4.0 instructions are attempting to improve naming conventions for improved
-understanding and usability.
-The pre-4.0 version uses different naming conventions mostly conforming
-to naming conventions of the legacy functions. 
+```
+pgr_version|
+-----------+
+4.0.0      |
+```
 
 
 Follow the instructions for your version of pgRouting.
@@ -128,11 +67,19 @@ Follow the instructions for your version of pgRouting.
 * [Routing with pgRouting 3](./routing-3.md)
 * [Routing with pgRouting 4](./routing-4.md)
 
-
 > PgOSM Flex 1.1.1 and later packages `pgRouting` 4.0.
 > If you are using external Postgres
 > as the target for your data, the pgRouting version you have installed is in
 > your control.
+
+
+
+The 4.0 instructions have been rewritten to improve naming conventions and reduce
+artifacts left behind from the process. The goal with the rewritten docs is improved
+understanding and usability.
+
+The pre-4.0 documentation used naming conventions aimed at conforming
+to pgRouting's naming conventions surrounding the legacy functions.
 
 
 
