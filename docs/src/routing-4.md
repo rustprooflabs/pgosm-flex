@@ -4,12 +4,8 @@
 
 ## Pre-process the OpenStreetMap Roads
 
-
-## Clean the data
-
-The following query converts multi-linestring data to multiple rows of
-`LINESTRING` records required by `pgRouting`.
-
+The following query converts `ST_MultiLineString` data to individual rows of
+`LINESTRING` records.
 
 ```sql
 CREATE TABLE routing.osm_road_intermediate AS
@@ -68,7 +64,6 @@ CREATE INDEX ix_routing_road_line_osm_id
 ```
 
 
-
 ## Split Long Segments
 
 Use the `pgr_separateTouching()` function to split line segments into smaller
@@ -76,10 +71,10 @@ segments and persist into a table.
 This is necessary because pgRouting can only route through the ends
 of line segments. It cannot switch from Line A to Line B from a point in the middle.
 
-> FIXME: Make this a temp table instead?? It is not needed post-processing.
 
 > Warning: This is an expensive query that does not parallelize in Postgres. The
-> Washington D.C. example (34k rows) takes roughly an hour (55 minutes) to run.
+> Washington D.C. example (34k rows) takes roughly an hour (55 minutes) to run
+> in Docker on my laptop.
 
 ```sql
 DROP TABLE IF EXISTS routing.road_separate_touching;
@@ -241,6 +236,9 @@ created from specific longitude/latitude values.
 Use the `start_id` and `end_id` values from this query
 in subsequent queries through the `:start_id` and `:end_id` variables
 via DBeaver.
+
+> This query simulates a GUI allowing user to click on start/end points on a map,
+> resulting in longitude and latitude values.
 
 
 ```sql
@@ -466,3 +464,14 @@ SELECT d.*, n.geom AS node_geom, e.geom AS edge_geom
 ![Screenshot from DBeaver showing the route generated with all roads and limiting based on route_motor and using the improved cost model including forward and reverse costs. The route bypasses the road(s) marked access=no and access=private, as well as respects the one-way access controls.](dc-example-route-start-motor-access-control-oneway.png)
 
 
+
+## Cleanup Intermediary tables
+
+There are 2 tables used to build the routing network that are not needed
+after the `routing.osm_road_edge` and `routing.osm_road_vertex` tables are
+populated.
+
+```sql
+DROP TABLE IF EXISTS routing.osm_road_intermediate;
+DROP TABLE IF EXISTS routing.road_separate_touching;
+```
