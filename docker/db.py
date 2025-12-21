@@ -404,11 +404,13 @@ def prepare_osm_schema(db_path: str, skip_qgis_style: bool, schema_name: str):
     create_osm_pgosm_flex_file = 'osm_pgosm_flex.sql'
     create_pgosm_road_file = 'pgosm_road.sql'
     create_replication_functions = 'replication_functions.sql'
+    create_routing_functions = 'routing_functions.sql'
 
     run_deploy_file(db_path=db_path, sql_filename=create_osm_file, schema_name=schema_name)
     run_deploy_file(db_path=db_path, sql_filename=create_osm_pgosm_flex_file, schema_name=schema_name)
     run_deploy_file(db_path=db_path, sql_filename=create_pgosm_road_file, schema_name=schema_name)
     run_deploy_file(db_path=db_path, sql_filename=create_replication_functions, schema_name=schema_name)
+    run_deploy_file(db_path=db_path, sql_filename=create_routing_functions, schema_name=schema_name)
 
     if skip_qgis_style:
         LOGGER.info('Skipping QGIS styles')

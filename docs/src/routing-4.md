@@ -2,230 +2,156 @@
 
 > If you are using a pgRouting prior to 4.0 see [Routing with pgRouting 3](./routing-3.md).
 
-## Pre-process the OpenStreetMap Roads
-
-The following query converts `ST_MultiLineString` data to individual rows of
-`LINESTRING` records.
+Create the `pgRouting` extension.
 
 ```sql
-CREATE TABLE routing.osm_road_intermediate AS
-WITH a AS (
--- Remove as many multi-linestrings as possible with ST_LineMerge() 
-SELECT osm_id, osm_type, maxspeed, oneway, layer,
-        route_foot, route_cycle, route_motor, access,
-        ST_LineMerge(geom) AS geom
-    FROM osm.road_line
-), extra_cleanup AS (
--- Pull out those that are still multi, use ST_Dump() to pull out parts
-SELECT osm_id, osm_type, maxspeed, oneway, layer,
-        route_foot, route_cycle, route_motor, access,
-        (ST_Dump(geom)).geom AS geom
-    FROM a 
-    WHERE ST_GeometryType(geom) = 'ST_MultiLineString'
-), combined AS (
--- Combine two sources
-SELECT osm_id, osm_type, maxspeed, oneway, layer,
-        route_foot, route_cycle, route_motor, access,
-        geom
-    FROM a
-    WHERE ST_GeometryType(geom) != 'ST_MultiLineString'
-UNION
-SELECT osm_id, osm_type, maxspeed, oneway, layer,
-        route_foot, route_cycle, route_motor, access,
-        geom
-    FROM extra_cleanup
-    -- Some data may be lost here if multi-linestring somehow
-    -- persists through the extra_cleanup query
-    WHERE ST_GeometryType(geom) != 'ST_MultiLineString'
-)
--- Calculate a new surrogate ID for key
-SELECT ROW_NUMBER() OVER (ORDER BY geom) AS id, *
-    FROM combined
-    ORDER BY geom
-;
-```
-
-The above query creates the `routing.osm_road_intermediate` table.  The next step
-adds some database best practices to the table:
-
-* Explain why a surrogate ID was added
-* Primary key on the `id` column
-* Index on `osm_id`
-
-
-```sql
-COMMENT ON COLUMN routing.osm_road_intermediate.id IS 'Surrogate ID, cannot rely on osm_id being unique after converting multi-linestrings to linestrings.';
-ALTER TABLE routing.osm_road_intermediate
-    ADD CONSTRAINT pk_routing_road_line PRIMARY KEY (id)
-;
-CREATE INDEX ix_routing_road_line_osm_id
-    ON routing.osm_road_intermediate (osm_id)
-;
+CREATE EXTENSION IF NOT EXISTS pgrouting;
 ```
 
 
-## Split Long Segments
+# Process the OpenStreetMap Roads
 
-Use the `pgr_separateTouching()` function to split line segments into smaller
-segments and persist into a table.
-This is necessary because pgRouting can only route through the ends
-of line segments. It cannot switch from Line A to Line B from a point in the middle.
-
-
-> Warning: This is an expensive query that does not parallelize in Postgres. The
-> Washington D.C. example (34k rows) takes roughly an hour (55 minutes) to run
-> in Docker on my laptop.
+For routing on `osm.road_line` data use the `osm.routing_prepare_roads_for_routing`
+procedure to prepare the edge and vertex data used for routing.
 
 ```sql
-DROP TABLE IF EXISTS routing.road_separate_touching;
-CREATE TABLE routing.road_separate_touching AS
-SELECT *
-FROM pgr_separateTouching('SELECT id, geom FROM routing.osm_road_intermediate')
-;
+CALL osm.routing_prepare_roads_for_routing();
 ```
 
-> The `pgr_separateTouching()` function supports a parameter `dry_run => true` that
-> returns the queries it runs instead of running the queries.
+> ⚠️ The `osm.routing_prepare_roads_for_routing` procedure was added in PgOSM Flex 1.1.2
+> and is a significant deviation in routing preparation along with pgRouting 4.0.
+> This procedure should be treated as a new feature with potential bugs lurking.
+
+This procedure was created as part of the migration to pgRouting 4.0, see
+[#408](https://github.com/rustprooflabs/pgosm-flex/pull/408) for notes about
+this.
+
+The procedure focuses on the most common use cases of routing with the `osm.road_line`
+layer.
 
 
-## Combine Split Lines with Unmodified Lines
+## Timing for data preparation
 
-The `routing.road_separate_touching` table created using `pgr_separateTouching()` 
-has one row for each segment of the lines split by the function.
-It does not contain every line from the source table.
-The following query combines the two result sets.
+This section outlines a few timing references to help gauge how long this might
+take for your region's data. Note these are generic timings using the built-in
+database in the PgOSM Flex Docker image, without any tuning from default
+configuration. Your tuning and your hardware will influence these timings.
 
-A few column notes:
+* D.C.: 18 seconds
+* Colorado: 11.5 minutes
 
-* `r.id`, created as surrogate key in `routing.osm_road_intermediate` is now aliased as `parent_id`
-* `sub_id` is created by `pgr_separateTouching()`
-* A new `edge_id` surrogate ID is created as `PRIMARY KEY` on the table.
+The Colorado data set has  1.2M input roads resulting in 2.6M edges after splitting.
 
-
-
-```sql
-DROP TABLE IF EXISTS routing.osm_road_edge;
-CREATE TABLE routing.osm_road_edge AS
-WITH split_lines AS (
-SELECT r.id AS parent_id, spl.sub_id, r.osm_id, r.osm_type, r.maxspeed, r.oneway, r.layer
-        , route_foot, route_cycle, route_motor
-        , r.access, spl.geom
-    FROM routing.osm_road_intermediate r
-    INNER JOIN routing.road_separate_touching spl
-        ON r.id = spl.id
-), unsplit_lines AS (
-SELECT r.id AS parent_id, 1::INT AS sub_id, r.osm_id, r.osm_type, r.maxspeed, r.oneway, r.layer
-        , route_foot, route_cycle, route_motor
-        , r.access, r.geom
-    FROM routing.osm_road_intermediate r
-LEFT JOIN routing.road_separate_touching spl
-    ON r.id = spl.id
-WHERE spl.id IS NULL
-)
-SELECT *
-    FROM split_lines
-UNION
-SELECT *
-    FROM unsplit_lines
-;
-
-COMMENT ON TABLE routing.osm_road_edge IS 'OSM road data setup for edges for routing for motorized travel';
-ALTER TABLE routing.osm_road_edge
-    ADD edge_id BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY;
-ALTER TABLE routing.osm_road_edge
-    ADD source BIGINT;
-ALTER TABLE routing.osm_road_edge
-    ADD target BIGINT;
-;
-ALTER TABLE routing.osm_road_edge
-    ADD CONSTRAINT uq_routing_road_edges_parent_id_sub_id
-    UNIQUE (parent_id, sub_id)
-;
 ```
-
-> At this point, the `routing.osm_road_intermediate` is no longer necessary
-> and can be dropped, unless troubleshooting is required within the data pipeline.
-
-
-## Create Vertices
-
-The `pgr_extractVertices()` function is used to create the vertices from the
-`edges`. Each vertex is the start or end point for one or more edges.
-
-
-```sql
-DROP TABLE IF EXISTS routing.osm_road_vertex;
-CREATE TABLE routing.osm_road_vertex AS
-SELECT  * FROM pgr_extractVertices(
-  'SELECT edge_id AS id, geom FROM routing.osm_road_edge')
-;
-```
-
-Shouldn't be any records with neither in/out edges set.
-
-```sql
-SELECT * 
-FROM routing.osm_road_vertex
-WHERE in_edges IS NULL
-    AND out_edges IS NULL
-;
+┌────────┬───────────────────┬─────────┐
+│ s_name │      t_name       │  rows   │
+╞════════╪═══════════════════╪═════════╡
+│ osm    │ routing_road_edge │ 2560998 │
+│ osm    │ road_line         │ 1189678 │
+└────────┴───────────────────┴─────────┘
 ```
 
 
-Update the edges table with information about vertices.
+# Costs for Routing
 
-```sql
---  Update source column from out_edges
-WITH outgoing AS (
-    SELECT id AS source
-        , unnest(out_edges) AS edge_id
-  FROM routing.osm_road_vertex
-)
-UPDATE routing.osm_road_edge e
-SET source = o.source
-FROM outgoing o
-WHERE e.edge_id = o.edge_id
-    AND e.source IS NULL
-;
+Routing uses a concept of cost to determine the best route to traverse. Cost can
+be defined in a variety of methods. This section explores a few options.
 
--- Update target column from in_edges
-WITH incoming AS (
-    SELECT id AS target
-        , unnest(in_edges) AS edge_id
-  FROM routing.osm_road_vertex
-)
-UPDATE routing.osm_road_edge e
-SET target = i.target
-FROM incoming i
-WHERE e.edge_id = i.edge_id
-    AND e.target IS NULL
-;
-```
-
-Should not be any records that are `NULL` in both `source` and `target`.
-
-```sql
-SELECT *
-    FROM routing.osm_road_edge
-    WHERE source IS NULL
-        AND target IS NULL
-;
-```
-
-
-## Costs
+## Length Based Cost
 
 The following query establishes a simple length based cost. In the case of defaults
 with PgOSM Flex, this results in costs in meters.
 
+
 ```sql
-ALTER TABLE routing.osm_road_edge
+ALTER TABLE osm.routing_road_edge
     ADD cost_length DOUBLE PRECISION NOT NULL
     GENERATED ALWAYS AS (ST_Length(geom))
     STORED
 ;
-COMMENT ON COLUMN routing.osm_road_edge.cost_length IS 'Length based cost. Units are determined by SRID of geom data.';
+COMMENT ON COLUMN osm.routing_road_edge.cost_length IS 'Length based cost. Units are determined by SRID of geom data.';
 ```
+
+The above will create a length calculation based on the `SRID` of the `geom` data,
+by default this is SRID 3857.
+
+> ⚠️ Warning: PgOSM Flex uses SRID 3857 by default. This generic projection is useful for
+> global web mapping, however it does not provide accurate calculation for most Latitudes
+> of the world. For accurate calculations, either run PgOSM Flex to load data
+> in an accurate, local SRID, or use `ST_Transform(geom, your_srid)`.
+> 
+> See [Accuracy of Geometry data in PostGIS](https://blog.rustprooflabs.com/2023/04/postgis-geometry-accuracy) for more.
+
+The following example creates a length based column using the geometry transformed
+to SRID 2773, ideal for the latitude covering the Denver, Colorado metro region.
+
+```sql
+ALTER TABLE osm.routing_road_edge
+    ADD cost_length DOUBLE PRECISION NOT NULL
+    GENERATED ALWAYS AS (ST_Length(ST_Transform(geom, 2773)))
+    STORED
+;
+```
+
+
+
+## Costs Including One Way Restrictions
+
+Many real-world routing examples need to be aware of one-way travel restrictions.
+The `oneway` column in PgOSM Flex's road tables uses
+[osm2pgsql's `direction` data type](https://osm2pgsql.org/doc/manual.html#type-conversions). 
+This direction data type resolves to `int2` in Postgres. Valid values are:
+
+* `0`: Not one way
+* `1`: One way, forward travel allowed
+* `-1`: One way, reverse travel allowed
+* `NULL`: It's complicated. See [#172](https://github.com/rustprooflabs/pgosm-flex/issues/172).
+
+The `osm.routing_road_edge` table has the `oneway` column from the
+`osm.road_line` table used as the source.
+
+
+Calculate forward and reverse costs using the `oneway` column. This still provides
+a length-based cost. The change is to also enforce direction restrictions within
+the cost model.
+
+
+```sql
+-- Add forward cost column, enforcing oneway restrictions
+ALTER TABLE osm.routing_road_edge
+    ADD cost_length_forward NUMERIC
+    GENERATED ALWAYS AS (
+        CASE WHEN oneway IN (0, 1) OR oneway IS NULL
+                THEN ST_Length(geom)
+            WHEN oneway = -1
+                THEN -1 * ST_Length(geom)
+            END
+    )
+    STORED
+;
+
+-- Add reverse cost column, enforcing oneway restrictions
+ALTER TABLE osm.routing_road_edge
+    ADD cost_length_reverse NUMERIC
+    GENERATED ALWAYS AS (
+        CASE WHEN oneway IN (0, -1) OR oneway IS NULL
+                THEN ST_Length(geom)
+            WHEN oneway = 1
+                THEN -1 * ST_Length(geom)
+            END
+    )
+    STORED
+;
+
+COMMENT ON COLUMN osm.routing_road_edge.cost_length_forward IS 'Length based cost for forward travel when using directed travel graphs.';
+COMMENT ON COLUMN osm.routing_road_edge.cost_length_reverse IS 'Length based cost for reverse travel when using directed travel graphs.';
+```
+
+## Travel Time Costs
+
+With lengths and one-way already calculated per edge, speed limits can be used
+to compute travel time costs.
+
 
 
 # Determine route start and end
@@ -244,7 +170,7 @@ via DBeaver.
 ```sql
 WITH s_point AS (
 SELECT v.id AS start_id, v.geom
-    FROM routing.osm_road_vertex v
+    FROM osm.routing_road_vertex v
     INNER JOIN (SELECT
         ST_Transform(ST_SetSRID(ST_MakePoint(-77.0211, 38.92255), 4326), 3857)
             AS geom
@@ -253,7 +179,7 @@ SELECT v.id AS start_id, v.geom
     LIMIT 1
 ), e_point AS (
 SELECT v.id AS end_id, v.geom
-    FROM routing.osm_road_vertex v
+    FROM osm.routing_road_vertex v
     INNER JOIN (SELECT
         ST_Transform(ST_SetSRID(ST_MakePoint(-77.0183, 38.9227), 4326), 3857)
             AS geom
@@ -302,7 +228,7 @@ SELECT *
 
 
 
-## Route!
+# Route!
 
 
 Using `pgr_dijkstra()` and no additional filters will
@@ -314,7 +240,7 @@ a section of road with the
 The key details to focus on in the following queries
 is the string containing a SQL query passed into the `pgr_dijkstra()`
 function.  This first example is a simple query from the
-`routing.osm_road_edge` table.
+`osm.routing_road_edge` table.
 
 > Note:  These queries are intended to be ran using DBeaver.  The `:start_id` and `:end_id` variables work within DBeaver, but not via `psql` or QGIS.  Support in other GUIs is unknown at this time (PRs welcome!).
 
@@ -324,12 +250,12 @@ SELECT d.*, n.geom AS node_geom, e.geom AS edge_geom
     FROM pgr_dijkstra(
         'SELECT edge_id AS id, source, target, cost_length AS cost,
                 geom
-            FROM routing.osm_road_edge
+            FROM osm.routing_road_edge
             ',
             :start_id, :end_id, directed := False
         ) d
-    INNER JOIN routing.osm_road_vertex n ON d.node = n.id
-    LEFT JOIN routing.osm_road_edge e ON d.edge = e.edge_id
+    INNER JOIN osm.routing_road_vertex n ON d.node = n.id
+    LEFT JOIN osm.routing_road_edge e ON d.edge = e.edge_id
 ;
 ```
 
@@ -342,7 +268,7 @@ SELECT d.*, n.geom AS node_geom, e.geom AS edge_geom
 # Route motorized
 
 The following query modifies the query passed in to `pgr_dijkstra()`
-to join the `routing.osm_road_edge` table to the
+to join the `osm.routing_road_edge` table to the
 `routing.road_line` table.  This allows using attributes available
 in the upstream table for additional routing logic.
 The join clause includes a filter on the `route_motor` column.
@@ -351,7 +277,7 @@ From the comment on the `osm.road_line.route_motor` column:
 
 > "Best guess if the segment is route-able for motorized traffic. If access is no or private, set to false. WARNING: This does not indicate that this method of travel is safe OR allowed!"
 
-Based on this comment, we can expect that adding `AND r.route_motor`
+Based on this comment, we can expect that adding `AND route_motor`
 into the filter will ensure the road type is suitable for motorized
 traffic, and it excludes routes marked private. 
 
@@ -361,23 +287,20 @@ SELECT d.*, n.geom AS node_geom, e.geom AS edge_geom
     FROM pgr_dijkstra(
         'SELECT e.edge_id AS id, e.source, e.target, e.cost_length AS cost,
                 e.geom
-            FROM routing.osm_road_edge e
+            FROM osm.routing_road_edge e
             WHERE e.route_motor
             ',
             :start_id, :end_id, directed := False
         ) d
-    INNER JOIN routing.osm_road_vertex n ON d.node = n.id
-    LEFT JOIN routing.osm_road_edge e ON d.edge = e.edge_id
+    INNER JOIN osm.routing_road_vertex n ON d.node = n.id
+    LEFT JOIN osm.routing_road_edge e ON d.edge = e.edge_id
 ;
 ```
 
 
 ![Screenshot from DBeaver showing the route generated with all roads and limiting based on route_motor. The route bypasses the road(s) marked access=no and access=private.](dc-example-route-start-motor-access-control.png)
 
-
-
-# Route `oneway`
-
+# Oneway-aware routing
 
 The route shown in the previous example now respects the
 access control and limits to routes suitable for motorized traffic.
@@ -387,57 +310,6 @@ the wrong way on a one-way street.
 This behavior is a result of the simple length-based cost model.
 
 
-The `oneway` column in the road tables uses
-[osm2pgsql's `direction` data type](https://osm2pgsql.org/doc/manual.html#type-conversions) 
-which resolves to `int2` in Postgres. Valid values are:
-
-* `0`: Not one way
-* `1`: One way, forward travel allowed
-* `-1`: One way, reverse travel allowed
-* `NULL`: It's complicated. See [#172](https://github.com/rustprooflabs/pgosm-flex/issues/172).
-
-The `routing.osm_road_edge` table already has the `oneway` column from the
-`osm.road_line` table used as the source.
-
-
-## Forward and reverse costs
-
-Calculate forward and reverse costs using the `oneway` column. This still provides
-a length-based cost. The change is to also enforce direction restrictions within
-the cost model.
-
-```sql
-ALTER TABLE routing.osm_road_edge
-    ADD cost_length_forward NUMERIC
-    GENERATED ALWAYS AS (
-        CASE WHEN oneway IN (0, 1) OR oneway IS NULL
-                THEN ST_Length(geom)
-            WHEN oneway = -1
-                THEN -1 * ST_Length(geom)
-            END
-    )
-    STORED
-;
-```
-
-Reverse cost.
-
-```sql
--- Reverse cost with oneway considerations
-ALTER TABLE routing.osm_road_edge
-    ADD cost_length_reverse NUMERIC
-    GENERATED ALWAYS AS (
-        CASE WHEN oneway IN (0, -1) OR oneway IS NULL
-                THEN ST_Length(geom)
-            WHEN oneway = 1
-                THEN -1 * ST_Length(geom)
-            END
-    )
-    STORED
-;
-```
-
-
 This query uses the new reverse cost column, and changes
 `directed` from `False` to `True`.
 If you do not see the route shown in the screenshot below, try switching the
@@ -445,33 +317,21 @@ If you do not see the route shown in the screenshot below, try switching the
 
 
 ```sql
-SELECT d.*, n.geom AS node_geom, e.geom AS edge_geom
-    FROM pgr_dijkstra(
-        'SELECT e.edge_id AS id, e.source, e.target
-                , e.cost_length_forward AS cost
-                , e.cost_length_reverse AS reverse_cost
-                , e.geom
-            FROM routing.osm_road_edge e
-            WHERE e.route_motor
-            ',
-            :start_id, :end_id, directed := True
-        ) d
-    INNER JOIN routing.osm_road_vertex n ON d.node = n.id
-    LEFT JOIN routing.osm_road_edge e ON d.edge = e.edge_id
-;
+    SELECT d.*, n.geom AS node_geom, e.geom AS edge_geom
+        FROM pgr_dijkstra(
+            'SELECT e.edge_id AS id, e.source, e.target
+                    , e.cost_length_forward AS cost
+                    , e.cost_length_reverse AS reverse_cost
+                    , e.geom
+                FROM osm.routing_road_edge e
+                WHERE e.route_motor
+                ',
+                :start_id, :end_id, directed := True
+            ) d
+        INNER JOIN osm.routing_road_vertex n ON d.node = n.id
+        LEFT JOIN osm.routing_road_edge e ON d.edge = e.edge_id
+    ;
 ```
 
 ![Screenshot from DBeaver showing the route generated with all roads and limiting based on route_motor and using the improved cost model including forward and reverse costs. The route bypasses the road(s) marked access=no and access=private, as well as respects the one-way access controls.](dc-example-route-start-motor-access-control-oneway.png)
 
-
-
-## Cleanup Intermediary tables
-
-There are 2 tables used to build the routing network that are not needed
-after the `routing.osm_road_edge` and `routing.osm_road_vertex` tables are
-populated.
-
-```sql
-DROP TABLE IF EXISTS routing.osm_road_intermediate;
-DROP TABLE IF EXISTS routing.road_separate_touching;
-```
