@@ -9,7 +9,7 @@ CREATE EXTENSION IF NOT EXISTS pgrouting;
 ```
 
 
-## Process the OpenStreetMap Roads
+# Process the OpenStreetMap Roads
 
 For routing on `osm.road_line` data use the `osm.routing_prepare_roads_for_routing`
 procedure to prepare the edge and vertex data used for routing.
@@ -17,6 +17,10 @@ procedure to prepare the edge and vertex data used for routing.
 ```sql
 CALL osm.routing_prepare_roads_for_routing();
 ```
+
+> ⚠️ The `osm.routing_prepare_roads_for_routing` procedure was added in PgOSM Flex 1.1.2
+> and is a significant deviation in routing preparation along with pgRouting 4.0.
+> This procedure should be treated as a new feature with potential bugs lurking.
 
 This procedure was created as part of the migration to pgRouting 4.0, see
 [#408](https://github.com/rustprooflabs/pgosm-flex/pull/408) for notes about
@@ -26,25 +30,37 @@ The procedure focuses on the most common use cases of routing with the `osm.road
 layer.
 
 
-### Timing for data preparation
+## Timing for data preparation
+
+This section outlines a few timing references to help gauge how long this might
+take for your region's data. Note these are generic timings using the built-in
+database in the PgOSM Flex Docker image, without any tuning from default
+configuration. Your tuning and your hardware will influence these timings.
 
 * D.C.: 18 seconds
-* Colorado: 11 minutes
+* Colorado: 11.5 minutes
+
+The Colorado data set has  1.2M input roads resulting in 2.6M edges after splitting.
+
+```
+┌────────┬───────────────────┬─────────┐
+│ s_name │      t_name       │  rows   │
+╞════════╪═══════════════════╪═════════╡
+│ osm    │ routing_road_edge │ 2560998 │
+│ osm    │ road_line         │ 1189678 │
+└────────┴───────────────────┴─────────┘
+```
 
 
+# Costs for Routing
 
+Routing uses a concept of cost to determine the best route to traverse. Cost can
+be defined in a variety of methods. This section explores a few options.
 
-## Costs
+## Length Based Cost
 
 The following query establishes a simple length based cost. In the case of defaults
 with PgOSM Flex, this results in costs in meters.
-
-> ⚠️ Warning: PgOSM Flex uses SRID 3857 by default. This generic projection is useful for
-> global web mapping, however it does not provide accurate calculation for most Latitudes
-> of the world. For accurate calculations, either run PgOSM Flex to load data
-> in an accurate, local SRID, or use `ST_Transform(geom, your_srid)`.
-> 
-> See [Accuracy of Geometry data in PostGIS](https://blog.rustprooflabs.com/2023/04/postgis-geometry-accuracy) for more.
 
 
 ```sql
@@ -55,6 +71,87 @@ ALTER TABLE osm.routing_road_edge
 ;
 COMMENT ON COLUMN osm.routing_road_edge.cost_length IS 'Length based cost. Units are determined by SRID of geom data.';
 ```
+
+The above will create a length calculation based on the `SRID` of the `geom` data,
+by default this is SRID 3857.
+
+> ⚠️ Warning: PgOSM Flex uses SRID 3857 by default. This generic projection is useful for
+> global web mapping, however it does not provide accurate calculation for most Latitudes
+> of the world. For accurate calculations, either run PgOSM Flex to load data
+> in an accurate, local SRID, or use `ST_Transform(geom, your_srid)`.
+> 
+> See [Accuracy of Geometry data in PostGIS](https://blog.rustprooflabs.com/2023/04/postgis-geometry-accuracy) for more.
+
+The following example creates a length based column using the geometry transformed
+to SRID 2773, ideal for the latitude covering the Denver, Colorado metro region.
+
+```sql
+ALTER TABLE osm.routing_road_edge
+    ADD cost_length DOUBLE PRECISION NOT NULL
+    GENERATED ALWAYS AS (ST_Length(ST_Transform(geom, 2773)))
+    STORED
+;
+```
+
+
+
+## Costs Including One Way Restrictions
+
+Many real-world routing examples need to be aware of one-way travel restrictions.
+The `oneway` column in PgOSM Flex's road tables uses
+[osm2pgsql's `direction` data type](https://osm2pgsql.org/doc/manual.html#type-conversions). 
+This direction data type resolves to `int2` in Postgres. Valid values are:
+
+* `0`: Not one way
+* `1`: One way, forward travel allowed
+* `-1`: One way, reverse travel allowed
+* `NULL`: It's complicated. See [#172](https://github.com/rustprooflabs/pgosm-flex/issues/172).
+
+The `osm.routing_road_edge` table has the `oneway` column from the
+`osm.road_line` table used as the source.
+
+
+Calculate forward and reverse costs using the `oneway` column. This still provides
+a length-based cost. The change is to also enforce direction restrictions within
+the cost model.
+
+
+```sql
+-- Add forward cost column, enforcing oneway restrictions
+ALTER TABLE osm.routing_road_edge
+    ADD cost_length_forward NUMERIC
+    GENERATED ALWAYS AS (
+        CASE WHEN oneway IN (0, 1) OR oneway IS NULL
+                THEN ST_Length(geom)
+            WHEN oneway = -1
+                THEN -1 * ST_Length(geom)
+            END
+    )
+    STORED
+;
+
+-- Add reverse cost column, enforcing oneway restrictions
+ALTER TABLE osm.routing_road_edge
+    ADD cost_length_reverse NUMERIC
+    GENERATED ALWAYS AS (
+        CASE WHEN oneway IN (0, -1) OR oneway IS NULL
+                THEN ST_Length(geom)
+            WHEN oneway = 1
+                THEN -1 * ST_Length(geom)
+            END
+    )
+    STORED
+;
+
+COMMENT ON COLUMN osm.routing_road_edge.cost_length_forward IS 'Length based cost for forward travel when using directed travel graphs.';
+COMMENT ON COLUMN osm.routing_road_edge.cost_length_reverse IS 'Length based cost for reverse travel when using directed travel graphs.';
+```
+
+## Travel Time Costs
+
+With lengths and one-way already calculated per edge, speed limits can be used
+to compute travel time costs.
+
 
 
 # Determine route start and end
@@ -203,10 +300,7 @@ SELECT d.*, n.geom AS node_geom, e.geom AS edge_geom
 
 ![Screenshot from DBeaver showing the route generated with all roads and limiting based on route_motor. The route bypasses the road(s) marked access=no and access=private.](dc-example-route-start-motor-access-control.png)
 
-
-
-# Route `oneway`
-
+# Oneway-aware routing
 
 The route shown in the previous example now respects the
 access control and limits to routes suitable for motorized traffic.
@@ -214,59 +308,6 @@ It, however, **did not** respect the one-way access control.
 The very first segment (top-left corner of screenshot) went
 the wrong way on a one-way street.
 This behavior is a result of the simple length-based cost model.
-
-
-The `oneway` column in the road tables uses
-[osm2pgsql's `direction` data type](https://osm2pgsql.org/doc/manual.html#type-conversions) 
-which resolves to `int2` in Postgres. Valid values are:
-
-* `0`: Not one way
-* `1`: One way, forward travel allowed
-* `-1`: One way, reverse travel allowed
-* `NULL`: It's complicated. See [#172](https://github.com/rustprooflabs/pgosm-flex/issues/172).
-
-The `osm.routing_road_edge` table already has the `oneway` column from the
-`osm.road_line` table used as the source.
-
-
-## Forward and reverse costs
-
-Calculate forward and reverse costs using the `oneway` column. This still provides
-a length-based cost. The change is to also enforce direction restrictions within
-the cost model.
-
-
-
-```sql
--- Add forward cost column, enforcing oneway restrictions
-ALTER TABLE osm.routing_road_edge
-    ADD cost_length_forward NUMERIC
-    GENERATED ALWAYS AS (
-        CASE WHEN oneway IN (0, 1) OR oneway IS NULL
-                THEN ST_Length(geom)
-            WHEN oneway = -1
-                THEN -1 * ST_Length(geom)
-            END
-    )
-    STORED
-;
-
--- Add reverse cost column, enforcing oneway restrictions
-ALTER TABLE osm.routing_road_edge
-    ADD cost_length_reverse NUMERIC
-    GENERATED ALWAYS AS (
-        CASE WHEN oneway IN (0, -1) OR oneway IS NULL
-                THEN ST_Length(geom)
-            WHEN oneway = 1
-                THEN -1 * ST_Length(geom)
-            END
-    )
-    STORED
-;
-
-COMMENT ON COLUMN osm.routing_road_edge.cost_length_forward IS 'Length based cost for forward travel when using directed travel graphs.';
-COMMENT ON COLUMN osm.routing_road_edge.cost_length_reverse IS 'Length based cost for reverse travel when using directed travel graphs.';
-```
 
 
 This query uses the new reverse cost column, and changes
