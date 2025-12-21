@@ -2,302 +2,28 @@
 
 > If you are using a pgRouting prior to 4.0 see [Routing with pgRouting 3](./routing-3.md).
 
-## Pre-process the OpenStreetMap Roads
-
-The following query converts `ST_MultiLineString` data to individual rows of
-`LINESTRING` records.
+Create the `pgRouting` extension.
 
 ```sql
-DROP TABLE IF EXISTS routing.osm_road_intermediate;
-CREATE TABLE routing.osm_road_intermediate AS
-WITH a AS (
--- Remove as many multi-linestrings as possible with ST_LineMerge() 
-SELECT r.osm_id, r.osm_type, r.maxspeed, r.oneway, r.layer,
-        r.route_foot, r.route_cycle, r.route_motor, r.access,
-        ST_LineMerge(r.geom) AS geom
-    FROM osm.road_line r
-), extra_cleanup AS (
--- Pull out those that are still multi, use ST_Dump() to pull out parts
-SELECT osm_id, osm_type, maxspeed, oneway, layer,
-        route_foot, route_cycle, route_motor, access,
-        (ST_Dump(geom)).geom AS geom
-    FROM a 
-    WHERE ST_GeometryType(geom) = 'ST_MultiLineString'
-), combined AS (
--- Combine two sources
-SELECT osm_id, osm_type, maxspeed, oneway, layer,
-        route_foot, route_cycle, route_motor, access,
-        geom
-    FROM a
-    WHERE ST_GeometryType(geom) != 'ST_MultiLineString'
-UNION
-SELECT osm_id, osm_type, maxspeed, oneway, layer,
-        route_foot, route_cycle, route_motor, access,
-        geom
-    FROM extra_cleanup
-    -- Some data may be lost here if multi-linestring somehow
-    -- persists through the extra_cleanup query
-    WHERE ST_GeometryType(geom) != 'ST_MultiLineString'
-)
--- Calculate a new surrogate ID for key
-SELECT ROW_NUMBER() OVER (ORDER BY geom) AS id
-        , *
-        -- Compute start/end points here instead of making this part of an expensive JOIN
-        -- in the intersection code later.
-        , ST_StartPoint(geom) AS geom_start
-        , ST_EndPoint(geom) AS geom_end
-    FROM combined
-    ORDER BY geom
-;
-```
-
-The above query creates the `routing.osm_road_intermediate` table.  The next step
-adds some database best practices to the table:
-
-* Explain why a surrogate ID was added
-* Primary key on the `id` column
-* Index on `osm_id`
-
-
-```sql
-COMMENT ON COLUMN routing.osm_road_intermediate.id IS 'Surrogate ID, cannot rely on osm_id being unique after converting multi-linestrings to linestrings.';
-ALTER TABLE routing.osm_road_intermediate
-    ADD CONSTRAINT pk_routing_road_line PRIMARY KEY (id)
-;
-CREATE INDEX ix_routing_road_line_osm_id
-    ON routing.osm_road_intermediate (osm_id)
-;
--- Spatial indexes on the 3 geometry columns
-CREATE INDEX gix_routing_osm_road_intermediate_geom
-    ON routing.osm_road_intermediate
-    USING GIST (geom)
-;
-CREATE INDEX gix_routing_osm_road_intermediate_geom_start
-    ON routing.osm_road_intermediate
-    USING GIST (geom_start)
-;
-CREATE INDEX gix_routing_osm_road_intermediate_geom_end
-    ON routing.osm_road_intermediate
-    USING GIST (geom_end)
-;
--- Ensure statistics are accurate before proceeding
-ANALYZE routing.osm_road_intermediate;
+CREATE EXTENSION IF NOT EXISTS pgrouting;
 ```
 
 
-## Split Long Segments
+## Process the OpenStreetMap Roads
 
-To make OpenStreetMap data usable in a routing network we need to split line
-segments into smaller segments and persist into a table.
-This is necessary because pgRouting can only route through the ends
-of line segments. It cannot switch from Line A to Line B from a point in the middle.
-
-
-These procedures use queries based on `pgr_separateTouching()`, but adjusted
-to provide reasonable query times with typical edge networks using OpenStreetMap
-data.
-
+For routing on `osm.road_line` data use the `osm.routing_prepare_roads_for_routing`
+procedure to prepare the edge and vertex data used for routing.
 
 ```sql
-DROP TABLE IF EXISTS initial_intersection;
-CREATE TEMP TABLE initial_intersection AS
-SELECT e1.id AS id1, e2.id AS id2
-        , ST_Snap(e1.geom, e2.geom, 0.01) AS geom
-        , e1.geom AS geom1
-        , e2.geom AS geom2
-        , e1.geom_start AS geom_start1
-        , e1.geom_end AS geom_end1
-    FROM routing.osm_road_intermediate e1
-        , routing.osm_road_intermediate e2
-    WHERE
-        e1.id != e2.id
-        AND ST_DWithin(e1.geom, e2.geom, 0.1)
-        AND NOT (
-            e1.geom_start = e2.geom_start OR  e1.geom_start = e2.geom_end
-            OR e1.geom_end = e2.geom_start OR e1.geom_end = e2.geom_end
-        )
-;
-
-CREATE INDEX gix_initial_intersection_geom ON initial_intersection USING GIST (geom);
-CREATE INDEX gix_initial_intersection_geom1 ON initial_intersection USING GIST (geom1);
-CREATE INDEX gix_initial_intersection_geom2 ON initial_intersection USING GIST (geom2);
-
-DROP TABLE IF EXISTS touchings;
-CREATE TEMP TABLE touchings AS
-SELECT  id1, geom1, geom2, ST_Intersection(geom, geom2) AS point
-  FROM initial_intersection
-  WHERE 
-    NOT (geom = geom1)
-     OR (
-        ST_touches(geom1, geom2)
-        AND NOT 
-            (
-            ST_Intersection(geom, geom2) = geom_start1
-            OR ST_Intersection(geom, geom2) = geom_end1
-            )
-        )
-;
-
-
-DROP TABLE IF EXISTS blades;
-CREATE TEMP TABLE blades AS
-SELECT id1, geom1, ST_UnaryUnion(ST_Collect(point)) AS blade
-  FROM touchings
-  GROUP BY id1, geom1
-;
-
-
-SELECT *
-    , ST_Relate(geom1, blade)
-FROM blades
-  ON ST_Intersects(a.geom, b.geom)
-WHERE ST_Relate(a.geom, b.geom, '1********');
-
-
-DROP TABLE IF EXISTS collection;
-CREATE TEMP TABLE collection AS
-SELECT id1, (st_dump(st_split(st_snap(geom1, blade, 0.01), blade))).*
-  FROM blades
-  -- Avoid this error, excludes any offending edges.
-  WHERE NOT ST_Relate(st_snap(geom1, blade, 0.01), blade, '1********')
-;
-
-
-DROP TABLE IF EXISTS routing.road_separate_touching;
-CREATE TABLE routing.road_separate_touching AS
-SELECT row_number() over()::INTEGER AS seq
-    , id1::BIGINT AS id
-    , path[1] AS sub_id
-    , geom
-FROM collection;
-;
+CALL osm.routing_prepare_roads_for_routing();
 ```
 
+### Timing for data preparation
+
+* D.C.: 18 seconds
+* Colorado: 11 minutes
 
 
-## Combine Split Lines with Unmodified Lines
-
-The `routing.road_separate_touching` table created using `pgr_separateTouching()` 
-has one row for each segment of the lines split by the function.
-It does not contain every line from the source table.
-The following query combines the two result sets.
-
-A few column notes:
-
-* `r.id`, created as surrogate key in `routing.osm_road_intermediate` is now aliased as `parent_id`
-* `sub_id` is created by `pgr_separateTouching()`
-* A new `edge_id` surrogate ID is created as `PRIMARY KEY` on the table.
-
-
-
-```sql
-DROP TABLE IF EXISTS routing.osm_road_edge;
-CREATE TABLE routing.osm_road_edge AS
-WITH split_lines AS (
-SELECT r.id AS parent_id, spl.sub_id, r.osm_id, r.osm_type, r.maxspeed, r.oneway, r.layer
-        , route_foot, route_cycle, route_motor
-        , r.access, spl.geom
-    FROM routing.osm_road_intermediate r
-    INNER JOIN routing.road_separate_touching spl
-        ON r.id = spl.id
-), unsplit_lines AS (
-SELECT r.id AS parent_id, 1::INT AS sub_id, r.osm_id, r.osm_type, r.maxspeed, r.oneway, r.layer
-        , route_foot, route_cycle, route_motor
-        , r.access, r.geom
-    FROM routing.osm_road_intermediate r
-LEFT JOIN routing.road_separate_touching spl
-    ON r.id = spl.id
-WHERE spl.id IS NULL
-)
-SELECT *
-    FROM split_lines
-UNION
-SELECT *
-    FROM unsplit_lines
-;
-
-COMMENT ON TABLE routing.osm_road_edge IS 'OSM road data setup for edges for routing for motorized travel';
-ALTER TABLE routing.osm_road_edge
-    ADD edge_id BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY;
-ALTER TABLE routing.osm_road_edge
-    ADD source BIGINT;
-ALTER TABLE routing.osm_road_edge
-    ADD target BIGINT;
-;
-ALTER TABLE routing.osm_road_edge
-    ADD CONSTRAINT uq_routing_road_edges_parent_id_sub_id
-    UNIQUE (parent_id, sub_id)
-;
-```
-
-> At this point, the `routing.osm_road_intermediate` is no longer necessary
-> and can be dropped, unless troubleshooting is required within the data pipeline.
-
-
-## Create Vertices
-
-The `pgr_extractVertices()` function is used to create the vertices from the
-`edges`. Each vertex is the start or end point for one or more edges.
-
-
-```sql
-DROP TABLE IF EXISTS routing.osm_road_vertex;
-CREATE TABLE routing.osm_road_vertex AS
-SELECT  * FROM pgr_extractVertices(
-  'SELECT edge_id AS id, geom FROM routing.osm_road_edge')
-;
-```
-
-Shouldn't be any records with neither in/out edges set.
-
-```sql
-SELECT * 
-FROM routing.osm_road_vertex
-WHERE in_edges IS NULL
-    AND out_edges IS NULL
-;
-```
-
-
-Update the edges table with information about vertices.
-
-```sql
---  Update source column from out_edges
-WITH outgoing AS (
-    SELECT id AS source
-        , unnest(out_edges) AS edge_id
-  FROM routing.osm_road_vertex
-)
-UPDATE routing.osm_road_edge e
-SET source = o.source
-FROM outgoing o
-WHERE e.edge_id = o.edge_id
-    AND e.source IS NULL
-;
-
--- Update target column from in_edges
-WITH incoming AS (
-    SELECT id AS target
-        , unnest(in_edges) AS edge_id
-  FROM routing.osm_road_vertex
-)
-UPDATE routing.osm_road_edge e
-SET target = i.target
-FROM incoming i
-WHERE e.edge_id = i.edge_id
-    AND e.target IS NULL
-;
-```
-
-Should not be any records that are `NULL` in both `source` and `target`.
-
-```sql
-SELECT *
-    FROM routing.osm_road_edge
-    WHERE source IS NULL
-        AND target IS NULL
-;
-```
 
 
 ## Costs
@@ -306,12 +32,12 @@ The following query establishes a simple length based cost. In the case of defau
 with PgOSM Flex, this results in costs in meters.
 
 ```sql
-ALTER TABLE routing.osm_road_edge
+ALTER TABLE osm.routing_road_edge
     ADD cost_length DOUBLE PRECISION NOT NULL
     GENERATED ALWAYS AS (ST_Length(geom))
     STORED
 ;
-COMMENT ON COLUMN routing.osm_road_edge.cost_length IS 'Length based cost. Units are determined by SRID of geom data.';
+COMMENT ON COLUMN osm.routing_road_edge.cost_length IS 'Length based cost. Units are determined by SRID of geom data.';
 ```
 
 
@@ -411,12 +137,12 @@ SELECT d.*, n.geom AS node_geom, e.geom AS edge_geom
     FROM pgr_dijkstra(
         'SELECT edge_id AS id, source, target, cost_length AS cost,
                 geom
-            FROM routing.osm_road_edge
+            FROM osm.routing_road_edge
             ',
             :start_id, :end_id, directed := False
         ) d
-    INNER JOIN routing.osm_road_vertex n ON d.node = n.id
-    LEFT JOIN routing.osm_road_edge e ON d.edge = e.edge_id
+    INNER JOIN osm.routing_road_vertex n ON d.node = n.id
+    LEFT JOIN osm.routing_road_edge e ON d.edge = e.edge_id
 ;
 ```
 
