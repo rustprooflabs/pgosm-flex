@@ -74,66 +74,59 @@ BEGIN
     DROP TABLE IF EXISTS initial_intersection;
     CREATE TEMP TABLE initial_intersection AS
     SELECT e1.id AS id1, e2.id AS id2
-            , ST_Snap(e1.geom, e2.geom, 0.01) AS geom_snapped
+            , e1.osm_id AS osm_id1, e2.osm_id AS osm_id2
             , e1.geom AS geom1
             , e2.geom AS geom2
             , e1.geom_start AS geom_start1
             , e1.geom_end AS geom_end1
+            -- The intersection point is the blade
+            , ST_Intersection(e1.geom, e2.geom) AS blade
         FROM edges_table e1
             , edges_table e2
         WHERE
-            e1.id != e2.id
+            -- Find all combinations of mismatches.
+            e1.id > e2.id
+            -- This tolerance should be same (??? should it???) as snap tolerance above
             AND ST_DWithin(e1.geom, e2.geom, 0.1)
+            -- They don't share start/end points. If they do, this step doesn't matter.
             AND NOT (
                 e1.geom_start = e2.geom_start OR  e1.geom_start = e2.geom_end
                 OR e1.geom_end = e2.geom_start OR e1.geom_end = e2.geom_end
             )
     ;
 
-    RAISE NOTICE 'Intersections table created';
-    CREATE INDEX gix_initial_intersection_geom_snapped ON initial_intersection USING GIST (geom_snapped);
     CREATE INDEX gix_initial_intersection_geom1 ON initial_intersection USING GIST (geom1);
     CREATE INDEX gix_initial_intersection_geom2 ON initial_intersection USING GIST (geom2);
+    CREATE INDEX gix_initial_intersection_blade ON initial_intersection USING GIST (blade);
 
-    DROP TABLE IF EXISTS intersections_to_split;
-    CREATE TEMP TABLE intersections_to_split AS
-    SELECT  i.id1, i.geom1, i.geom2, ST_Intersection(i.geom_snapped, i.geom2) AS point
-    FROM initial_intersection i
-    WHERE 
-        NOT (i.geom_snapped = i.geom1)
-        OR (
-            ST_touches(i.geom1, i.geom2)
-            AND NOT 
-                (
-                ST_Intersection(i.geom_snapped, i.geom2) = geom_start1
-                OR ST_Intersection(i.geom_snapped, i.geom2) = geom_end1
-                )
-            )
-    ;
+    RAISE NOTICE 'Intersections table created';
 
-    DROP TABLE IF EXISTS blades;
-    CREATE TEMP TABLE blades AS
-    SELECT id1, geom1, ST_UnaryUnion(ST_Collect(point)) AS blade
-    FROM intersections_to_split
-    GROUP BY id1, geom1
-    ;
-
-    DROP TABLE IF EXISTS collection;
-    CREATE TEMP TABLE collection AS
-    SELECT id1, (st_dump(st_split(st_snap(geom1, blade, 0.01), blade))).*
-    FROM blades
-    -- Avoid this error: "ERROR: Splitter line has linear intersection with input"
-    -- Excludes offending edges without trying to troubleshoot them.
-    WHERE NOT ST_Relate(st_snap(geom1, blade, 0.01), blade, '1********')
-    ;
 
     DROP TABLE IF EXISTS split_edges;
-    CREATE TABLE split_edges AS
-    SELECT row_number() over()::BIGINT AS seq
-        , c.id1::BIGINT AS id
-        , c.path[1]::BIGINT AS sub_id
-        , c.geom
-    FROM collection c
+    CREATE TEMP TABLE split_edges AS
+    WITH stacked AS (
+    SELECT i.id1 AS id, i.osm_id1 AS osm_id
+            , split.path[1]::BIGINT AS sub_id
+            , split.geom
+        FROM initial_intersection i
+        CROSS JOIN LATERAL st_dump(st_split(st_snap(geom1, blade, 0.1), blade)) split
+        WHERE NOT ST_Relate(st_snap(geom1, blade, 0.1), blade, '1********')
+           -- AND osm_id1 IN (1171245820, 758283788)
+           -- AND osm_id2 IN (1171245820, 758283788)
+    UNION
+    SELECT i.id2 AS id, i.osm_id2 AS osm_id
+            , split.path[1]::BIGINT AS sub_id
+            , split.geom
+        FROM initial_intersection i
+        CROSS JOIN LATERAL st_dump(st_split(st_snap(geom2, blade, 0.1), blade)) split
+        WHERE NOT ST_Relate(st_snap(geom2, blade, 0.1), blade, '1********')
+           -- AND osm_id1 IN (1171245820, 758283788)
+           -- AND osm_id2 IN (1171245820, 758283788)
+    )
+    SELECT DISTINCT
+            row_number() over()::BIGINT AS seq
+            , *
+        FROM stacked
     ;
 
 
@@ -174,12 +167,14 @@ BEGIN
     ALTER TABLE {schema_name}.routing_road_edge
         ADD target BIGINT;
 
+    /*
     ALTER TABLE {schema_name}.routing_road_edge
         ADD CONSTRAINT uq_routing_road_edges_parent_id_sub_id
         UNIQUE (parent_id, sub_id)
     ;
-
+    */
     RAISE NOTICE 'routing_osm_road_edge table created';
+    RAISE WARNING 'Not adding a unique constraint that should exist... data cleanup needed.';
 
 
     DROP TABLE IF EXISTS {schema_name}.routing_road_vertex;

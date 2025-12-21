@@ -18,6 +18,14 @@ procedure to prepare the edge and vertex data used for routing.
 CALL osm.routing_prepare_roads_for_routing();
 ```
 
+This procedure was created as part of the migration to pgRouting 4.0, see
+[#408](https://github.com/rustprooflabs/pgosm-flex/pull/408) for notes about
+this.
+
+The procedure focuses on the most common use cases of routing with the `osm.road_line`
+layer.
+
+
 ### Timing for data preparation
 
 * D.C.: 18 seconds
@@ -57,7 +65,7 @@ via DBeaver.
 ```sql
 WITH s_point AS (
 SELECT v.id AS start_id, v.geom
-    FROM routing.osm_road_vertex v
+    FROM osm.routing_road_vertex v
     INNER JOIN (SELECT
         ST_Transform(ST_SetSRID(ST_MakePoint(-77.0211, 38.92255), 4326), 3857)
             AS geom
@@ -66,7 +74,7 @@ SELECT v.id AS start_id, v.geom
     LIMIT 1
 ), e_point AS (
 SELECT v.id AS end_id, v.geom
-    FROM routing.osm_road_vertex v
+    FROM osm.routing_road_vertex v
     INNER JOIN (SELECT
         ST_Transform(ST_SetSRID(ST_MakePoint(-77.0183, 38.9227), 4326), 3857)
             AS geom
@@ -115,7 +123,7 @@ SELECT *
 
 
 
-## Route!
+# Route!
 
 
 Using `pgr_dijkstra()` and no additional filters will
@@ -127,7 +135,7 @@ a section of road with the
 The key details to focus on in the following queries
 is the string containing a SQL query passed into the `pgr_dijkstra()`
 function.  This first example is a simple query from the
-`routing.osm_road_edge` table.
+`osm.routing_road_edge` table.
 
 > Note:  These queries are intended to be ran using DBeaver.  The `:start_id` and `:end_id` variables work within DBeaver, but not via `psql` or QGIS.  Support in other GUIs is unknown at this time (PRs welcome!).
 
@@ -155,7 +163,7 @@ SELECT d.*, n.geom AS node_geom, e.geom AS edge_geom
 # Route motorized
 
 The following query modifies the query passed in to `pgr_dijkstra()`
-to join the `routing.osm_road_edge` table to the
+to join the `osm.routing_road_edge` table to the
 `routing.road_line` table.  This allows using attributes available
 in the upstream table for additional routing logic.
 The join clause includes a filter on the `route_motor` column.
@@ -164,7 +172,7 @@ From the comment on the `osm.road_line.route_motor` column:
 
 > "Best guess if the segment is route-able for motorized traffic. If access is no or private, set to false. WARNING: This does not indicate that this method of travel is safe OR allowed!"
 
-Based on this comment, we can expect that adding `AND r.route_motor`
+Based on this comment, we can expect that adding `AND route_motor`
 into the filter will ensure the road type is suitable for motorized
 traffic, and it excludes routes marked private. 
 
@@ -174,13 +182,13 @@ SELECT d.*, n.geom AS node_geom, e.geom AS edge_geom
     FROM pgr_dijkstra(
         'SELECT e.edge_id AS id, e.source, e.target, e.cost_length AS cost,
                 e.geom
-            FROM routing.osm_road_edge e
+            FROM osm.routing_road_edge e
             WHERE e.route_motor
             ',
             :start_id, :end_id, directed := False
         ) d
-    INNER JOIN routing.osm_road_vertex n ON d.node = n.id
-    LEFT JOIN routing.osm_road_edge e ON d.edge = e.edge_id
+    INNER JOIN osm.routing_road_vertex n ON d.node = n.id
+    LEFT JOIN osm.routing_road_edge e ON d.edge = e.edge_id
 ;
 ```
 
@@ -209,7 +217,7 @@ which resolves to `int2` in Postgres. Valid values are:
 * `-1`: One way, reverse travel allowed
 * `NULL`: It's complicated. See [#172](https://github.com/rustprooflabs/pgosm-flex/issues/172).
 
-The `routing.osm_road_edge` table already has the `oneway` column from the
+The `osm.routing_road_edge` table already has the `oneway` column from the
 `osm.road_line` table used as the source.
 
 
@@ -220,7 +228,7 @@ a length-based cost. The change is to also enforce direction restrictions within
 the cost model.
 
 ```sql
-ALTER TABLE routing.osm_road_edge
+ALTER TABLE osm.routing_road_edge
     ADD cost_length_forward NUMERIC
     GENERATED ALWAYS AS (
         CASE WHEN oneway IN (0, 1) OR oneway IS NULL
@@ -237,7 +245,7 @@ Reverse cost.
 
 ```sql
 -- Reverse cost with oneway considerations
-ALTER TABLE routing.osm_road_edge
+ALTER TABLE osm.routing_road_edge
     ADD cost_length_reverse NUMERIC
     GENERATED ALWAYS AS (
         CASE WHEN oneway IN (0, -1) OR oneway IS NULL
@@ -258,33 +266,21 @@ If you do not see the route shown in the screenshot below, try switching the
 
 
 ```sql
-SELECT d.*, n.geom AS node_geom, e.geom AS edge_geom
-    FROM pgr_dijkstra(
-        'SELECT e.edge_id AS id, e.source, e.target
-                , e.cost_length_forward AS cost
-                , e.cost_length_reverse AS reverse_cost
-                , e.geom
-            FROM routing.osm_road_edge e
-            WHERE e.route_motor
-            ',
-            :start_id, :end_id, directed := True
-        ) d
-    INNER JOIN routing.osm_road_vertex n ON d.node = n.id
-    LEFT JOIN routing.osm_road_edge e ON d.edge = e.edge_id
-;
+    SELECT d.*, n.geom AS node_geom, e.geom AS edge_geom
+        FROM pgr_dijkstra(
+            'SELECT e.edge_id AS id, e.source, e.target
+                    , e.cost_length_forward AS cost
+                    , e.cost_length_reverse AS reverse_cost
+                    , e.geom
+                FROM osm.routing_road_edge e
+                WHERE e.route_motor
+                ',
+                :start_id, :end_id, directed := True
+            ) d
+        INNER JOIN osm.routing_road_vertex n ON d.node = n.id
+        LEFT JOIN osm.routing_road_edge e ON d.edge = e.edge_id
+    ;
 ```
 
 ![Screenshot from DBeaver showing the route generated with all roads and limiting based on route_motor and using the improved cost model including forward and reverse costs. The route bypasses the road(s) marked access=no and access=private, as well as respects the one-way access controls.](dc-example-route-start-motor-access-control-oneway.png)
 
-
-
-## Cleanup Intermediary tables
-
-There are 2 tables used to build the routing network that are not needed
-after the `routing.osm_road_edge` and `routing.osm_road_vertex` tables are
-populated.
-
-```sql
-DROP TABLE IF EXISTS routing.osm_road_intermediate;
-DROP TABLE IF EXISTS routing.road_separate_touching;
-```
