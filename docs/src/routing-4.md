@@ -39,6 +39,14 @@ layer.
 The following query establishes a simple length based cost. In the case of defaults
 with PgOSM Flex, this results in costs in meters.
 
+> ⚠️ Warning: PgOSM Flex uses SRID 3857 by default. This generic projection is useful for
+> global web mapping, however it does not provide accurate calculation for most Latitudes
+> of the world. For accurate calculations, either run PgOSM Flex to load data
+> in an accurate, local SRID, or use `ST_Transform(geom, your_srid)`.
+> 
+> See [Accuracy of Geometry data in PostGIS](https://blog.rustprooflabs.com/2023/04/postgis-geometry-accuracy) for more.
+
+
 ```sql
 ALTER TABLE osm.routing_road_edge
     ADD cost_length DOUBLE PRECISION NOT NULL
@@ -227,7 +235,10 @@ Calculate forward and reverse costs using the `oneway` column. This still provid
 a length-based cost. The change is to also enforce direction restrictions within
 the cost model.
 
+
+
 ```sql
+-- Add forward cost column, enforcing oneway restrictions
 ALTER TABLE osm.routing_road_edge
     ADD cost_length_forward NUMERIC
     GENERATED ALWAYS AS (
@@ -239,12 +250,8 @@ ALTER TABLE osm.routing_road_edge
     )
     STORED
 ;
-```
 
-Reverse cost.
-
-```sql
--- Reverse cost with oneway considerations
+-- Add reverse cost column, enforcing oneway restrictions
 ALTER TABLE osm.routing_road_edge
     ADD cost_length_reverse NUMERIC
     GENERATED ALWAYS AS (
@@ -256,6 +263,9 @@ ALTER TABLE osm.routing_road_edge
     )
     STORED
 ;
+
+COMMENT ON COLUMN osm.routing_road_edge.cost_length_forward IS 'Length based cost for forward travel when using directed travel graphs.';
+COMMENT ON COLUMN osm.routing_road_edge.cost_length_reverse IS 'Length based cost for reverse travel when using directed travel graphs.';
 ```
 
 

@@ -79,13 +79,15 @@ BEGIN
             , e2.geom AS geom2
             , e1.geom_start AS geom_start1
             , e1.geom_end AS geom_end1
+            , e2.geom_start AS geom_start2
+            , e2.geom_end AS geom_end2
             -- The intersection point is the blade
             , ST_Intersection(e1.geom, e2.geom) AS blade
         FROM edges_table e1
             , edges_table e2
         WHERE
             -- Find all combinations of mismatches.
-            e1.id > e2.id
+            e1.id != e2.id
             -- This tolerance should be same (??? should it???) as snap tolerance above
             AND ST_DWithin(e1.geom, e2.geom, 0.1)
             -- They don't share start/end points. If they do, this step doesn't matter.
@@ -102,31 +104,43 @@ BEGIN
     RAISE NOTICE 'Intersections table created';
 
 
+    -- Create the combination of lines to be split with all points to use for blades.
+    -- Looking at both directions for id1/id2 pairs.
+    DROP TABLE IF EXISTS geom_with_blade;
+    CREATE TABLE geom_with_blade AS 
+    SELECT id1 AS id, osm_id1 AS osm_id, geom1 AS geom
+            , ST_UnaryUnion(ST_Collect(ST_PointOnSurface(blade))) AS blades
+        FROM initial_intersection
+        WHERE blade NOT IN (geom_start1, geom_end1)
+           -- AND 17077818 IN (osm_id1)
+        GROUP BY id1, osm_id1, geom1
+    UNION
+    SELECT id2 AS id, osm_id2 AS osm_id, geom2 AS geom
+            , ST_UnaryUnion(ST_Collect(ST_PointOnSurface(blade))) AS blades
+        FROM initial_intersection
+        WHERE blade NOT IN (geom_start2, geom_end2)
+           -- AND 17077818 IN (osm_id2)
+        GROUP BY id2, osm_id2, geom2
+    ;
+
+    -- Split lines using blades. Assign new `seq` ID (legacy reasons, try to improve this...)
     DROP TABLE IF EXISTS split_edges;
     CREATE TEMP TABLE split_edges AS
-    WITH stacked AS (
-    SELECT i.id1 AS id, i.osm_id1 AS osm_id
+    WITH splits AS (
+    SELECT i.id, i.osm_id
             , split.path[1]::BIGINT AS sub_id
             , split.geom
-        FROM initial_intersection i
-        CROSS JOIN LATERAL st_dump(st_split(st_snap(geom1, blade, 0.1), blade)) split
-        WHERE NOT ST_Relate(st_snap(geom1, blade, 0.1), blade, '1********')
-           -- AND osm_id1 IN (1171245820, 758283788)
-           -- AND osm_id2 IN (1171245820, 758283788)
-    UNION
-    SELECT i.id2 AS id, i.osm_id2 AS osm_id
-            , split.path[1]::BIGINT AS sub_id
-            , split.geom
-        FROM initial_intersection i
-        CROSS JOIN LATERAL st_dump(st_split(st_snap(geom2, blade, 0.1), blade)) split
-        WHERE NOT ST_Relate(st_snap(geom2, blade, 0.1), blade, '1********')
+        FROM geom_with_blade i
+        CROSS JOIN LATERAL st_dump(st_split(st_snap(i.geom, blades, 0.1), blades)) split
+        WHERE NOT ST_Relate(st_snap(i.geom, blades, 0.1), blades, '1********')
+            AND split.geom <> i.geom -- Exclude any unchanged records
+            AND NOT ST_IsEmpty(blades) -- Exclude any blades that ended up empty
            -- AND osm_id1 IN (1171245820, 758283788)
            -- AND osm_id2 IN (1171245820, 758283788)
     )
-    SELECT DISTINCT
-            row_number() over()::BIGINT AS seq
+    SELECT row_number() over()::BIGINT AS seq
             , *
-        FROM stacked
+        FROM splits
     ;
 
 
@@ -210,6 +224,7 @@ BEGIN
         AND e.target IS NULL
     ;
     
+
     ANALYZE {schema_name}.routing_road_vertex;
     ANALYZE {schema_name}.routing_road_edge;
 
