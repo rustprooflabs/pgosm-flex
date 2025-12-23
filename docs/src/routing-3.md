@@ -1,10 +1,11 @@
 # Routing with pgRouting 3
 
 If you are using a pgRouting 4.0 or later see [Routing with pgRouting 4](./routing-4.md).
-New development in PgOSM Flex will focus support on pgRouting 4.0 support.
+
+New development in PgOSM Flex will focus support on pgRouting 4.0 support
+per the Versions Supported section  [in the About page](./readme.md).
 [PgOSM Flex 1.1.2](https://github.com/rustprooflabs/pgosm-flex/releases/tag/1.1.2)
-includes a simplified and higher performance implementation of the routing
-data preparation.
+simplified and improved performance in the routing data preparation.
 
 
 > ⚠️ This page will remain in the PgOSM documentation through at least 2026 to ensure
