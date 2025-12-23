@@ -1,4 +1,4 @@
-# PgOSM Flex
+# About PgOSM Flex
 
 PgOSM Flex ([GitHub](https://github.com/rustprooflabs/pgosm-flex))
 provides high quality OpenStreetMap datasets in PostGIS using the
@@ -33,7 +33,7 @@ A few decisions made in this project:
 * Defaults to same units as OpenStreetMap (e.g. km/hr, meters)
 * Data not included in a dedicated column is available from `osm.tags.tags` (`JSONB`)
 * Points, Lines, and Polygons are not mixed in a single table
-* Tracks latest Postgres, PostGIS, and osm2pgsql versions
+* Tracks latest Postgres, PostGIS, osm2pgsql, and pgRouting versions
 
 This project's approach is to do as much processing in the Lua styles
 passed along to osm2pgsql, with post-processing steps creating indexes,
@@ -72,6 +72,8 @@ package used to determine the best osm2pgsql command assumes fast SSDs.
 
 ## RustProof Labs project
 
-PgOSM Flex is a RustProof Labs project developed and maintained by Ryan Lambert.
+PgOSM Flex is a RustProof Labs project developed and maintained
+by Ryan Lambert and
+[contributors](https://github.com/rustprooflabs/pgosm-flex/graphs/contributors).
 See the [RustProof Labs blog](https://blog.rustprooflabs.com/category/pgosm-flex)
 for more resources and examples of using PgOSM Flex.

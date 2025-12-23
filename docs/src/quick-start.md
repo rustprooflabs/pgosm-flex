@@ -235,11 +235,15 @@ From the perspective of database design, the `osm.unitable` option is the **wors
 This table violates all sorts of best practices established in this project
 by shoving all features into a single unstructured table.
 
-> This style included in PgOSM Flex is intended to be used for troubleshooting and quality control.  It is not intended to be used for real production workloads! This table is helpful for exploring the full data set when you don't really know what you are looking for, but you know **where** you are looking.
+The Unitable data is loaded with the `everything` layerset.
+Of course, you can create your own customized layerset including this style
+if needed.
 
-Unitable is loaded with the `everything` layerset.  Feel free to create your own
-customized layerset if needed.
 
+> The `osm.unitable` table is intended to be used for troubleshooting and
+> quality control.  It is not intended to be used for production workloads!
+> This table is most helpful for exploring the full data set when you don't
+> really know what you are looking for, but you know **where** you are looking.
 
 
 ```bash
