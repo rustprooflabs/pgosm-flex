@@ -1,4 +1,4 @@
-# Routing with PgRouting 4
+# Routing with pgRouting 4
 
 > If you are using a pgRouting prior to 4.0 see [Routing with pgRouting 3](./routing-3.md).
 

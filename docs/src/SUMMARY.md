@@ -20,7 +20,7 @@
     - [pgRouting 4](./routing-4.md)
 - [Processing Time](./performance.md)
 
-# Production usages
+# Production Use
 
 - [Postgres Permissions](./postgres-permissions.md)
 - [Using External Postgres Connection](./postgres-external.md)
