@@ -3,7 +3,25 @@ CREATE OR REPLACE PROCEDURE {schema_name}.routing_prepare_roads_for_routing()
 LANGUAGE plpgsql
 AS $$
 
+DECLARE pgr_ver TEXT;
 BEGIN
+    -- Ensure pgRouting extension exists with at least pgRouting 4.0
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_extension WHERE extname = 'pgrouting'
+    ) THEN
+        RAISE EXCEPTION
+            'pgRouting extension is not installed. Version >= 4.0 required.';
+    END IF;
+
+    -- Get pgRouting version
+    SELECT pgr_version() INTO pgr_ver;
+
+    -- Enforce minimum version
+    IF string_to_array(pgr_ver, '.')::INT[] < ARRAY[4,0] THEN
+        RAISE EXCEPTION
+            'pgRouting version % detected. Version >= 4.0 required.',
+            pgr_ver;
+    END IF;
 
     DROP TABLE IF EXISTS edges_table;
     CREATE TEMP TABLE edges_table AS
