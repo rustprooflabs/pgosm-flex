@@ -75,6 +75,7 @@ BEGIN
     CREATE TEMP TABLE initial_intersection AS
     SELECT e1.id AS id1, e2.id AS id2
             , e1.osm_id AS osm_id1, e2.osm_id AS osm_id2
+            , e1.layer AS layer1, e2.layer AS layer2
             , e1.geom AS geom1
             , e2.geom AS geom2
             , e1.geom_start AS geom_start1
@@ -88,8 +89,11 @@ BEGIN
         WHERE
             -- Find all combinations of mismatches.
             e1.id != e2.id
-            -- This tolerance should be same (??? should it???) as snap tolerance above
+            -- This tolerance finds general proximity, later refined.
+            -- Probably can speed up by switching to simple && bbox query.
             AND ST_DWithin(e1.geom, e2.geom, 0.1)
+            -- Don't split line if not on same layer
+            AND e1.layer = e2.layer
             -- They don't share start/end points. If they do, this step doesn't matter.
             AND NOT (
                 e1.geom_start = e2.geom_start OR  e1.geom_start = e2.geom_end
@@ -111,19 +115,23 @@ BEGIN
     SELECT id1 AS id, osm_id1 AS osm_id, geom1 AS geom
             , ST_UnaryUnion(ST_Collect(ST_PointOnSurface(blade))) AS blades
         FROM initial_intersection
+        -- Exclude blades same as start/end points
         WHERE blade NOT IN (geom_start1, geom_end1)
-           -- AND 17077818 IN (osm_id1)
         GROUP BY id1, osm_id1, geom1
     UNION
     SELECT id2 AS id, osm_id2 AS osm_id, geom2 AS geom
             , ST_UnaryUnion(ST_Collect(ST_PointOnSurface(blade))) AS blades
         FROM initial_intersection
+        -- Exclude blades same as start/end points
         WHERE blade NOT IN (geom_start2, geom_end2)
-           -- AND 17077818 IN (osm_id2)
         GROUP BY id2, osm_id2, geom2
     ;
 
     -- Split lines using blades. Assign new `seq` ID (legacy reasons, try to improve this...)
+    -- Splitting no longer uses snapping. OpenStreetMap edge data should be properly
+    -- connected with shared nodes if there is a true path. Missing nodes in
+    -- data should be fixed in OpenStreetMap data directly instead of trying
+    -- to make that step happen here.
     DROP TABLE IF EXISTS split_edges;
     CREATE TEMP TABLE split_edges AS
     WITH splits AS (
@@ -131,12 +139,10 @@ BEGIN
             , split.path[1]::BIGINT AS sub_id
             , split.geom
         FROM geom_with_blade i
-        CROSS JOIN LATERAL st_dump(st_split(st_snap(i.geom, blades, 0.1), blades)) split
-        WHERE NOT ST_Relate(st_snap(i.geom, blades, 0.1), blades, '1********')
+        CROSS JOIN LATERAL st_dump(st_split(i.geom, blades)) split
+        WHERE NOT ST_Relate(i.geom, blades, '1********')
             AND split.geom <> i.geom -- Exclude any unchanged records
             AND NOT ST_IsEmpty(blades) -- Exclude any blades that ended up empty
-           -- AND osm_id1 IN (1171245820, 758283788)
-           -- AND osm_id2 IN (1171245820, 758283788)
     )
     SELECT row_number() over()::BIGINT AS seq
             , *
