@@ -197,7 +197,7 @@ BEGIN
         FROM unsplit_lines
     ;
 
-    COMMENT ON TABLE {schema_name}.routing_road_edge IS 'OSM road data setup for edges for routing for motorized travel';
+    COMMENT ON TABLE {schema_name}.routing_road_edge IS 'OpenStreetMap road data prepared as the edge network for pgRouting.';
     ALTER TABLE {schema_name}.routing_road_edge
         ADD edge_id BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY;
     ALTER TABLE {schema_name}.routing_road_edge
@@ -205,12 +205,11 @@ BEGIN
     ALTER TABLE {schema_name}.routing_road_edge
         ADD target BIGINT;
 
-    /*
-    ALTER TABLE {schema_name}.routing_road_edge
-        ADD CONSTRAINT uq_routing_road_edges_parent_id_sub_id
-        UNIQUE (parent_id, sub_id)
+    CREATE INDEX gix_{schema_name}_routing_road_edge
+        ON {schema_name}.routing_road_edge
+        USING GIST (geom)
     ;
-    */
+
     RAISE NOTICE 'routing_osm_road_edge table created';
     RAISE WARNING 'Not adding a unique constraint that should exist... data cleanup needed.';
 
@@ -221,6 +220,11 @@ BEGIN
     'SELECT edge_id AS id, geom FROM {schema_name}.routing_road_edge')
     ;
     RAISE NOTICE 'routing_osm_road_vertex table created';
+
+    CREATE INDEX gix_{schema_name}_routing_road_vertex
+        ON {schema_name}.routing_road_vertex
+        USING GIST (geom)
+    ;
 
     --  Update source column from out_edges
     WITH outgoing AS (
@@ -249,8 +253,12 @@ BEGIN
     ;
     
 
-    ANALYZE {schema_name}.routing_road_vertex;
     ANALYZE {schema_name}.routing_road_edge;
+    ANALYZE {schema_name}.routing_road_vertex;
+
+    COMMENT ON TABLE {schema_name}.routing_road_vertex IS 'Routing vertex data. These points can be used as the start/end points for routing the edge network in {schema_name}.routing_road_edge..';
 
 END $$;
 
+
+COMMENT ON PROCEDURE {schema_name}.routing_prepare_roads_for_routing IS 'Creates the {schema_name}.routing_road_edge and {schema_name}.routing_road_vertex from the {schema_name}.road_line input data';
