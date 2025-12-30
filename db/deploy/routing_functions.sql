@@ -1,27 +1,39 @@
+CREATE OR REPLACE PROCEDURE {schema_name}.pgrouting_version_check()
+LANGUAGE plpgsql
+AS $$
+    DECLARE pgr_ver TEXT;
+BEGIN
+        -- Ensure pgRouting extension exists with at least pgRouting 4.0
+        IF NOT EXISTS (
+            SELECT 1 FROM pg_extension WHERE extname = 'pgrouting'
+        ) THEN
+            RAISE EXCEPTION
+                'pgRouting extension is not installed. Version >= 4.0 required.';
+        END IF;
+
+        -- Get pgRouting version
+        SELECT pgr_version() INTO pgr_ver;
+
+        -- Enforce minimum version
+        IF string_to_array(pgr_ver, '.')::INT[] < ARRAY[4,0] THEN
+            RAISE EXCEPTION
+                'pgRouting version % detected. Version >= 4.0 required.',
+                pgr_ver;
+        END IF;
+
+END $$;
+
+
+COMMENT ON PROCEDURE {schema_name}.pgrouting_version_check IS 'Ensures appropriate pgRouting extension is installed with an appropriate version.';
+
+
 
 CREATE OR REPLACE PROCEDURE {schema_name}.routing_prepare_roads_for_routing()
 LANGUAGE plpgsql
 AS $$
-
-DECLARE pgr_ver TEXT;
 BEGIN
-    -- Ensure pgRouting extension exists with at least pgRouting 4.0
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_extension WHERE extname = 'pgrouting'
-    ) THEN
-        RAISE EXCEPTION
-            'pgRouting extension is not installed. Version >= 4.0 required.';
-    END IF;
 
-    -- Get pgRouting version
-    SELECT pgr_version() INTO pgr_ver;
-
-    -- Enforce minimum version
-    IF string_to_array(pgr_ver, '.')::INT[] < ARRAY[4,0] THEN
-        RAISE EXCEPTION
-            'pgRouting version % detected. Version >= 4.0 required.',
-            pgr_ver;
-    END IF;
+    CALL {schema_name}.pgrouting_version_check();
 
     DROP TABLE IF EXISTS edges_table;
     CREATE TEMP TABLE edges_table AS
@@ -65,19 +77,19 @@ BEGIN
         ORDER BY geom
     ;
 
-    CREATE INDEX gix_routing_osm_road_intermediate_geom
+    CREATE INDEX gix_tmp_edges_table_geom
         ON edges_table
         USING GIST (geom)
     ;
-    CREATE INDEX gix_routing_osm_road_intermediate_geom_start
+    CREATE INDEX gix_tmp_edges_table_geom_start
         ON edges_table
         USING GIST (geom_start)
     ;
-    CREATE INDEX gix_routing_osm_road_intermediate_geom_end
+    CREATE INDEX gix_tmp_edges_table_geom_end
         ON edges_table
         USING GIST (geom_end)
     ;
-    CREATE UNIQUE INDEX gix_tmp_edges_id
+    CREATE UNIQUE INDEX gix_tmp_edges_table_id
         ON edges_table (id)
     ;
     ANALYZE edges_table;
