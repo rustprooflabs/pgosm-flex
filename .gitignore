@@ -5,3 +5,5 @@ output/
 pgosm-data/*
 docs/book/*
 .vscode/*
+**/*.gv
+**/.ipynb_checkpoints
