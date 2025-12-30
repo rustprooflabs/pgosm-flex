@@ -65,15 +65,6 @@ def run_command_via_subprocess(cmd: list,
                 output_lines.append(ln)
                 if print_to_log:
                     logger.info(ln)
-
-                # Detects issue reported in https://github.com/rustprooflabs/pgosm-flex/issues/391
-                # Status code is incorrectly returned is 0, cannot detect
-                # problem using that method so forcing failure with custom
-                # status code.
-                if 'Error during diff download. Bailing out.' in ln:
-                    logger.error('Data in database is too far behind replication service.')
-                    return 999
-
             else:
                 # Only sleep when there wasn't output
                 sleep(1)
