@@ -317,8 +317,8 @@ BEGIN
         STORED
     ;
 
-    COMMENT ON COLUMN {schema_name}.routing_road_edge.cost_length_forward IS 'Length based cost for forward travel when using directed travel graphs.';
-    COMMENT ON COLUMN {schema_name}.routing_road_edge.cost_length_reverse IS 'Length based cost for reverse travel when using directed travel graphs.';
+    COMMENT ON COLUMN {schema_name}.routing_road_edge.cost_length_forward IS 'Length based cost for forward travel with directed routing. Based on cost_length value.';
+    COMMENT ON COLUMN {schema_name}.routing_road_edge.cost_length_reverse IS 'Length based cost for reverse travel with directed routing. Based on cost_length value.';
 
 
     DROP TABLE IF EXISTS {schema_name}.routing_road_vertex;
@@ -369,3 +369,143 @@ END $$;
 
 
 COMMENT ON PROCEDURE {schema_name}.routing_prepare_roads IS 'Creates the {schema_name}.routing_road_edge and {schema_name}.routing_road_vertex from the {schema_name}.road_line input data';
+
+
+
+--------------------------------------------------
+-- Waterway routing prep
+--------------------------------------------------
+
+
+CREATE OR REPLACE PROCEDURE {schema_name}.routing_prepare_water()
+LANGUAGE plpgsql
+AS $$
+BEGIN
+
+    CALL {schema_name}.pgrouting_version_check();
+
+    --Create edges table for input to routing_prepare_edges procedure
+    DROP TABLE IF EXISTS route_edge_input;
+    CREATE TEMP TABLE route_edge_input AS
+    SELECT osm_id, layer, geom
+        FROM {schema_name}.water_line
+    ;
+
+    -- Creates the `route_edges_output` table.
+    CALL {schema_name}.routing_prepare_edges();
+
+
+    DROP TABLE IF EXISTS {schema_name}.routing_water_edge;
+    CREATE TABLE {schema_name}.routing_water_edge
+    (
+        edge_id BIGINT NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY
+        , osm_id BIGINT NOT NULL
+        , sub_id BIGINT NOT NULL
+        , vertex_id_source BIGINT
+        , vertex_id_target BIGINT
+        , layer INT
+        , osm_type TEXT NOT NULL
+        , name TEXT
+        , tunnel TEXT
+        , bridge TEXT
+        , geom GEOMETRY(LINESTRING)
+    );
+
+    INSERT INTO {schema_name}.routing_water_edge (
+        osm_id, sub_id, osm_type, name, layer, tunnel, bridge
+        , geom
+    )
+    SELECT re.osm_id, re.sub_id
+            , r.osm_type, r.name
+            , re.layer, r.tunnel, r.bridge
+            , re.geom
+        FROM route_edges_output re
+        INNER JOIN {schema_name}.water_line r ON re.osm_id = r.osm_id
+        ORDER BY re.geom
+    ;
+
+    CREATE INDEX gix_{schema_name}_routing_water_edge
+        ON {schema_name}.routing_water_edge
+        USING GIST (geom)
+    ;
+
+    RAISE NOTICE 'Created table {schema_name}.routing_water_edge with edge data';
+
+
+    ALTER TABLE {schema_name}.routing_water_edge
+        ADD cost_length DOUBLE PRECISION NULL;
+
+    UPDATE {schema_name}.routing_water_edge
+        SET cost_length = ST_Length(ST_Transform(geom, 4326)::GEOGRAPHY)
+    ;
+
+    COMMENT ON COLUMN {schema_name}.routing_water_edge.cost_length IS 'Length based cost calculated using GEOGRAPHY for accurate length.';
+
+
+    -- Add forward cost column, enforcing oneway restrictions
+    ALTER TABLE {schema_name}.routing_water_edge
+        ADD cost_length_forward NUMERIC
+        GENERATED ALWAYS AS (cost_length)
+        STORED
+    ;
+
+    -- Add reverse cost column, enforcing oneway restrictions
+    ALTER TABLE {schema_name}.routing_water_edge
+        ADD cost_length_reverse NUMERIC
+        GENERATED ALWAYS AS (-1 * cost_length)
+        STORED
+    ;
+
+    COMMENT ON COLUMN {schema_name}.routing_water_edge.cost_length_forward IS 'Length based cost for forward travel with directed routing. Based on cost_length value.';
+    COMMENT ON COLUMN {schema_name}.routing_water_edge.cost_length_reverse IS 'Length based cost for reverse travel with directed routing. Based on cost_length value.';
+
+
+    DROP TABLE IF EXISTS {schema_name}.routing_water_vertex;
+    CREATE TABLE {schema_name}.routing_water_vertex AS
+    SELECT  * FROM pgr_extractVertices(
+    'SELECT edge_id AS id, geom FROM {schema_name}.routing_water_edge')
+    ;
+    RAISE NOTICE 'Created table {schema_name}.routing_water_vertex from edges.';
+
+    CREATE INDEX gix_{schema_name}_routing_water_vertex
+        ON {schema_name}.routing_water_vertex
+        USING GIST (geom)
+    ;
+
+    --  Update source column from out_edges
+    WITH outgoing AS (
+        SELECT id AS vertex_id_source
+            , unnest(out_edges) AS edge_id
+    FROM {schema_name}.routing_water_vertex
+    )
+    UPDATE {schema_name}.routing_water_edge e
+    SET vertex_id_source = o.vertex_id_source
+    FROM outgoing o
+    WHERE e.edge_id = o.edge_id
+        AND e.vertex_id_source IS NULL
+    ;
+
+    -- Update target column from in_edges
+    WITH incoming AS (
+        SELECT id AS vertex_id_target
+            , unnest(in_edges) AS edge_id
+    FROM {schema_name}.routing_water_vertex
+    )
+    UPDATE {schema_name}.routing_water_edge e
+    SET vertex_id_target = i.vertex_id_target
+    FROM incoming i
+    WHERE e.edge_id = i.edge_id
+        AND e.vertex_id_target IS NULL
+    ;
+
+
+    ANALYZE {schema_name}.routing_water_edge;
+    ANALYZE {schema_name}.routing_water_vertex;
+
+    COMMENT ON TABLE {schema_name}.routing_water_vertex IS 'Routing vertex data. These points can be used as the start/end points for routing the edge network in {schema_name}.routing_water_edge..';
+
+
+END $$;
+
+
+COMMENT ON PROCEDURE {schema_name}.routing_prepare_water IS 'Creates the {schema_name}.routing_water_edge and {schema_name}.routing_water_vertex from the {schema_name}.water_line input data';
