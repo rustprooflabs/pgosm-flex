@@ -18,6 +18,14 @@ procedure to prepare the edge and vertex data used for routing.
 CALL osm.routing_prepare_roads();
 ```
 
+The `osm.routing_prepare_roads` procedure focuses on the most common use
+cases of routing with the `osm.road_line` layer. It generates the edge/vertex
+network for all data in the `osm.road_line` table. It generates accurate `cost_length`
+by casting data to `GEOGRAPHY` and generates `cost_length_forward`
+and `cost_length_reverse` to natively support directionally-enforced routing
+without additional steps.
+
+
 > ⚠️ The `osm.routing_prepare_roads` procedure was added in PgOSM Flex 1.1.2
 > and is a significant deviation in routing preparation along with pgRouting 4.0.
 > This procedure should be treated as a new feature with potential bugs lurking.
@@ -25,9 +33,6 @@ CALL osm.routing_prepare_roads();
 This procedure was created as part of the migration to pgRouting 4.0, see
 [#408](https://github.com/rustprooflabs/pgosm-flex/pull/408) for notes about
 this.
-
-The procedure focuses on the most common use cases of routing with the `osm.road_line`
-layer.
 
 
 ## Timing for data preparation
@@ -57,11 +62,17 @@ The Colorado data set has  1.2M input roads resulting in 2.6M edges after splitt
 Routing uses a concept of cost to determine the best route to traverse. Cost can
 be defined in a variety of methods. This section explores a few options.
 
-## Length Based Cost
+* `cost_length`
+* `cost_length_forward`
+* `cost_length_reverse`
+
+
 
 The procedure automatically generates a `cost_length` column using `GEOGRAPHY`
 for accurate calculations in meters.
 
+The forward/reverse costs start with `cost_length` calculation and apply the
+OpenStreetMap `oneway` restrictions.
 
 
 ## Costs Including One Way Restrictions
@@ -94,6 +105,9 @@ the cost model.
 With lengths and one-way already calculated per edge, speed limits can be used
 to compute travel time costs.
 
+The `maxspeed` data in `pgosm.road` can be used to generate travel time costs
+per segment.
+[Chapter 16 of Mastering PostGIS and OpenStreetMap](https://book.postgis-osm.com/ch_pgrouting/improve-specific-routing.html) (paid content) provides examples of this approach.
 
 
 # Determine route start and end
