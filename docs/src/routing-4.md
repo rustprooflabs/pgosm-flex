@@ -11,23 +11,28 @@ CREATE EXTENSION IF NOT EXISTS pgrouting;
 
 # Process the OpenStreetMap Roads
 
-For routing on `osm.road_line` data use the `osm.routing_prepare_roads_for_routing`
+For routing on `osm.road_line` data use the `osm.routing_prepare_road_network`
 procedure to prepare the edge and vertex data used for routing.
 
 ```sql
-CALL osm.routing_prepare_roads_for_routing();
+CALL osm.routing_prepare_road_network();
 ```
 
-> ⚠️ The `osm.routing_prepare_roads_for_routing` procedure was added in PgOSM Flex 1.1.2
+The `osm.routing_prepare_road_network` procedure focuses on the most common use
+cases of routing with the `osm.road_line` layer. It generates the edge/vertex
+network for all data in the `osm.road_line` table. It generates accurate `cost_length`
+by casting data to `GEOGRAPHY` and generates `cost_length_forward`
+and `cost_length_reverse` to natively support directionally-enforced routing
+without additional steps.
+
+
+> ⚠️ The `osm.routing_prepare_road_network` procedure was added in PgOSM Flex 1.1.2
 > and is a significant deviation in routing preparation along with pgRouting 4.0.
 > This procedure should be treated as a new feature with potential bugs lurking.
 
 This procedure was created as part of the migration to pgRouting 4.0, see
 [#408](https://github.com/rustprooflabs/pgosm-flex/pull/408) for notes about
 this.
-
-The procedure focuses on the most common use cases of routing with the `osm.road_line`
-layer.
 
 
 ## Timing for data preparation
@@ -57,42 +62,17 @@ The Colorado data set has  1.2M input roads resulting in 2.6M edges after splitt
 Routing uses a concept of cost to determine the best route to traverse. Cost can
 be defined in a variety of methods. This section explores a few options.
 
-## Length Based Cost
+* `cost_length`
+* `cost_length_forward`
+* `cost_length_reverse`
 
-The following query establishes a simple length based cost. In the case of defaults
-with PgOSM Flex, this results in costs in meters.
 
 
-```sql
-ALTER TABLE osm.routing_road_edge
-    ADD cost_length DOUBLE PRECISION NOT NULL
-    GENERATED ALWAYS AS (ST_Length(geom))
-    STORED
-;
-COMMENT ON COLUMN osm.routing_road_edge.cost_length IS 'Length based cost. Units are determined by SRID of geom data.';
-```
+The procedure automatically generates a `cost_length` column using `GEOGRAPHY`
+for accurate calculations in meters.
 
-The above will create a length calculation based on the `SRID` of the `geom` data,
-by default this is SRID 3857.
-
-> ⚠️ Warning: PgOSM Flex uses SRID 3857 by default. This generic projection is useful for
-> global web mapping, however it does not provide accurate calculation for most Latitudes
-> of the world. For accurate calculations, either run PgOSM Flex to load data
-> in an accurate, local SRID, or use `ST_Transform(geom, your_srid)`.
-> 
-> See [Accuracy of Geometry data in PostGIS](https://blog.rustprooflabs.com/2023/04/postgis-geometry-accuracy) for more.
-
-The following example creates a length based column using the geometry transformed
-to SRID 2773, ideal for the latitude covering the Denver, Colorado metro region.
-
-```sql
-ALTER TABLE osm.routing_road_edge
-    ADD cost_length DOUBLE PRECISION NOT NULL
-    GENERATED ALWAYS AS (ST_Length(ST_Transform(geom, 2773)))
-    STORED
-;
-```
-
+The forward/reverse costs start with `cost_length` calculation and apply the
+OpenStreetMap `oneway` restrictions.
 
 
 ## Costs Including One Way Restrictions
@@ -107,51 +87,18 @@ This direction data type resolves to `int2` in Postgres. Valid values are:
 * `-1`: One way, reverse travel allowed
 * `NULL`: It's complicated. See [#172](https://github.com/rustprooflabs/pgosm-flex/issues/172).
 
-The `osm.routing_road_edge` table has the `oneway` column from the
-`osm.road_line` table used as the source.
+> Forward and reverse cost columns are calculated in the `cost_length_forward`
+> and `cost_length_reverse` columns within the `osm.routing_prepare_road_network()` procedure.
 
-
-Calculate forward and reverse costs using the `oneway` column. This still provides
-a length-based cost. The change is to also enforce direction restrictions within
-the cost model.
-
-
-```sql
--- Add forward cost column, enforcing oneway restrictions
-ALTER TABLE osm.routing_road_edge
-    ADD cost_length_forward NUMERIC
-    GENERATED ALWAYS AS (
-        CASE WHEN oneway IN (0, 1) OR oneway IS NULL
-                THEN ST_Length(geom)
-            WHEN oneway = -1
-                THEN -1 * ST_Length(geom)
-            END
-    )
-    STORED
-;
-
--- Add reverse cost column, enforcing oneway restrictions
-ALTER TABLE osm.routing_road_edge
-    ADD cost_length_reverse NUMERIC
-    GENERATED ALWAYS AS (
-        CASE WHEN oneway IN (0, -1) OR oneway IS NULL
-                THEN ST_Length(geom)
-            WHEN oneway = 1
-                THEN -1 * ST_Length(geom)
-            END
-    )
-    STORED
-;
-
-COMMENT ON COLUMN osm.routing_road_edge.cost_length_forward IS 'Length based cost for forward travel when using directed travel graphs.';
-COMMENT ON COLUMN osm.routing_road_edge.cost_length_reverse IS 'Length based cost for reverse travel when using directed travel graphs.';
-```
 
 ## Travel Time Costs
 
 With lengths and one-way already calculated per edge, speed limits can be used
 to compute travel time costs.
 
+The `maxspeed` data in `pgosm.road` can be used to generate travel time costs
+per segment.
+[Chapter 16 of Mastering PostGIS and OpenStreetMap](https://book.postgis-osm.com/ch_pgrouting/improve-specific-routing.html) (paid content) provides examples of this approach.
 
 
 # Determine route start and end
@@ -248,9 +195,12 @@ function.  This first example is a simple query from the
 ```sql
 SELECT d.*, n.geom AS node_geom, e.geom AS edge_geom
     FROM pgr_dijkstra(
-        'SELECT edge_id AS id, source, target, cost_length AS cost,
-                geom
-            FROM osm.routing_road_edge
+        'SELECT e.edge_id AS id
+                , e.vertex_id_source AS source
+                , e.vertex_id_target AS target
+                , e.cost_length AS cost
+                , e.geom
+            FROM osm.routing_road_edge e
             ',
             :start_id, :end_id, directed := False
         ) d
@@ -285,7 +235,10 @@ traffic, and it excludes routes marked private.
 ```sql
 SELECT d.*, n.geom AS node_geom, e.geom AS edge_geom
     FROM pgr_dijkstra(
-        'SELECT e.edge_id AS id, e.source, e.target, e.cost_length AS cost,
+        'SELECT e.edge_id AS id
+                , e.vertex_id_source AS source
+                , e.vertex_id_target AS target
+                , e.cost_length AS cost,
                 e.geom
             FROM osm.routing_road_edge e
             WHERE e.route_motor
@@ -300,7 +253,7 @@ SELECT d.*, n.geom AS node_geom, e.geom AS edge_geom
 
 ![Screenshot from DBeaver showing the route generated with all roads and limiting based on route_motor. The route bypasses the road(s) marked access=no and access=private.](dc-example-route-start-motor-access-control.png)
 
-# Oneway-aware routing
+# One-way Aware Routing
 
 The route shown in the previous example now respects the
 access control and limits to routes suitable for motorized traffic.
@@ -317,21 +270,104 @@ If you do not see the route shown in the screenshot below, try switching the
 
 
 ```sql
-    SELECT d.*, n.geom AS node_geom, e.geom AS edge_geom
-        FROM pgr_dijkstra(
-            'SELECT e.edge_id AS id, e.source, e.target
-                    , e.cost_length_forward AS cost
-                    , e.cost_length_reverse AS reverse_cost
-                    , e.geom
-                FROM osm.routing_road_edge e
-                WHERE e.route_motor
-                ',
-                :start_id, :end_id, directed := True
-            ) d
-        INNER JOIN osm.routing_road_vertex n ON d.node = n.id
-        LEFT JOIN osm.routing_road_edge e ON d.edge = e.edge_id
-    ;
+SELECT d.*, n.geom AS node_geom, e.geom AS edge_geom
+    FROM pgr_dijkstra(
+        'SELECT e.edge_id AS id
+                , e.vertex_id_source AS source
+                , e.vertex_id_target AS target
+                , e.cost_length_forward AS cost
+                , e.cost_length_reverse AS reverse_cost
+                , e.geom
+            FROM osm.routing_road_edge e
+            WHERE e.route_motor
+            ',
+            :start_id, :end_id, directed := True
+        ) d
+    INNER JOIN osm.routing_road_vertex n ON d.node = n.id
+    LEFT JOIN osm.routing_road_edge e ON d.edge = e.edge_id
+;
 ```
 
 ![Screenshot from DBeaver showing the route generated with all roads and limiting based on route_motor and using the improved cost model including forward and reverse costs. The route bypasses the road(s) marked access=no and access=private, as well as respects the one-way access controls.](dc-example-route-start-motor-access-control-oneway.png)
+
+
+# Routing with Water
+
+PgOSM Flex also includes a procedure to prepare a routing network using
+the `osm.water_line` table.
+
+```sql
+CALL osm.routing_prepare_water_network();
+```
+
+Find the `vertex_id` for start and end nodes, similar to approach above
+with roads.
+
+```sql
+
+WITH s_point AS (
+SELECT v.id AS start_id, v.geom
+    FROM osm.routing_water_vertex v
+    INNER JOIN (SELECT
+        ST_Transform(ST_SetSRID(ST_MakePoint(-77.050625, 38.908953), 4326), 3857)
+            AS geom
+        ) p ON v.geom <-> p.geom < 200
+    ORDER BY v.geom <-> p.geom
+    LIMIT 1
+), e_point AS (
+SELECT v.id AS end_id, v.geom
+    FROM osm.routing_water_vertex v
+    INNER JOIN (SELECT
+        ST_Transform(ST_SetSRID(ST_MakePoint(-77.055645, 38.888747), 4326), 3857)
+            AS geom
+        ) p ON v.geom <-> p.geom < 200
+    ORDER BY v.geom <-> p.geom
+    LIMIT 1
+)
+SELECT s_point.start_id, e_point.end_id
+        , s_point.geom AS geom_start
+        , e_point.geom AS geom_end
+    FROM s_point, e_point
+;
+```
+
+
+Route, using the directional approach.
+
+```sql
+SELECT d.*, n.geom AS node_geom, e.geom AS edge_geom
+    FROM pgr_dijkstra(
+        'SELECT e.edge_id AS id
+                , e.vertex_id_source AS source
+                , e.vertex_id_target AS target
+                , e.cost_length_forward AS cost
+                , e.cost_length_reverse AS reverse_cost
+                , e.geom
+            FROM osm.routing_water_edge e
+            ',
+            :start_id, :end_id, directed := True
+        ) d
+    INNER JOIN osm.routing_water_vertex n ON d.node = n.id
+    LEFT JOIN osm.routing_water_edge e ON d.edge = e.edge_id
+;
+```
+
+![Example route using D.C. water layer.](dc-water-route-example.png)
+
+## Challenge: Polygons with Water Routing
+
+Waterway routing using lines only is often complicated by the nature of waterways
+and the way routes flow through steams and rivers (lines) and also through ponds
+and lakes (polygons). The data prepared by the above procedure only provides
+the line-based functionality.
+
+The following image ([source](https://blog.rustprooflabs.com/2022/10/pgrouting-lines-through-polygons))
+visualizes the impact polygons can have on a line-only routing network for water routes.
+
+![Image alternates between showing / hiding water polygons, creating significant gaps in the routing network.](https://blog.rustprooflabs.com/static/images/water-polygons-are-important-for-routing.gif)
+
+
+
+See the [Routing with Lines through Polygons](https://blog.rustprooflabs.com/2022/10/pgrouting-lines-through-polygons)
+blog post to explore one possible approach to solving this problem.
 
