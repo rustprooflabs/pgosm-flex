@@ -28,7 +28,6 @@ COMMENT ON PROCEDURE {schema_name}.pgrouting_version_check IS 'Ensures appropria
 
 
 
-
 CREATE OR REPLACE PROCEDURE {schema_name}.routing_prepare_edges()
 LANGUAGE plpgsql
 AS $$
@@ -216,7 +215,7 @@ COMMENT ON PROCEDURE {schema_name}.routing_prepare_edges() IS 'Requires `route_e
 
 
 
-CREATE OR REPLACE PROCEDURE {schema_name}.routing_prepare_roads_for_routing()
+CREATE OR REPLACE PROCEDURE {schema_name}.routing_prepare_roads()
 LANGUAGE plpgsql
 AS $$
 BEGIN
@@ -270,7 +269,7 @@ BEGIN
             , r.route_foot, r.route_cycle, r.route_motor, r.access
             , re.geom
         FROM route_edges_output re
-        INNER JOIN osm.road_line r ON re.osm_id = r.osm_id
+        INNER JOIN {schema_name}.road_line r ON re.osm_id = r.osm_id
         ORDER BY re.geom
     ;
 
@@ -279,20 +278,55 @@ BEGIN
         USING GIST (geom)
     ;
 
-    RAISE NOTICE 'routing_osm_road_edge table created';
+    RAISE NOTICE 'Created table {schema_name}.routing_road_edge with edge data';
+
 
     ALTER TABLE {schema_name}.routing_road_edge
-        ADD cost_length DOUBLE PRECISION NOT NULL
-        GENERATED ALWAYS AS (ST_Length(ST_Transform(geom, 4326)::GEOGRAPHY))
+        ADD cost_length DOUBLE PRECISION NULL;
+
+    UPDATE {schema_name}.routing_road_edge
+        SET cost_length = ST_Length(ST_Transform(geom, 4326)::GEOGRAPHY)
+    ;
+
+    COMMENT ON COLUMN {schema_name}.routing_road_edge.cost_length IS 'Length based cost calculated using GEOGRAPHY for accurate length.';
+
+
+    -- Add forward cost column, enforcing oneway restrictions
+    ALTER TABLE {schema_name}.routing_road_edge
+        ADD cost_length_forward NUMERIC
+        GENERATED ALWAYS AS (
+            CASE WHEN oneway IN (0, 1) OR oneway IS NULL
+                    THEN cost_length
+                WHEN oneway = -1
+                    THEN -1 * cost_length
+                END
+        )
         STORED
     ;
+
+    -- Add reverse cost column, enforcing oneway restrictions
+    ALTER TABLE {schema_name}.routing_road_edge
+        ADD cost_length_reverse NUMERIC
+        GENERATED ALWAYS AS (
+            CASE WHEN oneway IN (0, -1) OR oneway IS NULL
+                    THEN cost_length
+                WHEN oneway = 1
+                    THEN -1 * cost_length
+                END
+        )
+        STORED
+    ;
+
+    COMMENT ON COLUMN {schema_name}.routing_road_edge.cost_length_forward IS 'Length based cost for forward travel when using directed travel graphs.';
+    COMMENT ON COLUMN {schema_name}.routing_road_edge.cost_length_reverse IS 'Length based cost for reverse travel when using directed travel graphs.';
+
 
     DROP TABLE IF EXISTS {schema_name}.routing_road_vertex;
     CREATE TABLE {schema_name}.routing_road_vertex AS
     SELECT  * FROM pgr_extractVertices(
     'SELECT edge_id AS id, geom FROM {schema_name}.routing_road_edge')
     ;
-    RAISE NOTICE 'routing_osm_road_vertex table created';
+    RAISE NOTICE 'Created table {schema_name}.routing_road_vertex from edges.';
 
     CREATE INDEX gix_{schema_name}_routing_road_vertex
         ON {schema_name}.routing_road_vertex
@@ -334,4 +368,4 @@ BEGIN
 END $$;
 
 
-COMMENT ON PROCEDURE {schema_name}.routing_prepare_roads_for_routing IS 'Creates the {schema_name}.routing_road_edge and {schema_name}.routing_road_vertex from the {schema_name}.road_line input data';
+COMMENT ON PROCEDURE {schema_name}.routing_prepare_roads IS 'Creates the {schema_name}.routing_road_edge and {schema_name}.routing_road_vertex from the {schema_name}.road_line input data';
