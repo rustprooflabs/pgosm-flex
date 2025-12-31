@@ -11,14 +11,14 @@ CREATE EXTENSION IF NOT EXISTS pgrouting;
 
 # Process the OpenStreetMap Roads
 
-For routing on `osm.road_line` data use the `osm.routing_prepare_roads`
+For routing on `osm.road_line` data use the `osm.routing_prepare_road_network`
 procedure to prepare the edge and vertex data used for routing.
 
 ```sql
-CALL osm.routing_prepare_roads();
+CALL osm.routing_prepare_road_network();
 ```
 
-The `osm.routing_prepare_roads` procedure focuses on the most common use
+The `osm.routing_prepare_road_network` procedure focuses on the most common use
 cases of routing with the `osm.road_line` layer. It generates the edge/vertex
 network for all data in the `osm.road_line` table. It generates accurate `cost_length`
 by casting data to `GEOGRAPHY` and generates `cost_length_forward`
@@ -26,7 +26,7 @@ and `cost_length_reverse` to natively support directionally-enforced routing
 without additional steps.
 
 
-> ⚠️ The `osm.routing_prepare_roads` procedure was added in PgOSM Flex 1.1.2
+> ⚠️ The `osm.routing_prepare_road_network` procedure was added in PgOSM Flex 1.1.2
 > and is a significant deviation in routing preparation along with pgRouting 4.0.
 > This procedure should be treated as a new feature with potential bugs lurking.
 
@@ -88,7 +88,7 @@ This direction data type resolves to `int2` in Postgres. Valid values are:
 * `NULL`: It's complicated. See [#172](https://github.com/rustprooflabs/pgosm-flex/issues/172).
 
 > Forward and reverse cost columns are calculated in the `cost_length_forward`
-> and `cost_length_reverse` columns within the `osm.routing_prepare_roads()` procedure.
+> and `cost_length_reverse` columns within the `osm.routing_prepare_road_network()` procedure.
 
 
 ## Travel Time Costs
@@ -297,7 +297,7 @@ PgOSM Flex also includes a procedure to prepare a routing network using
 the `osm.water_line` table.
 
 ```sql
-CALL osm.routing_prepare_water();
+CALL osm.routing_prepare_water_network();
 ```
 
 Find the `vertex_id` for start and end nodes, similar to approach above

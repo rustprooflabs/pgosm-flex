@@ -28,7 +28,7 @@ COMMENT ON PROCEDURE {schema_name}.pgrouting_version_check IS 'Ensures appropria
 
 
 
-CREATE OR REPLACE PROCEDURE {schema_name}.routing_prepare_edges()
+CREATE OR REPLACE PROCEDURE {schema_name}.routing_prepare_edge_network()
 LANGUAGE plpgsql
 AS $$
 BEGIN
@@ -211,18 +211,18 @@ BEGIN
     -- Outputs:  `route_edges_output` temp table.
 END $$;
 
-COMMENT ON PROCEDURE {schema_name}.routing_prepare_edges() IS 'Requires `route_edge_input` temp table as input, creates `route_edges_output` temp table as output.';
+COMMENT ON PROCEDURE {schema_name}.routing_prepare_edge_network() IS 'Requires `route_edge_input` temp table as input, creates `route_edges_output` temp table as output.';
 
 
 
-CREATE OR REPLACE PROCEDURE {schema_name}.routing_prepare_roads()
+CREATE OR REPLACE PROCEDURE {schema_name}.routing_prepare_road_network()
 LANGUAGE plpgsql
 AS $$
 BEGIN
 
     CALL {schema_name}.pgrouting_version_check();
 
-    --Create edges table for input to routing_prepare_edges procedure
+    --Create edges table for input to routing_prepare_edge_network procedure
     DROP TABLE IF EXISTS route_edge_input;
     CREATE TEMP TABLE route_edge_input AS
     SELECT osm_id, layer, geom
@@ -230,7 +230,7 @@ BEGIN
     ;
 
     -- Creates the `route_edges_output` table.
-    CALL {schema_name}.routing_prepare_edges();
+    CALL {schema_name}.routing_prepare_edge_network();
 
 
     DROP TABLE IF EXISTS {schema_name}.routing_road_edge;
@@ -368,7 +368,7 @@ BEGIN
 END $$;
 
 
-COMMENT ON PROCEDURE {schema_name}.routing_prepare_roads IS 'Creates the {schema_name}.routing_road_edge and {schema_name}.routing_road_vertex from the {schema_name}.road_line input data';
+COMMENT ON PROCEDURE {schema_name}.routing_prepare_road_network IS 'Creates the {schema_name}.routing_road_edge and {schema_name}.routing_road_vertex from the {schema_name}.road_line input data';
 
 
 
@@ -377,14 +377,14 @@ COMMENT ON PROCEDURE {schema_name}.routing_prepare_roads IS 'Creates the {schema
 --------------------------------------------------
 
 
-CREATE OR REPLACE PROCEDURE {schema_name}.routing_prepare_water()
+CREATE OR REPLACE PROCEDURE {schema_name}.routing_prepare_water_network()
 LANGUAGE plpgsql
 AS $$
 BEGIN
 
     CALL {schema_name}.pgrouting_version_check();
 
-    --Create edges table for input to routing_prepare_edges procedure
+    --Create edges table for input to routing_prepare_edge_network procedure
     DROP TABLE IF EXISTS route_edge_input;
     CREATE TEMP TABLE route_edge_input AS
     SELECT osm_id, layer, geom
@@ -392,7 +392,7 @@ BEGIN
     ;
 
     -- Creates the `route_edges_output` table.
-    CALL {schema_name}.routing_prepare_edges();
+    CALL {schema_name}.routing_prepare_edge_network();
 
 
     DROP TABLE IF EXISTS {schema_name}.routing_water_edge;
@@ -508,4 +508,4 @@ BEGIN
 END $$;
 
 
-COMMENT ON PROCEDURE {schema_name}.routing_prepare_water IS 'Creates the {schema_name}.routing_water_edge and {schema_name}.routing_water_vertex from the {schema_name}.water_line input data';
+COMMENT ON PROCEDURE {schema_name}.routing_prepare_water_network IS 'Creates the {schema_name}.routing_water_edge and {schema_name}.routing_water_vertex from the {schema_name}.water_line input data';
