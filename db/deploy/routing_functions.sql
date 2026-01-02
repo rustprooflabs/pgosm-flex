@@ -136,7 +136,7 @@ BEGIN
 
     CREATE INDEX gix_intersection_blade ON intersection USING GIST (blade);
 
-    RAISE NOTICE 'Intersections table created';
+    RAISE NOTICE 'Intersection table created';
 
 
     -- Create the combination of lines to be split with all points to use for blades.
@@ -159,6 +159,7 @@ BEGIN
         WHERE i.blade NOT IN (e.geom_start, e.geom_end)
         GROUP BY e.id, e.osm_id, e.geom
     ;
+    RAISE NOTICE 'Blades created';
 
     -- Split lines using blades. Assign new `seq` ID (legacy reasons, try to improve this...)
     -- Splitting no longer uses snapping. OpenStreetMap edge data should be properly
@@ -181,6 +182,8 @@ BEGIN
             , *
         FROM splits
     ;
+    RAISE NOTICE 'Split edges created';
+
 
     -------------------------------------------------------
     -- Combine the Split edges with the un-split edges
@@ -213,7 +216,7 @@ BEGIN
         FROM unsplit_lines
     ;
 
-    RAISE NOTICE 'Edge data in route_edges_output temp table. Persist the output to save it.';
+    RAISE NOTICE 'Edge data in route_edges_output temp table.';
     -- Outputs:  `route_edges_output` temp table.
 END $$;
 
@@ -284,7 +287,7 @@ BEGIN
         USING GIST (geom)
     ;
 
-    RAISE NOTICE 'Created table {schema_name}.routing_road_edge with edge data';
+    RAISE NOTICE 'Created table {schema_name}.routing_road_edge';
 
 
     ALTER TABLE {schema_name}.routing_road_edge
@@ -365,6 +368,7 @@ BEGIN
         AND e.vertex_id_target IS NULL
     ;
     
+    RAISE NOTICE 'Edge table updated with vertex source/target details.';
 
     ANALYZE {schema_name}.routing_road_edge;
     ANALYZE {schema_name}.routing_road_vertex;
@@ -504,6 +508,7 @@ BEGIN
         AND e.vertex_id_target IS NULL
     ;
 
+    RAISE NOTICE 'Edge table updated with vertex source/target details.';
 
     ANALYZE {schema_name}.routing_water_edge;
     ANALYZE {schema_name}.routing_water_vertex;
