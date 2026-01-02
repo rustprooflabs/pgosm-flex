@@ -95,9 +95,9 @@ BEGIN
 
 
     --------------------------------------------------------------
-    -- Identify edges overlapping bounding boxes. Enforce same layer, and not
-    -- sharing end points at this step.
-    -- Will establish true intersection in following step
+    -- Identify edges overlapping bounding boxes.
+    -- Enforce same layer, and exclude those sharing end points.
+    -- Will establish true intersection in following step.
     DROP TABLE IF EXISTS nearby;
     CREATE TEMP TABLE nearby AS
     SELECT e1.id AS id1, e2.id AS id2
@@ -123,19 +123,16 @@ BEGIN
     RAISE NOTICE 'Nearby table created';
 
 
-    -- CO -- 2.5 minutes - 110950 rows
+    -- Create table of actual intersections with the point(s) of intersection for blade
     DROP TABLE IF EXISTS intersection;
     CREATE TEMP TABLE intersection AS
-    SELECT e1.id AS id1, e2.id AS id2
-            -- The intersection point is the blade. Calculating here, should
-            -- be the last place we have to join e1 and e2 at same time.
+    SELECT n.id1, n.id2
             , ST_Intersection(e1.geom, e2.geom) AS blade
         FROM nearby n
         INNER JOIN edges_table e1 ON n.id1 = e1.id
         INNER JOIN edges_table e2 ON n.id2 = e2.id
         WHERE ST_Intersects(e1.geom, e2.geom)
     ;
-
 
     CREATE INDEX gix_intersection_blade ON intersection USING GIST (blade);
 
