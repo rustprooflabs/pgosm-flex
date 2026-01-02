@@ -19,6 +19,9 @@ CREATE TABLE IF NOT EXISTS pgosm.road
     CONSTRAINT uq_pgosm_routable_code UNIQUE (region, osm_type)
 );
 
+ALTER TABLE pgosm.road
+    ADD COLUMN IF NOT EXISTS traffic_penalty_normal NUMERIC(3,2) NOT NULL DEFAULT 1.0
+;
 
 COMMENT ON TABLE pgosm.road IS 'Provides lookup information for road layers, generally related to routing use cases.';
 COMMENT ON COLUMN pgosm.road.region IS 'Allows defining different definitions based on region.  Can be custom defined.';
