@@ -118,7 +118,8 @@ BEGIN
             e1.id != e2.id
             -- This tolerance finds general proximity, later refined.
             -- Probably can speed up by switching to simple && bbox query.
-            AND ST_DWithin(e1.geom, e2.geom, 0.1)
+            AND e1.geom && e2.geom
+            --AND ST_DWithin(e1.geom, e2.geom, 0.1)
             -- Don't split line if not on same layer
             AND e1.layer = e2.layer
             -- They don't share start/end points. If they do, this step doesn't matter.
