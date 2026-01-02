@@ -94,31 +94,20 @@ BEGIN
     RAISE NOTICE 'Edge table table created';
 
 
-
-    ------------------------------------------------------------------
-    -- Split long lines where there are route-able intersections
-    -- Based on `pgr_separateTouching()` from pgRouting 4.0 
-    DROP TABLE IF EXISTS initial_intersection;
-    CREATE TEMP TABLE initial_intersection AS
+    --------------------------------------------------------------
+    -- Identify edges overlapping bounding boxes.
+    -- Enforce same layer, and exclude those sharing end points.
+    -- Will establish true intersection in following step.
+    DROP TABLE IF EXISTS nearby;
+    CREATE TEMP TABLE nearby AS
     SELECT e1.id AS id1, e2.id AS id2
-            , e1.osm_id AS osm_id1, e2.osm_id AS osm_id2
-            , e1.layer AS layer1, e2.layer AS layer2
-            , e1.geom AS geom1
-            , e2.geom AS geom2
-            , e1.geom_start AS geom_start1
-            , e1.geom_end AS geom_end1
-            , e2.geom_start AS geom_start2
-            , e2.geom_end AS geom_end2
-            -- The intersection point is the blade
-            , ST_Intersection(e1.geom, e2.geom) AS blade
         FROM edges_table e1
             , edges_table e2
         WHERE
             -- Find all combinations of mismatches.
             e1.id != e2.id
-            -- This tolerance finds general proximity, later refined.
-            -- Probably can speed up by switching to simple && bbox query.
-            AND ST_DWithin(e1.geom, e2.geom, 0.1)
+            -- Proximity of bounding box to start.
+            AND e1.geom && e2.geom
             -- Don't split line if not on same layer
             AND e1.layer = e2.layer
             -- They don't share start/end points. If they do, this step doesn't matter.
@@ -128,9 +117,24 @@ BEGIN
             )
     ;
 
-    CREATE INDEX gix_initial_intersection_geom1 ON initial_intersection USING GIST (geom1);
-    CREATE INDEX gix_initial_intersection_geom2 ON initial_intersection USING GIST (geom2);
-    CREATE INDEX gix_initial_intersection_blade ON initial_intersection USING GIST (blade);
+    CREATE INDEX gix_tmp_nearby_id1 ON nearby (id1);
+    CREATE INDEX gix_tmp_nearby_id2 ON nearby (id2);
+
+    RAISE NOTICE 'Nearby table created';
+
+
+    -- Create table of actual intersections with the point(s) of intersection for blade
+    DROP TABLE IF EXISTS intersection;
+    CREATE TEMP TABLE intersection AS
+    SELECT n.id1, n.id2
+            , ST_Intersection(e1.geom, e2.geom) AS blade
+        FROM nearby n
+        INNER JOIN edges_table e1 ON n.id1 = e1.id
+        INNER JOIN edges_table e2 ON n.id2 = e2.id
+        WHERE ST_Intersects(e1.geom, e2.geom)
+    ;
+
+    CREATE INDEX gix_intersection_blade ON intersection USING GIST (blade);
 
     RAISE NOTICE 'Intersections table created';
 
@@ -139,19 +143,21 @@ BEGIN
     -- Looking at both directions for id1/id2 pairs.
     DROP TABLE IF EXISTS geom_with_blade;
     CREATE TABLE geom_with_blade AS 
-    SELECT id1 AS id, osm_id1 AS osm_id, geom1 AS geom
-            , ST_UnaryUnion(ST_Collect(ST_PointOnSurface(blade))) AS blades
-        FROM initial_intersection
+    SELECT e.id, e.osm_id, e.geom
+            , ST_UnaryUnion(ST_Collect(ST_PointOnSurface(i.blade))) AS blades
+        FROM intersection i
+        INNER JOIN edges_table e ON i.id1 = e.id
         -- Exclude blades same as start/end points
-        WHERE blade NOT IN (geom_start1, geom_end1)
-        GROUP BY id1, osm_id1, geom1
+        WHERE i.blade NOT IN (e.geom_start, e.geom_end)
+        GROUP BY e.id, e.osm_id, e.geom
     UNION
-    SELECT id2 AS id, osm_id2 AS osm_id, geom2 AS geom
-            , ST_UnaryUnion(ST_Collect(ST_PointOnSurface(blade))) AS blades
-        FROM initial_intersection
+    SELECT e.id, e.osm_id, e.geom
+            , ST_UnaryUnion(ST_Collect(ST_PointOnSurface(i.blade))) AS blades
+        FROM intersection i
+        INNER JOIN edges_table e ON i.id2 = e.id
         -- Exclude blades same as start/end points
-        WHERE blade NOT IN (geom_start2, geom_end2)
-        GROUP BY id2, osm_id2, geom2
+        WHERE i.blade NOT IN (e.geom_start, e.geom_end)
+        GROUP BY e.id, e.osm_id, e.geom
     ;
 
     -- Split lines using blades. Assign new `seq` ID (legacy reasons, try to improve this...)
