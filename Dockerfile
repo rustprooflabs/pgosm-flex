@@ -58,10 +58,9 @@ RUN git clone --depth 1 --branch $OSM2PGSQL_BRANCH $OSM2PGSQL_REPO \
 RUN wget https://github.com/rustprooflabs/pgdd/releases/download/0.6.1/pgdd_0.6.1_postgis_pg18_amd64.deb \
     && dpkg -i ./pgdd_0.6.1_postgis_pg18_amd64.deb \
     && rm ./pgdd_0.6.1_postgis_pg18_amd64.deb \
-    && wget https://github.com/rustprooflabs/convert/releases/download/0.0.5/convert_0.0.5_postgis_pg18_amd64.deb \
-    && dpkg -i ./convert_0.0.5_postgis_pg18_amd64.deb \
-    && rm ./convert_0.0.5_postgis_pg18_amd64.deb
-
+    && wget https://github.com/rustprooflabs/convert/releases/download/0.1.0/convert_0.1.0_postgis_pg18_amd64.deb \
+    && dpkg -i ./convert_0.1.0_postgis_pg18_amd64.deb \
+    && rm ./convert_0.1.0_postgis_pg18_amd64.deb
 
 
 WORKDIR /app

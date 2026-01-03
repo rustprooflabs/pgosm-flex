@@ -2,10 +2,12 @@
 
 > If you are using a pgRouting prior to 4.0 see [Routing with pgRouting 3](./routing-3.md).
 
-Create the `pgRouting` extension.
+Create the `pgRouting` and `convert extensions.
+
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS pgrouting;
+CREATE EXTENSION IF NOT EXISTS convert;
 ```
 
 
