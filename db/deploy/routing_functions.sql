@@ -326,10 +326,10 @@ BEGIN
     )
     SELECT a.*
             , convert.ttt_meters_km_hr_to_seconds(
-                a.cost_length_forward, COALESCE(a.maxspeed, r.maxspeed)
+                a.cost_length_forward, COALESCE(a.maxspeed, r.maxspeed) * r.traffic_penalty_normal
             ) AS cost_motor_forward_s
             , convert.ttt_meters_km_hr_to_seconds(
-                a.cost_length_forward, COALESCE(a.maxspeed, r.maxspeed)
+                a.cost_length_reverse, COALESCE(a.maxspeed, r.maxspeed) * r.traffic_penalty_normal
             ) AS cost_motor_reverse_s
         FROM add_forward_reverse a
         INNER JOIN pgosm.road r ON a.osm_type = r.osm_type
@@ -344,34 +344,6 @@ BEGIN
     RAISE NOTICE 'Created table {schema_name}.routing_road_edge';
 
     COMMENT ON COLUMN {schema_name}.routing_road_edge.cost_length IS 'Length based cost calculated using GEOGRAPHY for accurate length.';
-
-    UPDATE {schema_name}.routing_road_edge
-        SET cost_length_forward = 
-                    CASE WHEN oneway IN (0, 1) OR oneway IS NULL
-                        THEN cost_length
-                    WHEN oneway = -1
-                        THEN -1 * cost_length
-                    END
-            , cost_length_reverse = 
-                    CASE WHEN oneway IN (0, -1) OR oneway IS NULL
-                        THEN cost_length
-                    WHEN oneway = 1
-                        THEN -1 * cost_length
-                    END
-    ;
-
-    UPDATE {schema_name}.routing_road_edge e
-        SET cost_motor_forward_s =
-            convert.ttt_meters_km_hr_to_seconds(
-                cost_length_forward, COALESCE(e.maxspeed, r.maxspeed)
-            )
-            , cost_motor_reverse_s =
-            convert.ttt_meters_km_hr_to_seconds(
-                cost_length_reverse, COALESCE(e.maxspeed, r.maxspeed)
-            )
-    FROM pgosm.road r
-    WHERE e.osm_type = r.osm_type
-    ;
 
     COMMENT ON COLUMN {schema_name}.routing_road_edge.cost_length_forward IS 'Length based cost for forward travel with directed routing. Based on cost_length value.';
     COMMENT ON COLUMN {schema_name}.routing_road_edge.cost_length_reverse IS 'Length based cost for reverse travel with directed routing. Based on cost_length value.';

@@ -1,4 +1,4 @@
-# Routing with pgRouting 3
+# Routing Roads: Legacy (pgRouting 3)
 
 If you are using a pgRouting 4.0 or later see [Routing with pgRouting 4](./routing-4.md).
 
