@@ -157,6 +157,83 @@ the `pgosm.road.traffic_penalty_normal` column, to compute travel time.
 > timing model. Other penalty / cost models can also be investigated.
 
 
+# Routing by Joining to Inputs
+
+This next example expands beyond using singular routes to generating routes
+based on a table of inputs. The `osm.route_motor_travel_time()` function is
+a set-returning function and can be used in a lateral join.
+
+## Example Table - Random Points
+
+For the purpose of this example, create a temp table `route_vertex_combos`
+with a few start/end points to route between.  The `LIMIT 4` sets the number
+of vertices to select. The final output is `(N * N) - N` potential routes
+to generate.
+
+```sql
+DROP TABLE IF EXISTS route_vertex_combos;
+CREATE TEMP TABLE route_vertex_combos AS
+WITH vertices AS (
+SELECT v.id AS vertex_id, v.geom
+    FROM osm.routing_road_vertex v
+    INNER JOIN osm.routing_road_edge e
+        ON v.id IN (e.vertex_id_source, e.vertex_id_target)
+        AND e.route_motor
+    ORDER BY random()
+    LIMIT 4 -- results in row count:  (N * N) - N
+)
+SELECT a.vertex_id AS vertex_id_start
+        , b.vertex_id AS vertex_id_end
+    FROM vertices a
+    CROSS JOIN vertices b
+    -- Don't route to yourself :)
+    WHERE a.vertex_id <> b.vertex_id
+;
+```
+
+## Generate the Routes
+
+The table if start/end points can be joined to the `osm.route_motor_travel_time()`
+function.
+
+```sql
+DROP TABLE IF EXISTS public.my_random_routes;
+CREATE TABLE public.my_random_routes AS 
+SELECT v.*, rte.*
+    FROM route_vertex_combos v
+    CROSS JOIN LATERAL osm.route_motor_travel_time(v.vertex_id_start, v.vertex_id_end) rte
+;
+```
+
+> Warning: The above query can take a long time to execute, depending on the number of inputs and the
+> size of your routing network. It is often best to calculate routes in batches
+> instead of a full join like shown in this simple example.
+
+
+Routes can now be examined with costs often desired to be converted to minutes
+or hours. The example here shows an example of a long route taking a few hours.
+
+```sql
+SELECT vertex_id_start, vertex_id_end, segments
+        , total_cost_seconds / 60 AS total_cost_minutes
+        , total_cost_seconds / 60 / 60 AS total_cost_hours
+        , geom
+    FROM public.my_routes
+    WHERE vertex_id_start = 1817591
+        AND vertex_id_end = 17109
+;
+```
+
+
+```
+┌─────────────────┬───────────────┬──────────┬────────────────────┬───────────────────┐
+│ vertex_id_start │ vertex_id_end │ segments │ total_cost_minutes │ total_cost_hours  │
+╞═════════════════╪═══════════════╪══════════╪════════════════════╪═══════════════════╡
+│         1817591 │         17109 │      783 │   350.379710135436 │ 5.839661835590601 │
+└─────────────────┴───────────────┴──────────┴────────────────────┴───────────────────┘
+```
+
+
 
 # Routing Data Preparation Timing
 
