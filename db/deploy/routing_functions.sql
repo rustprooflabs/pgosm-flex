@@ -1,7 +1,8 @@
-CREATE OR REPLACE PROCEDURE {schema_name}.pgrouting_version_check()
+CREATE OR REPLACE PROCEDURE {schema_name}.extension_version_check()
 LANGUAGE plpgsql
 AS $$
     DECLARE pgr_ver TEXT;
+    DECLARE convert_version TEXT;
 BEGIN
         -- Ensure pgRouting extension exists with at least pgRouting 4.0
         IF NOT EXISTS (
@@ -21,10 +22,28 @@ BEGIN
                 pgr_ver;
         END IF;
 
+        -- Ensure convert extension exists with at least convert 0.1.0
+        IF NOT EXISTS (
+            SELECT 1 FROM pg_extension WHERE extname = 'convert'
+        ) THEN
+            RAISE EXCEPTION
+                'The convert extension is not installed. Version >= 0.1.0 required.';
+        END IF;
+
+        SELECT extversion INTO convert_version FROM pg_extension WHERE extname = 'convert'
+        ;
+
+        -- Enforce minimum version
+        IF string_to_array(convert_version, '.')::INT[] < ARRAY[0,1,0] THEN
+            RAISE EXCEPTION
+                'Convert version % detected. Version >= 0.1.0 required.',
+                convert_version;
+        END IF;
+
 END $$;
 
 
-COMMENT ON PROCEDURE {schema_name}.pgrouting_version_check IS 'Ensures appropriate pgRouting extension is installed with an appropriate version.';
+COMMENT ON PROCEDURE {schema_name}.extension_version_check IS 'Ensures pgRouting and convert extensions are installed with appropriate versions.';
 
 
 
@@ -229,7 +248,7 @@ LANGUAGE plpgsql
 AS $$
 BEGIN
 
-    CALL {schema_name}.pgrouting_version_check();
+    CALL {schema_name}.extension_version_check();
 
     --Create edges table for input to routing_prepare_edge_network procedure
     DROP TABLE IF EXISTS route_edge_input;
@@ -263,68 +282,75 @@ BEGIN
         , tunnel TEXT
         , bridge TEXT
         , access TEXT
-        , geom GEOMETRY(LINESTRING)
+        , cost_length DOUBLE PRECISION
+        , cost_length_forward DOUBLE PRECISION NULL
+        , cost_length_reverse DOUBLE PRECISION NULL
+        , cost_motor_forward_s DOUBLE PRECISION NULL
+        , cost_motor_reverse_s DOUBLE PRECISION NULL
+        , geom GEOMETRY(LINESTRING) NOT NULL
         --, UNIQUE (osm_id, sub_id) -- Currently not enforceable... dups exist...
     );
 
     INSERT INTO {schema_name}.routing_road_edge (
         osm_id, sub_id, osm_type, name, ref, maxspeed, oneway, layer, tunnel, bridge, major
         , route_foot, route_cycle, route_motor, access
-        , geom
+        , cost_length
+        , geom -- Through geom is in initial query
+        -- Forward/reverse added next
+        , cost_length_forward, cost_length_reverse
+        -- Travel times added last.
+        , cost_motor_forward_s, cost_motor_reverse_s
     )
+    WITH add_cost AS (
     SELECT re.osm_id, re.sub_id
             , r.osm_type, r.name, r.ref, r.maxspeed
             , r.oneway, re.layer, r.tunnel, r.bridge, r.major
             , r.route_foot, r.route_cycle, r.route_motor, r.access
+            , ST_Length(ST_Transform(re.geom, 4326)::GEOGRAPHY) AS cost_length
             , re.geom
         FROM route_edges_output re
         INNER JOIN {schema_name}.road_line r ON re.osm_id = r.osm_id
-        ORDER BY re.geom
+    ), add_forward_reverse AS (
+    SELECT a.*
+            ,  CASE WHEN a.oneway IN (0, 1) OR a.oneway IS NULL
+                        THEN a.cost_length
+                    WHEN a.oneway = -1
+                        THEN -1 * a.cost_length
+                    END AS cost_length_forward
+            , CASE WHEN a.oneway IN (0, -1) OR a.oneway IS NULL
+                        THEN a.cost_length
+                    WHEN a.oneway = 1
+                        THEN -1 * a.cost_length
+                    END AS cost_length_reverse
+        FROM add_cost a
+    )
+    SELECT a.*
+            , convert.ttt_meters_km_hr_to_seconds(
+                a.cost_length_forward, COALESCE(a.maxspeed, r.maxspeed) * r.traffic_penalty_normal
+            ) AS cost_motor_forward_s
+            , convert.ttt_meters_km_hr_to_seconds(
+                a.cost_length_reverse, COALESCE(a.maxspeed, r.maxspeed) * r.traffic_penalty_normal
+            ) AS cost_motor_reverse_s
+        FROM add_forward_reverse a
+        INNER JOIN pgosm.road r ON a.osm_type = r.osm_type
+        ORDER BY a.geom
     ;
 
-    CREATE INDEX gix_{schema_name}_routing_road_edge
+    CREATE INDEX gix_{schema_name}_routing_road_edge_geom
         ON {schema_name}.routing_road_edge
         USING GIST (geom)
     ;
+    CREATE INDEX ix_{schema_name}_routing_road_edge_vertex_id_source
+        ON {schema_name}.routing_road_edge (vertex_id_source)
+    ;
+    CREATE INDEX ix_{schema_name}_routing_road_edge_vertex_id_target
+        ON {schema_name}.routing_road_edge (vertex_id_target)
+    ;
+
 
     RAISE NOTICE 'Created table {schema_name}.routing_road_edge';
 
-
-    ALTER TABLE {schema_name}.routing_road_edge
-        ADD cost_length DOUBLE PRECISION NULL;
-
-    UPDATE {schema_name}.routing_road_edge
-        SET cost_length = ST_Length(ST_Transform(geom, 4326)::GEOGRAPHY)
-    ;
-
     COMMENT ON COLUMN {schema_name}.routing_road_edge.cost_length IS 'Length based cost calculated using GEOGRAPHY for accurate length.';
-
-
-    -- Add forward cost column, enforcing oneway restrictions
-    ALTER TABLE {schema_name}.routing_road_edge
-        ADD cost_length_forward NUMERIC
-        GENERATED ALWAYS AS (
-            CASE WHEN oneway IN (0, 1) OR oneway IS NULL
-                    THEN cost_length
-                WHEN oneway = -1
-                    THEN -1 * cost_length
-                END
-        )
-        STORED
-    ;
-
-    -- Add reverse cost column, enforcing oneway restrictions
-    ALTER TABLE {schema_name}.routing_road_edge
-        ADD cost_length_reverse NUMERIC
-        GENERATED ALWAYS AS (
-            CASE WHEN oneway IN (0, -1) OR oneway IS NULL
-                    THEN cost_length
-                WHEN oneway = 1
-                    THEN -1 * cost_length
-                END
-        )
-        STORED
-    ;
 
     COMMENT ON COLUMN {schema_name}.routing_road_edge.cost_length_forward IS 'Length based cost for forward travel with directed routing. Based on cost_length value.';
     COMMENT ON COLUMN {schema_name}.routing_road_edge.cost_length_reverse IS 'Length based cost for reverse travel with directed routing. Based on cost_length value.';
@@ -392,7 +418,7 @@ LANGUAGE plpgsql
 AS $$
 BEGIN
 
-    CALL {schema_name}.pgrouting_version_check();
+    CALL {schema_name}.extension_version_check();
 
     --Create edges table for input to routing_prepare_edge_network procedure
     DROP TABLE IF EXISTS route_edge_input;
@@ -520,3 +546,53 @@ END $$;
 
 
 COMMENT ON PROCEDURE {schema_name}.routing_prepare_water_network IS 'Creates the {schema_name}.routing_water_edge and {schema_name}.routing_water_vertex from the {schema_name}.water_line input data';
+
+
+
+
+CREATE OR REPLACE FUNCTION {schema_name}.route_motor_travel_time(
+   route_vertex_id_start BIGINT, route_vertex_id_end BIGINT
+)
+RETURNS TABLE (segments BIGINT, vertex_ids BIGINT[], edge_ids BIGINT[]
+        , total_cost_seconds DOUBLE PRECISION, geom GEOMETRY
+)
+LANGUAGE plpgsql
+ROWS 5
+AS $function$
+
+BEGIN
+
+    RETURN QUERY
+    WITH route_steps AS (
+    SELECT d.node AS vertex_id
+            , d.edge AS edge_id
+            , d.cost
+            , n.geom AS node_geom, e.geom AS edge_geom
+        FROM pgr_dijkstra(
+            'SELECT e.edge_id AS id
+                    , e.vertex_id_source AS source
+                    , e.vertex_id_target AS target
+                    , e.cost_motor_forward_s AS cost
+                    , e.cost_motor_reverse_s AS reverse_cost
+                    , e.geom
+                FROM {schema_name}.routing_road_edge e
+                WHERE e.route_motor
+                ',
+                route_vertex_id_start, route_vertex_id_end, directed := True
+            ) d
+        INNER JOIN {schema_name}.routing_road_vertex n ON d.node = n.id
+        LEFT JOIN {schema_name}.routing_road_edge e ON d.edge = e.edge_id
+    )
+    SELECT COUNT(*) AS segments
+            , ARRAY_AGG(vertex_id) AS vertex_ids
+            , ARRAY_AGG(edge_id) AS edge_ids
+            , SUM(cost) AS total_cost_seconds
+            , ST_Collect(edge_geom) AS geom
+        FROM route_steps
+;
+END
+$function$
+;
+
+COMMENT ON FUNCTION {schema_name}.route_motor_travel_time IS 'Computes best route using ideal travel time costs. Does not account for traffic.';
+

@@ -40,20 +40,16 @@ passed along to osm2pgsql, with post-processing steps creating indexes,
 constraints and comments.
 
 
-## Versions Supported
+## Minimum Versions Supported
 
-Minimum versions supported:
-
-* Postgres 12
-* PostGIS 3.0
-
-This project will attempt, but not guarantee, to support PostgreSQL 12 until it
-reaches it EOL support.
+This project will attempt, but not guarantee, to support each major PostgreSQL version
+until it reaches it EOL support.
 
 The Docker image is pinned to osm2pgsql's `master` branch. Users of the Docker image
 naturally use the latest version of osm2pgsql at the time the Docker image was created.
 
-This project runs entirely in Docker, optionally connecting to an external Postgres instance.
+This project runs entirely in Docker, optionally connecting to an external
+Postgres instance at runtime.
 It should work on any typical OS able to run Docker.
 
 

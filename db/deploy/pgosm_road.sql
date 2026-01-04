@@ -19,6 +19,10 @@ CREATE TABLE IF NOT EXISTS pgosm.road
     CONSTRAINT uq_pgosm_routable_code UNIQUE (region, osm_type)
 );
 
+ALTER TABLE pgosm.road
+    ADD COLUMN IF NOT EXISTS traffic_penalty_normal NUMERIC(3,2) NOT NULL DEFAULT 1.0
+;
+
 
 COMMENT ON TABLE pgosm.road IS 'Provides lookup information for road layers, generally related to routing use cases.';
 COMMENT ON COLUMN pgosm.road.region IS 'Allows defining different definitions based on region.  Can be custom defined.';
@@ -26,7 +30,7 @@ COMMENT ON COLUMN pgosm.road.osm_type IS 'Value from highway tags.';
 COMMENT ON COLUMN pgosm.road.route_motor IS 'Used to filter for classifications that typically allow motorized traffic.';
 COMMENT ON COLUMN pgosm.road.route_foot IS 'Used to filter for classifications that typically allow foot traffic.';
 COMMENT ON COLUMN pgosm.road.route_cycle IS 'Used to filter for classifications that typically allow bicycle traffic.';
-COMMENT ON COLUMN pgosm.road.maxspeed IS 'Maxspeed in km/hr';
-COMMENT ON COLUMN pgosm.road.maxspeed_mph IS 'Maxspeed in mph';
+COMMENT ON COLUMN pgosm.road.maxspeed IS 'Max speed in km/hr';
+COMMENT ON COLUMN pgosm.road.maxspeed_mph IS 'Max speed in mph. Calculated from max speed in km/hr.';
 
 COMMIT;

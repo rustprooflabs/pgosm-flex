@@ -1,16 +1,22 @@
-# Routing with pgRouting 3
+# Routing Roads: Legacy (pgRouting 3)
 
-If you are using a pgRouting 4.0 or later see [Routing with pgRouting 4](./routing-4.md).
+## Plan your Upgrade!
 
-New development in PgOSM Flex will focus support on pgRouting 4.0 support
-per the Versions Supported section  [in the About page](./readme.md).
-[PgOSM Flex 1.1.2](https://github.com/rustprooflabs/pgosm-flex/releases/tag/1.1.2)
-simplified and improved performance in the routing data preparation.
+This page is a legacy documentation page for versions of pgRouting
+older than 4.0. This process requires more manual effort to setup and
+results in lower-quality routing networks compared to the
+[latest procedures](./routing-road.md).
 
+It is recommended to use pgRouting 4.0 or later, see [the latest Routing Roads](./routing-road.md)
+documentation.
 
-> ⚠️ This page will remain in the PgOSM documentation through at least 2026 to ensure
+> ⚠️ This page is no longer maintained.
+>
+> This page will remain in the PgOSM documentation for the foreseeable future to ensure
 > continuity for a transition to pgRouting 4.0.
-> There will not be improvements made to these legacy instructions.
+
+
+## Getting Started
 
 Create the `pgRouting` extension.
 

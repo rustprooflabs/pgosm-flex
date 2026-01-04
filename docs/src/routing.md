@@ -1,5 +1,24 @@
 # Routing with PgOSM Flex
 
+This section provides details about routing with OpenStreetMap data loaded by
+PgOSM Flex.  The primary focus of this documentation supports pgRouting 4.0
+and newer, with legacy documentation available for older versions.
+
+## Prepare for Routing
+
+The Postgres database needs to have both [`pgrouting`](https://pgrouting.org/)
+and [`convert`](https://github.com/rustprooflabs/convert) extensions installed. 
+These extensions are both available in the PgOSM Flex Docker image, they are your
+responsibility to install in external Postgres instances.
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pgrouting;
+CREATE EXTENSION IF NOT EXISTS convert;
+```
+
+
+## Data File for Examples
+
 This page provides a simple example of using OpenStreetMap roads
 loaded with PgOSM Flex for routing.
 The example uses the D.C. PBF included under `tests/data/`.
@@ -28,55 +47,24 @@ docker exec -it \
 ```
 
 
-## Prepare for routing
+# Prepare Data and Route
 
-Create the `pgrouting` extension if it does not already exist.
-Also create the `routing` schema to store the data used in this
-example.
+It is highly recommended to use [Routing with pgRouting 4.0](./routing-4.md).
+Not all steps are backward compatible with older versions of
+pgRouting. Table names, column names, and more have changed in recent versions.
 
+The goal with the rewritten docs is improved understanding and usability.
 
-```sql
-CREATE EXTENSION IF NOT EXISTS pgrouting SCHEMA public;
-CREATE SCHEMA IF NOT EXISTS routing;
-```
+## Legacy Routing Instructions
 
-> This command explicitly specifies the `public` schema to enforce the expected default
-> and avoid unexpected behavior with custom  `search_path` settings.
+If you must use an older version of pgRouting, see
+[Routing with pgRouting 3](./routing-3.md).
+These are the legacy procedures that used pgRouting functions removed in pgRouting 4.0.
 
-### Prepare data for routing
+> The significnat improvements with routing in PgOSM Flex are focused on
+> pgRouting 4.0 and newer. The queries used in the latest versions are not
+> fully backward compatible to older version of pgRouting.
 
-The [pgRouting 4.0 release](https://github.com/pgRouting/pgrouting/releases/tag/v4.0.0)
-removed functions previously used for data preparation in the original documentation.
-
-The routing setup instructions are now scoped to which version of pgRouting you are
-using. You can check your version with `pgr_version()`.
-
-```sql
-SELECT * FROM pgr_version();
-```
-
-```
-pgr_version|
------------+
-4.0.0      |
-```
-
-
-Follow the instructions for your version of pgRouting.
-
-* [Routing with pgRouting 3](./routing-3.md)
-* [Routing with pgRouting 4](./routing-4.md)
-
-> PgOSM Flex 1.1.1 and later packages `pgRouting` 4.0.
-> If you are using external Postgres
-> as the target for your data, the pgRouting version you have installed is in
-> your control.
-
-
-
-The 4.0 instructions have been rewritten to improve naming conventions and reduce
-artifacts left behind from the process. The goal with the rewritten docs is improved
-understanding and usability.
 
 The pre-4.0 documentation used naming conventions aimed at conforming
 to pgRouting's naming conventions surrounding the legacy functions.
