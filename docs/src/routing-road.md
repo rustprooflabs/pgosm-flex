@@ -158,12 +158,6 @@ the `pgosm.road.traffic_penalty_normal` column, to compute travel time.
 
 
 
-----
-
-# OLD NOTES
-
-
-
 # Routing Data Preparation Timing
 
 

@@ -336,10 +336,17 @@ BEGIN
         ORDER BY a.geom
     ;
 
-    CREATE INDEX gix_{schema_name}_routing_road_edge
+    CREATE INDEX gix_{schema_name}_routing_road_edge_geom
         ON {schema_name}.routing_road_edge
         USING GIST (geom)
     ;
+    CREATE INDEX ix_{schema_name}_routing_road_edge_vertex_id_source
+        ON {schema_name}.routing_road_edge (vertex_id_source)
+    ;
+    CREATE INDEX ix_{schema_name}_routing_road_edge_vertex_id_target
+        ON {schema_name}.routing_road_edge (vertex_id_target)
+    ;
+
 
     RAISE NOTICE 'Created table {schema_name}.routing_road_edge';
 
