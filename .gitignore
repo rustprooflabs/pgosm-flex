@@ -1,0 +1,9 @@
+tests/tmp/*
+output/
+**/.coverage
+**/__pycache__
+pgosm-data/*
+docs/book/*
+.vscode/*
+**/*.gv
+**/.ipynb_checkpoints

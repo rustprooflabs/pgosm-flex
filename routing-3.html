@@ -1,0 +1,522 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js rust">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Routing Roads: Legacy (pgRouting 3) - PgOSM Flex User Guide</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="PgOSM Flex provides high quality OpenStreetMap datasets in PostGIS using the osm2pgsql Flex output">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "rust";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('rust')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">About PgOSM Flex</a></li><li class="chapter-item expanded affix "><a href="code-of-conduct.html">Code of Conduct</a></li><li class="chapter-item expanded affix "><a href="contributing.html">Contributing to PgOSM Flex</a></li><li class="chapter-item expanded affix "><li class="part-title">User Guide</li><li class="chapter-item expanded "><a href="quick-start.html"><strong aria-hidden="true">1.</strong> Quick Start</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="windows.html"><strong aria-hidden="true">1.1.</strong> Running on Windows</a></li></ol></li><li class="chapter-item expanded "><a href="customizations.html"><strong aria-hidden="true">2.</strong> Customize PgOSM Flex</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="common-customization.html"><strong aria-hidden="true">2.1.</strong> Common Customizations</a></li><li class="chapter-item expanded "><a href="layersets.html"><strong aria-hidden="true">2.2.</strong> Layersets</a></li><li class="chapter-item expanded "><a href="custom-indexes.html"><strong aria-hidden="true">2.3.</strong> Indexes</a></li><li class="chapter-item expanded "><a href="configure-postgres.html"><strong aria-hidden="true">2.4.</strong> Configure Postgres</a></li><li class="chapter-item expanded "><a href="data-files.html"><strong aria-hidden="true">2.5.</strong> Data Files</a></li></ol></li><li class="chapter-item expanded "><a href="query.html"><strong aria-hidden="true">3.</strong> Query examples</a></li><li class="chapter-item expanded "><a href="routing.html"><strong aria-hidden="true">4.</strong> Routing</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="routing-road.html"><strong aria-hidden="true">4.1.</strong> Routing Roads</a></li><li class="chapter-item expanded "><a href="routing-water.html"><strong aria-hidden="true">4.2.</strong> Routing Water</a></li><li class="chapter-item expanded "><a href="routing-process.html"><strong aria-hidden="true">4.3.</strong> Routing Process</a></li><li class="chapter-item expanded "><a href="routing-3.html" class="active"><strong aria-hidden="true">4.4.</strong> Routing Roads: Legacy (pgRouting 3)</a></li></ol></li><li class="chapter-item expanded "><a href="performance.html"><strong aria-hidden="true">5.</strong> Processing Time</a></li><li class="chapter-item expanded affix "><li class="part-title">Production Use</li><li class="chapter-item expanded "><a href="postgres-permissions.html"><strong aria-hidden="true">6.</strong> Postgres Permissions</a></li><li class="chapter-item expanded "><a href="postgres-external.html"><strong aria-hidden="true">7.</strong> Using External Postgres Connection</a></li><li class="chapter-item expanded "><a href="data-updates.html"><strong aria-hidden="true">8.</strong> Data updates</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="replication.html"><strong aria-hidden="true">8.1.</strong> Using Replication</a></li><li class="chapter-item expanded "><a href="relocate-data.html"><strong aria-hidden="true">8.2.</strong> Relocate Data</a></li><li class="chapter-item expanded "><a href="update-mode.html"><strong aria-hidden="true">8.3.</strong> Using Update Mode</a></li></ol></li><li class="chapter-item expanded "><a href="qgis-styles.html"><strong aria-hidden="true">9.</strong> QGIS Styles</a></li><li class="chapter-item expanded affix "><li class="part-title">Developers</li><li class="chapter-item expanded "><a href="force-load.html"><strong aria-hidden="true">10.</strong> Force Load</a></li><li class="chapter-item expanded "><a href="projects.html"><strong aria-hidden="true">11.</strong> Projects using PgOSM Flex</a></li><li class="chapter-item expanded "><a href="docker-build.html"><strong aria-hidden="true">12.</strong> Build and Push Docker Images</a></li><li class="chapter-item expanded "><a href="tests.html"><strong aria-hidden="true">13.</strong> Testing PgOSM Flex</a></li><li class="chapter-item expanded "><a href="qgis-styles-dev.html"><strong aria-hidden="true">14.</strong> Developing QGIS Styles</a></li><li class="chapter-item expanded "><a href="troubleshooting.html"><strong aria-hidden="true">15.</strong> Troubleshoot errors in osm2pgsql processing</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">PgOSM Flex User Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/rustprooflabs/pgosm-flex" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/rustprooflabs/pgosm-flex/edit/main/docs/src/routing-3.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="routing-roads-legacy-pgrouting-3"><a class="header" href="#routing-roads-legacy-pgrouting-3">Routing Roads: Legacy (pgRouting 3)</a></h1>
+<h2 id="plan-your-upgrade"><a class="header" href="#plan-your-upgrade">Plan your Upgrade!</a></h2>
+<p>This page is a legacy documentation page for versions of pgRouting
+older than 4.0. This process requires more manual effort to setup and
+results in lower-quality routing networks compared to the
+<a href="./routing-road.html">latest procedures</a>.</p>
+<p>It is recommended to use pgRouting 4.0 or later, see <a href="./routing-road.html">the latest Routing Roads</a>
+documentation.</p>
+<blockquote>
+<p>⚠️ This page is no longer maintained.</p>
+<p>This page will remain in the PgOSM documentation for the foreseeable future to ensure
+continuity for a transition to pgRouting 4.0.</p>
+</blockquote>
+<h2 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h2>
+<p>Create the <code>pgRouting</code> extension.</p>
+<pre><code class="language-sql">CREATE EXTENSION IF NOT EXISTS pgrouting;
+</code></pre>
+<h2 id="clean-the-data"><a class="header" href="#clean-the-data">Clean the data</a></h2>
+<p>The following query does the initial cleanup for preparing OpenStreetMap roads
+for routing. The following code is converting multi-linestrings to standard
+linestrings for subsequent processing steps.</p>
+<pre><code class="language-sql">CREATE TABLE routing.road_line AS
+WITH a AS (
+-- Remove as many multi-linestrings as possible with ST_LineMerge() 
+SELECT osm_id, osm_type, maxspeed, oneway, layer,
+        route_foot, route_cycle, route_motor, access,
+        ST_LineMerge(geom) AS geom
+    FROM osm.road_line
+), extra_cleanup AS (
+-- Pull out those that are still multi, use ST_Dump() to pull out parts
+SELECT osm_id, osm_type, maxspeed, oneway, layer,
+        route_foot, route_cycle, route_motor, access,
+        (ST_Dump(geom)).geom AS geom
+    FROM a 
+    WHERE ST_GeometryType(geom) = 'ST_MultiLineString'
+), combined AS (
+-- Combine two sources
+SELECT osm_id, osm_type, maxspeed, oneway, layer,
+        route_foot, route_cycle, route_motor, access,
+        geom
+    FROM a
+    WHERE ST_GeometryType(geom) != 'ST_MultiLineString'
+UNION
+SELECT osm_id, osm_type, maxspeed, oneway, layer,
+        route_foot, route_cycle, route_motor, access,
+        geom
+    FROM extra_cleanup
+    -- Some data may be lost here if multi-linestring somehow
+    -- persists through the extra_cleanup query
+    WHERE ST_GeometryType(geom) != 'ST_MultiLineString'
+)
+-- Calculate a new surrogate ID for key
+SELECT ROW_NUMBER() OVER (ORDER BY geom) AS id, *
+    FROM combined
+    ORDER BY geom
+;
+</code></pre>
+<p>The above query creates the <code>routing.road_line</code> table.  The next step
+adds some database best practices to the table:</p>
+<ul>
+<li>Explain why a surrogate ID was added</li>
+<li>Primary key on the <code>id</code> column</li>
+<li>Index on <code>osm_id</code></li>
+</ul>
+<pre><code class="language-sql">COMMENT ON COLUMN routing.road_line.id IS 'Surrogate ID, cannot rely on osm_id being unique after converting multi-linestrings to linestrings.';
+ALTER TABLE routing.road_line
+    ADD CONSTRAINT pk_routing_road_line PRIMARY KEY (id)
+;
+CREATE INDEX ix_routing_road_line_osm_id
+    ON routing.road_line (osm_id)
+;
+</code></pre>
+<p>To prepare the OpenStreetMap roads data for routing with the older pgRouting
+installation, run the
+pgRouting functions <code>pgr_nodeNetwork()</code>, <code>pgr_createTopology()</code>,
+and <code>pgr_analyzeGraph()</code>.</p>
+<pre><code class="language-sql">SELECT pgr_nodeNetwork('routing.road_line', 0.1, 'id', 'geom');
+SELECT pgr_createTopology('routing.road_line_noded', 0.1, 'geom');
+SELECT pgr_analyzeGraph('routing.road_line_noded', 0.1, 'geom');
+</code></pre>
+<blockquote>
+<p>Note: These functions were all removed in pgRouting 4.0.</p>
+</blockquote>
+<p>Running the functions shown above will create two (2) new tables
+usable for routing.</p>
+<ul>
+<li><code>routing.road_line_noded</code></li>
+<li><code>routing.road_line_noded_vertices_pgr</code></li>
+</ul>
+<h2 id="timing-note"><a class="header" href="#timing-note">Timing note</a></h2>
+<p>The pgRouting functions shown in the preceding section can take a
+long time to complete on larger regions.
+It is often a good idea to run these from <code>psql</code> within a screen
+emulator, such as <code>screen</code> or <code>tmux</code> that allow you to disconnect
+from the long-running command without cancelling the query.</p>
+<h2 id="determine-costs"><a class="header" href="#determine-costs">Determine Costs</a></h2>
+<p>Routing requires a cost in order to determine the best route to
+take.
+The following query creates a simple <code>cost_length</code> column to
+the <code>routing.road_line_noded</code> table as a generated column.
+This is a simple way to get started with costs for routing.</p>
+<pre><code class="language-sql">ALTER TABLE routing.road_line_noded
+    ADD cost_length DOUBLE PRECISION NOT NULL
+    GENERATED ALWAYS AS (ST_Length(geom))
+    STORED; 
+</code></pre>
+<blockquote>
+<p>Note: This is for non-directional routing.  See the <em>Routing <code>oneway</code></em> section below for more on directional routing.</p>
+</blockquote>
+<h1 id="determine-route-start-and-end"><a class="header" href="#determine-route-start-and-end">Determine route start and end</a></h1>
+<p>The following query identifies the vertex IDs for a start and end point 
+to use for later queries. The query uses an input set of points
+created from specific longitude/latitude values.
+Use the <code>start_id</code> and <code>end_id</code> values from this query
+in subsequent queries through the <code>:start_id</code> and <code>:end_id</code> variables
+via DBeaver.</p>
+<pre><code class="language-sql">WITH s_point AS (
+SELECT v.id AS start_id
+    FROM routing.road_line_noded_vertices_pgr v
+    INNER JOIN (SELECT
+        ST_Transform(ST_SetSRID(ST_MakePoint(-77.0211, 38.92255), 4326), 3857)
+            AS geom
+        ) p ON v.the_geom &lt;-&gt; geom &lt; 10
+    ORDER BY v.the_geom &lt;-&gt; geom
+    LIMIT 1
+), e_point AS (
+SELECT v.id AS end_id
+    FROM routing.road_line_noded_vertices_pgr v
+    INNER JOIN (SELECT
+        ST_Transform(ST_SetSRID(ST_MakePoint(-77.0183, 38.9227), 4326), 3857)
+            AS geom
+        ) p ON v.the_geom &lt;-&gt; geom &lt; 10
+    ORDER BY v.the_geom &lt;-&gt; geom
+    LIMIT 1
+)
+SELECT s_point.start_id, e_point.end_id
+    FROM s_point, e_point
+;
+</code></pre>
+<pre><code class="language-bash">┌──────────┬────────┐
+│ start_id │ end_id │
+╞══════════╪════════╡
+│    14630 │  14686 │
+└──────────┴────────┘
+</code></pre>
+<blockquote>
+<p>Warning: The vertex IDs returned by the above query will vary. The pgRouting functions that generate this data do not guarantee data will always be generated in precisely the same order, causing these IDs to be different.</p>
+</blockquote>
+<p>The vertex IDs returned were <code>14630</code> and <code>14686</code>.  These points
+span a particular segment of road (<code>osm_id = 6062791</code>) that is tagged
+as <code>highway=residential</code> and <code>access=private</code>.
+This segment is used to illustrate how the calculated access
+control columns, <code>route_motor</code>, <code>route_cycle</code> and <code>route_foot</code>,
+can influence route selection.</p>
+<pre><code class="language-sql">SELECT *
+    FROM routing.road_line
+    WHERE osm_id = 6062791
+;
+</code></pre>
+<p><img src="dc-example-route-start-end-vertices.png" alt="Screenshot from QGIS showing two labeled points, 14630 and 14686. The road between the two points is shown with a light gray dash indicating the access tag indicates non-public travel." /></p>
+<blockquote>
+<p>See <code>flex-config/helpers.lua</code> functions (e.g. <code>routable_motor()</code>) for logic behind access control columns.</p>
+</blockquote>
+<h1 id="simple-route"><a class="header" href="#simple-route">Simple route</a></h1>
+<p>Using <code>pgr_dijkstra()</code> and no additional filters will
+use all roads from OpenStreetMap without regard to mode of travel
+or access rules.
+This query picks a route that traverses sidewalks and
+a section of road with the
+<a href="https://wiki.openstreetmap.org/wiki/Tag:access%3Dprivate"><code>access=private</code> tag from OpenStreetMap</a>.
+The key details to focus on in the following queries
+is the string containing a SQL query passed into the <code>pgr_dijkstra()</code>
+function.  This first example is a simple query from the
+<code>routing.road_line_noded</code> table.</p>
+<blockquote>
+<p>Note:  These queries are intended to be ran using DBeaver.  The <code>:start_id</code> and <code>:end_id</code> variables work within DBeaver, but not via <code>psql</code> or QGIS.  Support in other GUIs is unknown at this time (PRs welcome!).</p>
+</blockquote>
+<pre><code class="language-sql">SELECT d.*, n.the_geom AS node_geom, e.geom AS edge_geom
+    FROM pgr_dijkstra(
+        'SELECT id, source, target, cost_length AS cost,
+                geom
+            FROM routing.road_line_noded
+            ',
+            :start_id, :end_id, directed := False
+        ) d
+    INNER JOIN routing.road_line_noded_vertices_pgr n ON d.node = n.id
+    LEFT JOIN routing.road_line_noded e ON d.edge = e.id
+;
+</code></pre>
+<p><img src="dc-example-route-start-no-access-control.png" alt="Screenshot from DBeaver showing the route generated with all roads and no access control. The route is direct, traversing the road marked access=private." /></p>
+<h1 id="route-motorized"><a class="header" href="#route-motorized">Route motorized</a></h1>
+<p>The following query modifies the query passed in to <code>pgr_dijkstra()</code>
+to join the <code>routing.road_line_noded</code> table to the
+<code>routing.road_line</code> table.  This allows using attributes available
+in the upstream table for additional routing logic.
+The join clause includes a filter on the <code>route_motor</code> column.</p>
+<p>From the comment on the <code>osm.road_line.route_motor</code> column:</p>
+<blockquote>
+<p>&quot;Best guess if the segment is route-able for motorized traffic. If access is no or private, set to false. WARNING: This does not indicate that this method of travel is safe OR allowed!&quot;</p>
+</blockquote>
+<p>Based on this comment, we can expect that adding <code>AND r.route_motor</code>
+into the filter will ensure the road type is suitable for motorized
+traffic, and it excludes routes marked private. </p>
+<pre><code class="language-sql">SELECT d.*, n.the_geom AS node_geom, e.geom AS edge_geom
+    FROM pgr_dijkstra(
+        'SELECT n.id, n.source, n.target, n.cost_length AS cost,
+                n.geom
+            FROM routing.road_line_noded n
+            INNER JOIN routing.road_line r ON n.old_id = r.id
+                    AND r.route_motor
+            ',
+            :start_id, :end_id, directed := False
+        ) d
+    INNER JOIN routing.road_line_noded_vertices_pgr n ON d.node = n.id
+    LEFT JOIN routing.road_line_noded e ON d.edge = e.id
+;
+</code></pre>
+<p><img src="dc-example-route-start-motor-access-control.png" alt="Screenshot from DBeaver showing the route generated with all roads and limiting based on route_motor. The route bypasses the road(s) marked access=no and access=private." /></p>
+<h1 id="route-oneway"><a class="header" href="#route-oneway">Route <code>oneway</code></a></h1>
+<p>The route shown in the previous example now respects the
+access control and limits to routes suitable for motorized traffic.
+It, however, <strong>did not</strong> respect the one-way access control.
+The very first segment (top-left corner of screenshot) went
+the wrong way on a one-way street.
+This behavior is a result of the simple length-based cost model.</p>
+<p>The <code>oneway</code> column in the road tables uses
+<a href="https://osm2pgsql.org/doc/manual.html#type-conversions">osm2pgsql's <code>direction</code> data type</a> which resolves to <code>int2</code> in Postgres.
+Valid values are:</p>
+<ul>
+<li><code>0</code>: Not one way</li>
+<li><code>1</code>: One way, forward travel allowed</li>
+<li><code>-1</code>: One way, reverse travel allowed</li>
+<li><code>NULL</code>: It's complicated. See #172.</li>
+</ul>
+<p>Assuming a noded roads table routing table, bring over the <code>oneway</code> detail</p>
+<pre><code class="language-sql">ALTER TABLE routing.road_line_noded
+    ADD oneway INT2 NULL
+;
+
+UPDATE routing.road_line_noded rn
+    SET oneway = r.oneway
+    FROM routing.road_line r
+    WHERE rn.old_id = r.id AND rn.oneway IS NULL
+;
+</code></pre>
+<h2 id="forward-and-reverse-costs"><a class="header" href="#forward-and-reverse-costs">Forward and reverse costs</a></h2>
+<p>Calculate forward cost.</p>
+<pre><code class="language-sql">ALTER TABLE routing.road_line_noded
+    DROP COLUMN IF EXISTS cost_length
+;
+
+-- Cost with oneway considerations
+ALTER TABLE routing.road_line_noded
+    ADD cost_length NUMERIC
+    GENERATED ALWAYS AS (
+        CASE WHEN oneway IN (0, 1) OR oneway IS NULL
+                THEN ST_Length(geom)
+            WHEN oneway = -1
+                THEN -1 * ST_Length(geom)
+            END
+    )
+    STORED
+;
+</code></pre>
+<p>Reverse cost.</p>
+<pre><code class="language-sql">-- Reverse cost with oneway considerations
+ALTER TABLE routing.road_line_noded
+    ADD cost_length_reverse NUMERIC
+    GENERATED ALWAYS AS (
+        CASE WHEN oneway IN (0, -1) OR oneway IS NULL
+                THEN ST_Length(geom)
+            WHEN oneway = 1
+                THEN -1 * ST_Length(geom)
+            END
+    )
+    STORED
+;
+</code></pre>
+<p>This query uses the new reverse cost column, and changes
+<code>directed</code> from <code>False</code> to <code>True</code>.</p>
+<pre><code class="language-sql">SELECT d.*, n.the_geom AS node_geom, e.geom AS edge_geom
+    FROM pgr_dijkstra(
+        'SELECT n.id, n.source, n.target, n.cost_length AS cost,
+                n.cost_length_reverse AS reverse_cost,
+                n.geom
+            FROM routing.road_line_noded n
+            INNER JOIN routing.road_line r ON n.old_id = r.id
+                    AND r.route_motor
+            ',
+            :start_id, :end_id, directed := True
+        ) d
+    INNER JOIN routing.road_line_noded_vertices_pgr n ON d.node = n.id
+    LEFT JOIN routing.road_line_noded e ON d.edge = e.id
+;
+</code></pre>
+<p><img src="dc-example-route-start-motor-access-control-oneway.png" alt="Screenshot from DBeaver showing the route generated with all roads and limiting based on route_motor and using the improved cost model including forward and reverse costs. The route bypasses the road(s) marked access=no and access=private, as well as respects the one-way access controls." /></p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="routing-process.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="performance.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="routing-process.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="performance.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

@@ -1,0 +1,430 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js rust">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Quick Start - PgOSM Flex User Guide</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="PgOSM Flex provides high quality OpenStreetMap datasets in PostGIS using the osm2pgsql Flex output">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "rust";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('rust')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">About PgOSM Flex</a></li><li class="chapter-item expanded affix "><a href="code-of-conduct.html">Code of Conduct</a></li><li class="chapter-item expanded affix "><a href="contributing.html">Contributing to PgOSM Flex</a></li><li class="chapter-item expanded affix "><li class="part-title">User Guide</li><li class="chapter-item expanded "><a href="quick-start.html" class="active"><strong aria-hidden="true">1.</strong> Quick Start</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="windows.html"><strong aria-hidden="true">1.1.</strong> Running on Windows</a></li></ol></li><li class="chapter-item expanded "><a href="customizations.html"><strong aria-hidden="true">2.</strong> Customize PgOSM Flex</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="common-customization.html"><strong aria-hidden="true">2.1.</strong> Common Customizations</a></li><li class="chapter-item expanded "><a href="layersets.html"><strong aria-hidden="true">2.2.</strong> Layersets</a></li><li class="chapter-item expanded "><a href="custom-indexes.html"><strong aria-hidden="true">2.3.</strong> Indexes</a></li><li class="chapter-item expanded "><a href="configure-postgres.html"><strong aria-hidden="true">2.4.</strong> Configure Postgres</a></li><li class="chapter-item expanded "><a href="data-files.html"><strong aria-hidden="true">2.5.</strong> Data Files</a></li></ol></li><li class="chapter-item expanded "><a href="query.html"><strong aria-hidden="true">3.</strong> Query examples</a></li><li class="chapter-item expanded "><a href="routing.html"><strong aria-hidden="true">4.</strong> Routing</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="routing-road.html"><strong aria-hidden="true">4.1.</strong> Routing Roads</a></li><li class="chapter-item expanded "><a href="routing-water.html"><strong aria-hidden="true">4.2.</strong> Routing Water</a></li><li class="chapter-item expanded "><a href="routing-process.html"><strong aria-hidden="true">4.3.</strong> Routing Process</a></li><li class="chapter-item expanded "><a href="routing-3.html"><strong aria-hidden="true">4.4.</strong> Routing Roads: Legacy (pgRouting 3)</a></li></ol></li><li class="chapter-item expanded "><a href="performance.html"><strong aria-hidden="true">5.</strong> Processing Time</a></li><li class="chapter-item expanded affix "><li class="part-title">Production Use</li><li class="chapter-item expanded "><a href="postgres-permissions.html"><strong aria-hidden="true">6.</strong> Postgres Permissions</a></li><li class="chapter-item expanded "><a href="postgres-external.html"><strong aria-hidden="true">7.</strong> Using External Postgres Connection</a></li><li class="chapter-item expanded "><a href="data-updates.html"><strong aria-hidden="true">8.</strong> Data updates</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="replication.html"><strong aria-hidden="true">8.1.</strong> Using Replication</a></li><li class="chapter-item expanded "><a href="relocate-data.html"><strong aria-hidden="true">8.2.</strong> Relocate Data</a></li><li class="chapter-item expanded "><a href="update-mode.html"><strong aria-hidden="true">8.3.</strong> Using Update Mode</a></li></ol></li><li class="chapter-item expanded "><a href="qgis-styles.html"><strong aria-hidden="true">9.</strong> QGIS Styles</a></li><li class="chapter-item expanded affix "><li class="part-title">Developers</li><li class="chapter-item expanded "><a href="force-load.html"><strong aria-hidden="true">10.</strong> Force Load</a></li><li class="chapter-item expanded "><a href="projects.html"><strong aria-hidden="true">11.</strong> Projects using PgOSM Flex</a></li><li class="chapter-item expanded "><a href="docker-build.html"><strong aria-hidden="true">12.</strong> Build and Push Docker Images</a></li><li class="chapter-item expanded "><a href="tests.html"><strong aria-hidden="true">13.</strong> Testing PgOSM Flex</a></li><li class="chapter-item expanded "><a href="qgis-styles-dev.html"><strong aria-hidden="true">14.</strong> Developing QGIS Styles</a></li><li class="chapter-item expanded "><a href="troubleshooting.html"><strong aria-hidden="true">15.</strong> Troubleshoot errors in osm2pgsql processing</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">PgOSM Flex User Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/rustprooflabs/pgosm-flex" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/rustprooflabs/pgosm-flex/edit/main/docs/src/quick-start.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="quick-start"><a class="header" href="#quick-start">Quick Start</a></h1>
+<p>The bulk of the PgOSM Flex user guide is written for <code>*nix</code> users.
+The Quick Start, however, includes an additional section <a href="./windows.html">Running on Windows</a>
+provides guidance for Windows users.  Windows users are advised to read
+this section before continuing to the Windows specific steps, as many concepts
+are not repeated in the Windows instructions.</p>
+<h2 id="tldr"><a class="header" href="#tldr">TLDR;</a></h2>
+<p>The following code block shows the commands needed to run PgOSM Flex.
+The sections below provide explanations of these commands.</p>
+<pre><code class="language-bash">mkdir ~/pgosm-data
+export POSTGRES_USER=postgres
+export POSTGRES_PASSWORD=mysecretpassword
+
+# Ensure you have the latest Docker image
+docker pull rustprooflabs/pgosm-flex
+
+docker run --name pgosm -d --rm \
+    -v ~/pgosm-data:/app/output \
+    -v /etc/localtime:/etc/localtime:ro \
+    -e POSTGRES_USER=$POSTGRES_USER \
+    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+    -p 5433:5432 -d rustprooflabs/pgosm-flex
+
+docker exec -it \
+    pgosm python3 docker/pgosm_flex.py \
+    --ram=8 \
+    --region=north-america/us \
+    --subregion=district-of-columbia
+</code></pre>
+<h2 id="pgosm-via-docker"><a class="header" href="#pgosm-via-docker">PgOSM via Docker</a></h2>
+<p>The PgOSM Flex
+<a href="https://hub.docker.com/r/rustprooflabs/pgosm-flex">Docker image</a>
+is hosted on Docker Hub.
+The image includes all the pre-requisite software and handles all of the options,
+logic, and post-processing steps required.  Features include:</p>
+<ul>
+<li>Automatic data download from Geofabrik and validation against checksum</li>
+<li>Custom Flex layers built in Lua</li>
+<li>Mix and match layers using Layersets</li>
+<li>Loads to Docker-internal Postgres, or externally defined Postgres</li>
+<li>Supports <code>osm2pgsql-replication</code> and <code>osm2pgsql --append</code> mode</li>
+<li>Export processed data via <code>pg_dump</code> for loading into additional databases</li>
+</ul>
+<h2 id="docker-usage"><a class="header" href="#docker-usage">Docker usage</a></h2>
+<p>This section outlines a typical import using Docker to run PgOSM Flex.</p>
+<h3 id="prepare"><a class="header" href="#prepare">Prepare</a></h3>
+<p>Create a directory to use a common location to share with the Docker container.
+This is used to link to the internal path where the <code>.osm.pbf</code> file, <code>.md5</code> file,
+and (optional) output <code>.sql</code> files are saved.</p>
+<pre><code class="language-bash">mkdir ~/pgosm-data
+</code></pre>
+<h3 id="run"><a class="header" href="#run">Run</a></h3>
+<p>Set environment variables for the temporary Postgres connection in Docker.
+These are required for the Docker container to run.</p>
+<pre><code class="language-bash">export POSTGRES_USER=postgres
+export POSTGRES_PASSWORD=mysecretpassword
+</code></pre>
+<p>Start the <code>pgosm</code> Docker container. At this point, Postgres / PostGIS
+is available on port <code>5433</code>.</p>
+<pre><code class="language-bash">docker run --name pgosm -d --rm \
+    -v ~/pgosm-data:/app/output \
+    -v /etc/localtime:/etc/localtime:ro \
+    -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+    -p 5433:5432 -d rustprooflabs/pgosm-flex
+</code></pre>
+<h3 id="check-docker-container-running"><a class="header" href="#check-docker-container-running">Check Docker container running</a></h3>
+<p>It is worth verifying the Docker container is successfully running with <code>docker ps -a</code>.
+Check for a <code>STATUS</code> similar to <code>Up 4 seconds</code> shown in the example output below.</p>
+<pre><code class="language-bash">$ docker ps -a
+
+CONTAINER ID   IMAGE                      COMMAND                  CREATED         STATUS         PORTS                                       NAMES
+e7f80926a823   rustprooflabs/pgosm-flex   &quot;docker-entrypoint.s…&quot;   5 seconds ago   Up 4 seconds   0.0.0.0:5433-&gt;5432/tcp, :::5433-&gt;5432/tcp   pgosm
+</code></pre>
+<h3 id="execute-pgosm-flex"><a class="header" href="#execute-pgosm-flex">Execute PgOSM Flex</a></h3>
+<p>Use <code>docker exec</code> to run the processing for the Washington D.C subregion.
+This example uses three (3) parameters to specify the total system RAM (8 GB)
+along with a region/subregion.</p>
+<ul>
+<li>Total RAM for osm2pgsql, Postgres and OS (<code>8</code>)</li>
+<li>Region (<code>north-america/us</code>)</li>
+<li>Sub-region (<code>district-of-columbia</code>) (Optional)</li>
+</ul>
+<pre><code class="language-bash">docker exec -it \
+    pgosm python3 docker/pgosm_flex.py \
+    --ram=8 \
+    --region=north-america/us \
+    --subregion=district-of-columbia
+</code></pre>
+<p>The above command takes roughly 1 minute to run if the PBF for today
+has already been downloaded.
+If the PBF is not downloaded it will depend on how long
+it takes to download the 17 MB PBF file + ~ 1 minute processing.</p>
+<h2 id="after-processing"><a class="header" href="#after-processing">After processing</a></h2>
+<p>The processed OpenStreetMap data is also available in the Docker container on port <code>5433</code>.
+You can connect and query directly in the Docker container.</p>
+<pre><code class="language-bash">psql -h localhost -p 5433 -d pgosm -U postgres -c &quot;SELECT COUNT(*) FROM osm.road_line;&quot;
+
+┌───────┐
+│ count │
+╞═══════╡
+│ 39865 │
+└───────┘
+</code></pre>
+<p>The <code>~/pgosm-data</code> directory has two (2) files from a typical single run.
+The PBF file and its MD5 checksum have been renamed with the date in the filename.
+This enables loading the file downloaded today 
+again in the future, either with the same version of PgOSM Flex or the latest version. The <code>docker exec</code> command uses the <code>PGOSM_DATE</code> environment variable
+to load these historic files.</p>
+<p>If <code>--pg-dump</code> option is used the output <code>.sql</code> is also saved in
+the <code>~/pgosm-data</code> directory.
+This <code>.sql</code> file can be loaded into any other database with PostGIS and the proper
+permissions.</p>
+<pre><code class="language-bash">ls -alh ~/pgosm-data/
+
+-rw-r--r-- 1 root     root      18M Jan 21 03:45 district-of-columbia-2023-01-21.osm.pbf
+-rw-r--r-- 1 root     root       70 Jan 21 04:39 district-of-columbia-2023-01-21.osm.pbf.md5
+-rw-r--r-- 1 root     root     163M Jan 21 16:14 north-america-us-district-of-columbia-default-2023-01-21.sql
+</code></pre>
+<h2 id="meta-table"><a class="header" href="#meta-table">Meta table</a></h2>
+<p>PgOSM Flex tracks processing metadata in the <code>osm.pgosm_flex</code>  table. The initial import
+has <code>osm2pgsql_mode = 'create'</code>, the subsequent update has
+<code>osm2pgsql_mode = 'append'</code>. </p>
+<pre><code class="language-sql">SELECT osm_date, region, srid,
+        pgosm_flex_version, osm2pgsql_version, osm2pgsql_mode
+    FROM osm.pgosm_flex
+;
+</code></pre>
+<pre><code class="language-bash">┌────────────┬───────────────────────────┬──────┬────────────────────┬───────────────────┬────────────────┐
+│  osm_date  │          region           │ srid │ pgosm_flex_version │ osm2pgsql_version │ osm2pgsql_mode │
+╞════════════╪═══════════════════════════╪══════╪════════════════════╪═══════════════════╪════════════════╡
+│ 2022-11-04 │ north-america/us-colorado │ 3857 │ 0.6.2-e1f140f      │ 1.7.2             │ create         │
+│ 2022-11-25 │ north-america/us-colorado │ 3857 │ 0.6.2-e1f140f      │ 1.7.2             │ append         │
+└────────────┴───────────────────────────┴──────┴────────────────────┴───────────────────┴────────────────┘
+</code></pre>
+<h2 id="explore-data-loaded"><a class="header" href="#explore-data-loaded">Explore data loaded</a></h2>
+<p>A peek at some of the tables loaded.
+This query requires the
+<a href="https://github.com/rustprooflabs/pgdd">PostgreSQL Data Dictionary (PgDD) extension</a>,
+use <code>\dt+ osm.*</code> in <code>psql</code> for similar details.</p>
+<pre><code class="language-sql">SELECT s_name, t_name, rows, size_plus_indexes 
+    FROM dd.tables 
+    WHERE s_name = 'osm' 
+    ORDER BY t_name LIMIT 10;
+</code></pre>
+<pre><code class="language-bash">    ┌────────┬──────────────────────┬────────┬───────────────────┐
+    │ s_name │        t_name        │  rows  │ size_plus_indexes │
+    ╞════════╪══════════════════════╪════════╪═══════════════════╡
+    │ osm    │ amenity_line         │      7 │ 56 kB             │
+    │ osm    │ amenity_point        │   5796 │ 1136 kB           │
+    │ osm    │ amenity_polygon      │   7593 │ 3704 kB           │
+    │ osm    │ building_point       │    525 │ 128 kB            │
+    │ osm    │ building_polygon     │ 161256 │ 55 MB             │
+    │ osm    │ indoor_line          │      1 │ 40 kB             │
+    │ osm    │ indoor_point         │      5 │ 40 kB             │
+    │ osm    │ indoor_polygon       │    288 │ 136 kB            │
+    │ osm    │ infrastructure_point │    884 │ 216 kB            │
+    │ osm    │ landuse_point        │     18 │ 56 kB             │
+    └────────┴──────────────────────┴────────┴───────────────────┘
+</code></pre>
+<h2 id="one-table-to-rule-them-all"><a class="header" href="#one-table-to-rule-them-all">One table to rule them all</a></h2>
+<p>From the perspective of database design, the <code>osm.unitable</code> option is the <strong>worst</strong>!
+This table violates all sorts of best practices established in this project
+by shoving all features into a single unstructured table.</p>
+<p>The Unitable data is loaded with the <code>everything</code> layerset.
+Of course, you can create your own customized layerset including this style
+if needed.</p>
+<blockquote>
+<p>The <code>osm.unitable</code> table is intended to be used for troubleshooting and
+quality control.  It is not intended to be used for production workloads!
+This table is most helpful for exploring the full data set when you don't
+really know what you are looking for, but you know <strong>where</strong> you are looking.</p>
+</blockquote>
+<pre><code class="language-bash">docker exec -it \
+    pgosm python3 docker/pgosm_flex.py \
+    --ram=8 \
+    --region=north-america/us \
+    --subregion=district-of-columbia \
+    --layerset=everything
+</code></pre>
+<blockquote>
+<p>The <code>unitable.lua</code> script included in this project was <a href="https://github.com/openstreetmap/osm2pgsql/blob/master/flex-config/unitable.lua">adapted from the unitable example from osm2pgsql</a>. This version uses <code>JSONB</code> instead of <code>HSTORE</code>, and takes advantage of <code>helpers.lua</code> to easily customize SRID.</p>
+</blockquote>
+<h2 id="jsonb-support"><a class="header" href="#jsonb-support">JSONB support</a></h2>
+<p>PgOSM-Flex uses <code>JSONB</code> in Postgres to store the raw OpenStreetMap
+key/value data (<code>tags</code> column) and relation members (<code>member_ids</code>).
+The <code>tags</code> column only exists in the <code>osm.tags</code> and <code>osm.unitable</code> tables.
+The <code>member_ids</code> column is included in:</p>
+<ul>
+<li><code>osm.place_polygon</code></li>
+<li><code>osm.poi_polygon</code></li>
+<li><code>osm.public_transport_line</code></li>
+<li><code>osm.public_transport_polygon</code></li>
+<li><code>osm.road_line</code></li>
+<li><code>osm.road_major</code></li>
+<li><code>osm.road_polygon</code></li>
+</ul>
+<h2 id="additional-resources"><a class="header" href="#additional-resources">Additional resources</a></h2>
+<p>Blog posts covering various details and background information.</p>
+<ul>
+<li><a href="https://blog.rustprooflabs.com/2022/10/announce-mastering-postgis-openstreemap">Book Release! Mastering PostGIS and OpenStreetMap</a></li>
+<li><a href="https://blog.rustprooflabs.com/2021/01/pgosm-flex-improved-openstreetmap-places-postgis">Better OpenStreetMap places in PostGIS</a></li>
+<li><a href="https://blog.rustprooflabs.com/2021/01/postgis-openstreetmap-flex-structure">Improved OpenStreetMap data structure in PostGIS</a> </li>
+<li><a href="https://blog.rustprooflabs.com/2020/12/osm2gpsql-flex-output-to-postgis">Hands on with osm2pgsql's new Flex output</a>.</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="contributing.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="windows.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="contributing.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="windows.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
