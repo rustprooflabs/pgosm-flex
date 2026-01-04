@@ -17,7 +17,6 @@ the initial migration.
 > These procedures should be treated as a new feature with potential bugs lurking.
 
 
-
 ## Costs Including One Way Restrictions
 
 Most real-world routing examples need to be aware of one-way travel restrictions.
@@ -63,3 +62,19 @@ In most common routing scenarios this will under-report travel times due
 to not considering for traffic signals, slowing down for corners, and traffic in
 general.
 
+
+## Customize the Edge Network Generation
+
+The `osm.routing_prepare_road_network` and `osm.routing_prepare_water_network` 
+procedures are bundled in PgOSM Flex as a convenient and easy starting point
+for realistic routing. They are not expected to be "perfect" or meet every routing
+use case.  Feel free to script out those procedures to modify for your own needs.
+The source SQL for these procedures can be found
+in the [`db/deploy`](https://github.com/rustprooflabs/pgosm-flex/tree/main/db/deploy)
+folder in the repository.
+
+The main procedures to prepare the road and water networks leverage a common
+procedure `osm.routing_prepare_edge_network()`. You most likely want to use this
+procedure within your custom logic, it handles the nitty-gritty details of preparing
+the edges/vertices.  The outer procedures handle layer-specific columns, cost models,
+and other minutia.

@@ -1,9 +1,9 @@
 # Routing Roads
 
 PgOSM Flex makes it easy to get started with routing with OpenStreetMap data
-and pgRouting. The best support is available with pgRouting 4.0 and newer.
-
-> If you are using a pgRouting prior to 4.0 see [Routing Roads: Legacy (pgRouting 3)](./routing-3.md).
+and pgRouting. The best experience is with pgRouting 4.0 and newer.
+If you are using a pgRouting prior to 4.0 see
+[Routing Roads: Legacy (pgRouting 3)](./routing-3.md).
 
 
 ## Prepare routing edge networks
