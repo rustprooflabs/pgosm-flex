@@ -10,8 +10,6 @@ import sys
 from time import sleep
 import git
 
-import db
-
 
 DEFAULT_SRID = '3857'
 
@@ -74,7 +72,7 @@ def run_command_via_subprocess(
     return status
 
 
-def verify_checksum_original(md5_file: str, path: str):
+def verify_checksum(md5_file: str, path: str):
     """Verifies checksum of osm pbf file.
 
     If verification fails calls `sys.exit()`
@@ -136,10 +134,7 @@ def set_env_vars(
     os.environ['PGOSM_LAYERSET'] = layerset
     os.environ['SCHEMA_NAME'] = schema_name
 
-    # PGOSM_CONN is required to be set by the Lua styles used by osm2pgsql
-    os.environ['PGOSM_CONN'] = db.connection_string()
-    # Connection to DB for admin purposes, e.g. drop/create main database
-    os.environ['PGOSM_CONN_PG'] = db.connection_string(admin=True)
+    # Moved DB Conn string details to database.py
 
     pgosm_region = get_region_combined(region, subregion)
     logger.debug(f'PGOSM_REGION_COMBINED: {pgosm_region}')
@@ -219,7 +214,7 @@ class ImportMode():
     """Determines logical variables used to control program flow.
 
     WARNING:  The values for `append_first_run` and `replication_update`
-    are used to determine when to drop the local DB.  Be careful with any
+    are used to determine when to drop the local database.  Be careful with any
     changes to these values.
     """
     def __init__(

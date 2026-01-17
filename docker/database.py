@@ -67,6 +67,13 @@ def connection_string(admin: bool=False) -> str:
 
     return conn_string
 
+def set_db_env_vars():
+    """Set the Postgres connection string environment variables"""
+    # PGOSM_CONN is required to be set by the Lua styles used by osm2pgsql
+    os.environ['PGOSM_CONN'] = connection_string()
+    # Connection to DB for admin purposes, e.g. drop/create main database
+    os.environ['PGOSM_CONN_PG'] = connection_string(admin=True)
+
 
 def pg_conn_parts() -> dict:
     """Returns dictionary of connection parts based on environment variables

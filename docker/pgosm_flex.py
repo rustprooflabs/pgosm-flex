@@ -15,7 +15,7 @@ import sys
 import click
 
 import osm2pgsql_recommendation as rec
-import db, geofabrik, helpers
+import database, geofabrik, helpers
 
 
 @click.command()
@@ -95,8 +95,10 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
     helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
                          layerset, layerset_path, schema_name,
                          skip_nested)
-    db.wait_for_postgres()
-    if force and db.pg_conn_parts()['pg_host'] == 'localhost':
+    database.set_db_env_vars()
+
+    database.wait_for_postgres()
+    if force and database.pg_conn_parts()['pg_host'] == 'localhost':
         msg = 'Using --force with the built-in database is unnecessary.'
         msg += ' The pgosm database is always dropped and recreated when'
         msg += ' running on localhost (in Docker).'
@@ -127,12 +129,12 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
                                      update=update,
                                      force=force)
 
-    db.prepare_pgosm_db(skip_qgis_style=skip_qgis_style,
+    database.prepare_pgosm_db(skip_qgis_style=skip_qgis_style,
                         db_path=paths['db_path'],
                         import_mode=import_mode,
                         schema_name=schema_name)
 
-    prior_import = db.get_prior_import(schema_name=schema_name)
+    prior_import = database.get_prior_import(schema_name=schema_name)
 
     if not import_mode.okay_to_run(prior_import):
         msg = 'Not okay to run PgOSM Flex. Exiting'
@@ -147,7 +149,7 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
                                        cwd='/usr/bin/',
                                        output_lines=vers_lines)
 
-    import_id = db.start_import(pgosm_region=helpers.get_region_combined(region, subregion),
+    import_id = database.start_import(pgosm_region=helpers.get_region_combined(region, subregion),
                                 pgosm_date=pgosm_date,
                                 srid=srid,
                                 language=language,
@@ -179,12 +181,12 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
 
     if not success:
         msg = 'PgOSM Flex completed with errors. Details in output'
-        db.log_import_message(import_id=import_id, msg='Failed',
+        database.log_import_message(import_id=import_id, msg='Failed',
                               schema_name=schema_name)
         logger.warning(msg)
         sys.exit(msg)
 
-    db.log_import_message(import_id=import_id, msg='Completed',
+    database.log_import_message(import_id=import_id, msg='Completed',
                           schema_name=schema_name)
 
     dump_database(input_file=input_file,
@@ -208,11 +210,6 @@ def run_osm2pgsql_standard(
         ) -> bool:
     """Runs standard osm2pgsql command and optionally inits for replication
     (osm2pgsql-replication) mode.
-
-    Returns
-    ---------------------------
-    post_processing : boolean
-        Indicates overall success/failure of the steps within this function.
     """
     logger = logging.getLogger('pgosm-flex')
 
@@ -227,8 +224,7 @@ def run_osm2pgsql_standard(
                                                      out_path=out_path,
                                                      import_mode=import_mode)
 
-    run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, flex_path=flex_path,
-                  debug=debug)
+    run_osm2pgsql(osm2pgsql_command=osm2pgsql_command, flex_path=flex_path)
 
     if not skip_nested:
         # Don't expect user to use --skip-nested when place isn't included
@@ -237,8 +233,7 @@ def run_osm2pgsql_standard(
     post_processing = run_post_processing(flex_path=flex_path,
                                           skip_nested=skip_nested,
                                           import_mode=import_mode,
-                                          schema_name=schema_name,
-                                          import_id=import_id)
+                                          schema_name=schema_name)
 
     if import_mode.replication:
         run_osm2pgsql_replication_init(pbf_path=out_path,
@@ -256,7 +251,7 @@ def run_replication_update(skip_nested: bool, flex_path: str) -> bool:
     """Runs osm2pgsql-replication between the DB start/finish steps.
     """
     logger = logging.getLogger('pgosm-flex')
-    conn_string = db.connection_string()
+    conn_string = database.connection_string()
 
     update_cmd = """
 osm2pgsql-replication update -d $PGOSM_CONN \
@@ -266,16 +261,18 @@ osm2pgsql-replication update -d $PGOSM_CONN \
     """
 
     update_cmd = update_cmd.replace('-d $PGOSM_CONN', f'-d {conn_string}')
-    returncode = helpers.run_command_via_subprocess(cmd=update_cmd.split(),
-                                                    cwd=flex_path,
-                                                    print_to_log=True)
+    returncode = helpers.run_command_via_subprocess(
+        cmd=update_cmd.split()
+        , cwd=flex_path
+        , print_to_log=True
+        )
 
     if returncode != 0:
         err_msg = f'Failure. Return code: {returncode}'
         logger.warning(err_msg)
         return False
 
-    db.osm2pgsql_replication_finish(skip_nested=skip_nested)
+    database.osm2pgsql_replication_finish(skip_nested=skip_nested)
     logger.info('osm2pgsql-replication update complete')
     return True
 
@@ -300,12 +297,7 @@ def validate_region_inputs(region: str, subregion: str, input_file: str):
 
 
 def setup_logger(debug: bool):
-    """Prepares logging.
-
-    Parameters
-    ------------------------------
-    debug : bool
-        Enables debug mode when True.  INFO when False.
+    """Prepares logging. Enables debug mode when True.  INFO when False.
     """
     if debug:
         log_level = logging.DEBUG
@@ -378,7 +370,7 @@ def get_export_full_path(out_path: str, export_filename: str) -> str:
     return export_path
 
 
-def run_osm2pgsql(osm2pgsql_command: str, flex_path: str, debug: bool):
+def run_osm2pgsql(osm2pgsql_command: str, flex_path: str):
     """Runs the provided osm2pgsql command.
     """
     logger = logging.getLogger('pgosm-flex')
@@ -469,7 +461,6 @@ def run_post_processing(
         , skip_nested: bool
         , import_mode: helpers.ImportMode
         , schema_name: str
-        , import_id: int
         ) -> bool:
     """Runs steps following osm2pgsql import.
 
@@ -481,16 +472,18 @@ def run_post_processing(
         msg = 'Running with --update append: Skipping post-processing SQL.'
         msg += ' Running osm2pgsql_replication_finish() instead.'
         logger.info(msg)
-        db.osm2pgsql_replication_finish(skip_nested=skip_nested, import_id=import_id)
+        database.osm2pgsql_replication_finish(
+            skip_nested=skip_nested
+            )
         return True
 
-    post_processing_sql = db.pgosm_after_import(flex_path=flex_path)
+    post_processing_sql = database.pgosm_after_import(flex_path=flex_path)
 
     if skip_nested:
         logger.info('Skipping calculating nested polygons')
     else:
         logger.info('Calculating nested polygons')
-        db.pgosm_nested_admin_polygons(schema_name=schema_name)
+        database.pgosm_nested_admin_polygons(schema_name=schema_name)
 
     if not post_processing_sql:
         return False
@@ -504,7 +497,7 @@ def dump_database(input_file: str, out_path: str, pg_dump: bool, skip_qgis_style
         export_filename = get_export_filename(input_file)
         export_path = get_export_full_path(out_path, export_filename)
 
-        db.run_pg_dump(export_path=export_path,
+        database.run_pg_dump(export_path=export_path,
                        skip_qgis_style=skip_qgis_style)
     else:
         logging.getLogger('pgosm-flex').info('Skipping pg_dump')
@@ -516,7 +509,7 @@ def check_replication_exists() -> bool:
     logger = logging.getLogger('pgosm-flex')
     check_cmd = "osm2pgsql-replication status -d $PGOSM_CONN "
     logger.debug(f'Command to check DB for replication status:\n{check_cmd}')
-    conn_string = db.connection_string()
+    conn_string = database.connection_string()
     check_cmd = check_cmd.replace('-d $PGOSM_CONN', f'-d {conn_string}')
 
     returncode = helpers.run_command_via_subprocess(cmd=check_cmd.split(),
@@ -539,7 +532,7 @@ def run_osm2pgsql_replication_init(pbf_path: str, pbf_filename: str):
     init_cmd = 'osm2pgsql-replication init -d $PGOSM_CONN '
     init_cmd += f'--osm-file {pbf_path}'
     logger.debug(f'Initializing DB for replication with command:\n{init_cmd}')
-    conn_string = db.connection_string()
+    conn_string = database.connection_string()
     init_cmd = init_cmd.replace('-d $PGOSM_CONN', f'-d {conn_string}')
 
     returncode = helpers.run_command_via_subprocess(cmd=init_cmd.split(),
