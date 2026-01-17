@@ -536,7 +536,7 @@ def osm2pgsql_replication_finish(skip_nested: bool):
 
 
 def run_pg_dump(export_path: str, skip_qgis_style: bool):
-    """Runs pg_dump to save processed data to load into other PostGIS DBs.
+    """Runs `pg_dump` to save processed data to load into other PostGIS DBs.
 
     Parameters
     ---------------------------
@@ -584,8 +584,6 @@ def fix_pg_dump_create_public(export_path: str):
 
 def log_import_message(import_id: int, msg: str, schema_name: str):
     """Logs msg to database in `osm.pgosm_flex` for `import_id`.
-
-    Overwrites `osm_date` if `pbf_timestamp` is set.
     """
     sql_raw = """
 UPDATE {schema_name}.pgosm_flex pf
@@ -628,5 +626,3 @@ SELECT id, osm_date, region, layerset, import_status,
         results = {}
 
     return results
-
-    

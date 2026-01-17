@@ -4,7 +4,9 @@ import logging
 import json
 import os
 import shutil
-import subprocess
+from pathlib import Path
+import requests
+from tqdm import tqdm
 
 import helpers
 
@@ -36,9 +38,9 @@ def prepare_data(out_path: str) -> str:
     pbf_file : str
         Full path to PBF file
     """
-    region = os.environ.get('PGOSM_REGION')
-    subregion = os.environ.get('PGOSM_SUBREGION')
-    pgosm_date = os.environ.get('PGOSM_DATE')
+    region = os.environ.get('PGOSM_REGION', '')
+    subregion = os.environ.get('PGOSM_SUBREGION', '')
+    pgosm_date = os.environ.get('PGOSM_DATE', '')
 
     pbf_filename = get_region_filename()
 
@@ -54,12 +56,13 @@ def prepare_data(out_path: str) -> str:
         archive_data(pbf_file, md5_file, pbf_file_with_date, md5_file_with_date)
     else:
         logging.getLogger('pgosm-flex').info('Copying Archived files')
-        unarchive_data(pbf_file,
-                       md5_file,
-                       pbf_file_with_date,
-                       md5_file_with_date)
+        unarchive_data(pbf_file=pbf_file
+                       , md5_file=md5_file
+                       , pbf_file_with_date=pbf_file_with_date
+                       , md5_file_with_date=md5_file_with_date
+                       )
 
-    helpers.verify_checksum(md5_file, out_path)
+    helpers.verify_checksum(md5_file=md5_file, path=out_path)
     set_date_from_metadata(pbf_file=pbf_file)
 
     return pbf_file
@@ -93,7 +96,7 @@ def set_date_from_metadata(pbf_file: str):
         try:
             meta_timestamp = meta_options['osmosis_replication_timestamp']
         except KeyError:
-            meta_timestamp = None
+            meta_timestamp = ''
 
     logger.info(f'PBF Meta timestamp: {meta_timestamp}')
     os.environ['PBF_TIMESTAMP'] = meta_timestamp
@@ -155,28 +158,53 @@ def download_data(region: str, subregion: str, pbf_file: str, md5_file: str):
     logger.info(f'Downloading PBF data to {pbf_file}')
     pbf_url = get_pbf_url(region, subregion)
 
-    subprocess.run(
-        ['/usr/bin/wget', pbf_url,
-         "-O", pbf_file , "--quiet"
-        ],
-        capture_output=True,
-        text=True,
-        check=True
-    )
+    downloads = [
+        (pbf_url, pbf_file, 'PBF'),
+        (f'{pbf_url}.md5', md5_file, 'MD5 checksum'),
+    ]
 
-    logger.info(f'Downloading MD5 checksum to {md5_file}')
-    subprocess.run(
-        ['/usr/bin/wget', f'{pbf_url}.md5',
-         "-O", md5_file , "--quiet"
-        ],
-        capture_output=True,
-        text=True,
-        check=True
-    )
+    for url, outfile, label in downloads:
+        logger.info("Downloading %s to %s", label, outfile)
+        download_file(url, Path(outfile))
 
 
-def archive_data(pbf_file: str, md5_file: str, pbf_file_with_date: str,
-                 md5_file_with_date: str):
+def download_file(url: str, dest: Path):
+    """Downloads file from `url` with progress bar.
+    """
+    with requests.get(url, stream=True, timeout=60) as request:
+        request.raise_for_status()
+
+        total_size = int(request.headers.get('Content-Length', 0))
+        chunk_size = 8192
+        #chunk_size = 1024 * 1024
+
+        with (
+            open(dest, "wb") as f,
+            tqdm(
+                total=total_size,
+                unit="B",
+                unit_scale=True,
+                unit_divisor=1024,
+                desc=dest.name,
+                disable=total_size == 0,  # fallback if server doesn't send size
+                mininterval=0.5
+            ) as bar,
+        ):
+            for chunk in request.iter_content(chunk_size=chunk_size):
+                if chunk:
+                    f.write(chunk)
+                    bar.update(len(chunk))
+
+            bar.update(bar.total - bar.n)
+            bar.close()
+
+
+def archive_data(
+        pbf_file: str
+        , md5_file: str
+        , pbf_file_with_date: str
+        , md5_file_with_date: str
+        ):
     """Copies `pbf_file` and `md5_file` to `pbf_file_with_date` and
     `md5_file_with_date`.
 

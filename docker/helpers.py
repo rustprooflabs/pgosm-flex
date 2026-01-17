@@ -23,11 +23,12 @@ def get_today() -> str:
     return today
 
 
-def run_command_via_subprocess(cmd: list,
-                               cwd: str,
-                               output_lines: list=[],
-                               print_to_log: bool=False
-                               ) -> int:
+def run_command_via_subprocess(
+        cmd: list
+        , cwd: str
+        , output_lines: list=[]
+        , print_to_log: bool=False
+        ) -> int:
     """Wraps around subprocess.Popen() to run commands outside of Python. Prints
     output as it goes, returns the status code from the command.
 
@@ -48,9 +49,12 @@ def run_command_via_subprocess(cmd: list,
         Return code from command
     """
     logger = logging.getLogger('pgosm-flex')
-    with subprocess.Popen(cmd, cwd=cwd, stdout=subprocess.PIPE,
-                          stderr=subprocess.STDOUT
-                          ) as process:
+    with subprocess.Popen(
+            cmd
+            , cwd=cwd
+            , stdout=subprocess.PIPE
+            , stderr=subprocess.STDOUT
+            ) as process:
         while True:
             output = process.stdout.readline()
             if process.poll() is not None and output == b'':
@@ -70,7 +74,7 @@ def run_command_via_subprocess(cmd: list,
     return status
 
 
-def verify_checksum(md5_file: str, path: str):
+def verify_checksum_original(md5_file: str, path: str):
     """Verifies checksum of osm pbf file.
 
     If verification fails calls `sys.exit()`
@@ -225,7 +229,7 @@ class ImportMode():
             , update: str
             , force: bool
             ):
-        """Computes two variables, slim_no_drop and append_first_run
+        """Computes two variables, `slim_no_drop` and `append_first_run`
         based on inputs.
 
         Parameters
@@ -273,9 +277,9 @@ class ImportMode():
         Parameters
         -------------------
         prior_import : dict
-            Details about the latest import from osm.pgosm_flex table.
+            Details about the latest import from `osm.pgosm_flex` table.
 
-            An empty dictionary (len==0) indicates no prior import.
+            An empty dictionary (`len==0`) indicates no prior import.
             Only the replication key is specifically used
         """
         self.logger.debug(f'Checking if it is okay to run...')
