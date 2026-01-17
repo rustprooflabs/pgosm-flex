@@ -12,10 +12,6 @@ import helpers
 def get_region_filename() -> str:
     """Returns the filename needed to download/manage PBF files based on the
     region/subregion.
-
-    Returns
-    ----------------------
-    filename : str
     """
     region = os.environ.get('PGOSM_REGION')
     subregion = os.environ.get('PGOSM_SUBREGION')
@@ -34,10 +30,6 @@ def prepare_data(out_path: str) -> str:
 
     Checks if it already exists locally, download if needed,
     and verify MD5 checksum.
-
-    Parameters
-    ----------------------
-    out_path : str
 
     Returns
     ----------------------
@@ -112,16 +104,6 @@ def pbf_download_needed(pbf_file_with_date: str,
                         pgosm_date: str
                         ) -> bool:
     """Decides if the PBF/MD5 files need to be downloaded.
-
-    Parameters
-    -------------------------------
-    pbf_file_with_date : str
-    md5_file_with_date : str
-    pgosm_date : str
-
-    Returns
-    --------------------------
-    download_needed : bool
     """
     logger = logging.getLogger('pgosm-flex')
     # If the PBF file exists, check for the MD5 file too.
@@ -155,15 +137,6 @@ def pbf_download_needed(pbf_file_with_date: str,
 
 def get_pbf_url(region: str, subregion: str) -> str:
     """Returns the URL to the PBF for the region / subregion.
-
-    Parameters
-    ----------------------
-    region : str
-    subregion : str
-
-    Returns
-    ----------------------
-    pbf_url : str
     """
     base_url = 'https://download.geofabrik.de'
 
@@ -177,13 +150,6 @@ def get_pbf_url(region: str, subregion: str) -> str:
 
 def download_data(region: str, subregion: str, pbf_file: str, md5_file: str):
     """Downloads PBF and MD5 file using wget.
-
-    Parameters
-    ---------------------
-    region : str
-    subregion : str
-    pbf_file : str
-    md5_file : str
     """
     logger = logging.getLogger('pgosm-flex')
     logger.info(f'Downloading PBF data to {pbf_file}')
@@ -215,13 +181,6 @@ def archive_data(pbf_file: str, md5_file: str, pbf_file_with_date: str,
     `md5_file_with_date`.
 
     If either file exists, does nothing.
-
-    Parameters
-    --------------------------------
-    pbf_file : str
-    md5_file : str
-    pbf_file_with_date : str
-    md5_file_with_date : str
     """
     if os.path.exists(pbf_file_with_date):
         pass
@@ -234,19 +193,16 @@ def archive_data(pbf_file: str, md5_file: str, pbf_file_with_date: str,
         shutil.copy2(md5_file, md5_file_with_date)
 
 
-def unarchive_data(pbf_file: str, md5_file: str, pbf_file_with_date: str,
-                   md5_file_with_date: str):
+def unarchive_data(
+        pbf_file: str
+        , md5_file: str
+        , pbf_file_with_date: str
+        , md5_file_with_date: str
+        ):
     """Copies `pbf_file_with_date` and `md5_file_with_date`
     to `pbf_file` and `md5_file`.
 
     Always copies, will overwrite a -latest file if it is in the way.
-
-    Parameters
-    --------------------------------
-    pbf_file : str
-    md5_file : str
-    pbf_file_with_date : str
-    md5_file_with_date : str
     """
     logger = logging.getLogger('pgosm-flex')
     if os.path.exists(pbf_file):
@@ -266,10 +222,6 @@ def remove_latest_files(out_path: str):
     """Removes the PBF and MD5 file with -latest in the name.
 
     Files are archived via prepare_data() before processing starts
-
-    Parameters
-    -------------------------
-    out_path : str
     """
     pbf_filename = get_region_filename()
 

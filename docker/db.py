@@ -15,7 +15,7 @@ import psycopg
 import sh
 from urllib import parse
 
-import qgis_styles
+import qgis_styles, helpers
 
 LOGGER = logging.getLogger('pgosm-flex')
 
@@ -36,10 +36,6 @@ def connection_string(admin: bool=False) -> str:
     admin : boolean
         Default False. Set to True to connect to admin database, currently
         hard-coded to `postgres`
-
-    Returns
-    --------------------------
-    conn_string : str
     """
     app_str = '?application_name=pgosm-flex'
 
@@ -75,10 +71,6 @@ def connection_string(admin: bool=False) -> str:
 def pg_conn_parts() -> dict:
     """Returns dictionary of connection parts based on environment variables
     if they exist.
-
-    Returns
-    --------------------------
-    pg_details : dict
     """
     try:
         pg_user = os.environ['POSTGRES_USER']
@@ -176,11 +168,7 @@ def wait_for_postgres():
 def pg_isready() -> bool:
     """Checks for Postgres to be available.
 
-    Uses pg_version_check() for simple approach.
-
-    Returns
-    -------------------
-    pg_up : bool
+    Uses `pg_version_check()` for simple approach.
     """
     try:
         result = pg_version_check()
@@ -196,7 +184,7 @@ def pg_isready() -> bool:
 
 
 def log_pg_details():
-    """Logs non-sensitive Postgres connection details to LOGGER.
+    """Logs non-sensitive Postgres connection details to `LOGGER`.
     """
     conn_parts = pg_conn_parts()
     pg_host = conn_parts['pg_host']
@@ -209,19 +197,16 @@ def log_pg_details():
     LOGGER.info(msg)
 
 
-def prepare_pgosm_db(skip_qgis_style, db_path, import_mode, schema_name):
+def prepare_pgosm_db(
+        skip_qgis_style: bool
+        , db_path: str
+        , import_mode: helpers.ImportMode
+        , schema_name: str
+        ):
     """Runs through steps to prepare the target database for PgOSM Flex.
 
     Includes additional preparation for using --replication and --updated=append
     modes.
-
-    Parameters
-    --------------------------
-    skip_qgis_style : bool
-    db_path : str
-    import_mode : import_mode.ImportMode
-    schema_name : str
-        Schema name for OpenStreetMap data
     """
     if pg_conn_parts()['pg_host'] == 'localhost':
         drop_it = True
@@ -252,33 +237,35 @@ def prepare_pgosm_db(skip_qgis_style, db_path, import_mode, schema_name):
         osm2pgsql_replication_start()
 
 
-def start_import(pgosm_region, pgosm_date, srid, language, layerset, git_info,
-                 osm2pgsql_version, import_mode, schema_name, input_file):
+def start_import(
+        pgosm_region: str
+        , pgosm_date: str
+        , srid: int
+        , language: str
+        , layerset: str
+        , git_info: str
+        , osm2pgsql_version: str
+        , import_mode: helpers.ImportMode
+        , schema_name: str
+        , input_file: str
+        ) -> int:
     """Creates record in osm.pgosm_flex table.
-
-    Parameters
-    ---------------------------
-    pgosm_region : str
-    pgosm_date : str (ish?)
-    srid : int
-    language : str
-    layerset : str
-    git_info : str
-    osm2pgsql_version : str
-    import_mode : import_mode.ImportMode
-    schema_name : str
-    input_file : str
 
     Returns
     ----------------------------
     import_id : int
         Value from the `id` column in `osm.pgosm_flex`.
     """
-    params = {'pgosm_region': pgosm_region, 'pgosm_date': pgosm_date,
-              'srid': srid, 'language': language, 'layerset': layerset,
-              'git_info': git_info, 'osm2pgsql_version': osm2pgsql_version,
-              'import_mode': import_mode.as_json(),
-              'input_file': input_file}
+    params = {'pgosm_region': pgosm_region
+              , 'pgosm_date': pgosm_date
+              , 'srid': srid
+              , 'language': language
+              , 'layerset': layerset
+              , 'git_info': git_info
+              , 'osm2pgsql_version': osm2pgsql_version
+              , 'import_mode': import_mode.as_json()
+              , 'input_file': input_file
+            }
 
     sql_raw = """
 INSERT INTO {schema_name}.pgosm_flex
@@ -302,14 +289,10 @@ INSERT INTO {schema_name}.pgosm_flex
     return import_id
 
 
-def pg_version_check():
+def pg_version_check() -> int:
     """Checks Postgres machine-readable server_version_num.
 
     Sends to logs and returns value.
-
-    Results
-    --------------------
-    pg_version : int
     """
     sql_raw = """
 SELECT setting
@@ -332,14 +315,10 @@ SELECT setting
     return pg_version
 
 
-def drop_pgosm_db():
+def drop_pgosm_db() -> bool:
     """Drops the pgosm database if it exists.
 
     Intentionally hard coded to `pgosm` database for in-Docker use only.
-
-    Returns
-    ------------------------
-    status : bool
     """
     if not pg_conn_parts()['pg_host'] == 'localhost':
         LOGGER.error('Attempted to drop database external from Docker. Not doing that')
@@ -356,14 +335,10 @@ def drop_pgosm_db():
     return True
 
 
-def create_pgosm_db():
+def create_pgosm_db() -> bool:
     """Creates the pgosm database and prepares with PostGIS and osm schema
 
     Intentionally hard coded to `pgosm` database for in-Docker use only.
-
-    Returns
-    -----------------------
-    status : bool
     """
     if not pg_conn_parts()['pg_host'] == 'localhost':
         LOGGER.error('Attempted to create database external from Docker. Not doing that')
@@ -422,20 +397,18 @@ def prepare_osm_schema(db_path: str, skip_qgis_style: bool, schema_name: str):
 
 def run_insert_pgosm_road(db_path: str, schema_name: str):
     """Runs script to load data to pgosm.road table.
-
-    Parameters
-    ------------------------
-    db_path : str
-    schema_name : str
-        Schema name for OpenStreetMap data
     """
     sql_filename = 'roads-us.sql'
     run_deploy_file(db_path=db_path, sql_filename=sql_filename,
                     schema_name=schema_name, subfolder='data')
 
 
-def run_deploy_file(db_path: str, sql_filename: str, schema_name: str,
-                    subfolder: str='deploy'):
+def run_deploy_file(
+        db_path: str
+        , sql_filename: str
+        , schema_name: str
+        , subfolder: str='deploy'
+        ):
     """Run a SQL script under the deploy path.  Used to setup PgOSM Flex DB.
 
     Parameters
@@ -444,7 +417,7 @@ def run_deploy_file(db_path: str, sql_filename: str, schema_name: str,
         Path to folder with SQL scripts.
     sql_filename : sql_filename
     subfolder : str
-        Set subfolder under db_path.
+        Set subfolder under `db_path`.
         Default: deploy
     schema_name : str
         Schema name for OpenStreetMap data
@@ -463,16 +436,8 @@ def run_deploy_file(db_path: str, sql_filename: str, schema_name: str,
         LOGGER.debug(f'Ran SQL in {sql_filename}')
 
 
-def get_db_conn(conn_string):
+def get_db_conn(conn_string: str) -> psycopg.Connection | bool:
     """Establishes psycopg database connection.
-
-    Parameters
-    -----------------------
-    conn_string : str
-
-    Returns
-    -----------------------
-    conn : psycopg.Connection
     """
     try:
         conn = psycopg.connect(conn_string)
@@ -490,10 +455,6 @@ def pgosm_after_import(flex_path: str) -> bool:
 
     Layerset logic is established via environment variable, must happen
     before this step.
-
-    Parameters
-    ---------------------
-    flex_path : str
     """
     LOGGER.info('Running post-processing...')
 
@@ -517,11 +478,6 @@ def pgosm_after_import(flex_path: str) -> bool:
 
 def pgosm_nested_admin_polygons(flex_path: str, schema_name: str):
     """Runs two stored procedures to calculate nested admin polygons via psql.
-
-    Parameters
-    ----------------------
-    flex_path : str
-    schema_name : str
     """
     # Populate the table
     sql_raw_1 = f'CALL {schema_name}.populate_place_polygon_nested();'
@@ -563,11 +519,10 @@ def pgosm_nested_admin_polygons(flex_path: str, schema_name: str):
         sys.exit(f'{err_msg} - Check the log output for details.')
 
 
-
 def osm2pgsql_replication_start():
     """Runs pre-replication step to clean out FKs that would prevent updates.
 
-    This function is necessary for using `--replication (osm2pgsql-replication)
+    This function is necessary for using `--replication` (osm2pgsql-replication)
     and `--update append` mode.
     """
     LOGGER.info('Prep database to allow data updates.')
@@ -583,36 +538,27 @@ def osm2pgsql_replication_finish(skip_nested: bool):
     nested data when appropriate.
 
     Only needed for `--replication`, not used for `--update append` mode.
-
-    Parameters
-    ---------------------
-    skip_nested : bool
     """
     # Fails via psycopg, using psql
     if skip_nested:
+        skip_nested = True
         LOGGER.info('Finishing Replication, skipping nested polygons')
-        sql_raw = 'CALL osm.append_data_finish(skip_nested := True );'
     else:
+        skip_nested = False
         LOGGER.info('Finishing Replication, including nested polygons')
-        sql_raw = 'CALL osm.append_data_finish(skip_nested := False );'
 
-    conn_string = os.environ['PGOSM_CONN']
-    cmds = ['psql', '-d', conn_string, '-c', sql_raw]
-    LOGGER.info('Finishing Replication')
-    output = subprocess.run(cmds,
-                            text=True,
-                            check=False,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
-    LOGGER.info(f'Finishing replication output: \n {output.stdout}')
+    sql_raw = 'CALL osm.append_data_finish(skip_nested := %(skip_nested)s);'
+    params = {'skip_nested': skip_nested}
 
-    if output.returncode != 0:
-        err_msg = f'Failed to finish replication. Return code: {output.returncode}'
-        LOGGER.error(err_msg)
-        sys.exit(f'{err_msg} - Check the log output for details.')
+    with get_db_conn(conn_string=connection_string()) as conn:
+        # Setting autocommit to avoid issues with the explicit transaction control
+        # inside the SQL procedures.
+        conn.autocommit = True
+        cur = conn.cursor()
+        cur.execute(sql_raw, params)
 
 
-def run_pg_dump(export_path, skip_qgis_style):
+def run_pg_dump(export_path: str, skip_qgis_style: bool):
     """Runs pg_dump to save processed data to load into other PostGIS DBs.
 
     Parameters
@@ -651,10 +597,6 @@ def fix_pg_dump_create_public(export_path: str):
     """Using pg_dump with `--schema=public` results in
     a .sql script containing `CREATE SCHEMA public;`, nearly always breaks
     in target DB.  Replaces with `CREATE SCHEMA IF NOT EXISTS public;`
-
-    Parameters
-    ----------------------
-    export_path : str
     """
     result = sh.sed('-i',
            's/CREATE SCHEMA public;/CREATE SCHEMA IF NOT EXISTS public;/',
@@ -664,47 +606,30 @@ def fix_pg_dump_create_public(export_path: str):
 
 
 def log_import_message(import_id: int, msg: str, schema_name: str):
-    """Logs msg to database in osm.pgosm_flex for import_uuid.
+    """Logs msg to database in `osm.pgosm_flex` for `import_id`.
 
     Overwrites `osm_date` if `pbf_timestamp` is set.
-
-    Parameters
-    -------------------------------
-    import_id : int
-    msg : str
-    schema_name: str
     """
-    try:
-        pbf_timestamp = os.environ['PBF_TIMESTAMP']
-    except KeyError:
-        pbf_timestamp = os.environ['PGOSM_DATE']
-
     sql_raw = """
-UPDATE {schema_name}.pgosm_flex
-    SET import_status = %(msg)s ,
-        osm_date = COALESCE( %(pbf_timestamp)s , osm_date)
-    WHERE id = %(import_id)s
+UPDATE {schema_name}.pgosm_flex pf
+    SET osm_date = op.value::TIMESTAMPTZ
+        ,  import_status = %(msg)s
+    FROM public.osm2pgsql_properties op
+    WHERE op.property = 'replication_timestamp'
+        AND pf.id = %(import_id)s
 ;
 """
     sql_raw = sql_raw.format(schema_name=schema_name)
     with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
         params = {'import_id': import_id,
-                  'msg': msg,
-                  'pbf_timestamp': pbf_timestamp}
+                  'msg': msg
+                  }
         cur = conn.cursor()
         cur.execute(sql_raw, params=params)
 
 
 def get_prior_import(schema_name: str) -> dict:
-    """Gets the latest import details from osm.pgosm_flex.
-
-    Parameters
-    --------------------
-    schema_name : str
-
-    Returns
-    --------------------
-    results : dict
+    """Gets the latest import details from `osm.pgosm_flex`.
     """
     sql_raw = """
 SELECT id, osm_date, region, layerset, import_status,

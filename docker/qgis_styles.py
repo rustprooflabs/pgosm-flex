@@ -10,7 +10,7 @@ import db
 LOGGER = logging.getLogger('pgosm-flex')
 
 
-def load_qgis_styles(db_path, db_name):
+def load_qgis_styles(db_path: str, db_name: str):
     """Loads QGIS style data for easy formatting of most common layers.
 
     Parameters
@@ -28,13 +28,8 @@ def load_qgis_styles(db_path, db_name):
     load_staging_to_prod(db_path=db_path, conn_string=conn_string)
 
 
-def create_layer_style_table(db_path, conn_string):
+def create_layer_style_table(db_path: str, conn_string: str):
     """Ensures QGIS layer styles table exists.
- 
-    Parameters
-    --------------------
-    db_path : str
-    conn_string : path
     """
     create_path = os.path.join(db_path,
                                'qgis-style',
