@@ -10,7 +10,7 @@ import sys
 from time import sleep
 import git
 
-import db
+from . import db
 
 
 DEFAULT_SRID = '3857'
@@ -18,10 +18,6 @@ DEFAULT_SRID = '3857'
 
 def get_today() -> str:
     """Returns yyyy-mm-dd formatted string for today.
-
-    Returns
-    -------------------------
-    today : str
     """
     today = datetime.datetime.today().strftime('%Y-%m-%d')
     return today
@@ -100,25 +96,19 @@ def verify_checksum(md5_file: str, path: str):
     logger.debug('md5sum validated')
 
 
-def set_env_vars(region: str, subregion: str, srid: str, language: str,
-                 pgosm_date: str, layerset: str,
-                 layerset_path: str, schema_name: str, skip_nested: bool):
+def set_env_vars(
+        region: str
+        , subregion: str
+        , srid: str
+        , language: str
+        , pgosm_date: str
+        , layerset: str
+        , layerset_path: str
+        , schema_name: str
+        , skip_nested: bool
+        ):
     """Sets environment variables needed by PgOSM Flex. Also creates DB
     record in `osm.pgosm_flex` table.
-
-    Parameters
-    ------------------------
-    region : str
-    subregion : str
-    srid : str
-    language : str
-    pgosm_date : str
-    layerset : str
-        Name of layerset matching the INI filename.
-    layerset_path : str
-        str when set, or None
-    schema_name : str
-    skip_nested : bool
     """
     logger = logging.getLogger('pgosm-flex')
     logger.debug('Ensuring env vars are not set from prior run')
@@ -126,7 +116,6 @@ def set_env_vars(region: str, subregion: str, srid: str, language: str,
     logger.debug('Setting environment variables')
 
     os.environ['PGOSM_REGION'] = region
-
 
     if srid != DEFAULT_SRID:
         logger.info(f'SRID set: {srid}')
@@ -154,17 +143,8 @@ def set_env_vars(region: str, subregion: str, srid: str, language: str,
     os.environ['SKIP_NESTED'] = str(skip_nested)
 
 
-def get_region_combined(region: str, subregion: str) -> str:
+def get_region_combined(region: str, subregion: str | None) -> str:
     """Returns combined region with optional subregion.
-
-    Parameters
-    ------------------------
-    region : str
-    subregion : str (or None)
-
-    Returns
-    -------------------------
-    pgosm_region : str
     """
     if subregion is None:
         pgosm_region = f'{region}'
@@ -184,10 +164,6 @@ def get_git_info(tag_only: bool=False) -> str:
     ----------------------
     tag_only : bool
         When true, omits the short sha portion, only returning the tag.
-
-    Returns
-    ----------------------
-    git_info : str
     """
     logger = logging.getLogger('pgosm-flex')
 
@@ -242,8 +218,13 @@ class ImportMode():
     are used to determine when to drop the local DB.  Be careful with any
     changes to these values.
     """
-    def __init__(self, replication: bool, replication_update: bool,
-                 update: str, force: bool):
+    def __init__(
+            self
+            , replication: bool
+            , replication_update: bool
+            , update: str
+            , force: bool
+            ):
         """Computes two variables, slim_no_drop and append_first_run
         based on inputs.
 
@@ -273,7 +254,6 @@ class ImportMode():
         self.set_append_first_run()
         self.set_run_post_sql()
 
-
     def okay_to_run(self, prior_import: dict) -> bool:
         """Determines if it is okay to run PgOSM Flex without fear of data loss.
 
@@ -297,10 +277,6 @@ class ImportMode():
 
             An empty dictionary (len==0) indicates no prior import.
             Only the replication key is specifically used
-
-        Returns
-        -------------------
-        okay_to_run : bool
         """
         self.logger.debug(f'Checking if it is okay to run...')
         if self.force:
@@ -403,5 +379,3 @@ class ImportMode():
                 'slim_no_drop': self.slim_no_drop,
                 'run_post_sql': self.run_post_sql}
         return json.dumps(self_as_dict)
-
-
