@@ -490,7 +490,7 @@ def run_post_processing(
         logger.info('Skipping calculating nested polygons')
     else:
         logger.info('Calculating nested polygons')
-        db.pgosm_nested_admin_polygons(flex_path, schema_name)
+        db.pgosm_nested_admin_polygons(schema_name=schema_name)
 
     if not post_processing_sql:
         return False
