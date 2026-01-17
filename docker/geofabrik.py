@@ -6,7 +6,7 @@ import os
 import shutil
 import subprocess
 
-from . import helpers
+import helpers
 
 
 def get_region_filename() -> str:

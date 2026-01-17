@@ -15,7 +15,7 @@ import psycopg
 import sh
 from urllib import parse
 
-from . import qgis_styles, helpers
+import qgis_styles, helpers
 
 LOGGER = logging.getLogger('pgosm-flex')
 

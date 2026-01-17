@@ -4,7 +4,7 @@ import logging
 import os
 import subprocess
 
-from . import db
+import db
 
 
 LOGGER = logging.getLogger('pgosm-flex')

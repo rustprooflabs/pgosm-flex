@@ -5,7 +5,7 @@ import logging
 import os
 import osm2pgsql_tuner as tuner
 
-from . import db, helpers
+import db, helpers
 
 LOGGER = logging.getLogger('pgosm-flex')
 

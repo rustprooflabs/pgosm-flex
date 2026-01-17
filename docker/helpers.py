@@ -10,7 +10,7 @@ import sys
 from time import sleep
 import git
 
-from . import db
+import db
 
 
 DEFAULT_SRID = '3857'

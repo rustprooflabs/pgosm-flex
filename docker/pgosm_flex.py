@@ -14,8 +14,8 @@ import sys
 
 import click
 
-from docker import osm2pgsql_recommendation as rec
-from docker import db, geofabrik, helpers
+import osm2pgsql_recommendation as rec
+import db, geofabrik, helpers
 
 
 @click.command()
