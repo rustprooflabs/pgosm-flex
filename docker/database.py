@@ -11,8 +11,12 @@ import os
 import sys
 import subprocess
 import time
+from typing import cast
 import psycopg
+from psycopg.abc import Query
+from psycopg import sql
 import sh
+
 from urllib import parse
 
 import qgis_styles, helpers
@@ -290,7 +294,7 @@ INSERT INTO {schema_name}.pgosm_flex
 """
     sql_raw = sql_raw.format(schema_name=schema_name)
     # FIXME: Why os environ here instead of get conn string???
-    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
+    with get_db_conn(conn_string=connection_string()) as conn:
         cur = conn.cursor()
         cur.execute(sql_raw, params=params)
         import_id = cur.fetchone()[0]
@@ -428,18 +432,19 @@ def run_deploy_file(
     LOGGER.info(f'Deploying {full_path}')
 
     with open(full_path) as f:
-        deploy_sql = f.read()
+        deploy_sql_raw = f.read()
 
-    deploy_sql = deploy_sql.format(schema_name=schema_name)
+    deploy_sql = deploy_sql_raw.format(schema_name=schema_name)
+    query = cast(Query, deploy_sql)
 
-    with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
+    with get_db_conn(conn_string=connection_string()) as conn:
         cur = conn.cursor()
-        cur.execute(deploy_sql)
+        cur.execute(query)
         LOGGER.debug(f'Ran SQL in {sql_filename}')
 
 
 def get_db_conn(conn_string: str) -> psycopg.Connection:
-    """Establishes psycopg database connection.
+    """Return a `psycopg` database connection.
     """
     try:
         conn = psycopg.connect(conn_string)
@@ -447,7 +452,7 @@ def get_db_conn(conn_string: str) -> psycopg.Connection:
     except psycopg.OperationalError as err:
         err_msg = 'Database connection error. Error: {}'.format(err)
         LOGGER.error(err_msg)
-        raise # previously returned False, raising seems more appropriate
+        raise # previously returned False, re-raising seems more appropriate
 
     return conn
 
@@ -483,24 +488,31 @@ def pgosm_nested_admin_polygons(schema_name: str):
     """
     # Prepare the base data
     LOGGER.info('Populating place_polygon_nested table (osm.populate_place_polygon_nested() )')
-    sql_raw_1 = f'CALL {schema_name}.populate_place_polygon_nested();'
+    sql_raw_1 = 'CALL {schema_name}.populate_place_polygon_nested();'
+    query_1 = sql.SQL(sql_raw_1).format(
+            schema_name = sql.Identifier(schema_name)
+    )
+
     with get_db_conn(conn_string=connection_string()) as conn:
         # Setting autocommit to avoid issues with the explicit transaction control
         # inside the SQL procedures.
         conn.autocommit = True
         cur = conn.cursor()
-        cur.execute(sql_raw_1)
+        cur.execute(query_1)
 
     # Build the nested data
     LOGGER.info('Building nested polygons... (this can take a while)')
-    sql_raw_2 = f' CALL {schema_name}.build_nested_admin_polygons();'
+    sql_raw_2 = ' CALL {schema_name}.build_nested_admin_polygons();'
+    query_2 = sql.SQL(sql_raw_2).format(
+            schema_name = sql.Identifier(schema_name)
+    )
 
     with get_db_conn(conn_string=connection_string()) as conn:
         # Setting autocommit to avoid issues with the explicit transaction control
         # inside the SQL procedures.
         conn.autocommit = True
         cur = conn.cursor()
-        cur.execute(sql_raw_2)
+        cur.execute(query_2)
 
 
 def osm2pgsql_replication_start():
@@ -544,12 +556,6 @@ def osm2pgsql_replication_finish(skip_nested: bool):
 
 def run_pg_dump(export_path: str, skip_qgis_style: bool):
     """Runs `pg_dump` to save processed data to load into other PostGIS DBs.
-
-    Parameters
-    ---------------------------
-    export_path : str
-        Absolute path to output .sql file
-    skip_qgis_style : bool
     """
     logger = logging.getLogger('pgosm-flex')
     conn_string = os.environ['PGOSM_CONN']
