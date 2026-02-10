@@ -62,6 +62,13 @@ Build latest.  Occasionally run with `--no-cache` to force some software updates
 docker build -t rustprooflabs/pgosm-flex .
 ```
 
+Building the Docker image on Apple Silicon (M*) requires forcing the `linux/amd64` platform
+using `--platform=linux/amd64`. See https://github.com/postgis/docker-postgis/issues/216
+for status on having `arm64` native image.
+
+```bash
+docker build --platform=linux/amd64 -t rustprooflabs/pgosm-flex .
+```
 
 Tag with version.
 
