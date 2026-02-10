@@ -4,7 +4,7 @@ import logging
 import os
 import subprocess
 
-import db
+import database
 
 
 LOGGER = logging.getLogger('pgosm-flex')
@@ -38,7 +38,7 @@ def create_layer_style_table(db_path: str, conn_string: str):
     with open(create_path, 'r') as file_in:
         create_sql = file_in.read()
 
-    with db.get_db_conn(conn_string=conn_string) as conn:
+    with database.get_db_conn(conn_string=conn_string) as conn:
         cur = conn.cursor()
         cur.execute(create_sql)
     LOGGER.debug('QGIS Style table created')
@@ -81,13 +81,13 @@ def load_staging_to_prod(db_path, conn_string):
     with open(load_path, 'r') as file_in:
         load_sql = file_in.read()
 
-    with db.get_db_conn(conn_string=conn_string) as conn:
+    with database.get_db_conn(conn_string=conn_string) as conn:
         cur = conn.cursor()
         cur.execute(load_sql)
 
     LOGGER.info('QGIS Style table populated')
 
-    with db.get_db_conn(conn_string=conn_string) as conn:
+    with database.get_db_conn(conn_string=conn_string) as conn:
         sql_clean = 'DELETE FROM public.layer_styles_staging;'
         cur = conn.cursor()
         cur.execute(sql_clean)
@@ -112,10 +112,9 @@ UPDATE public.layer_styles_staging
 ;
 """
     params = {'db_name': db_name}
-    with db.get_db_conn(conn_string=conn_string) as conn:
+    with database.get_db_conn(conn_string=conn_string) as conn:
         cur = conn.cursor()
         cur.execute(sql_raw, params=params)
         conn.commit()
 
     LOGGER.info(f'Updated QGIS layer styles for database {db_name}')
-

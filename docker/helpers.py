@@ -10,8 +10,6 @@ import sys
 from time import sleep
 import git
 
-import db
-
 
 DEFAULT_SRID = '3857'
 
@@ -23,11 +21,12 @@ def get_today() -> str:
     return today
 
 
-def run_command_via_subprocess(cmd: list,
-                               cwd: str,
-                               output_lines: list=[],
-                               print_to_log: bool=False
-                               ) -> int:
+def run_command_via_subprocess(
+        cmd: list
+        , cwd: str
+        , output_lines: list=[]
+        , print_to_log: bool=False
+        ) -> int:
     """Wraps around subprocess.Popen() to run commands outside of Python. Prints
     output as it goes, returns the status code from the command.
 
@@ -48,9 +47,12 @@ def run_command_via_subprocess(cmd: list,
         Return code from command
     """
     logger = logging.getLogger('pgosm-flex')
-    with subprocess.Popen(cmd, cwd=cwd, stdout=subprocess.PIPE,
-                          stderr=subprocess.STDOUT
-                          ) as process:
+    with subprocess.Popen(
+            cmd
+            , cwd=cwd
+            , stdout=subprocess.PIPE
+            , stderr=subprocess.STDOUT
+            ) as process:
         while True:
             output = process.stdout.readline()
             if process.poll() is not None and output == b'':
@@ -132,10 +134,7 @@ def set_env_vars(
     os.environ['PGOSM_LAYERSET'] = layerset
     os.environ['SCHEMA_NAME'] = schema_name
 
-    # PGOSM_CONN is required to be set by the Lua styles used by osm2pgsql
-    os.environ['PGOSM_CONN'] = db.connection_string()
-    # Connection to DB for admin purposes, e.g. drop/create main database
-    os.environ['PGOSM_CONN_PG'] = db.connection_string(admin=True)
+    # Moved DB Conn string details to database.py
 
     pgosm_region = get_region_combined(region, subregion)
     logger.debug(f'PGOSM_REGION_COMBINED: {pgosm_region}')
@@ -215,7 +214,7 @@ class ImportMode():
     """Determines logical variables used to control program flow.
 
     WARNING:  The values for `append_first_run` and `replication_update`
-    are used to determine when to drop the local DB.  Be careful with any
+    are used to determine when to drop the local database.  Be careful with any
     changes to these values.
     """
     def __init__(
@@ -225,7 +224,7 @@ class ImportMode():
             , update: str
             , force: bool
             ):
-        """Computes two variables, slim_no_drop and append_first_run
+        """Computes two variables, `slim_no_drop` and `append_first_run`
         based on inputs.
 
         Parameters
@@ -273,9 +272,9 @@ class ImportMode():
         Parameters
         -------------------
         prior_import : dict
-            Details about the latest import from osm.pgosm_flex table.
+            Details about the latest import from `osm.pgosm_flex` table.
 
-            An empty dictionary (len==0) indicates no prior import.
+            An empty dictionary (`len==0`) indicates no prior import.
             Only the replication key is specifically used
         """
         self.logger.debug(f'Checking if it is okay to run...')
