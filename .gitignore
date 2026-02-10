@@ -7,3 +7,4 @@ docs/book/*
 .vscode/*
 **/*.gv
 **/.ipynb_checkpoints
+**/.DS_Store

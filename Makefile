@@ -45,7 +45,10 @@ docker-clean:
 .PHONY: build-run-docker
 build-run-docker: docker-clean
 	# Builds and runs PgOSM Flex with D.C. test file
-	docker build -t rustprooflabs/pgosm-flex .
+	# Specifies linux/amd64 to enable running on ARM64 (e.g. Mac M* line chips)
+	# because the underlying Docker image does not support mulit-arch yet.
+	# See: https://github.com/postgis/docker-postgis/issues/216
+	docker build --platform=linux/amd64 -t rustprooflabs/pgosm-flex .
 	docker run --name pgosm \
 		--rm \
 		-v $(shell pwd)/pgosm-data:/app/output \
