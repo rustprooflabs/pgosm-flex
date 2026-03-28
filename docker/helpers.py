@@ -6,6 +6,7 @@ import logging
 from packaging.version import parse as parse_version
 import subprocess
 import os
+from pathlib import Path
 import sys
 from time import sleep
 import git
@@ -22,9 +23,9 @@ def get_today() -> str:
 
 
 def run_command_via_subprocess(
-        cmd: list
-        , cwd: str
-        , output_lines: list=[]
+        cmd: list[str]
+        , cwd: Path
+        , output_lines: list[str]=[]
         , print_to_log: bool=False
         ) -> int:
     """Wraps around subprocess.Popen() to run commands outside of Python. Prints
@@ -99,8 +100,8 @@ def verify_checksum(md5_file: str, path: str):
 
 
 def set_env_vars(
-        region: str
-        , subregion: str
+        region: str | None
+        , subregion: str | None
         , srid: str
         , language: str
         , pgosm_date: str

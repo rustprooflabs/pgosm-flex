@@ -71,10 +71,25 @@ import database, geofabrik, helpers
 @click.option('--update', default=None,
               type=click.Choice(['append', 'create'], case_sensitive=True),
               help='EXPERIMENTAL - Wrap around osm2pgsql create v. append modes, without using osm2pgsql-replication.')
-def run_pgosm_flex(ram, region, subregion, debug, force,
-                    input_file, layerset, layerset_path, language, pg_dump,
-                    pgosm_date, replication, schema_name, skip_nested,
-                    skip_qgis_style, srid, update):
+def run_pgosm_flex(
+        ram: float
+        , region: str | None
+        , subregion: str | None
+        , debug:bool
+        , force: bool
+        , input_file: str | None
+        , layerset: str
+        , layerset_path: str
+        , language: str
+        , pg_dump: bool
+        , pgosm_date: str
+        , replication: bool
+        , schema_name: str
+        , skip_nested: bool
+        , skip_qgis_style: bool
+        , srid: str
+        , update: str | None
+    ):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
     """
     paths = get_paths()
@@ -88,13 +103,25 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
         sys.exit(err_msg)
     # End of input validation
 
-    validate_region_inputs(region, subregion, input_file)
+    validate_region_inputs(
+        region=region
+        , subregion=subregion
+        , input_file=input_file
+    )
     if region is None and input_file:
         region = input_file
 
-    helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
-                         layerset, layerset_path, schema_name,
-                         skip_nested)
+    helpers.set_env_vars(
+        region=region
+        , subregion=subregion
+        , srid=srid
+        , language=language
+        , pgosm_date=pgosm_date
+        , layerset=layerset
+        , layerset_path=layerset_path
+        , schema_name=schema_name
+        , skip_nested=skip_nested
+    )
     database.set_db_env_vars()
 
     database.wait_for_postgres()
@@ -144,18 +171,19 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
     # There's probably a better way to get this data out, but this worked right
     # away and I'm moving on.  I'm breaking enough other things that this seemed
     # to be a good compromise today.
-    vers_lines = []
+    vers_lines: list[str] = []
     helpers.run_command_via_subprocess(cmd=['osm2pgsql', '--version'],
                                        cwd='/usr/bin/',
                                        output_lines=vers_lines)
 
+    osm2pgsql_version = '\n'.join(vers_lines)
     import_id = database.start_import(pgosm_region=helpers.get_region_combined(region, subregion),
                                 pgosm_date=pgosm_date,
                                 srid=srid,
                                 language=language,
                                 layerset=layerset,
                                 git_info=helpers.get_git_info(),
-                                osm2pgsql_version=vers_lines,
+                                osm2pgsql_version=osm2pgsql_version,
                                 import_mode=import_mode,
                                 schema_name=schema_name,
                                 input_file=input_file)
@@ -198,9 +226,9 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
 
 
 def run_osm2pgsql_standard(
-        input_file: str
-        , out_path: str
-        , flex_path: str
+        input_file: str | None
+        , out_path: Path
+        , flex_path: Path
         , ram: float
         , skip_nested: bool
         , import_mode: helpers.ImportMode
@@ -247,7 +275,7 @@ def run_osm2pgsql_standard(
     return post_processing
 
 
-def run_replication_update(skip_nested: bool, flex_path: str) -> bool:
+def run_replication_update(skip_nested: bool, flex_path: Path) -> bool:
     """Runs osm2pgsql-replication between the DB start/finish steps.
     """
     logger = logging.getLogger('pgosm-flex')
@@ -277,7 +305,11 @@ osm2pgsql-replication update -d $PGOSM_CONN \
     return True
 
 
-def validate_region_inputs(region: str, subregion: str, input_file: str):
+def validate_region_inputs(
+        region: str | None
+        , subregion: str | None
+        , input_file: str | None
+    ):
     """Ensures the combination of `region`, `subregion` and `input_file` is valid.
 
     No return, raises error when invalid.
@@ -316,22 +348,22 @@ def setup_logger(debug: bool):
     logger.debug('Logger configured')
 
 
-def get_paths() -> dict:
+def get_paths() -> dict[str, Path]:
     """Returns dictionary of various paths used.
 
     Ensures `out_path` exists.
     """
-    base_path = '/app'
+    base_path = Path('/app')
 
-    db_path = os.path.join(base_path, 'db')
-    out_path = os.path.join(base_path, 'output')
-    flex_path = os.path.join(base_path, 'flex-config')
+    db_path = base_path / 'db'
+    out_path = base_path / 'output'
+    flex_path = base_path / 'flex-config'
     paths = {'base_path': base_path,
              'db_path': db_path,
              'out_path': out_path,
              'flex_path': flex_path}
 
-    Path(out_path).mkdir(parents=True, exist_ok=True)
+    out_path.mkdir(parents=True, exist_ok=True)
     return paths
 
 

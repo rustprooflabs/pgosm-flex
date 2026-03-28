@@ -75,8 +75,7 @@ def get_recommended_script(system_ram_gb: float,
                                ssd=True)
 
     osm2pgsql_cmd = rec.get_osm2pgsql_command(pbf_path=pbf_filename)
-
-    osm2pgsql_cmd = osm2pgsql_cmd.replace('~/pgosm-data', output_path)
+    osm2pgsql_cmd = osm2pgsql_cmd.replace('~/pgosm-data', str(output_path))
 
     LOGGER.debug(f'Generic command to run: {osm2pgsql_cmd}')
 

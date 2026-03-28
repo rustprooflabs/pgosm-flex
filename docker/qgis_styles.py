@@ -2,6 +2,7 @@
 """
 import logging
 import os
+from pathlib import Path
 import subprocess
 
 import database
@@ -10,7 +11,7 @@ import database
 LOGGER = logging.getLogger('pgosm-flex')
 
 
-def load_qgis_styles(db_path: str, db_name: str):
+def load_qgis_styles(db_path: Path, db_name: str):
     """Loads QGIS style data for easy formatting of most common layers.
 
     Parameters
@@ -28,7 +29,7 @@ def load_qgis_styles(db_path: str, db_name: str):
     load_staging_to_prod(db_path=db_path, conn_string=conn_string)
 
 
-def create_layer_style_table(db_path: str, conn_string: str):
+def create_layer_style_table(db_path: Path, conn_string: str):
     """Ensures QGIS layer styles table exists.
     """
     create_path = os.path.join(db_path,
@@ -44,13 +45,8 @@ def create_layer_style_table(db_path: str, conn_string: str):
     LOGGER.debug('QGIS Style table created')
 
 
-def populate_layer_style_staging(db_path, conn_string):
+def populate_layer_style_staging(db_path: Path, conn_string: str):
     """Loads data to public.layer_styles_staging using psql
-
-    Parameters
-    --------------------
-    db_path : str
-    conn_string : path
     """
     # Loading layer_styles data is done from files created by pg_dump, using
     # psql to reload is easiest
@@ -66,13 +62,8 @@ def populate_layer_style_staging(db_path, conn_string):
     LOGGER.debug(f'Output from loading QGIS style data: {output.stdout}')
 
 
-def load_staging_to_prod(db_path, conn_string):
+def load_staging_to_prod(db_path: Path, conn_string: str):
     """Loads data from public.layer_styles_staging to public.layer_styles.
-
-    Parameters
-    --------------------
-    db_path : str
-    conn_string : path
     """
     load_path = os.path.join(db_path,
                              'qgis-style',
@@ -95,12 +86,8 @@ def load_staging_to_prod(db_path, conn_string):
     LOGGER.debug('QGIS Style staging table cleaned')
 
 
-def update_styles_db_name(db_name, conn_string):
-    """
-    Parameters
-    ----------------------
-    db_name : str
-    conn_string : str
+def update_styles_db_name(db_name: str, conn_string: str):
+    """Updates styles to match the DB name it is within to work properly in QGIS.
     """
     if db_name == 'pgosm':
         LOGGER.debug('Database name set to defaults. Update to layer styles not necessary')

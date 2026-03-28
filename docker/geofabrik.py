@@ -27,7 +27,7 @@ def get_region_filename() -> str:
     return filename
 
 
-def prepare_data(out_path: str) -> str:
+def prepare_data(out_path: Path) -> str:
     """Ensures the PBF file is available.
 
     Checks if it already exists locally, download if needed,
@@ -35,7 +35,7 @@ def prepare_data(out_path: str) -> str:
 
     Returns
     ----------------------
-    pbf_file : str
+    pbf_file : Path
         Full path to PBF file
     """
     region = os.environ.get('PGOSM_REGION', '')
@@ -43,12 +43,13 @@ def prepare_data(out_path: str) -> str:
     pgosm_date = os.environ.get('PGOSM_DATE', '')
 
     pbf_filename = get_region_filename()
+    pbf_filename_with_date = pbf_filename.replace('latest', pgosm_date)
 
-    pbf_file = os.path.join(out_path, pbf_filename)
-    pbf_file_with_date = pbf_file.replace('latest', pgosm_date)
+    pbf_file = out_path / pbf_filename
+    pbf_file_with_date = out_path / pbf_filename_with_date
 
-    md5_file = f'{pbf_file}.md5'
-    md5_file_with_date = f'{pbf_file_with_date}.md5'
+    md5_file = Path(f'{pbf_file}.md5')
+    md5_file_with_date = Path(f'{pbf_file_with_date}.md5')
 
     if pbf_download_needed(pbf_file_with_date, md5_file_with_date, pgosm_date):
         logging.getLogger('pgosm-flex').info('Downloading PBF and MD5 files...')

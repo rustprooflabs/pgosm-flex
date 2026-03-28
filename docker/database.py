@@ -11,7 +11,8 @@ import os
 import sys
 import subprocess
 import time
-from typing import cast
+from typing import cast, Any
+from pathlib import Path
 import psycopg
 from psycopg.abc import Query
 from psycopg import sql
@@ -79,7 +80,7 @@ def set_db_env_vars():
     os.environ['PGOSM_CONN_PG'] = connection_string(admin=True)
 
 
-def pg_conn_parts() -> dict:
+def pg_conn_parts() -> dict[str, str]:
     """Returns dictionary of connection parts based on environment variables
     if they exist.
     """
@@ -182,15 +183,13 @@ def pg_isready() -> bool:
     Uses `pg_version_check()` for simple approach.
     """
     try:
-        result = pg_version_check()
+        pg_version_check()
     except AttributeError:
         err_msg = 'Error checking version, likely waiting for Postgres to start.'
         err_msg += ' Only an error if it does not go away after a few attempts.'
         logging.getLogger('pgosm-flex').warning(err_msg)
         return False
 
-    if result is None:
-        return False
     return True
 
 
@@ -210,7 +209,7 @@ def log_pg_details():
 
 def prepare_pgosm_db(
         skip_qgis_style: bool
-        , db_path: str
+        , db_path: Path
         , import_mode: helpers.ImportMode
         , schema_name: str
         ):
@@ -264,11 +263,11 @@ def start_import(
         , osm2pgsql_version: str
         , import_mode: helpers.ImportMode
         , schema_name: str
-        , input_file: str
+        , input_file: str | None
         ) -> int:
     """Creates record in `osm.pgosm_flex` table and returns `id` from `osm.pgosm_flex`.
     """
-    params = {'pgosm_region': pgosm_region
+    params: dict[str, Any] = {'pgosm_region': pgosm_region
               , 'pgosm_date': pgosm_date
               , 'srid': srid
               , 'language': language
@@ -292,12 +291,15 @@ INSERT INTO {schema_name}.pgosm_flex
     RETURNING id
 ;
 """
-    sql_raw = sql_raw.format(schema_name=schema_name)
-    # FIXME: Why os environ here instead of get conn string???
+    sql_formatted = sql.SQL(sql_raw).format(schema_name=sql.Identifier(schema_name))
+    sql_raw = sql_raw.format(schema_name=sql.Identifier(schema_name))
     with get_db_conn(conn_string=connection_string()) as conn:
         cur = conn.cursor()
-        cur.execute(sql_raw, params=params)
-        import_id = cur.fetchone()[0]
+        cur.execute(sql_formatted, params=params)
+        import_id = int(cur.fetchone()[0])
+
+    if not import_id:
+        raise ValueError('Invalid response, should never be missing `import_id`.')
 
     return import_id
 
@@ -317,6 +319,9 @@ SELECT setting
         cur = conn.cursor()
         cur.execute(sql_raw)
         results = cur.fetchone()
+
+    if not results:
+        raise ValueError('Unable to return Postgres version number. Likely another error going on.')
 
     # It's an int https://www.postgresql.org/docs/current/runtime-config-preset.html#GUC-SERVER-VERSION-NUM
     pg_version = int(results[0])
@@ -374,7 +379,7 @@ def create_pgosm_db() -> bool:
     return True
 
 
-def prepare_osm_schema(db_path: str, skip_qgis_style: bool, schema_name: str):
+def prepare_osm_schema(db_path: Path, skip_qgis_style: bool, schema_name: str):
     """Runs deploy scripts to prepare the PgOSM Flex database.
 
     This function's code could be simplified, but currently I like the verbosity
@@ -382,7 +387,7 @@ def prepare_osm_schema(db_path: str, skip_qgis_style: bool, schema_name: str):
 
     Parameters
     ---------------------------
-    db_path : str
+    db_path : Path
         Path to folder with SQL scripts.
     skip_qgis_style : bool
     scheme_name : str
@@ -408,7 +413,7 @@ def prepare_osm_schema(db_path: str, skip_qgis_style: bool, schema_name: str):
                                      db_name=pg_conn_parts()['pg_db'])
 
 
-def run_insert_pgosm_road(db_path: str, schema_name: str):
+def run_insert_pgosm_road(db_path: Path, schema_name: str):
     """Runs script to load data to `pgosm.road` table.
     """
     sql_filename = 'roads-us.sql'
@@ -421,14 +426,14 @@ def run_insert_pgosm_road(db_path: str, schema_name: str):
 
 
 def run_deploy_file(
-        db_path: str
+        db_path: Path
         , sql_filename: str
         , schema_name: str
         , subfolder: str='deploy'
         ):
     """Run a SQL script under the deploy path.  Used to setup PgOSM Flex DB.
     """
-    full_path = os.path.join(db_path, subfolder, sql_filename)
+    full_path = db_path / subfolder / sql_filename
     LOGGER.info(f'Deploying {full_path}')
 
     with open(full_path) as f:
