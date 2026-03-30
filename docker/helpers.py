@@ -10,6 +10,7 @@ from pathlib import Path
 import sys
 from time import sleep
 import git
+from git.exc import InvalidGitRepositoryError
 
 
 DEFAULT_SRID = '3857'
@@ -24,7 +25,7 @@ def get_today() -> str:
 
 def run_command_via_subprocess(
         cmd: list[str]
-        , cwd: Path
+        , cwd: Path | None
         , output_lines: list[str]=[]
         , print_to_log: bool=False
         ) -> int:
@@ -35,7 +36,7 @@ def run_command_via_subprocess(
     -----------------------
     cmd : list
         Parts of the command to run.
-    cwd : str or None
+    cwd : Path or None
         Set the working directory, or to None.
     output_lines : list
         Pass in a list to return the output details.
@@ -48,6 +49,8 @@ def run_command_via_subprocess(
         Return code from command
     """
     logger = logging.getLogger('pgosm-flex')
+    status: int = -9999
+
     with subprocess.Popen(
             cmd
             , cwd=cwd
@@ -57,6 +60,7 @@ def run_command_via_subprocess(
         while True:
             output = process.stdout.readline()
             if process.poll() is not None and output == b'':
+                status = process.poll()
                 break
 
             if output:
@@ -68,28 +72,28 @@ def run_command_via_subprocess(
                 # Only sleep when there wasn't output
                 sleep(1)
 
-        status = process.poll()
-
     return status
 
 
-def verify_checksum(md5_file: str, path: str):
+def verify_checksum(md5_file: Path, path: Path):
     """Verifies checksum of osm pbf file.
 
     If verification fails calls `sys.exit()`
 
     Parameters
     ---------------------
-    md5_file : str
+    md5_file : Path
         Filename of the MD5 file to verify the osm.pbf file.
-    path : str
+    path : Path
         Path to directory with `md5_file` to validate
     """
     logger = logging.getLogger('pgosm-flex')
     logger.debug(f'Validating {md5_file} in {path}')
 
-    returncode = run_command_via_subprocess(cmd=['md5sum', '-c', md5_file],
-                                            cwd=path)
+    returncode = run_command_via_subprocess(
+        cmd=['md5sum', '-c', str(md5_file)]
+        , cwd=path
+    )
 
     if returncode != 0:
         err_msg = f'Failed to validate md5sum. Return code: {returncode}'
@@ -103,7 +107,7 @@ def set_env_vars(
         region: str | None
         , subregion: str | None
         , srid: str
-        , language: str
+        , language: str | None
         , pgosm_date: str
         , layerset: str
         , layerset_path: str
@@ -118,7 +122,7 @@ def set_env_vars(
     unset_env_vars()
     logger.debug('Setting environment variables')
 
-    os.environ['PGOSM_REGION'] = region
+    os.environ['PGOSM_REGION'] = region or ''
 
     if srid != DEFAULT_SRID:
         logger.info(f'SRID set: {srid}')
@@ -127,15 +131,15 @@ def set_env_vars(
         logger.info(f'Language set: {language}')
         os.environ['PGOSM_LANGUAGE'] = str(language)
 
-    if layerset_path is not None:
+    # Only set this env var if it is a real value. Lua code expects the env var
+    # to be unset to let it handle default path logic.
+    if layerset_path:
         logger.info(f'Custom layerset path set: {layerset_path}')
         os.environ['PGOSM_LAYERSET_PATH'] = str(layerset_path)
 
     os.environ['PGOSM_DATE'] = pgosm_date
     os.environ['PGOSM_LAYERSET'] = layerset
     os.environ['SCHEMA_NAME'] = schema_name
-
-    # Moved DB Conn string details to database.py
 
     pgosm_region = get_region_combined(region, subregion)
     logger.debug(f'PGOSM_REGION_COMBINED: {pgosm_region}')
@@ -169,7 +173,7 @@ def get_git_info(tag_only: bool=False) -> str:
 
     try:
         repo = git.Repo()
-    except git.exc.InvalidGitRepositoryError:
+    except InvalidGitRepositoryError:
         # This error happens when running via make for some reason...
         # This appears to fix it.
         repo = git.Repo('../')

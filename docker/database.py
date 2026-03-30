@@ -80,7 +80,7 @@ def set_db_env_vars():
     os.environ['PGOSM_CONN_PG'] = connection_string(admin=True)
 
 
-def pg_conn_parts() -> dict[str, str]:
+def pg_conn_parts() -> dict[str, str | None]:
     """Returns dictionary of connection parts based on environment variables
     if they exist.
     """
@@ -131,7 +131,7 @@ def pg_conn_parts() -> dict[str, str]:
     LOGGER.debug(f'DB Name: {pg_db}')
     os.environ['POSTGRES_DB'] = pg_db
 
-    pg_details = {'pg_user': pg_user,
+    pg_details: dict[str, str | None] = {'pg_user': pg_user,
                   'pg_pass': pg_pass,
                   'pg_host': pg_host,
                   'pg_port': pg_port,
@@ -296,10 +296,12 @@ INSERT INTO {schema_name}.pgosm_flex
     with get_db_conn(conn_string=connection_string()) as conn:
         cur = conn.cursor()
         cur.execute(sql_formatted, params=params)
-        import_id = int(cur.fetchone()[0])
-
-    if not import_id:
-        raise ValueError('Invalid response, should never be missing `import_id`.')
+        row = cur.fetchone()
+        if row:
+            import_id = int(row[0])
+        else:
+            msg = 'Invalid response. `import_id` should never be missing.'
+            raise ValueError(msg)
 
     return import_id
 
@@ -410,7 +412,7 @@ def prepare_osm_schema(db_path: Path, skip_qgis_style: bool, schema_name: str):
     else:
         LOGGER.info('Loading QGIS styles')
         qgis_styles.load_qgis_styles(db_path=db_path,
-                                     db_name=pg_conn_parts()['pg_db'])
+                                     db_name=str(pg_conn_parts()['pg_db']))
 
 
 def run_insert_pgosm_road(db_path: Path, schema_name: str):
@@ -612,16 +614,19 @@ UPDATE {schema_name}.pgosm_flex pf
         AND pf.id = %(import_id)s
 ;
 """
-    sql_raw = sql_raw.format(schema_name=schema_name)
+    sql_formatted = sql.SQL(sql_raw).format(
+        schema_name=sql.Identifier(schema_name)
+    )
     with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
-        params = {'import_id': import_id,
-                  'msg': msg
-                  }
+        params: dict[str, int | str] = {
+            'import_id': import_id
+            , 'msg': msg
+        }
         cur = conn.cursor()
-        cur.execute(sql_raw, params=params)
+        cur.execute(sql_formatted, params=params)
 
 
-def get_prior_import(schema_name: str) -> dict:
+def get_prior_import(schema_name: str) -> dict[str, Any]:
     """Gets the latest import details from `osm.pgosm_flex`.
     """
     sql_raw = """
@@ -641,6 +646,6 @@ SELECT id, osm_date, region, layerset, import_status,
         results = cur.execute(sql_raw).fetchone()
 
     if isinstance(results, type(None)):
-        results = {}
+        results: dict[str, Any] = {}
 
     return results

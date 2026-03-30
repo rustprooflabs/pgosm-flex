@@ -80,7 +80,7 @@ def run_pgosm_flex(
         , input_file: str | None
         , layerset: str
         , layerset_path: str
-        , language: str
+        , language: str | None
         , pg_dump: bool
         , pgosm_date: str
         , replication: bool
@@ -92,10 +92,11 @@ def run_pgosm_flex(
     ):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
     """
-    paths = get_paths()
     setup_logger(debug)
     logger = logging.getLogger('pgosm-flex')
     logger.info('PgOSM Flex starting...')
+
+    paths = get_paths()
 
     if replication and (update is not None):
         err_msg = 'The --replication and --update features are mutually exclusive. Use one or the other.'
@@ -173,7 +174,7 @@ def run_pgosm_flex(
     # to be a good compromise today.
     vers_lines: list[str] = []
     helpers.run_command_via_subprocess(cmd=['osm2pgsql', '--version'],
-                                       cwd='/usr/bin/',
+                                       cwd=Path('/usr/bin/'),
                                        output_lines=vers_lines)
 
     osm2pgsql_version = '\n'.join(vers_lines)
@@ -402,7 +403,7 @@ def get_export_full_path(out_path: str, export_filename: str) -> str:
     return export_path
 
 
-def run_osm2pgsql(osm2pgsql_command: str, flex_path: str):
+def run_osm2pgsql(osm2pgsql_command: str, flex_path: Path):
     """Runs the provided osm2pgsql command.
     """
     logger = logging.getLogger('pgosm-flex')
