@@ -257,7 +257,7 @@ def start_import(
         pgosm_region: str
         , pgosm_date: str
         , srid: int
-        , language: str
+        , language: str | None
         , layerset: str
         , git_info: str
         , osm2pgsql_version: str
@@ -464,7 +464,7 @@ def get_db_conn(conn_string: str) -> psycopg.Connection:
     return conn
 
 
-def pgosm_after_import(flex_path: str) -> bool:
+def pgosm_after_import(flex_path: Path) -> bool:
     """Runs post-processing SQL via Lua script.
 
     Layerset logic is established via environment variable, must happen
@@ -476,7 +476,7 @@ def pgosm_after_import(flex_path: str) -> bool:
 
     output = subprocess.run(cmds,
                             text=True,
-                            cwd=flex_path,
+                            cwd=str(flex_path),
                             check=False,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT)
@@ -561,7 +561,7 @@ def osm2pgsql_replication_finish(skip_nested: bool):
         cur.execute(sql_raw, params)
 
 
-def run_pg_dump(export_path: str, skip_qgis_style: bool):
+def run_pg_dump(export_path: Path, skip_qgis_style: bool):
     """Runs `pg_dump` to save processed data to load into other PostGIS DBs.
     """
     logger = logging.getLogger('pgosm-flex')
@@ -572,14 +572,14 @@ def run_pg_dump(export_path: str, skip_qgis_style: bool):
         logger.info(f'Running pg_dump (only {schema_name} schema)')
         cmds = ['pg_dump', '-d', conn_string,
                 f'--schema={schema_name}',
-                '-f', export_path]
+                '-f', str(export_path)]
     else:
         logger.info(f'Running pg_dump ({schema_name} schema plus extras)')
         cmds = ['pg_dump', '-d', conn_string,
                 f'--schema={schema_name}',
                 '--schema=pgosm',
                 '--schema=public',
-                '-f', export_path]
+                '-f', str(export_path)]
 
     output = subprocess.run(cmds,
                             text=True,
@@ -587,10 +587,10 @@ def run_pg_dump(export_path: str, skip_qgis_style: bool):
                             check=False)
     LOGGER.info(f'pg_dump complete, saved to {export_path}')
     LOGGER.debug(f'pg_dump output: \n {output.stderr}')
-    fix_pg_dump_create_public(export_path)
+    fix_pg_dump_create_public(export_path=export_path)
 
 
-def fix_pg_dump_create_public(export_path: str):
+def fix_pg_dump_create_public(export_path: Path):
     """Using pg_dump with `--schema=public` results in
     a .sql script containing `CREATE SCHEMA public;`, nearly always breaks
     in target DB.  Replaces with `CREATE SCHEMA IF NOT EXISTS public;`

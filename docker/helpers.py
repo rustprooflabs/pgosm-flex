@@ -4,8 +4,9 @@ import datetime
 import json
 import logging
 from packaging.version import parse as parse_version
-import subprocess
 import os
+import subprocess
+from typing import Any
 from pathlib import Path
 import sys
 from time import sleep
@@ -13,7 +14,7 @@ import git
 from git.exc import InvalidGitRepositoryError
 
 
-DEFAULT_SRID = '3857'
+DEFAULT_SRID = 3857
 
 
 def get_today() -> str:
@@ -106,7 +107,7 @@ def verify_checksum(md5_file: Path, path: Path):
 def set_env_vars(
         region: str | None
         , subregion: str | None
-        , srid: str
+        , srid: int
         , language: str | None
         , pgosm_date: str
         , layerset: str
@@ -147,9 +148,12 @@ def set_env_vars(
     os.environ['SKIP_NESTED'] = str(skip_nested)
 
 
-def get_region_combined(region: str, subregion: str | None) -> str:
+def get_region_combined(region: str | None, subregion: str | None) -> str:
     """Returns combined region with optional subregion.
     """
+    if region is None:
+        raise ValueError('Region is required for this function.')
+
     if subregion is None:
         pgosm_region = f'{region}'
     else:
@@ -226,7 +230,7 @@ class ImportMode():
             self
             , replication: bool
             , replication_update: bool
-            , update: str
+            , update: str | None
             , force: bool
             ):
         """Computes two variables, `slim_no_drop` and `append_first_run`
@@ -246,7 +250,7 @@ class ImportMode():
         self.replication_update = replication_update
 
         # The input via click should enforce this, still worth checking here
-        valid_update_options = ['append', 'create', None]
+        valid_update_options: list[str | None] = ['append', 'create', None]
 
         if update not in valid_update_options:
             raise ValueError(f'Invalid option for --update. Valid options: {valid_update_options}')
@@ -258,7 +262,7 @@ class ImportMode():
         self.set_append_first_run()
         self.set_run_post_sql()
 
-    def okay_to_run(self, prior_import: dict) -> bool:
+    def okay_to_run(self, prior_import: dict[str, Any]) -> bool:
         """Determines if it is okay to run PgOSM Flex without fear of data loss.
 
         This logic was along with the `--force` option to make it
@@ -292,7 +296,7 @@ class ImportMode():
             self.logger.debug('No prior import found, okay to proceed.')
             return True
 
-        prior_replication = prior_import['replication']
+        prior_replication = bool(prior_import['replication'])
 
         # Check PgOSM version using Git tags
         # If current version is lower than prior version from latest import, stop.
