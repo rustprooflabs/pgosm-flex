@@ -291,8 +291,9 @@ INSERT INTO {schema_name}.pgosm_flex
     RETURNING id
 ;
 """
-    sql_formatted = sql.SQL(sql_raw).format(schema_name=sql.Identifier(schema_name))
-    sql_raw = sql_raw.format(schema_name=sql.Identifier(schema_name))
+    sql_formatted = sql.SQL(sql_raw).format(
+        schema_name=sql.Identifier(schema_name)
+    )
     with get_db_conn(conn_string=connection_string()) as conn:
         cur = conn.cursor()
         cur.execute(sql_formatted, params=params)
