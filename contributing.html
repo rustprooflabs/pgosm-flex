@@ -1,0 +1,377 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js rust">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Contributing to PgOSM Flex - PgOSM Flex User Guide</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="PgOSM Flex provides high quality OpenStreetMap datasets in PostGIS using the osm2pgsql Flex output">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "rust";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('rust')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">About PgOSM Flex</a></li><li class="chapter-item expanded affix "><a href="code-of-conduct.html">Code of Conduct</a></li><li class="chapter-item expanded affix "><a href="contributing.html" class="active">Contributing to PgOSM Flex</a></li><li class="chapter-item expanded affix "><li class="part-title">User Guide</li><li class="chapter-item expanded "><a href="quick-start.html"><strong aria-hidden="true">1.</strong> Quick Start</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="windows.html"><strong aria-hidden="true">1.1.</strong> Running on Windows</a></li></ol></li><li class="chapter-item expanded "><a href="customizations.html"><strong aria-hidden="true">2.</strong> Customize PgOSM Flex</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="common-customization.html"><strong aria-hidden="true">2.1.</strong> Common Customizations</a></li><li class="chapter-item expanded "><a href="layersets.html"><strong aria-hidden="true">2.2.</strong> Layersets</a></li><li class="chapter-item expanded "><a href="custom-indexes.html"><strong aria-hidden="true">2.3.</strong> Indexes</a></li><li class="chapter-item expanded "><a href="configure-postgres.html"><strong aria-hidden="true">2.4.</strong> Configure Postgres</a></li><li class="chapter-item expanded "><a href="data-files.html"><strong aria-hidden="true">2.5.</strong> Data Files</a></li></ol></li><li class="chapter-item expanded "><a href="query.html"><strong aria-hidden="true">3.</strong> Query examples</a></li><li class="chapter-item expanded "><a href="routing.html"><strong aria-hidden="true">4.</strong> Routing</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="routing-road.html"><strong aria-hidden="true">4.1.</strong> Routing Roads</a></li><li class="chapter-item expanded "><a href="routing-water.html"><strong aria-hidden="true">4.2.</strong> Routing Water</a></li><li class="chapter-item expanded "><a href="routing-process.html"><strong aria-hidden="true">4.3.</strong> Routing Process</a></li><li class="chapter-item expanded "><a href="routing-3.html"><strong aria-hidden="true">4.4.</strong> Routing Roads: Legacy (pgRouting 3)</a></li></ol></li><li class="chapter-item expanded "><a href="performance.html"><strong aria-hidden="true">5.</strong> Processing Time</a></li><li class="chapter-item expanded affix "><li class="part-title">Production Use</li><li class="chapter-item expanded "><a href="postgres-permissions.html"><strong aria-hidden="true">6.</strong> Postgres Permissions</a></li><li class="chapter-item expanded "><a href="postgres-external.html"><strong aria-hidden="true">7.</strong> Using External Postgres Connection</a></li><li class="chapter-item expanded "><a href="data-updates.html"><strong aria-hidden="true">8.</strong> Data updates</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="replication.html"><strong aria-hidden="true">8.1.</strong> Using Replication</a></li><li class="chapter-item expanded "><a href="relocate-data.html"><strong aria-hidden="true">8.2.</strong> Relocate Data</a></li><li class="chapter-item expanded "><a href="update-mode.html"><strong aria-hidden="true">8.3.</strong> Using Update Mode</a></li></ol></li><li class="chapter-item expanded "><a href="qgis-styles.html"><strong aria-hidden="true">9.</strong> QGIS Styles</a></li><li class="chapter-item expanded affix "><li class="part-title">Developers</li><li class="chapter-item expanded "><a href="force-load.html"><strong aria-hidden="true">10.</strong> Force Load</a></li><li class="chapter-item expanded "><a href="projects.html"><strong aria-hidden="true">11.</strong> Projects using PgOSM Flex</a></li><li class="chapter-item expanded "><a href="docker-build.html"><strong aria-hidden="true">12.</strong> Build and Push Docker Images</a></li><li class="chapter-item expanded "><a href="tests.html"><strong aria-hidden="true">13.</strong> Testing PgOSM Flex</a></li><li class="chapter-item expanded "><a href="qgis-styles-dev.html"><strong aria-hidden="true">14.</strong> Developing QGIS Styles</a></li><li class="chapter-item expanded "><a href="troubleshooting.html"><strong aria-hidden="true">15.</strong> Troubleshoot errors in osm2pgsql processing</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">PgOSM Flex User Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/rustprooflabs/pgosm-flex" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/rustprooflabs/pgosm-flex/edit/main/docs/src/contributing.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="contributing"><a class="header" href="#contributing">Contributing</a></h1>
+<p>Thank you for your interest in contributing to PgOSM Flex!</p>
+<p>All types of contributions are encouraged and valued. This page outlines
+different ways you can contribute with details about how this project handles them.
+Please make sure to read the relevant sections below before making your contribution.
+This makes it much easier for maintainers and smooths out the experience for
+everyone involved.</p>
+<p>The PgOSM Flex community looks forward to your contributions. 🎉</p>
+<blockquote>
+<p>If you like the project, but do not have time to contribute directly, that is fine.
+There are other easy ways to support the project and show your appreciation,
+which we would also be very happy about:</p>
+<ul>
+<li>Star the <a href="https://github.com/rustprooflabs/pgosm-flex">project on GitHub</a>.</li>
+<li>Blog or otherwise post about it on the social media of your choice.</li>
+<li>Refer to this project in your project's readme.</li>
+<li>Tell your friends / colleagues.</li>
+<li>Mention the project at local meetups. </li>
+</ul>
+</blockquote>
+<h2 id="code-of-conduct"><a class="header" href="#code-of-conduct">Code of Conduct</a></h2>
+<p>This project and everyone participating in it is governed by the
+<a href="code-of-conduct.html">Code of Conduct</a>.
+By participating, you are expected to uphold this code.
+Please report unacceptable behavior to <a href="mailto:support@rustprooflabs.com">the maintainers</a>.</p>
+<h2 id="ways-to-contribute"><a class="header" href="#ways-to-contribute">Ways to Contribute</a></h2>
+<p>The PgOSM Flex project is managed on GitHub.  GitHub provides multiple ways to
+interact with and contribute to this project, including
+<a href="https://github.com/rustprooflabs/pgosm-flex/discussions/">discussions</a>,
+<a href="https://github.com/rustprooflabs/pgosm-flex/issues">issues</a>,
+and <a href="https://github.com/rustprooflabs/pgosm-flex/pulls">pull requests (PRs)</a>.
+A GitHub account is required for many interactions with the community, such as
+creating issues, leaving comments, and many other actions available through GitHub.
+The following sections explain various ways to use these GitHub features to
+contribute and otherwise interact with the community.</p>
+<h3 id="discussions-questions-ideas-show--tell"><a class="header" href="#discussions-questions-ideas-show--tell">Discussions: Questions, Ideas, Show &amp; Tell</a></h3>
+<p>Before asking a question, search for existing
+<a href="https://github.com/rustprooflabs/pgosm-flex/discussions">discussions</a>
+and <a href="https://github.com/rustprooflabs/pgosm-flex/issues">issues</a>
+that might address your question.
+If you find a suitable item yet still need clarification,
+write your question as a comment on the existing item to keep the discussion in
+a consolidated location.
+It is also advisable to search this documentation and the internet for answers first.</p>
+<p>If your question is not already being addressed, start a new
+<a href="https://github.com/rustprooflabs/pgosm-flex/discussions/new/choose">Discussion</a>
+with as much context and detail as possible.
+GitHub provides discussion types for
+<a href="https://github.com/rustprooflabs/pgosm-flex/discussions/new?category=q-a">Q &amp; A</a>,
+<a href="https://github.com/rustprooflabs/pgosm-flex/discussions/new?category=ideas">Discussions</a>,
+<a href="https://github.com/rustprooflabs/pgosm-flex/discussions/new?category=show-and-tell">Show and Tell</a>
+and more.  If a question turns into the discovery of a bug or feature request,
+Discussions can be converted into issues.</p>
+<h4 id="list-your-project"><a class="header" href="#list-your-project">List Your Project</a></h4>
+<p>The PgOSM Flex project encourages you to <a href="/projects.html">list your project</a>
+using PgOSM Flex. The easiest way to start this is to open a
+<a href="https://github.com/rustprooflabs/pgosm-flex/discussions/new?category=show-and-tell">Show and Tell</a>
+discussion.  Explain how PgOSM Flex is used in your project, if you have a blog post
+or other easy ways to show this, make sure to add links!</p>
+<h3 id="issues-enhancements-and-bugs"><a class="header" href="#issues-enhancements-and-bugs">Issues: Enhancements and Bugs</a></h3>
+<p>This section guides you through submitting GitHub issues for PgOSM Flex. Issues
+are used to suggest completely new features, minor improvements, and report bugs. </p>
+<p>Following these guidelines will help maintainers and the community understand
+your suggestion and make PgOSM Flex as useful and bug-free as possible.</p>
+<h4 id="before-submitting-an-issue"><a class="header" href="#before-submitting-an-issue">Before Submitting an Issue</a></h4>
+<ul>
+<li>Make sure that you are using the latest version.</li>
+<li>Read the <a href="/index.html">documentation</a> to see if your topic is already covered</li>
+<li>Search <a href="https://github.com/rustprooflabs/pgosm-flex/issues">existing isues</a> to see if there is already an open issue on the topic. If there is an existing issue, add a comment there instead of opening a new issue.</li>
+<li>Find out whether your idea fits with the scope and <a href="index.html#project-goals">aims of the project</a>. It's up to you to make a strong case to convince the project's developers of the merits of this feature. Keep in mind that we want features that will be useful to the majority of our users and not just a small subset. If you're just targeting a minority of users, consider writing an add-on/plugin library.</li>
+</ul>
+<h4 id="feature-request"><a class="header" href="#feature-request">Feature Request</a></h4>
+<p>Feature requests are tracked as
+<a href="https://github.com/rustprooflabs/pgosm-flex/issues">GitHub issues</a>.</p>
+<ul>
+<li>Use a <strong>clear and descriptive title</strong> for the issue to identify the suggestion.</li>
+<li>Provide a <strong>step-by-step description of the suggested enhancement</strong> in as many details as possible.</li>
+<li><strong>Describe the current behavior</strong> and <strong>explain which behavior you expected to see instead</strong> and why. At this point you can also tell which alternatives do not work for you.</li>
+<li><strong>Explain why this enhancement would be useful</strong> to PgOSM Flex users.</li>
+</ul>
+<h4 id="bug-report"><a class="header" href="#bug-report">Bug Report</a></h4>
+<p>A bug report indicates PgOSM Flex is not working as advertised or expected.
+Use the <a href="https://github.com/rustprooflabs/pgosm-flex/issues/new?assignees=&amp;labels=&amp;projects=&amp;template=bug_report.md&amp;title=">bug report template</a> to submit your issue.  Fill in
+detailed information for as many of the sections as possible.</p>
+<p>The bug report template includes a series of headers
+(defined as lines starting with <code>#</code> symbols) with comments prompting you for input.
+Use the &quot;Write&quot; and &quot;Preview&quot; tabs in the GitHub interface to edit and preview your issue.</p>
+<ul>
+<li>Make sure that you are using the latest version.</li>
+<li>Make sure that you have read the <a href="/index.html">documentation</a>.</li>
+<li>Determine if your bug is really a bug and not an error on your side e.g. using incompatible environment components/versions.</li>
+<li>To see if other users have experienced (and potentially already solved) the same issue you are having, check if there is not already a bug report existing for your bug or error in the <a href="https://github.com/rustprooflabs/pgosm-flex/issues">issues</a>.</li>
+</ul>
+<h4 id="security-advisory"><a class="header" href="#security-advisory">Security Advisory</a></h4>
+<p>Security related concerns should be submitted using GitHub's
+<a href="https://github.com/rustprooflabs/pgosm-flex/security/advisories/new">Security Advisory</a>
+feature.  This provides a secure method to communicate with project maintainers.</p>
+<p>RustProof Labs makes security a top priority and will address any security concerns
+as quickly as possible.</p>
+<h4 id="once-its-submitted"><a class="header" href="#once-its-submitted">Once it's submitted</a></h4>
+<p>After you have submitted an issue, the project team will label the issue accordingly.
+Maintainers will try to reproduce the issue with your provided steps. If there are no reproduction steps or no obvious way to reproduce the issue, the team will ask you for more details.</p>
+<h3 id="improving-documentation"><a class="header" href="#improving-documentation">Improving Documentation</a></h3>
+<p>See the <code>README.md</code> in the <a href="https://github.com/rustprooflabs/pgosm-flex/tree/main/docs"><code>pgosm-flex/docs</code> directory</a>.</p>
+<h2 id="submitting-pull-requests"><a class="header" href="#submitting-pull-requests">Submitting Pull Requests</a></h2>
+<p>This project uses Pull Requests (PRs) like so many other open source projects.
+Fork the project into your own repository, create a feature branch there,
+and make one or more pull requests back to the main PgOSM Flex repository
+targeting the <code>dev</code> branch. Your PR can then be reviewed and discussed.</p>
+<blockquote>
+<p>Helpful: Run <code>make</code> in the project root directory and ensure all tests pass.
+If tests are not passing and you need help resolving the problem, please mention this in your PR.</p>
+</blockquote>
+<h2 id="adding-new-feature-layers"><a class="header" href="#adding-new-feature-layers">Adding new feature layers</a></h2>
+<p>Feature <a href="layersets.html#layers">Layers</a> define the data loaded by PgOSM Flex into
+the target Postgres / PostGIS database.</p>
+<p>Checklist for adding new feature layers:</p>
+<ul>
+<li><input disabled="" type="checkbox"/>
+Create <code>flex-config/style/&lt;feature&gt;.lua</code></li>
+<li><input disabled="" type="checkbox"/>
+Create <code>flex-config/sql/&lt;feature&gt;.sql</code></li>
+<li><input disabled="" type="checkbox"/>
+Update <code>flex-config/run.lua</code></li>
+<li><input disabled="" type="checkbox"/>
+Update <code>flex-config/run.sql</code></li>
+<li><input disabled="" type="checkbox"/>
+Update <code>db/qc/features_not_in_run_all.sql</code></li>
+<li><input disabled="" type="checkbox"/>
+Add relevant <code>tests/sql/&lt;feature_queries&gt;.sql</code></li>
+<li><input disabled="" type="checkbox"/>
+Add relevant <code>tests/expected/&lt;feature_queries&gt;.out</code></li>
+</ul>
+<h2 id="style-guides"><a class="header" href="#style-guides">Style guides</a></h2>
+<h3 id="written-content-in-github"><a class="header" href="#written-content-in-github">Written content in GitHub</a></h3>
+<p>See <a href="https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax">GitHub's Markdown documentation</a>
+for more on writing with formatting in GitHub.</p>
+<ul>
+<li>Use headers to outline sections when using more than two or three paragraphs.</li>
+<li>Format <code>code</code> when using with inline text.</li>
+<li>Use code blocks for multi-line code examples.</li>
+</ul>
+<h3 id="commit-messages"><a class="header" href="#commit-messages">Commit Messages</a></h3>
+<p>Brief, descriptive commit messages are appreciated.  Lengthy commit messages
+will likely never be reviewed.  Detailed explanations and discussions are appropriate
+in GitHub Pull Request, Issues, and/or discussions.</p>
+<h2 id="legal-notice"><a class="header" href="#legal-notice">Legal Notice</a></h2>
+<p>When contributing to this project, you must agree that you have authored 100% of the content, that you have the necessary rights to the content and that the content you contribute may be provided under the project license.</p>
+<h2 id="attribution"><a class="header" href="#attribution">Attribution</a></h2>
+<p>This guide is loosely based on the
+<a href="https://contributing.md/">example <strong>contributing.md</strong> site</a>.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="code-of-conduct.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="quick-start.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="code-of-conduct.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="quick-start.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

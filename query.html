@@ -1,0 +1,362 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js rust">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Query examples - PgOSM Flex User Guide</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="PgOSM Flex provides high quality OpenStreetMap datasets in PostGIS using the osm2pgsql Flex output">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "rust";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('rust')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = null;
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">About PgOSM Flex</a></li><li class="chapter-item expanded affix "><a href="code-of-conduct.html">Code of Conduct</a></li><li class="chapter-item expanded affix "><a href="contributing.html">Contributing to PgOSM Flex</a></li><li class="chapter-item expanded affix "><li class="part-title">User Guide</li><li class="chapter-item expanded "><a href="quick-start.html"><strong aria-hidden="true">1.</strong> Quick Start</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="windows.html"><strong aria-hidden="true">1.1.</strong> Running on Windows</a></li></ol></li><li class="chapter-item expanded "><a href="customizations.html"><strong aria-hidden="true">2.</strong> Customize PgOSM Flex</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="common-customization.html"><strong aria-hidden="true">2.1.</strong> Common Customizations</a></li><li class="chapter-item expanded "><a href="layersets.html"><strong aria-hidden="true">2.2.</strong> Layersets</a></li><li class="chapter-item expanded "><a href="custom-indexes.html"><strong aria-hidden="true">2.3.</strong> Indexes</a></li><li class="chapter-item expanded "><a href="configure-postgres.html"><strong aria-hidden="true">2.4.</strong> Configure Postgres</a></li><li class="chapter-item expanded "><a href="data-files.html"><strong aria-hidden="true">2.5.</strong> Data Files</a></li></ol></li><li class="chapter-item expanded "><a href="query.html" class="active"><strong aria-hidden="true">3.</strong> Query examples</a></li><li class="chapter-item expanded "><a href="routing.html"><strong aria-hidden="true">4.</strong> Routing</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="routing-road.html"><strong aria-hidden="true">4.1.</strong> Routing Roads</a></li><li class="chapter-item expanded "><a href="routing-water.html"><strong aria-hidden="true">4.2.</strong> Routing Water</a></li><li class="chapter-item expanded "><a href="routing-process.html"><strong aria-hidden="true">4.3.</strong> Routing Process</a></li><li class="chapter-item expanded "><a href="routing-3.html"><strong aria-hidden="true">4.4.</strong> Routing Roads: Legacy (pgRouting 3)</a></li></ol></li><li class="chapter-item expanded "><a href="performance.html"><strong aria-hidden="true">5.</strong> Processing Time</a></li><li class="chapter-item expanded affix "><li class="part-title">Production Use</li><li class="chapter-item expanded "><a href="postgres-permissions.html"><strong aria-hidden="true">6.</strong> Postgres Permissions</a></li><li class="chapter-item expanded "><a href="postgres-external.html"><strong aria-hidden="true">7.</strong> Using External Postgres Connection</a></li><li class="chapter-item expanded "><a href="data-updates.html"><strong aria-hidden="true">8.</strong> Data updates</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="replication.html"><strong aria-hidden="true">8.1.</strong> Using Replication</a></li><li class="chapter-item expanded "><a href="relocate-data.html"><strong aria-hidden="true">8.2.</strong> Relocate Data</a></li><li class="chapter-item expanded "><a href="update-mode.html"><strong aria-hidden="true">8.3.</strong> Using Update Mode</a></li></ol></li><li class="chapter-item expanded "><a href="qgis-styles.html"><strong aria-hidden="true">9.</strong> QGIS Styles</a></li><li class="chapter-item expanded affix "><li class="part-title">Developers</li><li class="chapter-item expanded "><a href="force-load.html"><strong aria-hidden="true">10.</strong> Force Load</a></li><li class="chapter-item expanded "><a href="projects.html"><strong aria-hidden="true">11.</strong> Projects using PgOSM Flex</a></li><li class="chapter-item expanded "><a href="docker-build.html"><strong aria-hidden="true">12.</strong> Build and Push Docker Images</a></li><li class="chapter-item expanded "><a href="tests.html"><strong aria-hidden="true">13.</strong> Testing PgOSM Flex</a></li><li class="chapter-item expanded "><a href="qgis-styles-dev.html"><strong aria-hidden="true">14.</strong> Developing QGIS Styles</a></li><li class="chapter-item expanded "><a href="troubleshooting.html"><strong aria-hidden="true">15.</strong> Troubleshoot errors in osm2pgsql processing</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">PgOSM Flex User Guide</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/rustprooflabs/pgosm-flex" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/rustprooflabs/pgosm-flex/edit/main/docs/src/query.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="querying-with-pgosm-flex"><a class="header" href="#querying-with-pgosm-flex">Querying with PgOSM Flex</a></h1>
+<h2 id="nested-admin-polygons"><a class="header" href="#nested-admin-polygons">Nested admin polygons</a></h2>
+<p>Nested admin polygons are stored in the table <code>osm.place_polygon_nested</code>.
+The <code>osm.build_nested_admin_polygons()</code> to populate the table is defined in <code>flex-config/place.sql</code>,
+the Docker process automatically runs it.
+Can run quickly on small areas (Colorado), takes significantly longer on larger
+areas (North America).</p>
+<p>The Python script in the Docker image has a <code>--skip-nested</code> option to skip
+running the function to populate the table.  It can always be populated
+at a later time manually using the function.</p>
+<pre><code class="language-sql">CALL osm.build_nested_admin_polygons();
+</code></pre>
+<p>When this process is running for a while it can be monitored with this query.</p>
+<pre><code class="language-sql">SELECT COUNT(*) AS row_count,
+        COUNT(*) FILTER (WHERE nest_level IS NOT NULL) AS rows_processed
+    FROM osm.place_polygon_nested
+;
+</code></pre>
+<h1 id="quality-control-queries"><a class="header" href="#quality-control-queries">Quality Control Queries</a></h1>
+<h2 id="features-not-loaded"><a class="header" href="#features-not-loaded">Features not Loaded</a></h2>
+<p>The process of selectively load specific features and not others always has the chance
+of accidentally missing important data.</p>
+<p>Running and examine tags from the SQL script <code>db/qc/features_not_in_run_all.sql</code>.
+Run within <code>psql</code> (using <code>\i db/qc/features_not_in_run_all.sql</code>) or a GUI client
+to explore the temp table used to return the aggregated results, <code>osm_missing</code>.
+The table is a <code>TEMP TABLE</code> so will disappear when the session ends.</p>
+<p>Example results from initial run (v0.0.4) showed some obvious omissions from the
+current layer definitions.</p>
+<pre><code class="language-bash">┌────────────────────────────────────────┬────────┐
+│           jsonb_object_keys            │ count  │
+╞════════════════════════════════════════╪════════╡
+│ landuse                                │ 110965 │
+│ addr:street                            │  89482 │
+│ addr:housenumber                       │  89210 │
+│ name                                   │  47151 │
+│ leisure                                │  25351 │
+│ addr:state                             │  19051 │
+│ power                                  │  16933 │
+│ addr:unit                              │  13973 │
+│ building:part                          │  13773 │
+│ golf                                   │  13427 │
+│ railway                                │  13032 │
+│ addr:city                              │  12426 │
+│ addr:postcode                          │  12358 │
+│ height                                 │  12113 │
+│ building:colour                        │  11124 │
+│ roof:colour                            │  11115 │
+</code></pre>
+<h2 id="unroutable-routes"><a class="header" href="#unroutable-routes">Unroutable routes</a></h2>
+<p>The <code>helpers.lua</code> methods are probably not perfect.</p>
+<ul>
+<li><code>routable_foot()</code></li>
+<li><code>routable_cycle()</code></li>
+<li><code>routable_motor()</code></li>
+</ul>
+<pre><code class="language-sql">SELECT * FROM osm.road_line
+    WHERE NOT route_foot AND NOT route_motor AND NOT route_cycle
+;
+</code></pre>
+<blockquote>
+<p>Not all rows returned are errors.  <code>highway = 'construction'</code> is not necessarily determinate...</p>
+</blockquote>
+<h2 id="relations-missing-from-unitable"><a class="header" href="#relations-missing-from-unitable">Relations missing from unitable</a></h2>
+<pre><code class="language-sql">SELECT t.*
+    FROM osm.tags t
+    WHERE t.geom_type = 'R' 
+        AND NOT EXISTS (
+            SELECT 1
+            FROM osm.unitable u
+            WHERE u.geom_type = t.geom_type AND t.osm_id = u.osm_id
+);
+</code></pre>
+<h2 id="points-of-interest-pois"><a class="header" href="#points-of-interest-pois">Points of Interest (POIs)</a></h2>
+<p>PgOSM Flex loads an range of tags into a materialized view (<code>osm.poi_all</code>) for
+easily searching POIs.
+Line and polygon data is forced to point geometry using
+<code>ST_Centroid()</code>.  This layer duplicates a bunch of other more specific layers
+(shop, amenity, etc.) to provide a single place for simplified POI searches.</p>
+<p>Special layer included by layer sets <code>run-all</code> and <code>run-no-tags</code>.
+See <code>style/poi.lua</code> for logic on how to include POIs.
+The topic of POIs is subject and likely is not inclusive of everything that probably should be considered
+a POI. If there are POIs missing
+from this table please submit a <a href="https://github.com/rustprooflabs/pgosm-flex/issues/new">new issue</a>
+with sufficient details about what is missing.
+Pull requests also welcome! See <a href="contributing.html">the contributing section</a>
+for more information.</p>
+<p>Counts of POIs by <code>osm_type</code>.</p>
+<pre><code class="language-sql">SELECT osm_type, COUNT(*)
+    FROM osm.vpoi_all
+    GROUP BY osm_type
+    ORDER BY COUNT(*) DESC;
+</code></pre>
+<p>Results from Washington D.C. subregion (March 2020).</p>
+<pre><code>┌──────────┬───────┐
+│ osm_type │ count │
+╞══════════╪═══════╡
+│ amenity  │ 12663 │
+│ leisure  │  2701 │
+│ building │  2045 │
+│ shop     │  1739 │
+│ tourism  │   729 │
+│ man_made │   570 │
+│ landuse  │    32 │
+│ natural  │    19 │
+└──────────┴───────┘
+</code></pre>
+<p>Includes Points (<code>N</code>), Lines (<code>L</code>) and Polygons (<code>W</code>).</p>
+<pre><code class="language-sql">SELECT geom_type, COUNT(*) 
+    FROM osm.vpoi_all
+    GROUP BY geom_type
+    ORDER BY COUNT(*) DESC;
+</code></pre>
+<pre><code>┌───────────┬───────┐
+│ geom_type │ count │
+╞═══════════╪═══════╡
+│ W         │ 10740 │
+│ N         │  9556 │
+│ L         │   202 │
+└───────────┴───────┘
+</code></pre>
+<h2 id="meta-table"><a class="header" href="#meta-table">Meta table</a></h2>
+<p>PgOSM Flex tracks processing metadata in the <code>osm.pgosm_flex</code>  table. The initial import
+has <code>osm2pgsql_mode = 'create'</code>, the subsequent update has
+<code>osm2pgsql_mode = 'append'</code>. </p>
+<pre><code class="language-sql">SELECT osm_date, region, srid,
+        pgosm_flex_version, osm2pgsql_version, osm2pgsql_mode
+    FROM osm.pgosm_flex
+;
+</code></pre>
+<pre><code class="language-bash">┌────────────┬───────────────────────────┬──────┬────────────────────┬───────────────────┬────────────────┐
+│  osm_date  │          region           │ srid │ pgosm_flex_version │ osm2pgsql_version │ osm2pgsql_mode │
+╞════════════╪═══════════════════════════╪══════╪════════════════════╪═══════════════════╪════════════════╡
+│ 2022-11-04 │ north-america/us-colorado │ 3857 │ 0.6.2-e1f140f      │ 1.7.2             │ create         │
+│ 2022-11-25 │ north-america/us-colorado │ 3857 │ 0.6.2-e1f140f      │ 1.7.2             │ append         │
+└────────────┴───────────────────────────┴──────┴────────────────────┴───────────────────┴────────────────┘
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="data-files.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="routing.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="data-files.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="routing.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

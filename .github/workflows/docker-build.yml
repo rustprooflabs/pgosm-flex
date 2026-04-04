@@ -1,0 +1,23 @@
+name: Publish PgOSM-Flex Docker image
+permissions:
+  contents: read
+on:
+  push:
+jobs:
+  push_to_registry:
+    name: Build and inspect PgOSM Flex image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Build image for local GH use
+        id: docker_build_push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          load: true
+          push: false
+          tags: rustprooflabs/pgosm-flex:ghdev
+      - name: Inspect image
+        run: |
+          docker image inspect rustprooflabs/pgosm-flex:ghdev
