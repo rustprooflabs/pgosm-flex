@@ -71,16 +71,32 @@ import database, geofabrik, helpers
 @click.option('--update', default=None,
               type=click.Choice(['append', 'create'], case_sensitive=True),
               help='EXPERIMENTAL - Wrap around osm2pgsql create v. append modes, without using osm2pgsql-replication.')
-def run_pgosm_flex(ram, region, subregion, debug, force,
-                    input_file, layerset, layerset_path, language, pg_dump,
-                    pgosm_date, replication, schema_name, skip_nested,
-                    skip_qgis_style, srid, update):
+def run_pgosm_flex(
+        ram: float
+        , region: str | None
+        , subregion: str | None
+        , debug:bool
+        , force: bool
+        , input_file: str | None
+        , layerset: str
+        , layerset_path: str
+        , language: str | None
+        , pg_dump: bool
+        , pgosm_date: str
+        , replication: bool
+        , schema_name: str
+        , skip_nested: bool
+        , skip_qgis_style: bool
+        , srid: int
+        , update: str | None
+    ):
     """Run PgOSM Flex within Docker to automate osm2pgsql flex processing.
     """
-    paths = get_paths()
     setup_logger(debug)
     logger = logging.getLogger('pgosm-flex')
     logger.info('PgOSM Flex starting...')
+
+    paths = get_paths()
 
     if replication and (update is not None):
         err_msg = 'The --replication and --update features are mutually exclusive. Use one or the other.'
@@ -88,13 +104,25 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
         sys.exit(err_msg)
     # End of input validation
 
-    validate_region_inputs(region, subregion, input_file)
+    validate_region_inputs(
+        region=region
+        , subregion=subregion
+        , input_file=input_file
+    )
     if region is None and input_file:
         region = input_file
 
-    helpers.set_env_vars(region, subregion, srid, language, pgosm_date,
-                         layerset, layerset_path, schema_name,
-                         skip_nested)
+    helpers.set_env_vars(
+        region=region
+        , subregion=subregion
+        , srid=srid
+        , language=language
+        , pgosm_date=pgosm_date
+        , layerset=layerset
+        , layerset_path=layerset_path
+        , schema_name=schema_name
+        , skip_nested=skip_nested
+    )
     database.set_db_env_vars()
 
     database.wait_for_postgres()
@@ -136,7 +164,7 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
 
     prior_import = database.get_prior_import(schema_name=schema_name)
 
-    if not import_mode.okay_to_run(prior_import):
+    if not import_mode.okay_to_run(prior_import=prior_import):
         msg = 'Not okay to run PgOSM Flex. Exiting'
         logger.error(msg)
         sys.exit(msg)
@@ -144,21 +172,27 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
     # There's probably a better way to get this data out, but this worked right
     # away and I'm moving on.  I'm breaking enough other things that this seemed
     # to be a good compromise today.
-    vers_lines = []
+    vers_lines: list[str] = []
     helpers.run_command_via_subprocess(cmd=['osm2pgsql', '--version'],
-                                       cwd='/usr/bin/',
+                                       cwd=Path('/usr/bin/'),
                                        output_lines=vers_lines)
 
-    import_id = database.start_import(pgosm_region=helpers.get_region_combined(region, subregion),
-                                pgosm_date=pgosm_date,
-                                srid=srid,
-                                language=language,
-                                layerset=layerset,
-                                git_info=helpers.get_git_info(),
-                                osm2pgsql_version=vers_lines,
-                                import_mode=import_mode,
-                                schema_name=schema_name,
-                                input_file=input_file)
+    osm2pgsql_version = '\n'.join(vers_lines)
+    import_id = database.start_import(
+        pgosm_region=helpers.get_region_combined(
+            region=region
+            , subregion=subregion
+        ),
+        pgosm_date=pgosm_date,
+        srid=srid,
+        language=language,
+        layerset=layerset,
+        git_info=helpers.get_git_info(),
+        osm2pgsql_version=osm2pgsql_version,
+        import_mode=import_mode,
+        schema_name=schema_name,
+        input_file=input_file
+    )
 
     logger.info(f'Started import id {import_id}')
 
@@ -198,9 +232,9 @@ def run_pgosm_flex(ram, region, subregion, debug, force,
 
 
 def run_osm2pgsql_standard(
-        input_file: str
-        , out_path: str
-        , flex_path: str
+        input_file: str | None
+        , out_path: Path
+        , flex_path: Path
         , ram: float
         , skip_nested: bool
         , import_mode: helpers.ImportMode
@@ -228,7 +262,7 @@ def run_osm2pgsql_standard(
 
     if not skip_nested:
         # Don't expect user to use --skip-nested when place isn't included
-        skip_nested = check_layerset_skip_nested_place(flex_path)
+        skip_nested = check_layerset_skip_nested_place(flex_path=flex_path)
 
     post_processing = run_post_processing(flex_path=flex_path,
                                           skip_nested=skip_nested,
@@ -247,7 +281,7 @@ def run_osm2pgsql_standard(
     return post_processing
 
 
-def run_replication_update(skip_nested: bool, flex_path: str) -> bool:
+def run_replication_update(skip_nested: bool, flex_path: Path) -> bool:
     """Runs osm2pgsql-replication between the DB start/finish steps.
     """
     logger = logging.getLogger('pgosm-flex')
@@ -277,7 +311,11 @@ osm2pgsql-replication update -d $PGOSM_CONN \
     return True
 
 
-def validate_region_inputs(region: str, subregion: str, input_file: str):
+def validate_region_inputs(
+        region: str | None
+        , subregion: str | None
+        , input_file: str | None
+    ):
     """Ensures the combination of `region`, `subregion` and `input_file` is valid.
 
     No return, raises error when invalid.
@@ -316,30 +354,30 @@ def setup_logger(debug: bool):
     logger.debug('Logger configured')
 
 
-def get_paths() -> dict:
+def get_paths() -> dict[str, Path]:
     """Returns dictionary of various paths used.
 
     Ensures `out_path` exists.
     """
-    base_path = '/app'
+    base_path = Path('/app')
 
-    db_path = os.path.join(base_path, 'db')
-    out_path = os.path.join(base_path, 'output')
-    flex_path = os.path.join(base_path, 'flex-config')
+    db_path = base_path / 'db'
+    out_path = base_path / 'output'
+    flex_path = base_path / 'flex-config'
     paths = {'base_path': base_path,
              'db_path': db_path,
              'out_path': out_path,
              'flex_path': flex_path}
 
-    Path(out_path).mkdir(parents=True, exist_ok=True)
+    out_path.mkdir(parents=True, exist_ok=True)
     return paths
 
 
-def get_export_filename(input_file: str) -> str:
+def get_export_filename(input_file: str | None) -> str:
     """Returns the .sql filename to use for pg_dump.
     """
     # always set internally, even with --input-file and no --region
-    region = os.environ.get('PGOSM_REGION').replace('/', '-')
+    region = os.environ.get('PGOSM_REGION', '').replace('/', '-')
     subregion = os.environ.get('PGOSM_SUBREGION')
     layerset = os.environ.get('PGOSM_LAYERSET')
     pgosm_date = os.environ.get('PGOSM_DATE')
@@ -359,18 +397,18 @@ def get_export_filename(input_file: str) -> str:
     return filename
 
 
-def get_export_full_path(out_path: str, export_filename: str) -> str:
+def get_export_full_path(out_path: Path, export_filename: str) -> Path:
     """If `export_filename` is an absolute path, `out_path` is not considered.
     """
     if os.path.isabs(export_filename):
-        export_path = export_filename
+        export_path = Path(export_filename)
     else:
-        export_path = os.path.join(out_path, export_filename)
+        export_path = out_path / export_filename
 
     return export_path
 
 
-def run_osm2pgsql(osm2pgsql_command: str, flex_path: str):
+def run_osm2pgsql(osm2pgsql_command: str, flex_path: Path):
     """Runs the provided osm2pgsql command.
     """
     logger = logging.getLogger('pgosm-flex')
@@ -388,12 +426,12 @@ def run_osm2pgsql(osm2pgsql_command: str, flex_path: str):
     logger.info('osm2pgsql completed')
 
 
-def check_layerset_skip_nested_place(flex_path: str) -> bool:
+def check_layerset_skip_nested_place(flex_path: Path) -> bool:
     """If `place` layer is not included `skip_nested` should be true.
 
     Parameters
     ------------------------
-    flex_path : str
+    flex_path : Path
         Path to the .ini file for the defined layerset defining which layers
         to include.
 
@@ -404,7 +442,7 @@ def check_layerset_skip_nested_place(flex_path: str) -> bool:
     """
     logger = logging.getLogger('pgosm-flex')
 
-    include_place = layerset_include_place(flex_path)
+    include_place = layerset_include_place(flex_path=flex_path)
 
     logger.debug('--------------------------------------------')
     logger.debug(f'Place layer value: {type(include_place)}')
@@ -419,7 +457,7 @@ def check_layerset_skip_nested_place(flex_path: str) -> bool:
     return True
 
 
-def layerset_include_place(flex_path: str) -> bool:
+def layerset_include_place(flex_path: Path) -> bool:
     """
     Returns
     ---------------------
@@ -432,7 +470,7 @@ def layerset_include_place(flex_path: str) -> bool:
     layerset_path = os.environ.get('PGOSM_LAYERSET_PATH')
 
     if layerset_path is None:
-        layerset_path = os.path.join(flex_path, 'layerset')
+        layerset_path = flex_path / 'layerset'
         logger.info(f'Using default layerset path {layerset_path}')
 
     ini_file = os.path.join(layerset_path, f'{layerset}.ini')
@@ -457,7 +495,7 @@ def layerset_include_place(flex_path: str) -> bool:
 
 
 def run_post_processing(
-        flex_path: str
+        flex_path: Path
         , skip_nested: bool
         , import_mode: helpers.ImportMode
         , schema_name: str
@@ -490,12 +528,20 @@ def run_post_processing(
     return True
 
 
-def dump_database(input_file: str, out_path: str, pg_dump: bool, skip_qgis_style: bool):
+def dump_database(
+        input_file: str | None
+        , out_path: Path
+        , pg_dump: bool
+        , skip_qgis_style: bool
+    ):
     """Runs pg_dump when necessary to export the processed OpenStreetMap data.
     """
     if pg_dump:
-        export_filename = get_export_filename(input_file)
-        export_path = get_export_full_path(out_path, export_filename)
+        export_filename = get_export_filename(input_file=input_file)
+        export_path = get_export_full_path(
+            out_path=out_path
+            , export_filename=export_filename
+        )
 
         database.run_pg_dump(export_path=export_path,
                        skip_qgis_style=skip_qgis_style)
@@ -524,11 +570,11 @@ def check_replication_exists() -> bool:
     return True
 
 
-def run_osm2pgsql_replication_init(pbf_path: str, pbf_filename: str):
+def run_osm2pgsql_replication_init(pbf_path: Path, pbf_filename: str):
     """Runs osm2pgsql-replication init to support replication mode.
     """
     logger = logging.getLogger('pgosm-flex')
-    pbf_path = os.path.join(pbf_path, pbf_filename)
+    pbf_path = pbf_path / pbf_filename
     init_cmd = 'osm2pgsql-replication init -d $PGOSM_CONN '
     init_cmd += f'--osm-file {pbf_path}'
     logger.debug(f'Initializing DB for replication with command:\n{init_cmd}')

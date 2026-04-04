@@ -4,14 +4,17 @@ import datetime
 import json
 import logging
 from packaging.version import parse as parse_version
-import subprocess
 import os
+import subprocess
+from typing import Any
+from pathlib import Path
 import sys
 from time import sleep
 import git
+from git.exc import InvalidGitRepositoryError
 
 
-DEFAULT_SRID = '3857'
+DEFAULT_SRID = 3857
 
 
 def get_today() -> str:
@@ -22,9 +25,9 @@ def get_today() -> str:
 
 
 def run_command_via_subprocess(
-        cmd: list
-        , cwd: str
-        , output_lines: list=[]
+        cmd: list[str]
+        , cwd: Path | None
+        , output_lines: list[str]=[]
         , print_to_log: bool=False
         ) -> int:
     """Wraps around subprocess.Popen() to run commands outside of Python. Prints
@@ -34,7 +37,7 @@ def run_command_via_subprocess(
     -----------------------
     cmd : list
         Parts of the command to run.
-    cwd : str or None
+    cwd : Path or None
         Set the working directory, or to None.
     output_lines : list
         Pass in a list to return the output details.
@@ -47,6 +50,8 @@ def run_command_via_subprocess(
         Return code from command
     """
     logger = logging.getLogger('pgosm-flex')
+    status: int = -9999
+
     with subprocess.Popen(
             cmd
             , cwd=cwd
@@ -56,6 +61,7 @@ def run_command_via_subprocess(
         while True:
             output = process.stdout.readline()
             if process.poll() is not None and output == b'':
+                status = process.poll()
                 break
 
             if output:
@@ -67,28 +73,28 @@ def run_command_via_subprocess(
                 # Only sleep when there wasn't output
                 sleep(1)
 
-        status = process.poll()
-
     return status
 
 
-def verify_checksum(md5_file: str, path: str):
+def verify_checksum(md5_file: Path, path: Path):
     """Verifies checksum of osm pbf file.
 
     If verification fails calls `sys.exit()`
 
     Parameters
     ---------------------
-    md5_file : str
+    md5_file : Path
         Filename of the MD5 file to verify the osm.pbf file.
-    path : str
+    path : Path
         Path to directory with `md5_file` to validate
     """
     logger = logging.getLogger('pgosm-flex')
     logger.debug(f'Validating {md5_file} in {path}')
 
-    returncode = run_command_via_subprocess(cmd=['md5sum', '-c', md5_file],
-                                            cwd=path)
+    returncode = run_command_via_subprocess(
+        cmd=['md5sum', '-c', str(md5_file)]
+        , cwd=path
+    )
 
     if returncode != 0:
         err_msg = f'Failed to validate md5sum. Return code: {returncode}'
@@ -99,10 +105,10 @@ def verify_checksum(md5_file: str, path: str):
 
 
 def set_env_vars(
-        region: str
-        , subregion: str
-        , srid: str
-        , language: str
+        region: str | None
+        , subregion: str | None
+        , srid: int
+        , language: str | None
         , pgosm_date: str
         , layerset: str
         , layerset_path: str
@@ -117,7 +123,7 @@ def set_env_vars(
     unset_env_vars()
     logger.debug('Setting environment variables')
 
-    os.environ['PGOSM_REGION'] = region
+    os.environ['PGOSM_REGION'] = region or ''
 
     if srid != DEFAULT_SRID:
         logger.info(f'SRID set: {srid}')
@@ -126,7 +132,9 @@ def set_env_vars(
         logger.info(f'Language set: {language}')
         os.environ['PGOSM_LANGUAGE'] = str(language)
 
-    if layerset_path is not None:
+    # Only set this env var if it is a real value. Lua code expects the env var
+    # to be unset to let it handle default path logic.
+    if layerset_path:
         logger.info(f'Custom layerset path set: {layerset_path}')
         os.environ['PGOSM_LAYERSET_PATH'] = str(layerset_path)
 
@@ -134,17 +142,18 @@ def set_env_vars(
     os.environ['PGOSM_LAYERSET'] = layerset
     os.environ['SCHEMA_NAME'] = schema_name
 
-    # Moved DB Conn string details to database.py
-
     pgosm_region = get_region_combined(region, subregion)
     logger.debug(f'PGOSM_REGION_COMBINED: {pgosm_region}')
 
     os.environ['SKIP_NESTED'] = str(skip_nested)
 
 
-def get_region_combined(region: str, subregion: str | None) -> str:
+def get_region_combined(region: str | None, subregion: str | None) -> str:
     """Returns combined region with optional subregion.
     """
+    if region is None:
+        raise ValueError('Region is required for this function.')
+
     if subregion is None:
         pgosm_region = f'{region}'
     else:
@@ -168,7 +177,7 @@ def get_git_info(tag_only: bool=False) -> str:
 
     try:
         repo = git.Repo()
-    except git.exc.InvalidGitRepositoryError:
+    except InvalidGitRepositoryError:
         # This error happens when running via make for some reason...
         # This appears to fix it.
         repo = git.Repo('../')
@@ -221,7 +230,7 @@ class ImportMode():
             self
             , replication: bool
             , replication_update: bool
-            , update: str
+            , update: str | None
             , force: bool
             ):
         """Computes two variables, `slim_no_drop` and `append_first_run`
@@ -241,7 +250,7 @@ class ImportMode():
         self.replication_update = replication_update
 
         # The input via click should enforce this, still worth checking here
-        valid_update_options = ['append', 'create', None]
+        valid_update_options: list[str | None] = ['append', 'create', None]
 
         if update not in valid_update_options:
             raise ValueError(f'Invalid option for --update. Valid options: {valid_update_options}')
@@ -253,7 +262,7 @@ class ImportMode():
         self.set_append_first_run()
         self.set_run_post_sql()
 
-    def okay_to_run(self, prior_import: dict) -> bool:
+    def okay_to_run(self, prior_import: dict[str, Any]) -> bool:
         """Determines if it is okay to run PgOSM Flex without fear of data loss.
 
         This logic was along with the `--force` option to make it
@@ -287,7 +296,7 @@ class ImportMode():
             self.logger.debug('No prior import found, okay to proceed.')
             return True
 
-        prior_replication = prior_import['replication']
+        prior_replication = bool(prior_import['replication'])
 
         # Check PgOSM version using Git tags
         # If current version is lower than prior version from latest import, stop.

@@ -3,6 +3,7 @@ project.
 """
 import logging
 import os
+from pathlib import Path
 import osm2pgsql_tuner as tuner
 
 import database, helpers
@@ -13,7 +14,7 @@ LOGGER = logging.getLogger('pgosm-flex')
 def osm2pgsql_recommendation(
         ram: float
         , pbf_filename: str
-        , out_path: str
+        , out_path: Path
         , import_mode: helpers.ImportMode
         ) -> str:
     """Returns recommended osm2pgsql command from the osm2pgsql-tuner
@@ -25,25 +26,28 @@ def osm2pgsql_recommendation(
     system_ram_gb = ram
 
     if not os.path.isabs(pbf_filename):
-        pbf_file = os.path.join(out_path, pbf_filename)
+        pbf_file = out_path / pbf_filename
     else:
-        pbf_file = pbf_filename
+        pbf_file = Path(pbf_filename)
 
     osm_pbf_gb = os.path.getsize(pbf_file) / 1024 / 1024 / 1024
     LOGGER.debug(f'PBF size (GB): {osm_pbf_gb}')
 
-    osm2pgsql_cmd = get_recommended_script(system_ram_gb,
-                                           osm_pbf_gb,
-                                           import_mode,
-                                           pbf_file,
-                                           out_path)
+    osm2pgsql_cmd = get_recommended_script(
+        system_ram_gb=system_ram_gb
+        , osm_pbf_gb=osm_pbf_gb
+        , import_mode=import_mode
+        , pbf_filename=pbf_file
+        , output_path=out_path
+    )
     return osm2pgsql_cmd
+
 
 def get_recommended_script(system_ram_gb: float,
                            osm_pbf_gb: float,
                            import_mode:helpers.ImportMode,
-                           pbf_filename: str,
-                           output_path: str
+                           pbf_filename: Path,
+                           output_path: Path
                            ) -> str:
     """Generates recommended osm2pgsql command from osm2pgsql-tuner.
 
@@ -74,9 +78,10 @@ def get_recommended_script(system_ram_gb: float,
                                append_first_run=import_mode.append_first_run,
                                ssd=True)
 
+    # FIXME: Adjust Tuner project to work with paths.
+    #    Using str() on this side for now.
     osm2pgsql_cmd = rec.get_osm2pgsql_command(pbf_path=pbf_filename)
-
-    osm2pgsql_cmd = osm2pgsql_cmd.replace('~/pgosm-data', output_path)
+    osm2pgsql_cmd = osm2pgsql_cmd.replace('~/pgosm-data', str(output_path))
 
     LOGGER.debug(f'Generic command to run: {osm2pgsql_cmd}')
 

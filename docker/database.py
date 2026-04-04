@@ -11,7 +11,8 @@ import os
 import sys
 import subprocess
 import time
-from typing import cast
+from typing import cast, Any
+from pathlib import Path
 import psycopg
 from psycopg.abc import Query
 from psycopg import sql
@@ -79,7 +80,7 @@ def set_db_env_vars():
     os.environ['PGOSM_CONN_PG'] = connection_string(admin=True)
 
 
-def pg_conn_parts() -> dict:
+def pg_conn_parts() -> dict[str, str | None]:
     """Returns dictionary of connection parts based on environment variables
     if they exist.
     """
@@ -130,7 +131,7 @@ def pg_conn_parts() -> dict:
     LOGGER.debug(f'DB Name: {pg_db}')
     os.environ['POSTGRES_DB'] = pg_db
 
-    pg_details = {'pg_user': pg_user,
+    pg_details: dict[str, str | None] = {'pg_user': pg_user,
                   'pg_pass': pg_pass,
                   'pg_host': pg_host,
                   'pg_port': pg_port,
@@ -182,15 +183,13 @@ def pg_isready() -> bool:
     Uses `pg_version_check()` for simple approach.
     """
     try:
-        result = pg_version_check()
+        pg_version_check()
     except AttributeError:
         err_msg = 'Error checking version, likely waiting for Postgres to start.'
         err_msg += ' Only an error if it does not go away after a few attempts.'
         logging.getLogger('pgosm-flex').warning(err_msg)
         return False
 
-    if result is None:
-        return False
     return True
 
 
@@ -210,7 +209,7 @@ def log_pg_details():
 
 def prepare_pgosm_db(
         skip_qgis_style: bool
-        , db_path: str
+        , db_path: Path
         , import_mode: helpers.ImportMode
         , schema_name: str
         ):
@@ -258,17 +257,17 @@ def start_import(
         pgosm_region: str
         , pgosm_date: str
         , srid: int
-        , language: str
+        , language: str | None
         , layerset: str
         , git_info: str
         , osm2pgsql_version: str
         , import_mode: helpers.ImportMode
         , schema_name: str
-        , input_file: str
+        , input_file: str | None
         ) -> int:
     """Creates record in `osm.pgosm_flex` table and returns `id` from `osm.pgosm_flex`.
     """
-    params = {'pgosm_region': pgosm_region
+    params: dict[str, Any] = {'pgosm_region': pgosm_region
               , 'pgosm_date': pgosm_date
               , 'srid': srid
               , 'language': language
@@ -292,12 +291,18 @@ INSERT INTO {schema_name}.pgosm_flex
     RETURNING id
 ;
 """
-    sql_raw = sql_raw.format(schema_name=schema_name)
-    # FIXME: Why os environ here instead of get conn string???
+    sql_formatted = sql.SQL(sql_raw).format(
+        schema_name=sql.Identifier(schema_name)
+    )
     with get_db_conn(conn_string=connection_string()) as conn:
         cur = conn.cursor()
-        cur.execute(sql_raw, params=params)
-        import_id = cur.fetchone()[0]
+        cur.execute(sql_formatted, params=params)
+        row = cur.fetchone()
+        if row:
+            import_id = int(row[0])
+        else:
+            msg = 'Invalid response. `import_id` should never be missing.'
+            raise ValueError(msg)
 
     return import_id
 
@@ -317,6 +322,9 @@ SELECT setting
         cur = conn.cursor()
         cur.execute(sql_raw)
         results = cur.fetchone()
+
+    if not results:
+        raise ValueError('Unable to return Postgres version number. Likely another error going on.')
 
     # It's an int https://www.postgresql.org/docs/current/runtime-config-preset.html#GUC-SERVER-VERSION-NUM
     pg_version = int(results[0])
@@ -374,7 +382,7 @@ def create_pgosm_db() -> bool:
     return True
 
 
-def prepare_osm_schema(db_path: str, skip_qgis_style: bool, schema_name: str):
+def prepare_osm_schema(db_path: Path, skip_qgis_style: bool, schema_name: str):
     """Runs deploy scripts to prepare the PgOSM Flex database.
 
     This function's code could be simplified, but currently I like the verbosity
@@ -382,7 +390,7 @@ def prepare_osm_schema(db_path: str, skip_qgis_style: bool, schema_name: str):
 
     Parameters
     ---------------------------
-    db_path : str
+    db_path : Path
         Path to folder with SQL scripts.
     skip_qgis_style : bool
     scheme_name : str
@@ -405,10 +413,10 @@ def prepare_osm_schema(db_path: str, skip_qgis_style: bool, schema_name: str):
     else:
         LOGGER.info('Loading QGIS styles')
         qgis_styles.load_qgis_styles(db_path=db_path,
-                                     db_name=pg_conn_parts()['pg_db'])
+                                     db_name=str(pg_conn_parts()['pg_db']))
 
 
-def run_insert_pgosm_road(db_path: str, schema_name: str):
+def run_insert_pgosm_road(db_path: Path, schema_name: str):
     """Runs script to load data to `pgosm.road` table.
     """
     sql_filename = 'roads-us.sql'
@@ -421,14 +429,14 @@ def run_insert_pgosm_road(db_path: str, schema_name: str):
 
 
 def run_deploy_file(
-        db_path: str
+        db_path: Path
         , sql_filename: str
         , schema_name: str
         , subfolder: str='deploy'
         ):
     """Run a SQL script under the deploy path.  Used to setup PgOSM Flex DB.
     """
-    full_path = os.path.join(db_path, subfolder, sql_filename)
+    full_path = db_path / subfolder / sql_filename
     LOGGER.info(f'Deploying {full_path}')
 
     with open(full_path) as f:
@@ -457,7 +465,7 @@ def get_db_conn(conn_string: str) -> psycopg.Connection:
     return conn
 
 
-def pgosm_after_import(flex_path: str) -> bool:
+def pgosm_after_import(flex_path: Path) -> bool:
     """Runs post-processing SQL via Lua script.
 
     Layerset logic is established via environment variable, must happen
@@ -469,7 +477,7 @@ def pgosm_after_import(flex_path: str) -> bool:
 
     output = subprocess.run(cmds,
                             text=True,
-                            cwd=flex_path,
+                            cwd=str(flex_path),
                             check=False,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT)
@@ -554,7 +562,7 @@ def osm2pgsql_replication_finish(skip_nested: bool):
         cur.execute(sql_raw, params)
 
 
-def run_pg_dump(export_path: str, skip_qgis_style: bool):
+def run_pg_dump(export_path: Path, skip_qgis_style: bool):
     """Runs `pg_dump` to save processed data to load into other PostGIS DBs.
     """
     logger = logging.getLogger('pgosm-flex')
@@ -565,14 +573,14 @@ def run_pg_dump(export_path: str, skip_qgis_style: bool):
         logger.info(f'Running pg_dump (only {schema_name} schema)')
         cmds = ['pg_dump', '-d', conn_string,
                 f'--schema={schema_name}',
-                '-f', export_path]
+                '-f', str(export_path)]
     else:
         logger.info(f'Running pg_dump ({schema_name} schema plus extras)')
         cmds = ['pg_dump', '-d', conn_string,
                 f'--schema={schema_name}',
                 '--schema=pgosm',
                 '--schema=public',
-                '-f', export_path]
+                '-f', str(export_path)]
 
     output = subprocess.run(cmds,
                             text=True,
@@ -580,10 +588,10 @@ def run_pg_dump(export_path: str, skip_qgis_style: bool):
                             check=False)
     LOGGER.info(f'pg_dump complete, saved to {export_path}')
     LOGGER.debug(f'pg_dump output: \n {output.stderr}')
-    fix_pg_dump_create_public(export_path)
+    fix_pg_dump_create_public(export_path=export_path)
 
 
-def fix_pg_dump_create_public(export_path: str):
+def fix_pg_dump_create_public(export_path: Path):
     """Using pg_dump with `--schema=public` results in
     a .sql script containing `CREATE SCHEMA public;`, nearly always breaks
     in target DB.  Replaces with `CREATE SCHEMA IF NOT EXISTS public;`
@@ -607,16 +615,19 @@ UPDATE {schema_name}.pgosm_flex pf
         AND pf.id = %(import_id)s
 ;
 """
-    sql_raw = sql_raw.format(schema_name=schema_name)
+    sql_formatted = sql.SQL(sql_raw).format(
+        schema_name=sql.Identifier(schema_name)
+    )
     with get_db_conn(conn_string=os.environ['PGOSM_CONN']) as conn:
-        params = {'import_id': import_id,
-                  'msg': msg
-                  }
+        params: dict[str, int | str] = {
+            'import_id': import_id
+            , 'msg': msg
+        }
         cur = conn.cursor()
-        cur.execute(sql_raw, params=params)
+        cur.execute(sql_formatted, params=params)
 
 
-def get_prior_import(schema_name: str) -> dict:
+def get_prior_import(schema_name: str) -> dict[str, Any]:
     """Gets the latest import details from `osm.pgosm_flex`.
     """
     sql_raw = """
@@ -636,6 +647,6 @@ SELECT id, osm_date, region, layerset, import_status,
         results = cur.execute(sql_raw).fetchone()
 
     if isinstance(results, type(None)):
-        results = {}
+        results: dict[str, Any] = {}
 
     return results

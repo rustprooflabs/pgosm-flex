@@ -1,4 +1,5 @@
 """ Unit tests to cover the DB module."""
+from pathlib import Path
 import unittest
 
 import pgosm_flex, helpers
@@ -57,10 +58,10 @@ class PgOSMFlexTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             pgosm_flex.validate_region_inputs(region, subregion, input_file)
 
-    def test_get_export_full_path_returns_expected_str(self):
+    def test_get_export_full_path_returns_expected_path(self):
         export_filename = 'relative-path'
-        out_path = '/tmp/not/real'
-        expected = f'{out_path}/{export_filename}'
+        out_path = Path('/tmp/not/real')
+        expected = out_path / export_filename
         result = pgosm_flex.get_export_full_path(out_path, export_filename)
         self.assertEqual(expected, result)
 
